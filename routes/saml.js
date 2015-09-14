@@ -9,7 +9,8 @@ passport.use(new saml({
         path: '/saml/callback',
         entryPoint: SAML_ENTRYPOINT,
         issuer: SAML_ISSUER,
-        cert: SAML_CERT
+        cert: fs.readFileSync(SAML_CERT, 'utf-8'),
+        privateCert: fs.readFileSync(SAML_PRIVATECERT, 'utf-8')
     },
     function(accessToken, refreshToken, profile, done) {
         process.nextTick(function () {

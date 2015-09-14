@@ -20,6 +20,7 @@ FACEBOOK_SECRET = process.env.FACEBOOK_SECRET
 SAML_ENTRYPOINT = process.env.SAML_ENTRYPOINT
 SAML_ISSUER = process.env.SAML_ISSUER
 SAML_CERT = process.env.SAML_CERT
+SAML_PRIVATECERT = process.env.SAML_PRIVATECERT
 
 
 
@@ -49,7 +50,7 @@ app.use(bparser.urlencoded({extended: true}))
 // provider mapping (only if configured)
 if(GOOGLE_ID && GOOGLE_SECRET) app.use('/google', require('./routes/google'))
 if(FACEBOOK_ID && FACEBOOK_SECRET) app.use('/facebook', require('./routes/facebook'))
-if(SAML_ENTRYPOINT) app.use('/saml', require('./routes/saml'))
+if(SAML_ENTRYPOINT && SAML_CERT && SAML_PRIVATECERT) app.use('/saml', require('./routes/saml'))
 
 
 
