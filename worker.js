@@ -19,6 +19,17 @@ FACEBOOK_SECRET = process.env.FACEBOOK_SECRET
 
 
 
+// passport (de)serialize
+passport.serializeUser(function(user, done) {
+    done(null, user)
+})
+
+passport.deserializeUser(function(user, done) {
+    done(null, user)
+})
+
+
+
 var app = express()
 
 // Initialize Passport
