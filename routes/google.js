@@ -12,8 +12,6 @@ passport.use(new google({
     },
     function(accessToken, refreshToken, profile, done) {
         process.nextTick(function () {
-            console.log(profile)
-
             return done(null, profile)
         })
     }
@@ -21,13 +19,14 @@ passport.use(new google({
 
 
 
-router.get('/', passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'] }), function(req, res, next) {
+router.get('/', passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'], session: false }), function(req, res, next) {
 
 })
 
 
 
-router.get('/callback', passport.authenticate('google', { failureRedirect: '/login' }), function(req, res, next) {
+router.get('/callback', passport.authenticate('google', { failureRedirect: '/login', session: false }), function(req, res, next) {
+    console.log(req.user)
     res.redirect('/user')
 })
 

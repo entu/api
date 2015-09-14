@@ -11,8 +11,6 @@ passport.use(new saml({
     },
     function(accessToken, refreshToken, profile, done) {
         process.nextTick(function () {
-            console.log(profile)
-
             return done(null, profile)
         })
     }
@@ -20,13 +18,14 @@ passport.use(new saml({
 
 
 
-router.get('/', passport.authenticate('saml', { scope: [] }), function(req, res, next) {
+router.get('/', passport.authenticate('saml', { scope: [], session: false }), function(req, res, next) {
 
 })
 
 
 
-router.get('/callback', passport.authenticate('saml', { failureRedirect: '/login' }), function(req, res, next) {
+router.get('/callback', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function(req, res, next) {
+    console.log(req.user)
     res.redirect('/user')
 })
 

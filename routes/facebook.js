@@ -12,8 +12,6 @@ passport.use(new facebook({
     },
     function(accessToken, refreshToken, profile, done) {
         process.nextTick(function () {
-            console.log(profile)
-
             return done(null, profile)
         })
   }
@@ -21,13 +19,14 @@ passport.use(new facebook({
 
 
 
-router.get('/', passport.authenticate('facebook', { scope: ['email'] }), function(req, res, next) {
+router.get('/', passport.authenticate('facebook', { scope: ['email'], session: false }), function(req, res, next) {
 
 })
 
 
 
-router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login' }), function(req, res, next) {
+router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login', session: false }), function(req, res, next) {
+    console.log(req.user)
     res.redirect('/user')
 })
 
