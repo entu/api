@@ -2,6 +2,7 @@ var router   = require('express').Router()
 var passport = require('passport')
 var saml     = require('passport-saml').Strategy
 var op       = require('object-path')
+var fs       = require('fs')
 
 
 
