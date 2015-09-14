@@ -2,7 +2,7 @@ var router   = require('express').Router()
 
 
 
-router.get('/', function(req, res){
+router.get('/', function(req, res, next) {
     res.send({
         result: req.user,
         version: APP_VERSION,

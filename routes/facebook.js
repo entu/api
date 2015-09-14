@@ -31,7 +31,7 @@ router.get('/', passport.authenticate('facebook', { scope: ['email'] }), functio
 
 
 
-router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login' }), function(req, res) {
+router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login' }), function(req, res, next) {
     res.redirect('/user')
 })
 

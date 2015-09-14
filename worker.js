@@ -34,6 +34,7 @@ var app = express()
 
 // Initialize Passport
 app.use(passport.initialize())
+app.use(passport.session());
 
 // parse POST requests
 app.use(bparser.json())

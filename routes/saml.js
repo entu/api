@@ -30,7 +30,7 @@ router.get('/', passport.authenticate('saml', { scope: [] }), function(req, res,
 
 
 
-router.get('/callback', passport.authenticate('saml', { failureRedirect: '/login' }), function(req, res) {
+router.get('/callback', passport.authenticate('saml', { failureRedirect: '/login' }), function(req, res, next) {
     res.redirect('/user')
 })
 
