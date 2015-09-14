@@ -1,0 +1,28 @@
+{
+    "private": true,
+    "name": "entu-auth",
+    "version": "0.1.0",
+    "description": "Authentication server for Entu.ee",
+    "homepage": "https://github.com/argoroots/entu-auth",
+    "author": "Argo Roots <argo@roots.ee>",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/argoroots/entu-auth.git"
+    },
+    "bugs": {
+        "url": "https://github.com/argoroots/entu-auth/issues"
+    },
+    "scripts": {
+        "start": "node ./master.js"
+    },
+    "engines": {
+        "node": "4.0.x"
+    },
+    "dependencies": {
+        "cluster": "0.x",
+        "express": "4.x",
+        "newrelic": "1.x",
+        "passport": "0.x",
+        "passport-saml": "0.x"
+    }
+}
