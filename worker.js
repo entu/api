@@ -1,6 +1,7 @@
 if(process.env.NEW_RELIC_LICENSE_KEY) require('newrelic')
 
 var express = require('express')
+var passport = require('passport')
 var path    = require('path')
 var fs      = require('fs')
 
