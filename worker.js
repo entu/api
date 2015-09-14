@@ -1,9 +1,8 @@
 if(process.env.NEW_RELIC_LICENSE_KEY) require('newrelic')
 
-var express = require('express')
+var express  = require('express')
 var passport = require('passport')
-var path    = require('path')
-var fs      = require('fs')
+var bparser  = require('body-parser')
 
 
 
@@ -21,12 +20,16 @@ FACEBOOK_SECRET = process.env.FACEBOOK_SECRET
 
 
 var app = express()
-    // Initialize Passport!  Also use passport.session() middleware, to support
-    .use(passport.initialize())
 
+// Initialize Passport
+app.use(passport.initialize())
 
-    // routes mapping
-    .use('/user', require('./routes/user'))
+// parse POST requests
+app.use(bparser.json())
+app.use(bparser.urlencoded({extended: true}))
+
+// routes mapping
+.use('/user', require('./routes/user'))
 
 // provider mapping (only if configured)
 if(GOOGLE_ID && GOOGLE_SECRET) app.use('/google', require('./routes/google'))
