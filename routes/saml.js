@@ -8,7 +8,7 @@ var op       = require('object-path')
 passport.use(new saml({
         path: '/saml/callback',
         entryPoint: SAML_ENTRYPOINT,
-        issuer: SAML_ISSUER
+        issuer: SAML_ISSUER,
         cert: SAML_CERT
     },
     function(accessToken, refreshToken, profile, done) {
