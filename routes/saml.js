@@ -1,6 +1,7 @@
 var router   = require('express').Router()
 var passport = require('passport')
-var saml = require('passport-saml').Strategy
+var saml     = require('passport-saml').Strategy
+var op       = require('object-path')
 
 
 
@@ -25,8 +26,21 @@ router.get('/', passport.authenticate('saml', { scope: [], session: false }), fu
 
 
 router.get('/callback', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function(req, res, next) {
-    console.log(req.user)
-    res.redirect('/user')
+    var user = {}
+    op.set(user, 'provider', op.get(req, ['user', 'provider']))
+    op.set(user, 'id', op.get(req, ['user', 'id']))
+    op.set(user, 'name', op.get(req, ['user', 'displayName']))
+    op.set(user, 'email', op.get(req, ['user', 'emails', 0, 'value']))
+    op.set(user, 'picture', op.get(req, ['user', 'photos', 0, 'value']))
+    op.set(user, 'gender', op.get(req, ['user', 'gender']))
+    op.set(user, 'url', op.get(req, ['user', 'profileUrl']))
+    op.set(user, 'raw', op.get(req, ['user', '_json']))
+
+    res.send({
+        result: user,
+        version: APP_VERSION,
+        started: APP_STARTED
+    })
 })
 
 

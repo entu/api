@@ -23,6 +23,7 @@
         "cluster": "0.x",
         "express": "4.x",
         "newrelic": "1.x",
+        "object-path": "0.x",
         "passport": "0.x",
         "passport-facebook": "2.x",
         "passport-google-oauth": "0.x",
