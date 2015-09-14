@@ -19,10 +19,15 @@ FACEBOOK_SECRET = process.env.FACEBOOK_SECRET
 
 
 
-// routes mapping
 var app = express()
+    // Initialize Passport!  Also use passport.session() middleware, to support
+    .use(passport.initialize())
+
+
+    // routes mapping
     .use('/user', require('./routes/user'))
 
+// provider mapping (only if configured)
 if(GOOGLE_ID && GOOGLE_SECRET) app.use('/google', require('./routes/google'))
 if(FACEBOOK_ID && FACEBOOK_SECRET) app.use('/facebook', require('./routes/facebook'))
 
