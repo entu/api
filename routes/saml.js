@@ -7,7 +7,7 @@ var op       = require('object-path')
 
 passport.use(new saml({
         path: '/saml/callback',
-        entryPoint: 'https://openidp.feide.no/simplesaml/saml2/idp/SSOService.php',
+        entryPoint: SAML_ENTRYPOINT,
         issuer: 'passport-saml'
     },
     function(accessToken, refreshToken, profile, done) {

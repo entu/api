@@ -17,6 +17,8 @@ GOOGLE_SECRET = process.env.GOOGLE_SECRET
 FACEBOOK_ID = process.env.FACEBOOK_ID
 FACEBOOK_SECRET = process.env.FACEBOOK_SECRET
 
+SAML_ENTRYPOINT = process.env.SAML_ENTRYPOINT
+
 
 
 // passport (de)serialize
@@ -45,6 +47,7 @@ app.use(bparser.urlencoded({extended: true}))
 // provider mapping (only if configured)
 if(GOOGLE_ID && GOOGLE_SECRET) app.use('/google', require('./routes/google'))
 if(FACEBOOK_ID && FACEBOOK_SECRET) app.use('/facebook', require('./routes/facebook'))
+if(SAML_ENTRYPOINT) app.use('/saml', require('./routes/saml'))
 
 
 
