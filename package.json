@@ -19,6 +19,7 @@
         "node": "4.0.x"
     },
     "dependencies": {
+        "body-parser": "1.x",
         "cluster": "0.x",
         "express": "4.x",
         "newrelic": "1.x",
