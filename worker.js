@@ -11,18 +11,25 @@ APP_VERSION = require('./package').version
 APP_STARTED = new Date().toISOString()
 APP_PORT    = process.env.PORT || 3000
 
+GOOGLE_ID = process.env.GOOGLE_ID
+GOOGLE_SECRET = process.env.GOOGLE_SECRET
+
+FACEBOOK_ID = process.env.FACEBOOK_ID
+FACEBOOK_SECRET = process.env.FACEBOOK_SECRET
 
 
-fs.existsSync(APP_TMPDIR) || fs.mkdirSync(APP_TMPDIR)
+
+// routes mapping
+var app = express()
+    .use('/user', require('./routes/user'))
+
+if(GOOGLE_ID && GOOGLE_SECRET) app.use('/google', require('./routes/google'))
+if(FACEBOOK_ID && FACEBOOK_SECRET) app.use('/facebook', require('./routes/facebook'))
 
 
 
-express()
-    // routes mapping
-    .use('/auth', require('./routes/auth'))
-
-    // show error
-    .use(function(err, req, res, next) {
+// show error
+app.use(function(err, req, res, next) {
         var status = parseInt(err.status) || 500
 
         res.status(status)
@@ -35,8 +42,10 @@ express()
         if(err.status !== 404) console.log(err)
     })
 
-    // start server
-    .listen(APP_PORT)
+
+
+// start server
+app.listen(APP_PORT)
 
 
 
