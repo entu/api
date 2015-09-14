@@ -2,7 +2,7 @@
     "private": true,
     "name": "entu-auth",
     "version": "0.1.0",
-    "description": "Authentication server for Entu.ee",
+    "description": "Authentication service for Entu.ee",
     "homepage": "https://github.com/argoroots/entu-auth",
     "author": "Argo Roots <argo@roots.ee>",
     "repository": {
