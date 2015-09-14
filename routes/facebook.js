@@ -7,7 +7,8 @@ var facebook = FacebookStrategy = require('passport-facebook').Strategy
 passport.use(new facebook({
         clientID: FACEBOOK_ID,
         clientSecret: FACEBOOK_SECRET,
-        callbackURL: '/facebook/callback'
+        callbackURL: '/facebook/callback',
+        proxy: true
     },
     function(accessToken, refreshToken, profile, done) {
         // asynchronous verification, for effect...

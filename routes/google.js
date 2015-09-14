@@ -7,7 +7,8 @@ var google   = require('passport-google-oauth').OAuth2Strategy
 passport.use(new google({
         clientID: GOOGLE_ID,
         clientSecret: GOOGLE_SECRET,
-        callbackURL: '/google/callback'
+        callbackURL: '/google/callback',
+        proxy: true
     },
     function(accessToken, refreshToken, profile, done) {
         // asynchronous verification, for effect...
