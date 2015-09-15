@@ -12,7 +12,7 @@ passport.use(new saml({
         cert: fs.readFileSync(SAML_CERT, 'utf-8'),
         privateCert: fs.readFileSync(SAML_PRIVATECERT, 'utf-8')
     },
-    function(accessToken, refreshToken, profile, done) {
+    function(profile, done) {
         process.nextTick(function () {
             return done(null, profile)
         })
