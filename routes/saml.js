@@ -14,7 +14,6 @@ passport.use(new saml({
     },
     function(profile, done) {
         process.nextTick(function () {
-            console.log(profile)
             return done(null, profile)
         })
     }
@@ -37,7 +36,7 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
     op.set(user, 'picture', op.get(req, ['user', 'photos', 0, 'value']))
     op.set(user, 'gender', op.get(req, ['user', 'gender']))
     op.set(user, 'url', op.get(req, ['user', 'profileUrl']))
-    op.set(user, 'raw', op.get(req, ['user', '_json']))
+    op.set(user, 'raw', op.get(req, ['user']))
 
     res.send({
         result: user,
