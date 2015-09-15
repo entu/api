@@ -7,9 +7,10 @@ var fs       = require('fs')
 
 
 passport.use(new saml({
-        path: '/saml/callback',
         entryPoint: SAML_ENTRYPOINT,
         issuer: SAML_ISSUER,
+        callbackUrl: '/saml/callback',,
+        proxy: true,
         cert: fs.readFileSync(SAML_CERT, 'utf-8'),
         privateCert: fs.readFileSync(SAML_PRIVATECERT, 'utf-8')
     },
@@ -28,7 +29,7 @@ router.get('/', passport.authenticate('saml', { scope: [], session: false }), fu
 
 
 
-router.get('/callback', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function(req, res, next) {
+router.post('/callback', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function(req, res, next) {
     var user = {}
     op.set(user, 'provider', op.get(req, ['user', 'provider']))
     op.set(user, 'id', op.get(req, ['user', 'id']))
