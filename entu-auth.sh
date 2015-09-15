@@ -17,6 +17,14 @@ docker run -d \
     --restart="always" \
     --memory="512m" \
     --env="PORT=80" \
+    --env="GOOGLE_ID=" \
+    --env="GOOGLE_SECRET=" \
+    --env="FACEBOOK_ID=" \
+    --env="FACEBOOK_SECRET=" \
+    --env="TAAT_ENTRYPOINT=" \
+    --env="TAAT_ISSUER=" \
+    --env="TAAT_CERT=/usr/src/entu-auth/ssl/taat.pem" \
+    --env="TAAT_PRIVATECERT=/usr/src/entu-auth/ssl/server.pem" \
     --env="NEW_RELIC_APP_NAME=entu-auth" \
     --env="NEW_RELIC_LICENSE_KEY=" \
     --env="NEW_RELIC_LOG=stdout" \
