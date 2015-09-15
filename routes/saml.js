@@ -14,6 +14,7 @@ passport.use(new saml({
     },
     function(profile, done) {
         process.nextTick(function () {
+            console.log(profile)
             return done(null, profile)
         })
     }
