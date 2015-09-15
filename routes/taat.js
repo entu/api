@@ -10,7 +10,8 @@ passport.use(new saml({
         entryPoint: TAAT_ENTRYPOINT,
         issuer: TAAT_ISSUER,
         cert: fs.readFileSync(TAAT_CERT, 'utf-8'),
-        privateCert: fs.readFileSync(TAAT_PRIVATECERT, 'utf-8')
+        privateCert: fs.readFileSync(TAAT_PRIVATECERT, 'utf-8'),
+        forceAuthn: true
     },
     function(profile, done) {
         process.nextTick(function () {
