@@ -9,7 +9,7 @@ var fs       = require('fs')
 passport.use(new saml({
         entryPoint: SAML_ENTRYPOINT,
         issuer: SAML_ISSUER,
-        callbackUrl: '/saml/callback',,
+        callbackUrl: '/saml/callback',
         proxy: true,
         cert: fs.readFileSync(SAML_CERT, 'utf-8'),
         privateCert: fs.readFileSync(SAML_PRIVATECERT, 'utf-8')
