@@ -10,7 +10,7 @@ git pull
 version=`date +"%y%m%d.%H%M%S"`
 
 docker build -q -t entu-auth:$version ./ && docker tag -f entu-auth:$version entu-auth:latest
-docker kill entu-auth
+docker stop entu-auth
 docker rm entu-auth
 docker run -d \
     --name="entu-auth" \

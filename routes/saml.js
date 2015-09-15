@@ -29,13 +29,10 @@ router.get('/', passport.authenticate('saml', { scope: [], session: false }), fu
 
 router.post('/', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function(req, res, next) {
     var user = {}
-    op.set(user, 'provider', op.get(req, ['user', 'provider']))
-    op.set(user, 'id', op.get(req, ['user', 'id']))
-    op.set(user, 'name', op.get(req, ['user', 'displayName']))
-    op.set(user, 'email', op.get(req, ['user', 'emails', 0, 'value']))
-    op.set(user, 'picture', op.get(req, ['user', 'photos', 0, 'value']))
-    op.set(user, 'gender', op.get(req, ['user', 'gender']))
-    op.set(user, 'url', op.get(req, ['user', 'profileUrl']))
+    op.set(user, 'provider', 'taat@' + op.get(req, ['user', 'schacHomeOrganization']))
+    op.set(user, 'id', op.get(req, ['user', 'urn:mace:dir:attribute-def:eduPersonTargetedID']))
+    op.set(user, 'name', op.get(req, ['user', 'urn:mace:dir:attribute-def:cn']))
+    op.set(user, 'email', op.get(req, ['user', 'urn:mace:dir:attribute-def:mail']))
     op.set(user, 'raw', op.get(req, ['user']))
 
     res.send({
