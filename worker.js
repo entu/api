@@ -17,10 +17,10 @@ GOOGLE_SECRET = process.env.GOOGLE_SECRET
 FACEBOOK_ID = process.env.FACEBOOK_ID
 FACEBOOK_SECRET = process.env.FACEBOOK_SECRET
 
-SAML_ENTRYPOINT = process.env.SAML_ENTRYPOINT
-SAML_ISSUER = process.env.SAML_ISSUER
-SAML_CERT = process.env.SAML_CERT
-SAML_PRIVATECERT = process.env.SAML_PRIVATECERT
+TAAT_ENTRYPOINT = process.env.TAAT_ENTRYPOINT
+TAAT_ISSUER = process.env.TAAT_ISSUER
+TAAT_CERT = process.env.TAAT_CERT
+TAAT_PRIVATECERT = process.env.TAAT_PRIVATECERT
 
 
 
@@ -50,7 +50,7 @@ app.use(bparser.urlencoded({extended: true}))
 // provider mapping (only if configured)
 if(GOOGLE_ID && GOOGLE_SECRET) app.use('/google', require('./routes/google'))
 if(FACEBOOK_ID && FACEBOOK_SECRET) app.use('/facebook', require('./routes/facebook'))
-if(SAML_ENTRYPOINT && SAML_CERT && SAML_PRIVATECERT) app.use('/saml', require('./routes/saml'))
+if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) app.use('/taat', require('./routes/taat'))
 
 
 
