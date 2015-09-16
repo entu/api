@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 var path     = require('path')
 var cluster  = require('cluster')
 var cpuCount = require('os').cpus().length
