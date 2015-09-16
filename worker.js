@@ -3,6 +3,7 @@ if(process.env.NEW_RELIC_LICENSE_KEY) require('newrelic')
 var express  = require('express')
 var passport = require('passport')
 var bparser  = require('body-parser')
+var raven    = require('raven')
 
 
 
@@ -10,6 +11,7 @@ var bparser  = require('body-parser')
 APP_VERSION = require('./package').version
 APP_STARTED = new Date().toISOString()
 APP_PORT    = process.env.PORT || 3000
+APP_SENTRY  = process.env.SENTRY_DSN
 
 GOOGLE_ID = process.env.GOOGLE_ID
 GOOGLE_SECRET = process.env.GOOGLE_SECRET
@@ -36,6 +38,9 @@ passport.deserializeUser(function(user, done) {
 
 
 var app = express()
+
+// logs to getsentry.com
+if(APP_SENTRY) app.use(raven.middleware.express(APP_SENTRY))
 
 // Initialize Passport
 app.use(passport.initialize())
