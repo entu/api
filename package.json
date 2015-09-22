@@ -20,6 +20,7 @@
     },
     "dependencies": {
         "body-parser": "1.x",
+        "bugsnag": "1.x",
         "cluster": "0.x",
         "express": "4.x",
         "newrelic": "1.x",
@@ -27,7 +28,6 @@
         "passport": "0.x",
         "passport-facebook": "2.x",
         "passport-google-oauth": "0.x",
-        "passport-saml": "0.x",
-        "raven": "0.x"
+        "passport-saml": "0.x"
     }
 }
