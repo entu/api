@@ -1,15 +1,17 @@
 #!/bin/bash
 
-mkdir -p /data/entu-auth/code
+mkdir -p /data/entu-auth/code /data/entu-auth/ssl
 cd /data/entu-auth/code
 
-git clone https://github.com/argoroots/entu-auth.git ./
-git checkout master
+git clone -q https://github.com/argoroots/entu-auth.git ./
+git checkout -q master
 git pull
+printf "\n\n"
 
 version=`date +"%y%m%d.%H%M%S"`
-
 docker build -q -t entu-auth:$version ./ && docker tag -f entu-auth:$version entu-auth:latest
+printf "\n\n"
+
 docker stop entu-auth
 docker rm entu-auth
 docker run -d \
@@ -31,6 +33,10 @@ docker run -d \
     --env="NEW_RELIC_LOG_LEVEL=error" \
     --env="NEW_RELIC_NO_CONFIG_FILE=true" \
     --env="BUGSNAG_KEY=" \
+    --volume="/data/entu-auth/ssl:/usr/src/entu-auth/ssl" \
     entu-auth:latest
+
+docker inspect -f "{{ .NetworkSettings.IPAddress }}" entu-auth
+printf "\n\n"
 
 /data/nginx.sh
