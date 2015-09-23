@@ -1,4 +1,4 @@
-FROM node:4.0-slim
+FROM node:4-slim
 
 ADD ./ /usr/src/entu-auth
 RUN cd /usr/src/entu-auth && npm --silent --production install
