@@ -3,7 +3,7 @@ if(process.env.NEW_RELIC_LICENSE_KEY) require('newrelic')
 var express  = require('express')
 var passport = require('passport')
 var bparser  = require('body-parser')
-var bugsnag  = require('bugsnag')
+var raven    = require('raven')
 
 
 
@@ -11,7 +11,7 @@ var bugsnag  = require('bugsnag')
 APP_VERSION = require('./package').version
 APP_STARTED = new Date().toISOString()
 APP_PORT    = process.env.PORT || 3000
-APP_BUGSNAG = process.env.BUGSNAG_KEY
+APP_SENTRY  = process.env.SENTRY_DSN
 
 GOOGLE_ID = process.env.GOOGLE_ID
 GOOGLE_SECRET = process.env.GOOGLE_SECRET
@@ -23,11 +23,6 @@ TAAT_ENTRYPOINT = process.env.TAAT_ENTRYPOINT
 TAAT_ISSUER = process.env.TAAT_ISSUER
 TAAT_CERT = process.env.TAAT_CERT
 TAAT_PRIVATECERT = process.env.TAAT_PRIVATECERT
-
-
-
-// logs to bugsnag.com
-if(APP_BUGSNAG) bugsnag.register(APP_BUGSNAG)
 
 
 
@@ -44,8 +39,8 @@ passport.deserializeUser(function(user, done) {
 
 var app = express()
 
-// logs to bugsnag.com
-if(APP_BUGSNAG) app.use(bugsnag.requestHandler)
+// logs to getsentry.com
+if(APP_SENTRY) app.use(raven.middleware.express(APP_SENTRY))
 
 // Initialize Passport
 app.use(passport.initialize())
@@ -62,8 +57,7 @@ if(GOOGLE_ID && GOOGLE_SECRET) app.use('/google', require('./routes/google'))
 if(FACEBOOK_ID && FACEBOOK_SECRET) app.use('/facebook', require('./routes/facebook'))
 if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) app.use('/taat', require('./routes/taat'))
 
-// logs to bugsnag.com
-if(APP_BUGSNAG) app.use(bugsnag.errorHandler)
+
 
 // show error
 app.use(function(err, req, res, next) {
