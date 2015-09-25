@@ -1,6 +1,7 @@
 if(process.env.NEW_RELIC_LICENSE_KEY) require('newrelic')
 
 var express  = require('express')
+var session  = require('express-session')
 var passport = require('passport')
 var bparser  = require('body-parser')
 var raven    = require('raven')
@@ -47,7 +48,7 @@ var app = express()
 if(APP_SENTRY) app.use(raven.middleware.express(APP_SENTRY))
 
 // Use cookies
-app.use(express.session({
+app.use(session({
     secret: APP_COOKIE_SECRET,
     resave: false,
     saveUninitialized: true,
