@@ -48,7 +48,14 @@ var app = express()
 if(APP_SENTRY) app.use(raven.middleware.express(APP_SENTRY))
 
 // Use cookies
-app.use(session({ secret: APP_COOKIE_SECRET, key: 'sid', maxAge: 360 * 5 }))
+app.use(session({
+    secret: APP_COOKIE_SECRET,
+    key: 'sid',
+    maxAge: 360 * 5,
+    cookie: {
+        secure: false
+    }
+}))
 
 // Initialize Passport
 app.use(passport.initialize())
