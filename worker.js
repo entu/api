@@ -24,6 +24,9 @@ FACEBOOK_SECRET = process.env.FACEBOOK_SECRET
 TWITTER_KEY = process.env.TWITTER_KEY
 TWITTER_SECRET = process.env.TWITTER_SECRET
 
+LIVE_ID = process.env.LIVE_ID
+LIVE_SECRET = process.env.LIVE_SECRET
+
 TAAT_ENTRYPOINT = process.env.TAAT_ENTRYPOINT
 TAAT_ISSUER = process.env.TAAT_ISSUER
 TAAT_CERT = process.env.TAAT_CERT
@@ -51,6 +54,8 @@ if(APP_SENTRY) app.use(raven.middleware.express(APP_SENTRY))
 app.use(session({
     secret: APP_COOKIE_SECRET,
     key: 'sid',
+    resave: true,
+    saveUninitialized: true,
     maxAge: 360 * 5,
     cookie: {
         secure: false

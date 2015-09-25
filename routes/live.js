@@ -1,30 +1,32 @@
 var router   = require('express').Router()
 var passport = require('passport')
-var twitter  = require('passport-twitter').Strategy
+var live     = require('passport-windowslive').Strategy
 var op       = require('object-path')
 
 
 
-passport.use(new twitter({
-        consumerKey: TWITTER_KEY,
-        consumerSecret: TWITTER_SECRET,
-        callbackURL: '/twitter/callback',
+passport.use(new live({
+        clientID: LIVE_ID,
+        clientSecret: LIVE_SECRET,
+        callbackURL: '/live/callback',
         proxy: true
     },
-    function(token, tokenSecret, profile, done) {
+    function(accessToken, refreshToken, profile, done) {
         process.nextTick(function () {
             return done(null, profile)
         })
   }
 ))
 
-router.get('/', passport.authenticate('twitter', { scope: ['email'], session: false }), function(req, res, next) {
+
+
+router.get('/', passport.authenticate('live', { scope: ['email'], session: false }), function(req, res, next) {
 
 })
 
 
 
-router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/login', session: false }), function(req, res, next) {
+router.get('/callback', passport.authenticate('live', { failureRedirect: '/login', session: false }), function(req, res, next) {
     var user = {}
     op.set(user, 'provider', op.get(req, ['user', 'provider']))
     op.set(user, 'id', op.get(req, ['user', 'id']))

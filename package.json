@@ -30,6 +30,7 @@
         "passport-google-oauth": "0.x",
         "passport-saml": "0.x",
         "passport-twitter": "1.x",
+        "passport-windowslive": "1.x",
         "raven": "0.x"
     }
 }
