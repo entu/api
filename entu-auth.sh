@@ -19,6 +19,7 @@ docker run -d \
     --restart="always" \
     --memory="512m" \
     --env="PORT=80" \
+    --env="COOKIE_SECRET=" \
     --env="GOOGLE_ID=" \
     --env="GOOGLE_SECRET=" \
     --env="FACEBOOK_ID=" \

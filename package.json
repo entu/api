@@ -22,6 +22,7 @@
         "body-parser": "1.x",
         "cluster": "0.x",
         "express": "4.x",
+        "express-session": "1.x",
         "newrelic": "1.x",
         "object-path": "0.x",
         "passport": "0.x",

@@ -8,10 +8,11 @@ var raven    = require('raven')
 
 
 // global variables (and list of all used environment variables)
-APP_VERSION = require('./package').version
-APP_STARTED = new Date().toISOString()
-APP_PORT    = process.env.PORT || 3000
-APP_SENTRY  = process.env.SENTRY_DSN
+APP_VERSION       = require('./package').version
+APP_STARTED       = new Date().toISOString()
+APP_PORT          = process.env.PORT || 3000
+APP_COOKIE_SECRET = process.env.COOKIE_SECRET
+APP_SENTRY        = process.env.SENTRY_DSN
 
 GOOGLE_ID = process.env.GOOGLE_ID
 GOOGLE_SECRET = process.env.GOOGLE_SECRET
@@ -44,6 +45,14 @@ var app = express()
 
 // logs to getsentry.com
 if(APP_SENTRY) app.use(raven.middleware.express(APP_SENTRY))
+
+// Use cookies
+app.use(express.session({
+    secret: APP_COOKIE_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: true }
+}))
 
 // Initialize Passport
 app.use(passport.initialize())
