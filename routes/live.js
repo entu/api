@@ -20,7 +20,7 @@ passport.use(new live({
 
 
 
-router.get('/', passport.authenticate('windowslive', { scope: ['email'], session: false }), function(req, res, next) {
+router.get('/', passport.authenticate('windowslive', { scope: ['wl.basic', 'wl.emails'], session: false }), function(req, res, next) {
 
 })
 

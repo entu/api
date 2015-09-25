@@ -18,13 +18,13 @@ passport.use(new twitter({
   }
 ))
 
-router.get('/', passport.authenticate('twitter', { scope: ['email'], session: false }), function(req, res, next) {
+router.get('/', passport.authenticate('twitter'), function(req, res, next) {
 
 })
 
 
 
-router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/login', session: false }), function(req, res, next) {
+router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/login' }), function(req, res, next) {
     var user = {}
     op.set(user, 'provider', op.get(req, ['user', 'provider']))
     op.set(user, 'id', op.get(req, ['user', 'id']))
