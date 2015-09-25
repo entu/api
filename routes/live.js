@@ -20,13 +20,13 @@ passport.use(new live({
 
 
 
-router.get('/', passport.authenticate('live', { scope: ['email'], session: false }), function(req, res, next) {
+router.get('/', passport.authenticate('windowslive', { scope: ['email'], session: false }), function(req, res, next) {
 
 })
 
 
 
-router.get('/callback', passport.authenticate('live', { failureRedirect: '/login', session: false }), function(req, res, next) {
+router.get('/callback', passport.authenticate('windowslive', { failureRedirect: '/login', session: false }), function(req, res, next) {
     var user = {}
     op.set(user, 'provider', op.get(req, ['user', 'provider']))
     op.set(user, 'id', op.get(req, ['user', 'id']))
