@@ -19,6 +19,9 @@ GOOGLE_SECRET = process.env.GOOGLE_SECRET
 FACEBOOK_ID = process.env.FACEBOOK_ID
 FACEBOOK_SECRET = process.env.FACEBOOK_SECRET
 
+TWITTER_KEY = process.env.TWITTER_KEY
+TWITTER_SECRET = process.env.TWITTER_SECRET
+
 TAAT_ENTRYPOINT = process.env.TAAT_ENTRYPOINT
 TAAT_ISSUER = process.env.TAAT_ISSUER
 TAAT_CERT = process.env.TAAT_CERT
@@ -55,6 +58,7 @@ app.use(bparser.urlencoded({extended: true}))
 // provider mapping (only if configured)
 if(GOOGLE_ID && GOOGLE_SECRET) app.use('/google', require('./routes/google'))
 if(FACEBOOK_ID && FACEBOOK_SECRET) app.use('/facebook', require('./routes/facebook'))
+if(TWITTER_KEY && TWITTER_SECRET) app.use('/twitter', require('./routes/twitter'))
 if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) app.use('/taat', require('./routes/taat'))
 
 

@@ -1,32 +1,30 @@
 var router   = require('express').Router()
 var passport = require('passport')
-var facebook = require('passport-facebook').Strategy
+var twitter  = require('passport-twitter').Strategy
 var op       = require('object-path')
 
 
 
-passport.use(new facebook({
-        clientID: FACEBOOK_ID,
-        clientSecret: FACEBOOK_SECRET,
-        callbackURL: '/facebook/callback',
+passport.use(new twitter({
+        consumerKey: TWITTER_KEY,
+        consumerSecret: TWITTER_SECRET,
+        callbackURL: '/twitter/callback',
         proxy: true
     },
-    function(accessToken, refreshToken, profile, done) {
+    function(token, tokenSecret, profile, done) {
         process.nextTick(function () {
             return done(null, profile)
         })
   }
 ))
 
-
-
-router.get('/', passport.authenticate('facebook', { scope: ['email'], session: false }), function(req, res, next) {
+router.get('/', passport.authenticate('twitter', { scope: ['email'], session: false }), function(req, res, next) {
 
 })
 
 
 
-router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login', session: false }), function(req, res, next) {
+router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/login', session: false }), function(req, res, next) {
     var user = {}
     op.set(user, 'provider', op.get(req, ['user', 'provider']))
     op.set(user, 'id', op.get(req, ['user', 'id']))
@@ -35,7 +33,7 @@ router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/l
     op.set(user, 'picture', op.get(req, ['user', 'photos', 0, 'value']))
     op.set(user, 'gender', op.get(req, ['user', 'gender']))
     op.set(user, 'url', op.get(req, ['user', 'profileUrl']))
-    op.set(user, 'raw', op.get(req, ['user', '_json']))
+    op.set(user, 'raw', op.get(req, ['user']))
 
     res.send({
         result: user,

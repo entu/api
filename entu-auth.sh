@@ -23,6 +23,8 @@ docker run -d \
     --env="GOOGLE_SECRET=" \
     --env="FACEBOOK_ID=" \
     --env="FACEBOOK_SECRET=" \
+    --env="TWITTER_KEY=" \
+    --env="TWITTER_SECRET=" \
     --env="TAAT_ENTRYPOINT=" \
     --env="TAAT_ISSUER=" \
     --env="TAAT_CERT=/usr/src/entu-auth/ssl/taat.pem" \
