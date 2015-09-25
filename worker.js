@@ -76,6 +76,7 @@ app.use(bparser.urlencoded({extended: true}))
 if(GOOGLE_ID && GOOGLE_SECRET) app.use('/google', require('./routes/google'))
 if(FACEBOOK_ID && FACEBOOK_SECRET) app.use('/facebook', require('./routes/facebook'))
 if(TWITTER_KEY && TWITTER_SECRET) app.use('/twitter', require('./routes/twitter'))
+if(LIVE_ID && LIVE_SECRET) app.use('/live', require('./routes/live'))
 if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) app.use('/taat', require('./routes/taat'))
 
 
