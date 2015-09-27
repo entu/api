@@ -9,7 +9,7 @@ var raven    = require('raven')
 
 
 // global variables (and list of all used environment variables)
-APP_VERSION       = require('./package').version
+APP_VERSION       = process.env.VERSION || require('./package').version
 APP_STARTED       = new Date().toISOString()
 APP_PORT          = process.env.PORT || 3000
 APP_COOKIE_SECRET = process.env.COOKIE_SECRET
@@ -48,7 +48,7 @@ passport.deserializeUser(function(user, done) {
 var app = express()
 
 // logs to getsentry.com - start
-if(APP_SENTRY) app.use(raven.middleware.express.requestHandler(APP_SENTRY))
+if(APP_SENTRY) app.use(raven.middleware.express.requestHandler(APP_SENTRY, { release: APP_VERSION }))
 
 // Use cookies
 app.use(session({
@@ -80,7 +80,7 @@ if(LIVE_ID && LIVE_SECRET) app.use('/live', require('./routes/live'))
 if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) app.use('/taat', require('./routes/taat'))
 
 // logs to getsentry.com - error
-if(APP_SENTRY) app.use(raven.middleware.express.errorHandler(APP_SENTRY))
+if(APP_SENTRY) app.use(raven.middleware.express.errorHandler(APP_SENTRY, { release: APP_VERSION }))
 
 // show error
 app.use(function(err, req, res, next) {
