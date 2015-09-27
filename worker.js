@@ -42,19 +42,21 @@ passport.deserializeUser(function(user, done) {
     done(null, user)
 })
 
-
-
-var app = express()
-
-// logs to getsentry.com - start
-new raven.Client(process.env.SENTRY_DSN, {
+// initialize getsentry.com client
+var raven_client = new raven.Client(process.env.SENTRY_DSN, {
     release: process.env.SENTRY_RELEASE,
     dataCallback: function(data) {
         delete data.request.env
         return data
     }
 })
-app.use(raven.middleware.express.requestHandler())
+
+
+
+var app = express()
+
+// logs to getsentry.com - start
+app.use(raven.middleware.express.requestHandler(raven_client))
 
 // Use cookies
 app.use(session({
@@ -86,7 +88,7 @@ if(LIVE_ID && LIVE_SECRET) app.use('/live', require('./routes/live'))
 if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) app.use('/taat', require('./routes/taat'))
 
 // logs to getsentry.com - error
-app.use(raven.middleware.express.errorHandler())
+app.use(raven.middleware.express.errorHandler(raven_client))
 
 // show error
 app.use(function(err, req, res, next) {
