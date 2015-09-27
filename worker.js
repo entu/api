@@ -47,6 +47,7 @@ passport.deserializeUser(function(user, done) {
 var app = express()
 
 // logs to getsentry.com - start
+new raven.Client()
 app.use(raven.middleware.express.requestHandler())
 
 // Use cookies
