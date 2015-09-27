@@ -48,7 +48,7 @@ var app = express()
 
 // logs to getsentry.com - start
 new raven.Client(process.env.SENTRY_DSN, {
-    release: SENTRY_RELEASE,
+    release: process.env.SENTRY_RELEASE,
     dataCallback: function(data) {
         delete data.request.env
         return data
