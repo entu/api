@@ -47,7 +47,13 @@ passport.deserializeUser(function(user, done) {
 var app = express()
 
 // logs to getsentry.com - start
-new raven.Client()
+new raven.Client(process.env.SENTRY_DSN, {
+    release: SENTRY_RELEASE,
+    dataCallback: function(data) {
+        delete data.request.env
+        return data
+    }
+})
 app.use(raven.middleware.express.requestHandler())
 
 // Use cookies
