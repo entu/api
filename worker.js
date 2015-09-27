@@ -13,7 +13,6 @@ APP_VERSION       = process.env.VERSION || require('./package').version
 APP_STARTED       = new Date().toISOString()
 APP_PORT          = process.env.PORT || 3000
 APP_COOKIE_SECRET = process.env.COOKIE_SECRET
-APP_SENTRY        = process.env.SENTRY_DSN
 
 GOOGLE_ID = process.env.GOOGLE_ID
 GOOGLE_SECRET = process.env.GOOGLE_SECRET
@@ -48,7 +47,7 @@ passport.deserializeUser(function(user, done) {
 var app = express()
 
 // logs to getsentry.com - start
-if(APP_SENTRY) app.use(raven.middleware.express.requestHandler(APP_SENTRY, { release: APP_VERSION }))
+app.use(raven.middleware.express.requestHandler())
 
 // Use cookies
 app.use(session({
@@ -70,7 +69,7 @@ app.use(bparser.json())
 app.use(bparser.urlencoded({extended: true}))
 
 // routes mapping
-.use('/user', require('./routes/user'))
+app.use('/user', require('./routes/user'))
 
 // provider mapping (only if configured)
 if(GOOGLE_ID && GOOGLE_SECRET) app.use('/google', require('./routes/google'))
@@ -80,7 +79,7 @@ if(LIVE_ID && LIVE_SECRET) app.use('/live', require('./routes/live'))
 if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) app.use('/taat', require('./routes/taat'))
 
 // logs to getsentry.com - error
-if(APP_SENTRY) app.use(raven.middleware.express.errorHandler(APP_SENTRY, { release: APP_VERSION }))
+app.use(raven.middleware.express.errorHandler())
 
 // show error
 app.use(function(err, req, res, next) {

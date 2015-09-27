@@ -39,6 +39,7 @@ docker run -d \
     --env="NEW_RELIC_LOG_LEVEL=error" \
     --env="NEW_RELIC_NO_CONFIG_FILE=true" \
     --env="SENTRY_DSN=" \
+    --env="SENTRY_RELEASE=$version" \
     --volume="/data/entu-auth/ssl:/usr/src/entu-auth/ssl" \
     entu-auth:latest
 
