@@ -47,8 +47,8 @@ passport.deserializeUser(function(user, done) {
 
 var app = express()
 
-// logs to getsentry.com
-if(APP_SENTRY) app.use(raven.middleware.express(APP_SENTRY))
+// logs to getsentry.com - start
+if(APP_SENTRY) app.use(raven.middleware.express.requestHandler(APP_SENTRY))
 
 // Use cookies
 app.use(session({
@@ -79,7 +79,8 @@ if(TWITTER_KEY && TWITTER_SECRET) app.use('/twitter', require('./routes/twitter'
 if(LIVE_ID && LIVE_SECRET) app.use('/live', require('./routes/live'))
 if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) app.use('/taat', require('./routes/taat'))
 
-
+// logs to getsentry.com - error
+if(APP_SENTRY) app.use(raven.middleware.express.errorHandler(APP_SENTRY))
 
 // show error
 app.use(function(err, req, res, next) {
