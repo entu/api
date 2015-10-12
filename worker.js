@@ -1,7 +1,6 @@
 if(process.env.NEW_RELIC_LICENSE_KEY) require('newrelic')
 
 var express  = require('express')
-var cookie   = require('cookie-parser')
 var passport = require('passport')
 var bparser  = require('body-parser')
 var random   = require('randomstring')
@@ -67,9 +66,6 @@ var app = express()
 
 // logs to getsentry.com - start
 app.use(raven.middleware.express.requestHandler(raven_client))
-
-// enable cookie support
-app.use(cookie(APP_COOKIE_SECRET))
 
 // Initialize Passport
 app.use(passport.initialize())
