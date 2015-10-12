@@ -2,8 +2,10 @@ if(process.env.NEW_RELIC_LICENSE_KEY) require('newrelic')
 
 var express  = require('express')
 var session  = require('express-session')
+var cookie   = require('cookie-parser')
 var passport = require('passport')
 var bparser  = require('body-parser')
+var random   = require('randomstring')
 var raven    = require('raven')
 
 
@@ -12,7 +14,13 @@ var raven    = require('raven')
 APP_VERSION       = process.env.VERSION || require('./package').version
 APP_STARTED       = new Date().toISOString()
 APP_PORT          = process.env.PORT || 3000
-APP_COOKIE_SECRET = process.env.COOKIE_SECRET
+APP_COOKIE_SECRET = process.env.COOKIE_SECRET || random.generate(16)
+APP_COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || ''
+
+APP_MYSQL_HOST     = process.env.MYSQL_HOST
+APP_MYSQL_DATABASE = process.env.MYSQL_DATABASE
+APP_MYSQL_USER     = process.env.MYSQL_USER
+APP_MYSQL_PASSWORD = process.env.MYSQL_PASSWORD
 
 GOOGLE_ID = process.env.GOOGLE_ID
 GOOGLE_SECRET = process.env.GOOGLE_SECRET
@@ -61,6 +69,15 @@ var app = express()
 // logs to getsentry.com - start
 app.use(raven.middleware.express.requestHandler(raven_client))
 
+// enable cookie support
+app.use(cookie(APP_COOKIE_SECRET, {
+    maxAge: 360 * 5,
+    cookie: {
+        domain: APP_COOKIE_DOMAIN,
+        secure: true
+    }
+}))
+
 // Use cookies
 app.use(session({
     secret: APP_COOKIE_SECRET,
@@ -95,23 +112,18 @@ app.use(raven.middleware.express.errorHandler(raven_client))
 
 // show error
 app.use(function(err, req, res, next) {
-        var status = parseInt(err.status) || 500
-
-        res.status(status)
-        res.send({
-            error: err.message,
-            version: APP_VERSION,
-            started: APP_STARTED
-        })
-
-        if(err.status !== 404) console.log(err)
+    res.send({
+        error: err.message,
+        version: APP_VERSION,
+        started: APP_STARTED
     })
+
+    if(err.status !== 404) console.log(err)
+})
 
 
 
 // start server
-app.listen(APP_PORT)
-
-
-
-console.log(new Date().toString() + ' started listening port ' + APP_PORT)
+app.listen(APP_PORT, function() {
+    console.log(new Date().toString() + ' started listening port ' + APP_PORT)
+})

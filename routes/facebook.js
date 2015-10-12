@@ -33,9 +33,6 @@ router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/l
     op.set(user, 'name', op.get(req, ['user', 'displayName']))
     op.set(user, 'email', op.get(req, ['user', 'emails', 0, 'value']))
     op.set(user, 'picture', op.get(req, ['user', 'photos', 0, 'value']))
-    op.set(user, 'gender', op.get(req, ['user', 'gender']))
-    op.set(user, 'url', op.get(req, ['user', 'profileUrl']))
-    op.set(user, 'raw', op.get(req, ['user', '_json']))
 
     res.send({
         result: user,

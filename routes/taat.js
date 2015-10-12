@@ -33,7 +33,6 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
     op.set(user, 'id', op.get(req, ['user', 'urn:mace:dir:attribute-def:eduPersonTargetedID']))
     op.set(user, 'name', op.get(req, ['user', 'urn:mace:dir:attribute-def:cn']))
     op.set(user, 'email', op.get(req, ['user', 'urn:mace:dir:attribute-def:mail']))
-    op.set(user, 'raw', op.get(req, ['user']))
 
     res.send({
         result: user,

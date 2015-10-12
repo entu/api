@@ -3,6 +3,8 @@ var passport = require('passport')
 var google   = require('passport-google-oauth').OAuth2Strategy
 var op       = require('object-path')
 
+var entu   = require('../helpers/entu')
+
 
 
 passport.use(new google({
@@ -32,15 +34,20 @@ router.get('/callback', passport.authenticate('google', { failureRedirect: '/log
     op.set(user, 'id', op.get(req, ['user', 'id']))
     op.set(user, 'name', op.get(req, ['user', 'displayName']))
     op.set(user, 'email', op.get(req, ['user', 'emails', 0, 'value']))
-    op.set(user, 'picture', op.get(req, ['user', 'photos', 0, 'value']))
-    op.set(user, 'gender', op.get(req, ['user', 'gender']))
-    op.set(user, 'url', op.get(req, ['user', 'profileUrl']))
-    op.set(user, 'raw', op.get(req, ['user', '_json']))
+    op.set(user, 'picture', op.get(req, ['user', 'photos', 0, 'value']).replace('?sz=50', ''))
 
-    res.send({
-        result: user,
-        version: APP_VERSION,
-        started: APP_STARTED
+    entu.session_start({
+        request: req,
+        response: res,
+        domain: 'dev.entu.ee',
+        user: user
+    }, function(err, data) {
+        if(err) return next(err)
+        res.send({
+            result: data,
+            version: APP_VERSION,
+            started: APP_STARTED
+        })
     })
 })
 

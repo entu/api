@@ -21,6 +21,7 @@ docker run -d \
     --env="VERSION=$version" \
     --env="PORT=80" \
     --env="COOKIE_SECRET=" \
+    --env="COOKIE_DOMAIN=" \
     --env="GOOGLE_ID=" \
     --env="GOOGLE_SECRET=" \
     --env="FACEBOOK_ID=" \

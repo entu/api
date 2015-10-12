@@ -19,8 +19,10 @@
         "node": "4.0.x"
     },
     "dependencies": {
+        "async": "1.x",
         "body-parser": "1.x",
         "cluster": "0.x",
+        "cookie-parser": "1.x",
         "express": "4.x",
         "express-session": "1.x",
         "mysql": "2.x",
@@ -32,6 +34,7 @@
         "passport-saml": "0.x",
         "passport-twitter": "1.x",
         "passport-windowslive": "1.x",
+        "randomstring": "1.x",
         "raven": "0.x"
     }
 }
