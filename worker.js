@@ -1,7 +1,6 @@
 if(process.env.NEW_RELIC_LICENSE_KEY) require('newrelic')
 
 var express  = require('express')
-var session  = require('express-session')
 var cookie   = require('cookie-parser')
 var passport = require('passport')
 var bparser  = require('body-parser')
@@ -71,18 +70,6 @@ app.use(raven.middleware.express.requestHandler(raven_client))
 
 // enable cookie support
 app.use(cookie(APP_COOKIE_SECRET))
-
-// Use cookies
-app.use(session({
-    secret: APP_COOKIE_SECRET,
-    key: 'sid',
-    resave: true,
-    saveUninitialized: true,
-    maxAge: 360 * 5,
-    cookie: {
-        secure: false
-    }
-}))
 
 // Initialize Passport
 app.use(passport.initialize())
