@@ -90,7 +90,12 @@ exports.session_start = function(params, callback) {
         },
     ], function(err, results) {
         if (err) return callback(err)
-        params.response.cookie('session', session.session_key)
+        params.response.cookie('session', session.session_key, {
+            maxAge: 14 * 24 * 60 * 60 * 1000,
+            cookie: {
+                domain: APP_COOKIE_DOMAIN
+            }
+        })
         callback(null, session.session_key)
     })
 }

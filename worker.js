@@ -70,13 +70,7 @@ var app = express()
 app.use(raven.middleware.express.requestHandler(raven_client))
 
 // enable cookie support
-app.use(cookie(APP_COOKIE_SECRET, {
-    maxAge: 360 * 5,
-    cookie: {
-        domain: APP_COOKIE_DOMAIN,
-        secure: true
-    }
-}))
+app.use(cookie(APP_COOKIE_SECRET))
 
 // Use cookies
 app.use(session({
