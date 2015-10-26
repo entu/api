@@ -21,7 +21,7 @@ passport.use(new facebook({
 
 
 router.get('/', passport.authenticate('facebook', { scope: ['email'], session: false }), function(req, res, next) {
-
+    console.log(req.query)
 })
 
 

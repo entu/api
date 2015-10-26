@@ -15,10 +15,7 @@ APP_PORT          = process.env.PORT || 3000
 APP_COOKIE_SECRET = process.env.COOKIE_SECRET || random.generate(16)
 APP_COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || ''
 
-APP_MYSQL_HOST     = process.env.MYSQL_HOST
-APP_MYSQL_DATABASE = process.env.MYSQL_DATABASE
-APP_MYSQL_USER     = process.env.MYSQL_USER
-APP_MYSQL_PASSWORD = process.env.MYSQL_PASSWORD
+APP_MONGODB        = process.env.MONGODB
 
 GOOGLE_ID = process.env.GOOGLE_ID
 GOOGLE_SECRET = process.env.GOOGLE_SECRET
