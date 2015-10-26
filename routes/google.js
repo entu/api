@@ -24,7 +24,7 @@ passport.use(new google({
 
 router.get('/', function(req, res, next) {
     if(req.query.next) {
-        params.response.cookie('auth_redirect', req.query.next, {
+        res.cookie('auth_redirect', req.query.next, {
             maxAge: 60 * 60 * 1000,
             domain: APP_COOKIE_DOMAIN
         })
