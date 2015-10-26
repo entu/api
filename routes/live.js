@@ -60,8 +60,8 @@ router.get('/callback', passport.authenticate('windowslive', { failureRedirect: 
     }, function(err, session) {
         if(err) return next(err)
 
-        var next = req.cookies.auth_redirect
-        if(next) {
+        var redirect_url = req.cookies.auth_redirect
+        if(redirect_url) {
             res.cookie('session', session.session, {
                 maxAge: 14 * 24 * 60 * 60 * 1000,
                 domain: APP_COOKIE_DOMAIN
@@ -69,7 +69,7 @@ router.get('/callback', passport.authenticate('windowslive', { failureRedirect: 
             res.clearCookie('auth_redirect', {
                 domain: APP_COOKIE_DOMAIN
             })
-            res.redirect(next)
+            res.redirect(redirect_url)
         } else {
             res.send({
                 result: session,
@@ -90,9 +90,9 @@ router.get('/exit', function(req, res, next) {
             domain: APP_COOKIE_DOMAIN
         })
 
-        var next = req.query.next
-        if(next) {
-            res.redirect(next)
+        var redirect_url = req.query.next
+        if(redirect_url) {
+            res.redirect(redirect_url)
         } else {
             res.send({
                 result: true,
