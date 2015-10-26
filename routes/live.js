@@ -55,10 +55,15 @@ router.get('/callback', passport.authenticate('windowslive', { failureRedirect: 
         if(err) return next(err)
 
         if(req.cookies.auth_redirect) {
+            res.cookie('session', session.session, {
+                maxAge: 14 * 24 * 60 * 60 * 1000,
+                domain: APP_COOKIE_DOMAIN
+            })
             res.redirect(req.cookies.auth_redirect)
+            res.clearCookie('auth_redirect')
         } else {
             res.send({
-                result: data,
+                result: session,
                 version: APP_VERSION,
                 started: APP_STARTED
             })
