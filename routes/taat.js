@@ -22,6 +22,10 @@ passport.use(new saml({
 
 
 router.get('/', function(req, res, next) {
+    res.clearCookie('session', {
+        domain: APP_COOKIE_DOMAIN
+    })
+
     if(req.query.next) {
         res.cookie('auth_redirect', req.query.next, {
             maxAge: 60 * 60 * 1000,
