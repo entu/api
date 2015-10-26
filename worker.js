@@ -3,6 +3,7 @@ if(process.env.NEW_RELIC_LICENSE_KEY) require('newrelic')
 var express  = require('express')
 var passport = require('passport')
 var bparser  = require('body-parser')
+var cparser  = require('cookie-parser')
 var random   = require('randomstring')
 var raven    = require('raven')
 
@@ -66,6 +67,9 @@ app.use(raven.middleware.express.requestHandler(raven_client))
 
 // Initialize Passport
 app.use(passport.initialize())
+
+// parse Cookies
+app.use(cparser())
 
 // parse POST requests
 app.use(bparser.json())
