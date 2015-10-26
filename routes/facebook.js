@@ -47,7 +47,7 @@ router.get('/auth', passport.authenticate('facebook', { scope: ['email'], sessio
 
 router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login', session: false }), function(req, res, next) {
     var user = {}
-    op.set(user, 'provider', op.get(req, ['user', 'provider']))
+    op.set(user, 'provider', 'facebook')
     op.set(user, 'id', op.get(req, ['user', 'id']))
     op.set(user, 'name', op.get(req, ['user', 'displayName']))
     op.set(user, 'email', op.get(req, ['user', 'emails', 0, 'value']))

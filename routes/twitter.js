@@ -47,7 +47,7 @@ router.get('/auth', passport.authenticate('twitter'), function(req, res, next) {
 
 router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/login' }), function(req, res, next) {
     var user = {}
-    op.set(user, 'provider', op.get(req, ['user', 'provider']))
+    op.set(user, 'provider', 'twitter')
     op.set(user, 'id', op.get(req, ['user', 'id']))
     op.set(user, 'name', op.get(req, ['user', 'displayName']))
     op.set(user, 'email', op.get(req, ['user', 'emails', 0, 'value']))

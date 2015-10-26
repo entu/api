@@ -47,7 +47,7 @@ router.get('/auth', passport.authenticate('windowslive', { scope: ['wl.basic', '
 
 router.get('/callback', passport.authenticate('windowslive', { failureRedirect: '/login', session: false }), function(req, res, next) {
     var user = {}
-    op.set(user, 'provider', op.get(req, ['user', 'provider']))
+    op.set(user, 'provider', 'live')
     op.set(user, 'id', op.get(req, ['user', 'id']))
     op.set(user, 'name', op.get(req, ['user', 'displayName']))
     op.set(user, 'email', op.get(req, ['user', 'emails', 0, 'value']))
