@@ -25,10 +25,10 @@ exports.session_start = function(params, callback) {
 
     async.waterfall([
         function(callback) {
-            mongo.connect(APP_MONGODB, callback)
+            mongo.connect(APP_MONGODB + 'entu', callback)
         },
         function(connection, callback) {
-            .collection('session').insertOne(session, callback)
+            connection.collection('session').insertOne(session, callback)
         },
     ], function(err, results) {
         if (err) return callback(err)
