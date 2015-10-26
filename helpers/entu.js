@@ -17,7 +17,7 @@ exports.session_start = function(params, callback) {
             provider: op.get(params, 'user.provider'),
             name: op.get(params, 'user.name'),
             email: op.get(params, 'user.email'),
-            picture: op.get(params, 'user.picture'),
+            picture: op.get(params, 'user.picture')
         },
         ip: op.get(params, 'request.ip'),
         browser: op.get(params, 'request.headers.user-agent'),

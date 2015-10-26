@@ -20,8 +20,15 @@ passport.use(new facebook({
 
 
 
-router.get('/', passport.authenticate('facebook', { scope: ['email'], session: false }), function(req, res, next) {
+router.get('/', function(req, res, next) {
     console.log(req.query)
+    res.redirect('/facebook/auth')
+})
+
+
+
+router.get('/auth', passport.authenticate('facebook', { scope: ['email'], session: false }), function(req, res, next) {
+
 })
 
 

@@ -21,7 +21,14 @@ passport.use(new saml({
 
 
 
-router.get('/', passport.authenticate('saml', { scope: [], session: false }), function(req, res, next) {
+router.get('/', function(req, res, next) {
+    console.log(req.query)
+    res.redirect('/taat/auth')
+})
+
+
+
+router.get('/auth', passport.authenticate('saml', { scope: [], session: false }), function(req, res, next) {
 
 })
 

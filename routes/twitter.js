@@ -18,7 +18,16 @@ passport.use(new twitter({
   }
 ))
 
-router.get('/', passport.authenticate('twitter'), function(req, res, next) {
+
+
+router.get('/', function(req, res, next) {
+    console.log(req.query)
+    res.redirect('/twitter/auth')
+})
+
+
+
+router.get('/auth', passport.authenticate('twitter'), function(req, res, next) {
 
 })
 

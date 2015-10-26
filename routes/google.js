@@ -22,7 +22,14 @@ passport.use(new google({
 
 
 
-router.get('/', passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'], session: false }), function(req, res, next) {
+router.get('/', function(req, res, next) {
+    console.log(req.query)
+    res.redirect('/google/auth')
+})
+
+
+
+router.get('/auth', passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'], session: false }), function(req, res, next) {
 
 })
 
