@@ -3,6 +3,8 @@ var passport = require('passport')
 var live     = require('passport-windowslive').Strategy
 var op       = require('object-path')
 
+var entu   = require('../helpers/entu')
+
 
 
 passport.use(new live({

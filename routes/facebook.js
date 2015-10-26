@@ -3,6 +3,8 @@ var passport = require('passport')
 var facebook = require('passport-facebook').Strategy
 var op       = require('object-path')
 
+var entu   = require('../helpers/entu')
+
 
 
 passport.use(new facebook({

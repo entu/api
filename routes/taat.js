@@ -4,6 +4,8 @@ var saml     = require('passport-saml').Strategy
 var op       = require('object-path')
 var fs       = require('fs')
 
+var entu   = require('../helpers/entu')
+
 
 
 passport.use(new saml({

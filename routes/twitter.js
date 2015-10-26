@@ -3,6 +3,8 @@ var passport = require('passport')
 var twitter  = require('passport-twitter').Strategy
 var op       = require('object-path')
 
+var entu   = require('../helpers/entu')
+
 
 
 passport.use(new twitter({
