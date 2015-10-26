@@ -21,7 +21,13 @@ passport.use(new live({
 
 
 router.get('/', function(req, res, next) {
-    console.log(req.query)
+    if(req.query.next) {
+        params.response.cookie('auth_redirect', req.query.next, {
+            maxAge: 60 * 60 * 1000,
+            domain: APP_COOKIE_DOMAIN
+        })
+    }
+
     res.redirect('/live/auth')
 })
 
@@ -41,10 +47,22 @@ router.get('/callback', passport.authenticate('windowslive', { failureRedirect: 
     op.set(user, 'email', op.get(req, ['user', 'emails', 0, 'value']))
     op.set(user, 'picture', op.get(req, ['user', 'photos', 0, 'value']))
 
-    res.send({
-        result: user,
-        version: APP_VERSION,
-        started: APP_STARTED
+    entu.session_start({
+        request: req,
+        response: res,
+        user: user
+    }, function(err, data) {
+        if(err) return next(err)
+
+        if(req.cookies.auth_redirect) {
+            res.redirect(req.cookies.auth_redirect)
+        } else {
+            res.send({
+                result: data,
+                version: APP_VERSION,
+                started: APP_STARTED
+            })
+        }
     })
 })
 

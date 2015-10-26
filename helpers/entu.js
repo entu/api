@@ -32,10 +32,14 @@ exports.session_start = function(params, callback) {
         },
     ], function(err, results) {
         if (err) return callback(err)
+
         params.response.cookie('session', session.key, {
             maxAge: 14 * 24 * 60 * 60 * 1000,
             domain: APP_COOKIE_DOMAIN
         })
-        callback(null, session.key)
+
+        callback(null, {
+            session: session.key
+        })
     })
 }

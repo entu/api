@@ -23,7 +23,13 @@ passport.use(new google({
 
 
 router.get('/', function(req, res, next) {
-    console.log(req.query)
+    if(req.query.next) {
+        params.response.cookie('auth_redirect', req.query.next, {
+            maxAge: 60 * 60 * 1000,
+            domain: APP_COOKIE_DOMAIN
+        })
+    }
+
     res.redirect('/google/auth')
 })
 
@@ -46,15 +52,19 @@ router.get('/callback', passport.authenticate('google', { failureRedirect: '/log
     entu.session_start({
         request: req,
         response: res,
-        domain: 'dev.entu.ee',
         user: user
     }, function(err, data) {
         if(err) return next(err)
-        res.send({
-            result: data,
-            version: APP_VERSION,
-            started: APP_STARTED
-        })
+
+        if(req.cookies.auth_redirect) {
+            res.redirect(req.cookies.auth_redirect)
+        } else {
+            res.send({
+                result: data,
+                version: APP_VERSION,
+                started: APP_STARTED
+            })
+        }
     })
 })
 

@@ -22,7 +22,13 @@ passport.use(new saml({
 
 
 router.get('/', function(req, res, next) {
-    console.log(req.query)
+    if(req.query.next) {
+        params.response.cookie('auth_redirect', req.query.next, {
+            maxAge: 60 * 60 * 1000,
+            domain: APP_COOKIE_DOMAIN
+        })
+    }
+
     res.redirect('/taat/auth')
 })
 
@@ -41,10 +47,22 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
     op.set(user, 'name', op.get(req, ['user', 'urn:mace:dir:attribute-def:cn']))
     op.set(user, 'email', op.get(req, ['user', 'urn:mace:dir:attribute-def:mail']))
 
-    res.send({
-        result: user,
-        version: APP_VERSION,
-        started: APP_STARTED
+    entu.session_start({
+        request: req,
+        response: res,
+        user: user
+    }, function(err, data) {
+        if(err) return next(err)
+
+        if(req.cookies.auth_redirect) {
+            res.redirect(req.cookies.auth_redirect)
+        } else {
+            res.send({
+                result: data,
+                version: APP_VERSION,
+                started: APP_STARTED
+            })
+        }
     })
 })
 
