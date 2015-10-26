@@ -51,7 +51,7 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
         request: req,
         response: res,
         user: user
-    }, function(err, data) {
+    }, function(err, session) {
         if(err) return next(err)
 
         if(req.cookies.auth_redirect) {

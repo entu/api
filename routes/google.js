@@ -53,7 +53,7 @@ router.get('/callback', passport.authenticate('google', { failureRedirect: '/log
         request: req,
         response: res,
         user: user
-    }, function(err, data) {
+    }, function(err, session) {
         if(err) return next(err)
 
         if(req.cookies.auth_redirect) {
