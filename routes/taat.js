@@ -82,4 +82,28 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
 
 
 
+router.get('/exit', function(req, res, next) {
+    entu.session_end(req.cookies.session, function(err, session) {
+        if(err) return next(err)
+
+        res.clearCookie('session', {
+            domain: APP_COOKIE_DOMAIN
+        })
+
+        var next = req.query.next
+        if(next) {
+            res.redirect(next)
+        } else {
+            res.send({
+                result: true,
+                version: APP_VERSION,
+                started: APP_STARTED
+            })
+        }
+    })
+
+})
+
+
+
 module.exports = router

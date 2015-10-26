@@ -38,3 +38,23 @@ exports.session_start = function(params, callback) {
         })
     })
 }
+
+
+
+// Destoy user session
+exports.session_end = function(session_key, callback) {
+    if(!session_key) return callback(new Error('No session key'))
+
+    async.waterfall([
+        function(callback) {
+            mongo.connect(APP_MONGODB + 'entu', callback)
+        },
+        function(connection, callback) {
+            connection.collection('session').deleteMany({key: session_key}, callback)
+        },
+    ], function(err, results) {
+        if (err) return callback(err)
+
+        callback(null, {})
+    })
+}

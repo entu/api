@@ -75,9 +75,6 @@ app.use(cparser())
 app.use(bparser.json())
 app.use(bparser.urlencoded({extended: true}))
 
-// routes mapping
-app.use('/user', require('./routes/user'))
-
 // provider mapping (only if configured)
 if(GOOGLE_ID && GOOGLE_SECRET) app.use('/google', require('./routes/google'))
 if(FACEBOOK_ID && FACEBOOK_SECRET) app.use('/facebook', require('./routes/facebook'))
