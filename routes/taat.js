@@ -66,9 +66,7 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
                 maxAge: 14 * 24 * 60 * 60 * 1000,
                 domain: APP_COOKIE_DOMAIN
             })
-            res.clearCookie('redirect', {
-                domain: APP_COOKIE_DOMAIN
-            })
+            res.clearCookie('redirect')
             res.redirect(redirect_url)
         } else {
             res.send({
