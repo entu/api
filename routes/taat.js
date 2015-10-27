@@ -12,8 +12,7 @@ passport.use(new saml({
         entryPoint: TAAT_ENTRYPOINT,
         issuer: TAAT_ISSUER,
         cert: fs.readFileSync(TAAT_CERT, 'utf-8'),
-        privateCert: fs.readFileSync(TAAT_PRIVATECERT, 'utf-8'),
-        callbackUrl: '/taat/callback'
+        privateCert: fs.readFileSync(TAAT_PRIVATECERT, 'utf-8')
     },
     function(profile, done) {
         process.nextTick(function () {
@@ -47,9 +46,7 @@ router.get('/auth', passport.authenticate('saml', { scope: [], session: false })
 
 
 
-router.post('/callback', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function(req, res, next) {
-    console.clog(req.user)
-
+router.post('/', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function(req, res, next) {
     var user = {}
     op.set(user, 'provider', 'taat.' + op.get(req, ['user', 'schacHomeOrganization']))
     op.set(user, 'id', op.get(req, ['user', 'urn:mace:dir:attribute-def:eduPersonTargetedID']))
