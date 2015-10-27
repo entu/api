@@ -28,9 +28,8 @@ router.get('/', function(req, res, next) {
     })
 
     if(req.query.next) {
-        res.cookie('auth_redirect', req.query.next, {
-            maxAge: 60 * 60 * 1000,
-            domain: APP_COOKIE_DOMAIN
+        res.cookie('redirect', req.query.next, {
+            maxAge: 60 * 60 * 1000
         })
     }
 
@@ -60,13 +59,13 @@ router.get('/callback', passport.authenticate('google', { failureRedirect: '/log
     }, function(err, session) {
         if(err) return next(err)
 
-        var redirect_url = req.cookies.auth_redirect
+        var redirect_url = req.cookies.redirect
         if(redirect_url) {
             res.cookie('session', session.session, {
                 maxAge: 14 * 24 * 60 * 60 * 1000,
                 domain: APP_COOKIE_DOMAIN
             })
-            res.clearCookie('auth_redirect', {
+            res.clearCookie('redirect', {
                 domain: APP_COOKIE_DOMAIN
             })
             res.redirect(redirect_url)

@@ -20,8 +20,9 @@ exports.session_start = function(params, callback) {
             picture: op.get(params, 'user.picture')
         },
         ip: op.get(params, 'request.ip'),
-        browser: op.get(params, 'request.headers.user-agent'),
+        browser: op.get(params, 'request.headers.user-agent')
     }
+    if(op.has(params, 'request.cookies.redirect')) session.redirect = op.get(params, 'request.cookies.redirect')
 
     async.waterfall([
         function(callback) {
