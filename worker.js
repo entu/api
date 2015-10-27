@@ -79,6 +79,7 @@ app.use(bparser.json())
 app.use(bparser.urlencoded({extended: true}))
 
 // routes mapping
+app.use('/', require('./routes/index'))
 app.use('/exit', require('./routes/exit'))
 
 // provider mapping (only if configured)
