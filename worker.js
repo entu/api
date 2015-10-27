@@ -4,7 +4,6 @@ var express  = require('express')
 var passport = require('passport')
 var bparser  = require('body-parser')
 var cparser  = require('cookie-parser')
-var random   = require('randomstring')
 var raven    = require('raven')
 
 
@@ -13,10 +12,8 @@ var raven    = require('raven')
 APP_VERSION       = process.env.VERSION || require('./package').version
 APP_STARTED       = new Date().toISOString()
 APP_PORT          = process.env.PORT || 3000
-APP_COOKIE_SECRET = process.env.COOKIE_SECRET || random.generate(16)
 APP_COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || ''
-
-APP_MONGODB        = process.env.MONGODB
+APP_MONGODB       = process.env.MONGODB
 
 GOOGLE_ID = process.env.GOOGLE_ID
 GOOGLE_SECRET = process.env.GOOGLE_SECRET
