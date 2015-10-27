@@ -23,6 +23,7 @@ passport.use(new facebook({
 
 
 router.get('/', function(req, res, next) {
+    res.clearCookie('redirect')
     res.clearCookie('session', {
         domain: APP_COOKIE_DOMAIN
     })
