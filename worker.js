@@ -62,6 +62,9 @@ var raven_client = new raven.Client({
 // start express app
 var app = express()
 
+// get correct client IP behind nginx
+app.set('trust proxy', true)
+
 // logs to getsentry.com - start
 app.use(raven.middleware.express.requestHandler(raven_client))
 
