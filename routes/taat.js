@@ -12,7 +12,8 @@ passport.use(new saml({
         entryPoint: TAAT_ENTRYPOINT,
         issuer: TAAT_ISSUER,
         cert: fs.readFileSync(TAAT_CERT, 'utf-8'),
-        privateCert: fs.readFileSync(TAAT_PRIVATECERT, 'utf-8')
+        privateCert: fs.readFileSync(TAAT_PRIVATECERT, 'utf-8'),
+        path: '/taat/callback'
     },
     function(profile, done) {
         process.nextTick(function () {
@@ -46,7 +47,7 @@ router.get('/auth', passport.authenticate('saml', { scope: [], session: false })
 
 
 
-router.post('/', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function(req, res, next) {
+router.post('/callback', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function(req, res, next) {
     console.clog(req.user)
 
     var user = {}
