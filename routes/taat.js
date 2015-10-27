@@ -47,6 +47,8 @@ router.get('/auth', passport.authenticate('saml', { scope: [], session: false })
 
 
 router.post('/', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function(req, res, next) {
+    console.clog(req.user)
+
     var user = {}
     op.set(user, 'provider', 'taat.' + op.get(req, ['user', 'schacHomeOrganization']))
     op.set(user, 'id', op.get(req, ['user', 'urn:mace:dir:attribute-def:eduPersonTargetedID']))
