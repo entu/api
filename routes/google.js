@@ -53,7 +53,7 @@ router.get('/callback', passport.authenticate('google', { failureRedirect: '/log
     op.set(user, 'email', op.get(req, ['user', 'emails', 0, 'value']))
     op.set(user, 'picture', op.get(req, ['user', 'photos', 0, 'value']).replace('?sz=50', ''))
 
-    entu.session_start({
+    entu.sessionStart({
         request: req,
         response: res,
         user: user

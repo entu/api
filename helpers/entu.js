@@ -6,7 +6,7 @@ var random = require('randomstring')
 
 
 // Create user session
-exports.session_start = function(params, callback) {
+exports.sessionStart = function(params, callback) {
     if(!params.user) return callback(new Error('No user'))
 
     var session = {
@@ -43,15 +43,15 @@ exports.session_start = function(params, callback) {
 
 
 // Destoy user session
-exports.sessionEnd = function(session_key, callback) {
-    if(!session_key) return callback(new Error('No session key'))
+exports.sessionEnd = function(sessionKey, callback) {
+    if(!sessionKey) return callback(new Error('No session key'))
 
     async.waterfall([
         function(callback) {
             mongo.connect(APP_MONGODB + 'entu', callback)
         },
         function(connection, callback) {
-            connection.collection('session').deleteMany({key: session_key}, callback)
+            connection.collection('session').deleteMany({key: sessionKey}, callback)
         },
     ], function(err) {
         if (err) return callback(err)

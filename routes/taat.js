@@ -53,7 +53,7 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
     op.set(user, 'name', op.get(req, ['user', 'urn:mace:dir:attribute-def:cn']))
     op.set(user, 'email', op.get(req, ['user', 'urn:mace:dir:attribute-def:mail']))
 
-    entu.session_start({
+    entu.sessionStart({
         request: req,
         response: res,
         user: user
