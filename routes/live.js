@@ -1,7 +1,7 @@
-var router   = require('express').Router()
-var passport = require('passport')
 var live     = require('passport-windowslive').Strategy
 var op       = require('object-path')
+var passport = require('passport')
+var router   = require('express').Router()
 
 var entu   = require('../helpers/entu')
 

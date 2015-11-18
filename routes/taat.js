@@ -1,8 +1,8 @@
-var router   = require('express').Router()
-var passport = require('passport')
-var saml     = require('passport-saml').Strategy
-var op       = require('object-path')
 var fs       = require('fs')
+var op       = require('object-path')
+var passport = require('passport')
+var router   = require('express').Router()
+var saml     = require('passport-saml').Strategy
 
 var entu   = require('../helpers/entu')
 

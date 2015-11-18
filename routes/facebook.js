@@ -1,7 +1,7 @@
-var router   = require('express').Router()
-var passport = require('passport')
 var facebook = require('passport-facebook').Strategy
 var op       = require('object-path')
+var passport = require('passport')
+var router   = require('express').Router()
 
 var entu   = require('../helpers/entu')
 
