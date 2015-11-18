@@ -22,7 +22,7 @@ passport.use(new google({
 
 
 
-router.get('/', function(req, res, next) {
+router.get('/', function(req, res) {
     res.clearCookie('redirect')
     res.clearCookie('session', {
         domain: APP_COOKIE_DOMAIN
@@ -39,7 +39,7 @@ router.get('/', function(req, res, next) {
 
 
 
-router.get('/auth', passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'], session: false }), function(req, res, next) {
+router.get('/auth', passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'], session: false }), function(req, res) {
 
 })
 

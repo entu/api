@@ -31,7 +31,7 @@ exports.session_start = function(params, callback) {
         function(connection, callback) {
             connection.collection('session').insertOne(session, callback)
         },
-    ], function(err, results) {
+    ], function(err) {
         if (err) return callback(err)
 
         callback(null, {

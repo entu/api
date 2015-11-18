@@ -5,7 +5,7 @@ var entu   = require('../helpers/entu')
 
 
 router.get('/', function(req, res, next) {
-    entu.session_end(req.cookies.session, function(err, session) {
+    entu.session_end(req.cookies.session, function(err) {
         if(err) return next(err)
 
         res.clearCookie('session', {

@@ -22,7 +22,7 @@ passport.use(new live({
 
 
 
-router.get('/', function(req, res, next) {
+router.get('/', function(req, res) {
     res.clearCookie('redirect')
     res.clearCookie('session', {
         domain: APP_COOKIE_DOMAIN
@@ -39,7 +39,7 @@ router.get('/', function(req, res, next) {
 
 
 
-router.get('/auth', passport.authenticate('windowslive', { scope: ['wl.basic', 'wl.emails'], session: false }), function(req, res, next) {
+router.get('/auth', passport.authenticate('windowslive', { scope: ['wl.basic', 'wl.emails'], session: false }), function(req, res) {
 
 })
 

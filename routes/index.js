@@ -1,10 +1,8 @@
 var router   = require('express').Router()
 
-var entu   = require('../helpers/entu')
 
 
-
-router.get('/', function(req, res, next) {
+router.get('/', function(req, res) {
     res.send({
         result: true,
         version: APP_VERSION,
