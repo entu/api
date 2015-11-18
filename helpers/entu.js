@@ -43,7 +43,7 @@ exports.session_start = function(params, callback) {
 
 
 // Destoy user session
-exports.session_end = function(session_key, callback) {
+exports.sessionEnd = function(session_key, callback) {
     if(!session_key) return callback(new Error('No session key'))
 
     async.waterfall([
@@ -53,7 +53,7 @@ exports.session_end = function(session_key, callback) {
         function(connection, callback) {
             connection.collection('session').deleteMany({key: session_key}, callback)
         },
-    ], function(err, results) {
+    ], function(err) {
         if (err) return callback(err)
 
         callback(null, {})

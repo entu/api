@@ -5,16 +5,16 @@ var entu   = require('../helpers/entu')
 
 
 router.get('/', function(req, res, next) {
-    entu.session_end(req.cookies.session, function(err) {
+    entu.sessionEnd(req.cookies.session, function(err) {
         if(err) return next(err)
 
         res.clearCookie('session', {
             domain: APP_COOKIE_DOMAIN
         })
 
-        var redirect_url = req.query.next
-        if(redirect_url) {
-            res.redirect(redirect_url)
+        var redirectUrl = req.query.next
+        if(redirectUrl) {
+            res.redirect(redirectUrl)
         } else {
             res.send({
                 result: true,
