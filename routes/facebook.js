@@ -39,7 +39,7 @@ router.get('/', function(req, res) {
 
 
 
-router.get('/auth', passport.authenticate('facebook', { scope: ['email'], session: false }), function(req, res) {
+router.get('/auth', passport.authenticate('facebook', { scope: ['email'], session: false }), function() {
 
 })
 

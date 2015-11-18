@@ -39,7 +39,7 @@ router.get('/', function(req, res) {
 
 
 
-router.get('/auth', passport.authenticate('windowslive', { scope: ['wl.basic', 'wl.emails'], session: false }), function(req, res) {
+router.get('/auth', passport.authenticate('windowslive', { scope: ['wl.basic', 'wl.emails'], session: false }), function() {
 
 })
 

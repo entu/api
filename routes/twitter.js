@@ -39,7 +39,7 @@ router.get('/', function(req, res) {
 
 
 
-router.get('/auth', passport.authenticate('twitter'), function(req, res) {
+router.get('/auth', passport.authenticate('twitter'), function() {
 
 })
 

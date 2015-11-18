@@ -40,7 +40,7 @@ router.get('/', function(req, res) {
 
 
 
-router.get('/auth', passport.authenticate('saml', { scope: [], session: false }), function(req, res) {
+router.get('/auth', passport.authenticate('saml', { scope: [], session: false }), function() {
 
 })
 
