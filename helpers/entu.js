@@ -13,7 +13,8 @@ if(APP_MONGODB_CA) {
         mongos: {
             ssl: true,
             sslValidate: true,
-            sslCA: ca
+            sslCA: ca,
+            ca: ca
         }
     }
 }
