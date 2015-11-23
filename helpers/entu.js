@@ -9,10 +9,12 @@ var random = require('randomstring')
 var mongodb_options = {}
 if(APP_MONGODB_CA) {
     var ca = [fs.readFileSync(APP_MONGODB_CA)]
-    mongodb_options.mongos: {
-        ssl: true,
-        sslValidate: true,
-        sslCA: ca
+    mongodb_options = {
+        mongos: {
+            ssl: true,
+            sslValidate: true,
+            sslCA: ca
+        }
     }
 }
 
