@@ -1,23 +1,7 @@
 var async  = require('async')
-var fs     = require('fs')
 var mongo  = require('mongodb').MongoClient
 var op     = require('object-path')
 var random = require('randomstring')
-
-
-
-var mongodb_options = {}
-if(APP_MONGODB_CA) {
-    var ca = [fs.readFileSync(APP_MONGODB_CA)]
-    mongodb_options = {
-        mongos: {
-            ssl: true,
-            sslValidate: true,
-            sslCA: ca,
-            ca: ca
-        }
-    }
-}
 
 
 
@@ -42,7 +26,7 @@ exports.sessionStart = function(params, callback) {
 
     async.waterfall([
         function(callback) {
-            mongo.connect(APP_MONGODB + 'entu', mongodb_options, callback)
+            mongo.connect(APP_MONGODB + 'entu', callback)
         },
         function(connection, callback) {
             connection.collection('session').insertOne(session, callback)
@@ -64,7 +48,7 @@ exports.sessionEnd = function(sessionKey, callback) {
 
     async.waterfall([
         function(callback) {
-            mongo.connect(APP_MONGODB + 'entu', mongodb_options, callback)
+            mongo.connect(APP_MONGODB + 'entu', callback)
         },
         function(connection, callback) {
             connection.collection('session').deleteMany({key: sessionKey}, callback)
