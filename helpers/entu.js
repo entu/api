@@ -7,7 +7,7 @@ var random = require('randomstring')
 
 // Create user session
 exports.sessionStart = function(params, callback) {
-    if(!params.user) return callback(new Error('No user'))
+    if(!params.user) { return callback(new Error('No user')) }
 
     var session = {
         created: new Date(),
@@ -22,7 +22,7 @@ exports.sessionStart = function(params, callback) {
         ip: op.get(params, 'request.ip'),
         browser: op.get(params, 'request.headers.user-agent')
     }
-    if(op.has(params, 'request.cookies.redirect')) session.redirect = op.get(params, 'request.cookies.redirect')
+    if(op.has(params, 'request.cookies.redirect')) { session.redirect = op.get(params, 'request.cookies.redirect') }
 
     async.waterfall([
         function(callback) {
@@ -32,7 +32,7 @@ exports.sessionStart = function(params, callback) {
             connection.collection('session').insertOne(session, callback)
         },
     ], function(err) {
-        if (err) return callback(err)
+        if(err) { return callback(err) }
 
         callback(null, {
             session: session.key
@@ -44,7 +44,7 @@ exports.sessionStart = function(params, callback) {
 
 // Destoy user session
 exports.sessionEnd = function(sessionKey, callback) {
-    if(!sessionKey) return callback(new Error('No session key'))
+    if(!sessionKey) { return callback(new Error('No session key')) }
 
     async.waterfall([
         function(callback) {
@@ -54,7 +54,7 @@ exports.sessionEnd = function(sessionKey, callback) {
             connection.collection('session').deleteMany({key: sessionKey}, callback)
         },
     ], function(err) {
-        if (err) return callback(err)
+        if(err) { return callback(err) }
 
         callback(null, {})
     })

@@ -14,7 +14,7 @@ passport.use(new live({
         proxy: true
     },
     function(accessToken, refreshToken, profile, done) {
-        process.nextTick(function () {
+        process.nextTick(function() {
             return done(null, profile)
         })
   }
@@ -58,7 +58,7 @@ router.get('/callback', passport.authenticate('windowslive', { failureRedirect: 
         response: res,
         user: user
     }, function(err, session) {
-        if(err) return next(err)
+        if(err) { return next(err) }
 
         var redirectUrl = req.cookies.redirect
         if(redirectUrl) {

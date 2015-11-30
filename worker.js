@@ -80,11 +80,11 @@ app.use('/', require('./routes/index'))
 app.use('/exit', require('./routes/exit'))
 
 // provider mapping (only if configured)
-if(GOOGLE_ID && GOOGLE_SECRET) app.use('/google', require('./routes/google'))
-if(FACEBOOK_ID && FACEBOOK_SECRET) app.use('/facebook', require('./routes/facebook'))
-if(TWITTER_KEY && TWITTER_SECRET) app.use('/twitter', require('./routes/twitter'))
-if(LIVE_ID && LIVE_SECRET) app.use('/live', require('./routes/live'))
-if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) app.use('/taat', require('./routes/taat'))
+if(GOOGLE_ID && GOOGLE_SECRET) { app.use('/google', require('./routes/google')) }
+if(FACEBOOK_ID && FACEBOOK_SECRET) { app.use('/facebook', require('./routes/facebook')) }
+if(TWITTER_KEY && TWITTER_SECRET) { app.use('/twitter', require('./routes/twitter')) }
+if(LIVE_ID && LIVE_SECRET) { app.use('/live', require('./routes/live')) }
+if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) { app.use('/taat', require('./routes/taat')) }
 
 // logs to getsentry.com - error
 app.use(raven.middleware.express.errorHandler(ravenClient))

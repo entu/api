@@ -14,7 +14,7 @@ passport.use(new twitter({
         proxy: true
     },
     function(token, tokenSecret, profile, done) {
-        process.nextTick(function () {
+        process.nextTick(function() {
             return done(null, profile)
         })
   }
@@ -58,7 +58,7 @@ router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/lo
         response: res,
         user: user
     }, function(err, session) {
-        if(err) return next(err)
+        if(err) { return next(err) }
 
         var redirectUrl = req.cookies.redirect
         if(redirectUrl) {

@@ -15,7 +15,7 @@ passport.use(new saml({
         privateCert: fs.readFileSync(TAAT_PRIVATECERT, 'utf-8')
     },
     function(profile, done) {
-        process.nextTick(function () {
+        process.nextTick(function() {
             return done(null, profile)
         })
     }
@@ -58,7 +58,7 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
         response: res,
         user: user
     }, function(err, session) {
-        if(err) return next(err)
+        if(err) { return next(err) }
 
         var redirectUrl = req.cookies.redirect
         if(redirectUrl) {
