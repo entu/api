@@ -1,4 +1,4 @@
-if(process.env.NEW_RELIC_LICENSE_KEY) require('newrelic')
+if(process.env.NEW_RELIC_LICENSE_KEY) { require('newrelic') }
 
 var bparser  = require('body-parser')
 var cparser  = require('cookie-parser')
@@ -97,7 +97,7 @@ app.use(function(err, req, res) {
         started: APP_STARTED
     })
 
-    if(err.status !== 404) console.log(err)
+    if(err.status !== 404) { console.log(err) }
 })
 
 
