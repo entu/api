@@ -1,7 +1,7 @@
-var async  = require('async')
-var mongo  = require('mongodb').MongoClient
-var op     = require('object-path')
-var random = require('randomstring')
+var async     = require('async')
+var op        = require('object-path')
+var random    = require('randomstring')
+var rethinkdb = require('rethinkdb')
 
 
 
@@ -26,10 +26,47 @@ exports.sessionStart = function(params, callback) {
 
     async.waterfall([
         function(callback) {
-            mongo.connect(APP_MONGODB + 'entu', callback)
+            rethinkdb.connect(function(err, conn) {
+                if(err) { return callback(err) }
+
+                var connection = conn
+
+                async.waterfall([
+                    function(callback) {
+                        rethinkdb.dbList().run(connection, callback)
+                    },
+                    function(dbList, callback) {
+                        if(dbList.indexOf('entu') > -1) {
+                            connection.use('entu')
+                            callback()
+                        } else {
+                            rethinkdb.dbCreate('entu').run(connection, function(err) {
+                                if(err) { return callback(err) }
+                                connection.use('entu')
+                                callback()
+                            })
+                        }
+                    },
+                    function(callback) {
+                        rethinkdb.tableList().run(connection, callback)
+                    },
+                    function(tableList, callback) {
+                        if(tableList.indexOf('session') > -1) {
+                            callback()
+                        } else {
+                            rethinkdb.tableCreate('session').run(connection, callback)
+                        }
+                    },
+
+                ], function(err) {
+                    if(err) { return callback(err) }
+
+                    callback(null, connection)
+                })
+            })
         },
         function(connection, callback) {
-            connection.collection('session').insertOne(session, callback)
+            rethinkdb.table('session').insert(session).run(connection, callback)
         },
     ], function(err) {
         if(err) { return callback(err) }
@@ -48,10 +85,10 @@ exports.sessionEnd = function(sessionKey, callback) {
 
     async.waterfall([
         function(callback) {
-            mongo.connect(APP_MONGODB + 'entu', callback)
+            rethinkdb.connect({ db: 'entu' }, callback)
         },
         function(connection, callback) {
-            connection.collection('session').deleteMany({key: sessionKey}, callback)
+            rethinkdb.table('session').filter({key: sessionKey}).delete().run(connection, callback)
         },
     ], function(err) {
         if(err) { return callback(err) }

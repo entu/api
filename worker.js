@@ -9,11 +9,11 @@ var raven    = require('raven')
 
 
 // global variables (and list of all used environment variables)
-APP_VERSION       = process.env.VERSION || require('./package').version
-APP_STARTED       = new Date().toISOString()
-APP_PORT          = process.env.PORT || 3000
-APP_COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || ''
-APP_MONGODB       = process.env.MONGODB
+APP_VERSION        = process.env.VERSION || require('./package').version
+APP_STARTED        = new Date().toISOString()
+APP_PORT           = process.env.PORT || 3000
+APP_COOKIE_DOMAIN  = process.env.COOKIE_DOMAIN || ''
+APP_RETHINKDB_HOST = process.env.RETHINKDB_HOST
 
 GOOGLE_ID = process.env.GOOGLE_ID
 GOOGLE_SECRET = process.env.GOOGLE_SECRET

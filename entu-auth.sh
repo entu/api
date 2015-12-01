@@ -22,6 +22,7 @@ docker run -d \
     --env="PORT=80" \
     --env="COOKIE_SECRET=" \
     --env="COOKIE_DOMAIN=" \
+    --env="RETHINKDB_HOST=" \
     --env="GOOGLE_ID=" \
     --env="GOOGLE_SECRET=" \
     --env="FACEBOOK_ID=" \
