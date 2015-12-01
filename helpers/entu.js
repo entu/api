@@ -26,7 +26,7 @@ exports.sessionStart = function(params, callback) {
 
     async.waterfall([
         function(callback) {
-            rethinkdb.connect(function(err, conn) {
+            rethinkdb.connect({ host: APP_RETHINKDB_HOST }, function(err, conn) {
                 if(err) { return callback(err) }
 
                 var connection = conn
@@ -85,7 +85,7 @@ exports.sessionEnd = function(sessionKey, callback) {
 
     async.waterfall([
         function(callback) {
-            rethinkdb.connect({ db: 'entu' }, callback)
+            rethinkdb.connect({ host: APP_RETHINKDB_HOST, db: 'entu' }, callback)
         },
         function(connection, callback) {
             rethinkdb.table('session').filter({key: sessionKey}).delete().run(connection, callback)
