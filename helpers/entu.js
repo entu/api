@@ -12,17 +12,16 @@ exports.sessionStart = function(params, callback) {
     var session = {
         created: new Date(),
         key: random.generate(64),
-        user: {
-            id: op.get(params, 'user.id'),
-            provider: op.get(params, 'user.provider'),
-            name: op.get(params, 'user.name'),
-            email: op.get(params, 'user.email'),
-            picture: op.get(params, 'user.picture')
-        },
-        ip: op.get(params, 'request.ip'),
-        browser: op.get(params, 'request.headers.user-agent')
     }
-    if(op.has(params, 'request.cookies.redirect')) { session.redirect = op.get(params, 'request.cookies.redirect') }
+
+    if(op.get(params, 'user.id')) { op.set(session, 'user.id', op.get(params, 'user.id')) }
+    if(op.get(params, 'user.provider')) { op.set(session, 'user.provider', op.get(params, 'user.provider')) }
+    if(op.get(params, 'user.name')) { op.set(session, 'user.name', op.get(params, 'user.name')) }
+    if(op.get(params, 'user.email')) { op.set(session, 'user.email', op.get(params, 'user.email')) }
+    if(op.get(params, 'user.picture')) { op.set(session, 'user.picture', op.get(params, 'user.picture')) }
+    if(op.get(params, 'request.ip')) { op.set(session, 'ip', op.get(params, 'request.ip')) }
+    if(op.get(params, 'request.headers.user-agent')) { op.set(session, 'browser', op.get(params, 'request.headers.user-agent')) }
+    if(op.get(params, 'request.cookies.redirect')) { op.set(session, 'redirect', op.get(params, 'request.cookies.redirect')) }
 
     async.waterfall([
         function(callback) {
