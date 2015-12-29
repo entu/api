@@ -84,13 +84,13 @@ app.use(function(req, res, next) {
 
     res.on('finish', function() {
         var r = {
-            date     : new Date(),
-            ip       : req.ip,
-            duration : Date.now() - start,
-            status   : res.statusCode,
-            method   : req.method,
-            host     : req.hostname,
-            browser  : req.headers['user-agent'],
+            date: new Date(),
+            ip: req.ip,
+            ms: Date.now() - start,
+            status: res.statusCode,
+            method: req.method,
+            host: req.hostname,
+            browser: req.headers['user-agent'],
         }
         if(req.path) { r.path = req.path }
         if(!_.isEmpty(req.query)) { r.query = req.query }
