@@ -5,6 +5,24 @@ var random    = require('randomstring')
 
 
 
+// Requestlog
+exports.requestLog = function(request, callback) {
+    async.waterfall([
+        function(callback) {
+            mongo.connect(APP_MONGODB + 'entu', callback)
+        },
+        function(connection, callback) {
+            connection.collection('request').insertOne(request, callback)
+        },
+    ], function(err) {
+        if(err) { return callback(err) }
+
+        callback()
+    })
+}
+
+
+
 // Create user session
 exports.sessionStart = function(params, callback) {
     if(!params.user) { return callback(new Error('No user')) }

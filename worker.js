@@ -6,6 +6,8 @@ var express  = require('express')
 var passport = require('passport')
 var raven    = require('raven')
 
+var entu   = require('./helpers/entu')
+
 
 
 // global variables (and list of all used environment variables)
@@ -74,6 +76,31 @@ app.use(cparser())
 // parse POST requests
 app.use(bparser.json())
 app.use(bparser.urlencoded({extended: true}))
+
+// save request info to request collection
+app.use(function(req, res, next) {
+    var start = Date.now()
+
+    res.on('finish', function() {
+        entu.requestLog({
+            date     : new Date(),
+            ip       : req.ip,
+            duration : Date.now() - start,
+            status   : res.statusCode,
+            method   : req.method,
+            protocol : req.protocol,
+            host     : req.hostname,
+            path     : req.path,
+            query    : req.query,
+            body     : req.body,
+            browser  : req.headers['user-agent'],
+        }, function(err, item) {
+            if(err) next(err)
+        })
+    })
+
+    next()
+})
 
 // routes mapping
 app.use('/', require('./routes/index'))
