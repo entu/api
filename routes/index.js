@@ -12,4 +12,10 @@ router.get('/', function(req, res) {
 
 
 
+router.get('/test', function(req, res) {
+    throw new Error('böö')
+})
+
+
+
 module.exports = router
