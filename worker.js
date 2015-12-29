@@ -1,5 +1,6 @@
 if(process.env.NEW_RELIC_LICENSE_KEY) { require('newrelic') }
 
+var _        = require('underscore')
 var bparser  = require('body-parser')
 var cparser  = require('cookie-parser')
 var express  = require('express')
@@ -92,8 +93,8 @@ app.use(function(req, res, next) {
             browser  : req.headers['user-agent'],
         }
         if(req.path) { r.path = req.path }
-        if(Object.keys(req.query).length < 1) { r.query = req.query }
-        if(Object.keys(req.body).length < 1) { r.body = req.body }
+        if(_.isEmpty(req.query)) { r.query = req.query }
+        if(_.isEmpty(req.body)) { r.body = req.body }
         if(req.browser) { r.browser = req.headers['user-agent'] }
 
         entu.requestLog(r, function(err, item) {

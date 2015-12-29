@@ -34,6 +34,7 @@
         "passport-windowslive": "1.x",
         "passport": "0.x",
         "randomstring": "1.x",
-        "raven": "0.x"
+        "raven": "0.x",
+        "underscore": "1.x"
     }
 }
