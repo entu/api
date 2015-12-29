@@ -6,7 +6,7 @@ var express  = require('express')
 var passport = require('passport')
 var raven    = require('raven')
 
-var entu   = require('./helpers/entu')
+var entu     = require('./helpers/entu')
 
 
 
@@ -88,12 +88,13 @@ app.use(function(req, res, next) {
             duration : Date.now() - start,
             status   : res.statusCode,
             method   : req.method,
-            host     : req.hostname
+            host     : req.hostname,
+            browser  : req.headers['user-agent'],
         }
         if(req.path) { r.path = req.path }
-        if(req.query) { r.query = req.query }
-        if(req.body) { r.body = req.body }
-        if(req.browser) { r.browser = req.browser }
+        if(Object.keys(req.query).length < 1) { r.query = req.query }
+        if(Object.keys(req.body).length < 1) { r.body = req.body }
+        if(req.browser) { r.browser = req.headers['user-agent'] }
 
         entu.requestLog(r, function(err, item) {
             if(err) next(err)
