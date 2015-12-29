@@ -82,19 +82,20 @@ app.use(function(req, res, next) {
     var start = Date.now()
 
     res.on('finish', function() {
-        entu.requestLog({
+        var r = {
             date     : new Date(),
             ip       : req.ip,
             duration : Date.now() - start,
             status   : res.statusCode,
             method   : req.method,
-            protocol : req.protocol,
-            host     : req.hostname,
-            path     : req.path,
-            query    : req.query,
-            body     : req.body,
-            browser  : req.headers['user-agent'],
-        }, function(err, item) {
+            host     : req.hostname
+        }
+        if(req.path) { r.path = req.path }
+        if(req.query) { r.query = req.query }
+        if(req.body) { r.body = req.body }
+        if(req.browser) { r.browser = req.browser }
+
+        entu.requestLog(r, function(err, item) {
             if(err) next(err)
         })
     })
