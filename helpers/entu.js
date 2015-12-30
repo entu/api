@@ -60,8 +60,6 @@ exports.requestLog = function(req, res, next) {
             },
         ], function(err) {
             if(err) { return next(err) }
-
-            next()
         })
     })
 
