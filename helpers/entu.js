@@ -59,9 +59,9 @@ exports.requestLog = function(req, res, next) {
                 connection.collection('request').insertOne(request, callback)
             },
         ], function(err) {
-            if(err) { return callback(err) }
+            if(err) { return next(err) }
 
-            callback()
+            next()
         })
     })
 
