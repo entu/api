@@ -11,7 +11,7 @@ var dbConnection = function(db, callback) {
     async.series([
         function(callback) {
             if(_.has(APP_ENTU_DBS, db)) {
-                APP_ENTU_DBS[db].ping(callback)
+                APP_ENTU_DBS[db].admin().ping(callback)
             } else {
                 callback(new Error('No db connection'))
             }
