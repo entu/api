@@ -12,7 +12,7 @@ router.get('/', function(req, res) {
 
 
 
-router.get('/test', function(req) {
+router.get('/test', function() {
     throw new Error('böö')
 })
 

@@ -34,6 +34,8 @@ TAAT_ISSUER = process.env.TAAT_ISSUER
 TAAT_CERT = process.env.TAAT_CERT
 TAAT_PRIVATECERT = process.env.TAAT_PRIVATECERT
 
+APP_ENTU_DBS = {}
+
 
 
 // passport (de)serialize

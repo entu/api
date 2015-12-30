@@ -6,6 +6,32 @@ var random = require('randomstring')
 
 
 
+// returns db connection (creates if not set)
+var dbConnection = function(db, callback) {
+    async.series([
+        function(callback) {
+            if(_.has(APP_ENTU_DBS, db)) {
+                APP_ENTU_DBS[db].ping(callback)
+            } else {
+                callback(new Error('No db connection'))
+            }
+        },
+    ], function(err) {
+        if(!err) { callback(null, APP_ENTU_DBS[db]) }
+
+        mongo.connect(APP_MONGODB + db, { server: { auto_reconnect: true } }, function(err, connection) {
+            if(err) {
+                callback(err)
+            } else {
+                APP_ENTU_DBS[db] = connection
+                callback(null, APP_ENTU_DBS[db])
+            }
+        })
+    })
+}
+
+
+
 // Create requestlog entry on response finish
 exports.requestLog = function(req, res, next) {
     var start = Date.now()
@@ -27,7 +53,7 @@ exports.requestLog = function(req, res, next) {
 
         async.waterfall([
             function(callback) {
-                mongo.connect(APP_MONGODB + 'entu', callback)
+                dbConnection('entu', callback)
             },
             function(connection, callback) {
                 connection.collection('request').insertOne(request, callback)
@@ -64,7 +90,7 @@ exports.sessionStart = function(params, callback) {
 
     async.waterfall([
         function(callback) {
-            mongo.connect(APP_MONGODB + 'entu', callback)
+            dbConnection('entu', callback)
         },
         function(connection, callback) {
             connection.collection('session').insertOne(session, callback)
