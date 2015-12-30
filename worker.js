@@ -79,31 +79,7 @@ app.use(bparser.json())
 app.use(bparser.urlencoded({extended: true}))
 
 // save request info to request collection
-app.use(function(req, res, next) {
-    var start = Date.now()
-
-    res.on('finish', function() {
-        var r = {
-            date: new Date(),
-            ip: req.ip,
-            ms: Date.now() - start,
-            status: res.statusCode,
-            method: req.method,
-            host: req.hostname,
-            browser: req.headers['user-agent'],
-        }
-        if(req.path) { r.path = req.path }
-        if(!_.isEmpty(req.query)) { r.query = req.query }
-        if(!_.isEmpty(req.body)) { r.body = req.body }
-        if(req.browser) { r.browser = req.headers['user-agent'] }
-
-        entu.requestLog(r, function(err, item) {
-            if(err) next(err)
-        })
-    })
-
-    next()
-})
+app.use(entu.requestLog)
 
 // routes mapping
 app.use('/', require('./routes/index'))

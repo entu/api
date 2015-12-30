@@ -6,19 +6,39 @@ var random    = require('randomstring')
 
 
 // Requestlog
-exports.requestLog = function(request, callback) {
-    async.waterfall([
-        function(callback) {
-            mongo.connect(APP_MONGODB + 'entu', callback)
-        },
-        function(connection, callback) {
-            connection.collection('request').insertOne(request, callback)
-        },
-    ], function(err) {
-        if(err) { return callback(err) }
+exports.requestLog = function(req, res, next) {
+    var start = Date.now()
 
-        callback()
+    res.on('finish', function() {
+        var request = {
+            date: new Date(),
+            ip: req.ip,
+            ms: Date.now() - start,
+            status: res.statusCode,
+            method: req.method,
+            host: req.hostname,
+            browser: req.headers['user-agent'],
+        }
+        if(req.path) { request.path = req.path }
+        if(!_.isEmpty(req.query)) { request.query = req.query }
+        if(!_.isEmpty(req.body)) { request.body = req.body }
+        if(req.browser) { request.browser = req.headers['user-agent'] }
+
+        async.waterfall([
+            function(callback) {
+                mongo.connect(APP_MONGODB + 'entu', callback)
+            },
+            function(connection, callback) {
+                connection.collection('request').insertOne(request, callback)
+            },
+        ], function(err) {
+            if(err) { return callback(err) }
+
+            callback()
+        })
     })
+
+    next()
 }
 
 
