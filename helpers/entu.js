@@ -1,11 +1,12 @@
-var async     = require('async')
-var mongo     = require('mongodb').MongoClient
-var op        = require('object-path')
-var random    = require('randomstring')
+var _      = require('underscore')
+var async  = require('async')
+var mongo  = require('mongodb').MongoClient
+var op     = require('object-path')
+var random = require('randomstring')
 
 
 
-// Requestlog
+// Create requestlog entry on response finish
 exports.requestLog = function(req, res, next) {
     var start = Date.now()
 

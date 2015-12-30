@@ -1,6 +1,5 @@
 if(process.env.NEW_RELIC_LICENSE_KEY) { require('newrelic') }
 
-var _        = require('underscore')
 var bparser  = require('body-parser')
 var cparser  = require('cookie-parser')
 var express  = require('express')
