@@ -19,7 +19,7 @@ var dbConnection = function(db, callback) {
     ], function(err) {
         if(!err) { callback(null, APP_ENTU_DBS[db]) }
 
-        mongo.connect(APP_MONGODB + db, { server: { auto_reconnect: true } }, function(err, connection) {
+        mongo.connect(APP_MONGODB + db, { server: { autoReconnect: true } }, function(err, connection) {
             if(err) {
                 callback(err)
             } else {
@@ -110,7 +110,7 @@ exports.sessionEnd = function(sessionKey, callback) {
 
     async.waterfall([
         function(callback) {
-            mongo.connect(APP_MONGODB + 'entu', callback)
+            dbConnection('entu', callback)
         },
         function(connection, callback) {
             connection.collection('session').deleteMany({key: sessionKey}, callback)
