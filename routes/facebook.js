@@ -11,6 +11,7 @@ passport.use(new facebook({
         clientID: FACEBOOK_ID,
         clientSecret: FACEBOOK_SECRET,
         callbackURL: '/facebook/callback',
+        profileFields: ['id', 'name', 'email', 'picture'],
         proxy: true
     },
     function(accessToken, refreshToken, profile, done) {
