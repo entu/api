@@ -35,6 +35,7 @@
         "passport": "0.x",
         "randomstring": "1.x",
         "raven": "0.x",
+        "request": "2.x",
         "underscore": "1.x"
     }
 }
