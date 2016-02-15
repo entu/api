@@ -1,8 +1,9 @@
-var _      = require('underscore')
-var async  = require('async')
-var mongo  = require('mongodb').MongoClient
-var op     = require('object-path')
-var random = require('randomstring')
+var _       = require('underscore')
+var async   = require('async')
+var mongo   = require('mongodb').MongoClient
+var op      = require('object-path')
+var random  = require('randomstring')
+var request = require('request')
 
 
 
@@ -87,6 +88,17 @@ exports.sessionStart = function(params, callback) {
     if(op.get(params, 'request.cookies.redirect')) { op.set(session, 'redirect', op.get(params, 'request.cookies.redirect')) }
 
     async.waterfall([
+        function(callback) {
+            if(!op.get(params, 'request.ip')) { return callback(null) }
+
+            request.get({url: 'https://geoip.entu.eu/json/' + op.get(params, 'request.ip'), strictSSL: true, json: true, timeout: 1000}, function(error, response, body) {
+                if(!body) { return callback(null) }
+
+                op.set(session, 'geo', body)
+
+                callback(null)
+            })
+        },
         function(callback) {
             dbConnection('entu', callback)
         },
