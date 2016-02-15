@@ -94,7 +94,10 @@ exports.sessionStart = function(params, callback) {
             request.get({url: 'https://geoip.entu.eu/json/' + op.get(params, 'request.ip'), strictSSL: true, json: true, timeout: 1000}, function(error, response, body) {
                 if(!body) { return callback(null) }
 
-                op.set(session, 'geo', body)
+                var geo = _.pick(body, _.identity)
+                delete geo.ip
+
+                op.set(session, 'geo', geo)
 
                 callback(null)
             })
