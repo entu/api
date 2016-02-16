@@ -47,7 +47,7 @@ router.get('/auth', passport.authenticate('saml', { scope: [], session: false })
 
 
 router.post('/', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function(req, res, next) {
-    op.del(req, ['user', '_jsaon'])
+    op.del(req, ['user', '_json'])
     op.del(req, ['user', '_raw'])
 
     console.log(op.get(req, 'user'))

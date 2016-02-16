@@ -46,7 +46,7 @@ router.get('/auth', passport.authenticate('twitter'), function() {
 
 
 router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/login' }), function(req, res, next) {
-    op.del(req, ['user', '_jsaon'])
+    op.del(req, ['user', '_json'])
     op.del(req, ['user', '_raw'])
 
     console.log(op.get(req, 'user'))
