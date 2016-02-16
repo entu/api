@@ -1,3 +1,4 @@
+var _        = require('underscore')
 var fs       = require('fs')
 var op       = require('object-path')
 var passport = require('passport')

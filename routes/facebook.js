@@ -1,3 +1,4 @@
+var _        = require('underscore')
 var facebook = require('passport-facebook').Strategy
 var op       = require('object-path')
 var passport = require('passport')
@@ -47,15 +48,16 @@ router.get('/auth', passport.authenticate('facebook', { scope: ['public_profile'
 
 
 router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login', session: false }), function(req, res, next) {
-    op.del(req, ['user', '_json'])
-    op.del(req, ['user', '_raw'])
-
-    console.log(JSON.stringify(op.get(req, 'user'), null, '  '))
-
     var user = {}
+    var name = _.compact([
+        op.get(req, ['user', 'name', 'givenName']),
+        op.get(req, ['user', 'name', 'middleName']),
+        op.get(req, ['user', 'name', 'familyName'])
+    ]).join(' ')
+
     op.set(user, 'provider', 'facebook')
     op.set(user, 'id', op.get(req, ['user', 'id']))
-    op.set(user, 'name', op.get(req, ['user', 'displayName']))
+    op.set(user, 'name', name)
     op.set(user, 'email', op.get(req, ['user', 'emails', 0, 'value']))
     op.set(user, 'picture', op.get(req, ['user', 'photos', 0, 'value']))
 
