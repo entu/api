@@ -46,6 +46,11 @@ router.get('/auth', passport.authenticate('google', { scope: ['https://www.googl
 
 
 router.get('/callback', passport.authenticate('google', { failureRedirect: '/login', session: false }), function(req, res, next) {
+    op.del(req, ['user', '_jsaon'])
+    op.del(req, ['user', '_raw'])
+
+    console.log(op.get(req, 'user'))
+
     var user = {}
     op.set(user, 'provider', 'google')
     op.set(user, 'id', op.get(req, ['user', 'id']))
