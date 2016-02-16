@@ -48,6 +48,9 @@ router.get('/auth', passport.authenticate('facebook', { scope: ['public_profile'
 
 router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login', session: false }), function(req, res, next) {
     var user = {}
+
+    console.log(op.get(req, 'user'))
+
     op.set(user, 'provider', 'facebook')
     op.set(user, 'id', op.get(req, ['user', 'id']))
     op.set(user, 'name', op.get(req, ['user', 'displayName']))
