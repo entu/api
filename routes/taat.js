@@ -50,7 +50,7 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
     op.del(req, ['user', '_json'])
     op.del(req, ['user', '_raw'])
 
-    console.log(op.get(req, 'user'))
+    console.log(JSON.stringify(op.get(req, 'user'), null, '  '))
 
     var user = {}
     op.set(user, 'provider', 'taat.' + op.get(req, ['user', 'schacHomeOrganization']))

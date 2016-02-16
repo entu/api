@@ -49,7 +49,7 @@ router.get('/callback', passport.authenticate('windowslive', { failureRedirect: 
     op.del(req, ['user', '_json'])
     op.del(req, ['user', '_raw'])
 
-    console.log(op.get(req, 'user'))
+    console.log(JSON.stringify(op.get(req, 'user'), null, '  '))
 
     var user = {}
     op.set(user, 'provider', 'live')
