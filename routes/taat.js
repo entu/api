@@ -51,8 +51,6 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
     op.del(req, ['user', '_json'])
     op.del(req, ['user', '_raw'])
 
-    console.log(JSON.stringify(op.get(req, 'user'), null, '  '))
-
     var user = {}
     op.set(user, 'provider', 'taat.' + op.get(req, ['user', 'schacHomeOrganization']))
     op.set(user, 'id', op.get(req, ['user', 'urn:mace:dir:attribute-def:eduPersonTargetedID']))
