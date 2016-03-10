@@ -70,10 +70,7 @@ router.get('/requests', function(req, res) {
                 x_axis: {
                     type: 'datetime'
                 },
-                seriesData: seriesData,
-                seriesDataValues: seriesDataValues,
-                seriesDataValuesSorted: seriesDataValuesSorted,
-                series: seriesDataValuesSorted.slice(0, limit)
+                series: seriesDataValuesSorted.slice(seriesDataValuesSorted.length - limit)
             }
 
             callback(null, graphData)
