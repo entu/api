@@ -43,9 +43,8 @@ router.get('/requests', function(req, res) {
             ]).toArray(callback)
         },
         function(result, callback) {
-            var seriesData = {}
-            var seriesSum = {}
 
+            var seriesData = {}
             for (var i in result) {
                 if(!result.hasOwnProperty(i)) { continue }
 
@@ -63,10 +62,10 @@ router.get('/requests', function(req, res) {
                 op.set(seriesData, [host, 'name'], host)
                 op.push(seriesData, [host, 'data'], [date, count])
                 op.set(seriesData, [host, 'incomplete_from'], today.toISOString().substr(0, 10))
-
-                var seriesDataValues = _.values(seriesData)
-                var seriesDataValuesSorted = _.sortBy(seriesDataValues, 'sum')
             }
+
+            var seriesDataValues = _.values(seriesData)
+            var seriesDataValuesSorted = _.sortBy(seriesDataValues, 'sum')
             var graphData = {
                 x_axis: {
                     type: 'datetime'
