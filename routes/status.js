@@ -64,12 +64,14 @@ router.get('/requests', function(req, res) {
                 op.push(seriesData, [host, 'data'], [date, count])
                 op.set(seriesData, [host, 'incomplete_from'], today.toISOString().substr(0, 10))
 
+                var seriesDataValues = _.values(seriesData)
+                var seriesDataValuesSorted = _.sortBy(seriesDataValues, 'sum')
             }
             var graphData = {
                 x_axis: {
                     type: 'datetime'
                 },
-                series: _.sortBy(_.values(seriesData), 'sum').slice(0, limit)
+                series: seriesDataValuesSorted.slice(0, limit)
             }
 
             callback(null, graphData)
