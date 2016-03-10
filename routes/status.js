@@ -66,7 +66,7 @@ router.get('/requests', function(req, res) {
                 x_axis: {
                     type: 'datetime'
                 },
-                series: _.values(_.sortBy(seriesData, 'sum').slice(0, 5))
+                series: _.sortBy(_.values(seriesData), 'sum').slice(0, 5)
             }
 
             callback(null, graphData)
