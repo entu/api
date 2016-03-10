@@ -58,7 +58,7 @@ router.get('/requests', function(req, res) {
                 var date = [year, month, day].join('-')
                 var count = op.get(result[i], 'count')
 
-                op.set(seriesTotals, 'date', op.get(seriesTotals, 'date', 0) + count)
+                op.set(seriesTotals, date, op.get(seriesTotals, date, 0) + count)
                 op.set(seriesData, [host, 'sum'], op.get(seriesData, [host, 'sum'], 0) + count)
                 op.set(seriesData, [host, 'name'], host)
                 op.push(seriesData, [host, 'data'], [date, count])
