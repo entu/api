@@ -47,9 +47,9 @@ router.get('/requests', function(req, res) {
 
                 var host = op.get(result[i], '_id.host')
                 var day = '00' + op.get(result[i], '_id.day')
-                var day = day.substr(0, 2)
+                var day = day.substr(day.length - 2)
                 var month = '00' + op.get(result[i], '_id.month')
-                var month = month.substr(0, 2)
+                var month = month.substr(month.length - 2)
                 var year = op.get(result[i], '_id.year')
 
                 var date = [year, month, day].join('-')
