@@ -51,7 +51,7 @@ router.get('/requests', function(req, res) {
 
                 op.set(seriesData, [host, 'name'], host)
                 op.push(seriesData, [host, 'data'], [day.join('-'), count])
-                op.push(seriesData, [host, 'incomplete_from'], today.toISOString().substr(0, 7))
+                op.set(seriesData, [host, 'incomplete_from'], today.toISOString().substr(0, 10))
             }
             var graphData = {
                 x_axis: {
