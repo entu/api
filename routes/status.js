@@ -32,7 +32,12 @@ router.get('/requests', function(req, res) {
             		'$group' : {
             			_id: {
                             host: '$host',
-                            date: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+                            date: {
+                                $dateToString: {
+                                    format: "%Y-%m-%d",
+                                    date: "$date"
+                                }
+                            },
                         },
             			count: {
             				$sum: 1
@@ -47,7 +52,7 @@ router.get('/requests', function(req, res) {
             for (var i in result) {
                 if(!result.hasOwnProperty(i)) { continue }
 
-                var host = op.get(result[i], '_id.host')
+                var host = op.get(result[i], '_id.host').replace('.entu.ee', '')
                 var date = op.get(result[i], '_id.date')
                 var count = op.get(result[i], 'count')
 
