@@ -42,15 +42,15 @@ router.get('/requests', function(req, res) {
         function(result, callback) {
             var seriesData = {}
 
-            for (var variable in object) {
-                if(!object.hasOwnProperty(variable)) { continue }
+            for (var i in result) {
+                if(!result.hasOwnProperty(i)) { continue }
 
-                var host = op.get(result, '_id.host')
-                var day = op.get(result, '_id.year') + '-' + ('00' + op.get(result, '_id.month')).substr(0, 2) + '-' + ('00' + op.get(result, '_id.day')).substr(0, 2)
-                var count = op.get(result, 'count')
+                var host = op.get(result[i], '_id.host')
+                var day = [op.get(result[i], '_id.year'), ('00' + op.get(result[i], '_id.month')).substr(0, 2), ('00' + op.get(result[i], '_id.day')).substr(0, 2)]
+                var count = op.get(result[i], 'count')
 
                 op.set(seriesData, [host, 'name'], host)
-                op.push(seriesData, [host, 'data'], [day, count])
+                op.push(seriesData, [host, 'data'], [day.join('-'), count])
                 op.push(seriesData, [host, 'incomplete_from'], today.toISOString().substr(0, 7))
             }
             var graphData = {
@@ -58,24 +58,6 @@ router.get('/requests', function(req, res) {
                     type: 'datetime'
                 },
                 series: _.values(seriesData)
-                // [
-                //     {
-                //         name: 'Requests per day',
-                //         data: [
-                //             ['2014-01', 71173],
-                //             ['2014-02', 57624],
-                //             ['2014-03', 64851],
-                //             ['2014-04', 60486],
-                //             ['2014-05', 60500],
-                //             ['2014-06', 62908],
-                //             ['2014-07', 64818],
-                //             ['2014-08', 59961],
-                //             ['2014-09', 58542],
-                //             ['2014-10', 22050]
-                //         ],
-                //         incomplete_from: today.toISOString().substr(0, 7)
-                //     }
-                // ]
             }
 
             callback(null, graphData)
@@ -88,11 +70,7 @@ router.get('/requests', function(req, res) {
                 started: APP_STARTED
             })
         } else {
-            res.send({
-                result: result,
-                version: APP_VERSION,
-                started: APP_STARTED
-            })
+            res.send(result)
         }
     })
 })
