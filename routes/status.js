@@ -1,8 +1,7 @@
-var _       = require('underscore')
-var async   = require('async')
-var mongo   = require('mongodb').MongoClient
-var op      = require('object-path')
-var router  = require('express').Router()
+var async  = require('async')
+var router = require('express').Router()
+
+var entu   = require('../helpers/entu')
 
 
 
@@ -12,7 +11,7 @@ router.get('/requests', function(req, res) {
 
     async.waterfall([
         function(callback) {
-            dbConnection('entu', callback)
+            entu.dbConnection('entu', callback)
         },
         function(connection, callback) {
             connection.collection('request').aggregate([
