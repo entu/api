@@ -32,7 +32,7 @@ router.get('/requests', function(req, res) {
             		'$group' : {
             			_id: {
                             host: '$host',
-                            date: { $dateToString: { format: "%Y-%m-%dT%H:00:00", date: "$date" } },
+                            date: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
                         },
             			count: {
             				$sum: 1
