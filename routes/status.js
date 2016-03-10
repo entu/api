@@ -12,7 +12,7 @@ router.get('/requests', function(req, res) {
     var days = req.query.days || 7
 
     var today = new Date()
-    var lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - days)
+    var beginning = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (days - 1))
 
     async.waterfall([
         function(callback) {
@@ -23,8 +23,9 @@ router.get('/requests', function(req, res) {
             	{
             		'$match' : {
                 		date: {
-                    		$gt: lastWeek
-                		}
+                    		$gte: beginning
+                		},
+
             		}
             	},
             	{
