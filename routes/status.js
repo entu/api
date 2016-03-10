@@ -11,8 +11,8 @@ router.get('/requests', function(req, res) {
     var top = req.query.top || 5
     var days = req.query.days || 7
 
-    var today = new Date();
-    var lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - days);
+    var today = new Date()
+    var lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - days)
 
     async.waterfall([
         function(callback) {
@@ -43,7 +43,7 @@ router.get('/requests', function(req, res) {
             ]).toArray(callback)
         },
         function(result, callback) {
-
+            var seriesTotals = {}
             var seriesData = {}
             for (var i in result) {
                 if(!result.hasOwnProperty(i)) { continue }
@@ -58,6 +58,7 @@ router.get('/requests', function(req, res) {
                 var date = [year, month, day].join('-')
                 var count = op.get(result[i], 'count')
 
+                op.set(seriesTotals, 'date', op.get(seriesTotals, 'date', 0) + count)
                 op.set(seriesData, [host, 'sum'], op.get(seriesData, [host, 'sum'], 0) + count)
                 op.set(seriesData, [host, 'name'], host)
                 op.push(seriesData, [host, 'data'], [date, count])
@@ -70,6 +71,13 @@ router.get('/requests', function(req, res) {
                 },
                 series: _.sortBy(_.values(seriesData), 'sum').reverse().slice(0, top)
             }
+            op.push(graphData, 'series', {
+                name: 'all',
+                data: _.map(seriesTotals, function(num, key){
+                    return [key, num]
+                }),
+                incomplete_from: today.toISOString().substr(0, 10)
+            })
 
             callback(null, graphData)
         },
