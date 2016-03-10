@@ -46,11 +46,17 @@ router.get('/requests', function(req, res) {
                 if(!result.hasOwnProperty(i)) { continue }
 
                 var host = op.get(result[i], '_id.host')
-                var day = [op.get(result[i], '_id.year'), ('00' + op.get(result[i], '_id.month')).substr(0, 2), ('00' + op.get(result[i], '_id.day')).substr(0, 2)]
+                var day = '00' + op.get(result[i], '_id.day')
+                var day = day.substr(0, 2)
+                var month = '00' + op.get(result[i], '_id.month')
+                var month = month.substr(0, 2)
+                var year = op.get(result[i], '_id.year')
+
+                var date = [year, month, day].join('-')
                 var count = op.get(result[i], 'count')
 
                 op.set(seriesData, [host, 'name'], host)
-                op.push(seriesData, [host, 'data'], [day.join('-'), count])
+                op.push(seriesData, [host, 'data'], [date, count])
                 op.set(seriesData, [host, 'incomplete_from'], today.toISOString().substr(0, 10))
             }
             var graphData = {
