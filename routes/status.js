@@ -8,7 +8,7 @@ var entu   = require('../helpers/entu')
 
 
 router.get('/requests', function(req, res) {
-    var limit = req.query.limit || 5
+    var top = req.query.top || 5
     var days = req.query.days || 7
 
     var today = new Date();
@@ -71,7 +71,7 @@ router.get('/requests', function(req, res) {
                 seriesData: seriesData,
                 seriesDataValues: seriesDataValues,
                 seriesDataValuesSorted: seriesDataValuesSorted,
-                series: _.sortBy(_.values(seriesData), 'sum').reverse().slice(0, limit)
+                series: _.sortBy(_.values(seriesData), 'sum').reverse().slice(0, top)
             }
 
             callback(null, graphData)
