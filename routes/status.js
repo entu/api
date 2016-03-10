@@ -70,7 +70,7 @@ router.get('/requests', function(req, res) {
                 series: _.sortBy(_.values(seriesData), 'sum').reverse().slice(0, top)
             }
             graphData.series.unshift({
-                name: 'all',
+                name: '*',
                 data: _.map(seriesTotals, function(num, key){
                     return [key, num]
                 }),
