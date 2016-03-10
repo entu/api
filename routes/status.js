@@ -32,9 +32,7 @@ router.get('/requests', function(req, res) {
             		'$group' : {
             			_id: {
                             host: '$host',
-                            month: { $month: '$date' },
-                            day: { $dayOfMonth: '$date' },
-                            year: { $year: '$date' }
+                            date: { $dateToString: { format: "%Y-%m-%d %H", date: "$date" } },
                         },
             			count: {
             				$sum: 1
@@ -50,13 +48,7 @@ router.get('/requests', function(req, res) {
                 if(!result.hasOwnProperty(i)) { continue }
 
                 var host = op.get(result[i], '_id.host')
-                var day = '00' + op.get(result[i], '_id.day')
-                var day = day.substr(day.length - 2)
-                var month = '00' + op.get(result[i], '_id.month')
-                var month = month.substr(month.length - 2)
-                var year = op.get(result[i], '_id.year')
-
-                var date = [year, month, day].join('-')
+                var date = op.get(result[i], '_id.date')
                 var count = op.get(result[i], 'count')
 
                 op.set(seriesTotals, date, op.get(seriesTotals, date, 0) + count)
