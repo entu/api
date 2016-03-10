@@ -68,9 +68,6 @@ router.get('/requests', function(req, res) {
                 x_axis: {
                     type: 'datetime'
                 },
-                seriesData: seriesData,
-                seriesDataValues: seriesDataValues,
-                seriesDataValuesSorted: seriesDataValuesSorted,
                 series: _.sortBy(_.values(seriesData), 'sum').reverse().slice(0, top)
             }
 
