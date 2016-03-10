@@ -64,13 +64,14 @@ router.get('/requests', function(req, res) {
                 op.set(seriesData, [host, 'incomplete_from'], today.toISOString().substr(0, 10))
             }
 
-            var seriesDataValues = _.values(seriesData)
-            var seriesDataValuesSorted = _.sortBy(seriesDataValues, 'sum')
             var graphData = {
                 x_axis: {
                     type: 'datetime'
                 },
-                series: seriesDataValuesSorted.slice(seriesDataValuesSorted.length - limit)
+                seriesData: seriesData,
+                seriesDataValues: seriesDataValues,
+                seriesDataValuesSorted: seriesDataValuesSorted,
+                series: _.sortBy(_.values(seriesData), 'sum').reverse().slice(0, limit)
             }
 
             callback(null, graphData)
