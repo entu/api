@@ -41,6 +41,7 @@ router.get('/requests', function(req, res) {
         },
         function(result, callback) {
             var seriesData = {}
+            var seriesSum = {}
 
             for (var i in result) {
                 if(!result.hasOwnProperty(i)) { continue }
@@ -55,15 +56,17 @@ router.get('/requests', function(req, res) {
                 var date = [year, month, day].join('-')
                 var count = op.get(result[i], 'count')
 
+                op.set(seriesData, [host, 'sum'], op.get(seriesData, [host, 'sum'], 0) + count)
                 op.set(seriesData, [host, 'name'], host)
                 op.push(seriesData, [host, 'data'], [date, count])
                 op.set(seriesData, [host, 'incomplete_from'], today.toISOString().substr(0, 10))
+
             }
             var graphData = {
                 x_axis: {
                     type: 'datetime'
                 },
-                series: _.values(seriesData)
+                series: _.values(_.sortBy(seriesData, 'sum').slice(0, 5))
             }
 
             callback(null, graphData)
