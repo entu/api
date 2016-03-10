@@ -8,8 +8,11 @@ var entu   = require('../helpers/entu')
 
 
 router.get('/requests', function(req, res) {
+    var limit = req.query.limit || 5
+    var days = req.query.days || 7
+
     var today = new Date();
-    var lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+    var lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - days);
 
     async.waterfall([
         function(callback) {
@@ -66,7 +69,7 @@ router.get('/requests', function(req, res) {
                 x_axis: {
                     type: 'datetime'
                 },
-                series: _.sortBy(_.values(seriesData), 'sum').slice(0, 5)
+                series: _.sortBy(_.values(seriesData), 'sum').slice(0, limit)
             }
 
             callback(null, graphData)
