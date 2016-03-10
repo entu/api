@@ -84,6 +84,7 @@ app.use(entu.requestLog)
 
 // routes mapping
 app.use('/', require('./routes/index'))
+app.use('/status', require('./routes/status'))
 app.use('/exit', require('./routes/exit'))
 
 // provider mapping (only if configured)

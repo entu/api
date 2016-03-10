@@ -30,6 +30,7 @@ var dbConnection = function(db, callback) {
         })
     })
 }
+exports.dbConnection = dbConnection
 
 
 
