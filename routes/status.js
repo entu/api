@@ -71,7 +71,7 @@ router.get('/requests', function(req, res) {
                 },
                 series: _.sortBy(_.values(seriesData), 'sum').reverse().slice(0, top)
             }
-            op.push(graphData, 'series', {
+            op.unshift(graphData, 'series', {
                 name: 'all',
                 data: _.map(seriesTotals, function(num, key){
                     return [key, num]
