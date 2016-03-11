@@ -63,6 +63,19 @@ router.get('/requests', function(req, res) {
                 op.set(seriesData, [host, 'incomplete_from'], today.toISOString().substr(0, 10))
             }
 
+            seriesData = _.sortBy(_.values(seriesData), 'sum').reverse().slice(0, top)
+
+            for (var i in seriesData) {
+                if(!seriesData.hasOwnProperty(i)) { continue }
+
+                for (var n in seriesData[i].data) {
+                    if(!seriesData[i].data.hasOwnProperty(n)) { continue }
+
+                    seriesData[i].data[n][1] = (date === today.toISOString().substr(0, 10)) ? seriesData[i].data[n][1] / (today.getHours() * 60 + today.getMinutes()) : seriesData[i].data[n][1] / 1440
+                }
+
+            }
+
             var graphData = {
                 x_axis: {
                     type: 'datetime'
