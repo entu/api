@@ -78,7 +78,8 @@ router.get('/requests', function(req, res) {
                 for (var n in seriesData[i].data) {
                     if(!seriesData[i].data.hasOwnProperty(n)) { continue }
 
-                    seriesData[i].data[n][1] = Math.round((date === today.toISOString().substr(0, 10)) ? seriesData[i].data[n][1] / (today.getHours() * 60 + today.getMinutes()) : seriesData[i].data[n][1] / 1440, 2)
+                    seriesData[i].data[n][1] = (date === today.toISOString().substr(0, 10)) ? seriesData[i].data[n][1] / (today.getHours() * 60 + today.getMinutes()) : seriesData[i].data[n][1] / 1440
+                    seriesData[i].data[n][1] = Math.round(seriesData[i].data[n][1] * 100) / 100
                 }
 
             }
