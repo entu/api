@@ -64,6 +64,13 @@ router.get('/requests', function(req, res) {
             }
 
             seriesData = _.sortBy(_.values(seriesData), 'sum').reverse().slice(0, top)
+            seriesData.unshift({
+                name: '*',
+                data: _.map(seriesTotals, function(num, key){
+                    return [key, num]
+                }),
+                incomplete_from: today.toISOString().substr(0, 10)
+            })
 
             for (var i in seriesData) {
                 if(!seriesData.hasOwnProperty(i)) { continue }
@@ -71,7 +78,7 @@ router.get('/requests', function(req, res) {
                 for (var n in seriesData[i].data) {
                     if(!seriesData[i].data.hasOwnProperty(n)) { continue }
 
-                    seriesData[i].data[n][1] = (date === today.toISOString().substr(0, 10)) ? seriesData[i].data[n][1] / (today.getHours() * 60 + today.getMinutes()) : seriesData[i].data[n][1] / 1440
+                    seriesData[i].data[n][1] = Math.round((date === today.toISOString().substr(0, 10)) ? seriesData[i].data[n][1] / (today.getHours() * 60 + today.getMinutes()) : seriesData[i].data[n][1] / 1440, 2)
                 }
 
             }
@@ -80,15 +87,8 @@ router.get('/requests', function(req, res) {
                 x_axis: {
                     type: 'datetime'
                 },
-                series: _.sortBy(_.values(seriesData), 'sum').reverse().slice(0, top)
+                series: seriesData
             }
-            graphData.series.unshift({
-                name: '*',
-                data: _.map(seriesTotals, function(num, key){
-                    return [key, num]
-                }),
-                incomplete_from: today.toISOString().substr(0, 10)
-            })
 
             callback(null, graphData)
         },
