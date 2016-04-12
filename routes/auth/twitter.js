@@ -4,7 +4,7 @@ var passport = require('passport')
 var router   = require('express').Router()
 var twitter  = require('passport-twitter').Strategy
 
-var entu   = require('../helpers/entu')
+var entu   = require('../../helpers/entu')
 
 
 

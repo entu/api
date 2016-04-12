@@ -1,6 +1,6 @@
-var router   = require('express').Router()
+var router = require('express').Router()
 
-var entu   = require('../helpers/entu')
+var entu   = require('../../helpers/entu')
 
 
 

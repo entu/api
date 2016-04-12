@@ -5,7 +5,7 @@ var passport = require('passport')
 var router   = require('express').Router()
 var saml     = require('passport-saml').Strategy
 
-var entu   = require('../helpers/entu')
+var entu   = require('../../helpers/entu')
 
 
 

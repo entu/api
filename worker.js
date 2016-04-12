@@ -65,6 +65,9 @@ if(process.env.SENTRY_DSN) {
 // start express app
 var app = express()
 
+// Hide Powered By
+app.disable('x-powered-by')
+
 // get correct client IP behind nginx
 app.set('trust proxy', true)
 
@@ -90,6 +93,7 @@ app.use(entu.requestLog)
 app.use('/', require('./routes/index'))
 app.use('/auth/exit', require('./routes/auth/exit'))
 app.use('/status', require('./routes/status'))
+app.use('/user', require('./routes/user'))
 
 // provider mapping (only if configured)
 if(GOOGLE_ID && GOOGLE_SECRET) { app.use('/auth/google', require('./routes/auth/google')) }
@@ -106,17 +110,20 @@ if(process.env.SENTRY_DSN) {
 // show 404
 app.use(function(req, res) {
     res.status(404).send({
-        error: 404,
-        message: 'Not found'
+        error: 'Not found',
+        version: APP_VERSION,
+        started: APP_STARTED
     })
 })
 
 // show error
-app.use(function(err, req, res) {
-    console.error(err.stack)
+app.use(function(err, req, res, next) {
+    console.log(err)
+
     res.status(500).send({
-        error: 500,
-        message: err.message
+        error: err,
+        version: APP_VERSION,
+        started: APP_STARTED
     })
 })
 

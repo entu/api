@@ -4,7 +4,7 @@ var op       = require('object-path')
 var passport = require('passport')
 var router   = require('express').Router()
 
-var entu   = require('../helpers/entu')
+var entu   = require('../../helpers/entu')
 
 
 

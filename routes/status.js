@@ -94,15 +94,9 @@ router.get('/requests', function(req, res) {
             callback(null, graphData)
         },
     ], function(err, result) {
-        if(err) {
-            res.send({
-                error: err,
-                version: APP_VERSION,
-                started: APP_STARTED
-            })
-        } else {
-            res.send(result)
-        }
+        if(err) { return next(err) }
+
+        res.send(result)
     })
 })
 
