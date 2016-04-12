@@ -88,15 +88,15 @@ app.use(entu.requestLog)
 
 // routes mapping
 app.use('/', require('./routes/index'))
+app.use('/auth/exit', require('./routes/auth/exit'))
 app.use('/status', require('./routes/status'))
-app.use('/exit', require('./routes/exit'))
 
 // provider mapping (only if configured)
-if(GOOGLE_ID && GOOGLE_SECRET) { app.use('/google', require('./routes/google')) }
-if(FACEBOOK_ID && FACEBOOK_SECRET) { app.use('/facebook', require('./routes/facebook')) }
-if(TWITTER_KEY && TWITTER_SECRET) { app.use('/twitter', require('./routes/twitter')) }
-if(LIVE_ID && LIVE_SECRET) { app.use('/live', require('./routes/live')) }
-if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) { app.use('/taat', require('./routes/taat')) }
+if(GOOGLE_ID && GOOGLE_SECRET) { app.use('/auth/google', require('./routes/auth/google')) }
+if(FACEBOOK_ID && FACEBOOK_SECRET) { app.use('/auth/facebook', require('./routes/auth/facebook')) }
+if(TWITTER_KEY && TWITTER_SECRET) { app.use('/auth/twitter', require('./routes/auth/twitter')) }
+if(LIVE_ID && LIVE_SECRET) { app.use('/auth/live', require('./routes/auth/live')) }
+if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) { app.use('/auth/taat', require('./routes/auth/taat')) }
 
 // logs to getsentry.com - error
 if(process.env.SENTRY_DSN) {
