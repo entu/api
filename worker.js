@@ -50,13 +50,15 @@ passport.deserializeUser(function(user, done) {
 
 
 // initialize getsentry.com client
-var ravenClient = new raven.Client({
-    release: APP_VERSION,
-    dataCallback: function(data) {
-        delete data.request.env
-        return data
-    }
-})
+if(process.env.SENTRY_DSN) {
+    var ravenClient = new raven.Client({
+        release: APP_VERSION,
+        dataCallback: function(data) {
+            delete data.request.env
+            return data
+        }
+    })
+}
 
 
 
@@ -67,7 +69,9 @@ var app = express()
 app.set('trust proxy', true)
 
 // logs to getsentry.com - start
-app.use(raven.middleware.express.requestHandler(ravenClient))
+if(process.env.SENTRY_DSN) {
+    app.use(raven.middleware.express.requestHandler(ravenClient))
+}
 
 // Initialize Passport
 app.use(passport.initialize())
@@ -95,20 +99,26 @@ if(LIVE_ID && LIVE_SECRET) { app.use('/live', require('./routes/live')) }
 if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) { app.use('/taat', require('./routes/taat')) }
 
 // logs to getsentry.com - error
-app.use(raven.middleware.express.errorHandler(ravenClient))
+if(process.env.SENTRY_DSN) {
+    app.use(raven.middleware.express.errorHandler(ravenClient))
+}
+
+// show 404
+app.use(function(req, res) {
+    res.status(404).send({
+        error: 404,
+        message: 'Not found'
+    })
+})
 
 // show error
 app.use(function(err, req, res) {
-    res.send({
-        error: err.message,
-        version: APP_VERSION,
-        started: APP_STARTED
+    console.error(err.stack)
+    res.status(500).send({
+        error: 500,
+        message: err.message
     })
-
-    if(err.status !== 404) { console.log(err) }
 })
-
-
 
 // start server
 app.listen(APP_PORT, function() {
