@@ -86,8 +86,9 @@ app.use(cparser())
 app.use(bparser.json())
 app.use(bparser.urlencoded({extended: true}))
 
-// save request info to request collection
+// save request info to request collection and get user session
 app.use(entu.requestLog)
+app.use(entu.getUserSession)
 
 // routes mapping
 app.use('/', require('./routes/index'))
@@ -118,10 +119,14 @@ app.use(function(req, res) {
 
 // show error
 app.use(function(err, req, res, next) {
-    console.log(err)
-
-    res.status(500).send({
-        error: err,
+    var code = 500
+    var error = err
+    if (err.constructor === Array) {
+        code = err[0]
+        error = err[1]
+    }
+    res.status(code).send({
+        error: error,
         version: APP_VERSION,
         started: APP_STARTED
     })

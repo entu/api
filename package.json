@@ -16,7 +16,7 @@
         "start": "node ./master.js"
     },
     "engines": {
-        "node": "4.0.x"
+        "node": "6.0.x"
     },
     "dependencies": {
         "async": "1.x",
