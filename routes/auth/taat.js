@@ -36,7 +36,7 @@ router.get('/', function(req, res) {
         })
     }
 
-    res.redirect('/taat/auth')
+    res.redirect('/auth/taat/auth')
 })
 
 

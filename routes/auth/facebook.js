@@ -11,7 +11,7 @@ var entu   = require('../../helpers/entu')
 passport.use(new facebook({
         clientID: FACEBOOK_ID,
         clientSecret: FACEBOOK_SECRET,
-        callbackURL: '/facebook/callback',
+        callbackURL: '/auth/facebook/callback',
         profileFields: ['id', 'name', 'email', 'picture'],
         proxy: true
     },
@@ -36,7 +36,7 @@ router.get('/', function(req, res) {
         })
     }
 
-    res.redirect('/facebook/auth')
+    res.redirect('/auth/facebook/auth')
 })
 
 

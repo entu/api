@@ -11,7 +11,7 @@ var entu   = require('../../helpers/entu')
 passport.use(new twitter({
         consumerKey: TWITTER_KEY,
         consumerSecret: TWITTER_SECRET,
-        callbackURL: '/twitter/callback',
+        callbackURL: '/auth/twitter/callback',
         proxy: true
     },
     function(token, tokenSecret, profile, done) {
@@ -35,7 +35,7 @@ router.get('/', function(req, res) {
         })
     }
 
-    res.redirect('/twitter/auth')
+    res.redirect('/auth/twitter/auth')
 })
 
 

@@ -11,7 +11,7 @@ var entu   = require('../../helpers/entu')
 passport.use(new live({
         clientID: LIVE_ID,
         clientSecret: LIVE_SECRET,
-        callbackURL: '/live/callback',
+        callbackURL: '/auth/live/callback',
         proxy: true
     },
     function(accessToken, refreshToken, profile, done) {
@@ -35,7 +35,7 @@ router.get('/', function(req, res) {
         })
     }
 
-    res.redirect('/live/auth')
+    res.redirect('/auth/live/auth')
 })
 
 

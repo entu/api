@@ -11,7 +11,7 @@ var entu   = require('../../helpers/entu')
 passport.use(new google({
         clientID: GOOGLE_ID,
         clientSecret: GOOGLE_SECRET,
-        callbackURL: '/google/callback',
+        callbackURL: '/auth/google/callback',
         proxy: true
     },
     function(accessToken, refreshToken, profile, done) {
@@ -35,7 +35,7 @@ router.get('/', function(req, res) {
         })
     }
 
-    res.redirect('/google/auth')
+    res.redirect('/auth/google/auth')
 })
 
 
