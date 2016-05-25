@@ -1,6 +1,6 @@
 var _       = require('underscore')
 var async   = require('async')
-var mongo   = require('mongodb').MongoClient
+var mongo   = require('mongodb')
 var op      = require('object-path')
 var random  = require('randomstring')
 var request = require('request')
@@ -20,7 +20,7 @@ var dbConnection = function(db, callback) {
     ], function(err) {
         if(!err) { callback(null, APP_ENTU_DBS[db]) }
 
-        mongo.connect(APP_MONGODB + db, { server: { autoReconnect: true } }, function(err, connection) {
+        mongo.MongoClient.connect(APP_MONGODB + db, { server: { autoReconnect: true } }, function(err, connection) {
             if(err) {
                 callback(err)
             } else {
@@ -66,6 +66,41 @@ exports.requestLog = function(req, res, next) {
     })
 
     next()
+}
+
+
+
+// Create requestlog entry on response finish
+exports.getUserSession = function(req, res, next) {
+    var start = Date.now()
+
+    var session = req.get('X-Auth-Id')
+
+    try {
+        var session_id = new mongo.ObjectID(session.split('.')[0])
+        var session_key = session.split('.')[1]
+    } catch (e) {
+        return next(null)
+    }
+
+    if(!session_id || !session_key) { return next(null) }
+
+    async.waterfall([
+        function(callback) {
+            dbConnection('entu', callback)
+        },
+        function(connection, callback) {
+            connection.collection('session').findOne({ _id: session_id, key: session_key }, callback)
+        },
+    ], function(err, session) {
+        if(err) { return next(err) }
+        if(!session || !session._id || !session.key) { return next([403, 'No user']) }
+
+        res.locals.user = session
+
+        next()
+    })
+
 }
 
 

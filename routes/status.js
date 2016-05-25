@@ -7,7 +7,7 @@ var entu   = require('../helpers/entu')
 
 
 
-router.get('/requests', function(req, res) {
+router.get('/requests', function(req, res, next) {
     var top = req.query.top || 5
     var days = req.query.days || 7
 

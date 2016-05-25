@@ -23,6 +23,7 @@ docker run -d \
     --env="NODE_ENV=production" \
     --env="VERSION=$version" \
     --env="PORT=80" \
+    --env="MONGODB=" \
     --env="COOKIE_DOMAIN=.entu.ee" \
     --env="GOOGLE_ID=" \
     --env="GOOGLE_SECRET=" \
