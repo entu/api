@@ -144,12 +144,15 @@ exports.sessionStart = function(params, callback) {
         function(connection, callback) {
             connection.collection('session').insertOne(session, callback)
         },
-    ], function(err) {
+    ], function(err, r) {
         if(err) { return callback(err) }
+        if(!r) { return callback(r) }
 
-        callback(null, {
-            session: session.key
-        })
+        console.log(r)
+
+        session._id = r._id
+
+        callback(null, session)
     })
 }
 
