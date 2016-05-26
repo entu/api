@@ -148,9 +148,7 @@ exports.sessionStart = function(params, callback) {
         if(err) { return callback(err) }
         if(!r) { return callback(r) }
 
-        console.log(r)
-
-        session._id = r._id
+        session._id = r.insertedId
 
         callback(null, session)
     })
