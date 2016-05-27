@@ -1,22 +1,22 @@
 #!/bin/bash
 
-mkdir -p /data/entu_auth/code /data/entu_auth/ssl
-cd /data/entu_auth/code
+mkdir -p /data/entu_api/code /data/entu_api/ssl
+cd /data/entu_api/code
 
-git clone -q https://github.com/argoroots/entu-auth.git ./
+git clone -q https://github.com/argoroots/entu-api.git ./
 git checkout -q master
 git pull
 
 printf "\n\n"
 version=`date +"%y%m%d.%H%M%S"`
-docker build --quiet --pull --tag=entu_auth:$version ./ && docker tag entu_auth:$version entu_auth:latest
+docker build --quiet --pull --tag=entu_api:$version ./ && docker tag entu_api:$version entu_api:latest
 
 printf "\n\n"
-docker stop entu_auth
-docker rm entu_auth
+docker stop entu_api
+docker rm entu_api
 docker run -d \
     --net="entu" \
-    --name="entu_auth" \
+    --name="entu_api" \
     --restart="always" \
     --cpu-shares=256 \
     --memory="1g" \
@@ -34,17 +34,17 @@ docker run -d \
     --env="LIVE_ID=" \
     --env="LIVE_SECRET=" \
     --env="TAAT_ENTRYPOINT=https://sarvik.taat.edu.ee/saml2/idp/SSOService.php" \
-    --env="TAAT_ISSUER=https://auth.entu.ee/taat" \
-    --env="TAAT_CERT=/usr/src/entu-auth/ssl/taat.pem" \
-    --env="TAAT_PRIVATECERT=/usr/src/entu-auth/ssl/server.pem" \
-    --env="NEW_RELIC_APP_NAME=entu-auth" \
+    --env="TAAT_ISSUER=https://api.entu.ee/taat" \
+    --env="TAAT_CERT=/usr/src/entu-api/ssl/taat.pem" \
+    --env="TAAT_PRIVATECERT=/usr/src/entu-api/ssl/server.pem" \
+    --env="NEW_RELIC_APP_NAME=entu-api" \
     --env="NEW_RELIC_LICENSE_KEY=" \
     --env="NEW_RELIC_LOG=stdout" \
     --env="NEW_RELIC_LOG_LEVEL=error" \
     --env="NEW_RELIC_NO_CONFIG_FILE=true" \
     --env="SENTRY_DSN=" \
-    --volume="/data/entu_auth/ssl/:/usr/src/entu-auth/ssl/:ro" \
-    entu_auth:latest
+    --volume="/data/entu_api/ssl/:/usr/src/entu-api/ssl/:ro" \
+    entu_api:latest
 
 printf "\n\n"
 docker exec nginx /etc/init.d/nginx reload
