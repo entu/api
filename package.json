@@ -1,16 +1,16 @@
 {
     "private": true,
-    "name": "entu-auth",
-    "version": "0.1.0",
-    "description": "Authentication service for Entu.ee",
-    "homepage": "https://github.com/argoroots/entu-auth",
+    "name": "entu-api",
+    "version": "3.0.0",
+    "description": "Entu API",
+    "homepage": "https://github.com/argoroots/entu-api",
     "author": "Argo Roots <argo@roots.ee>",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/argoroots/entu-auth.git"
+        "url": "git+https://github.com/argoroots/entu-api.git"
     },
     "bugs": {
-        "url": "https://github.com/argoroots/entu-auth/issues"
+        "url": "https://github.com/argoroots/entu-api/issues"
     },
     "scripts": {
         "start": "node ./master.js"
