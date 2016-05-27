@@ -1,5 +1,4 @@
-# Authentication service for Entu.ee
-
+# Entu API
 
 ### LICENSE
 The MIT License (MIT)
