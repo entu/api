@@ -7,7 +7,7 @@ var entu   = require('../helpers/entu')
 
 router.get('/session', function(req, res, next) {
 
-    if(!res.locals.user || !res.locals.user._id || !res.locals.user.key) { return next([403, 'No user!']) }
+    if(!res.locals.user || !res.locals.user._id || !res.locals.user.key) { return next([403, 'No user']) }
 
     res.send({
         result: {

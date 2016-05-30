@@ -25,7 +25,7 @@ cluster.on('exit', function(worker, code, signal) {
     } else if(code !== 0) {
         console.error('Worker #' + worker.id + ' exited with error code: ' + code)
     } else {
-        console.error('Worker #' + worker.id + ' success!')
+        console.error('Worker #' + worker.id + ' success')
     }
     cluster.fork()
 })
