@@ -25,6 +25,7 @@ docker run -d \
     --env="PORT=80" \
     --env="MONGODB=" \
     --env="COOKIE_DOMAIN=.entu.ee" \
+    --env="JWT_SECRET=" \
     --env="GOOGLE_ID=" \
     --env="GOOGLE_SECRET=" \
     --env="FACEBOOK_ID=" \

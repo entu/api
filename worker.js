@@ -1,12 +1,13 @@
 if(process.env.NEW_RELIC_LICENSE_KEY) { require('newrelic') }
 
-var bparser  = require('body-parser')
-var cparser  = require('cookie-parser')
-var express  = require('express')
-var passport = require('passport')
-var raven    = require('raven')
+var bparser    = require('body-parser')
+var cparser    = require('cookie-parser')
+var express    = require('express')
+var expressJwt = require('express-jwt')
+var passport   = require('passport')
+var raven      = require('raven')
 
-var entu     = require('./helpers/entu')
+var entu       = require('./helpers/entu')
 
 
 
@@ -16,6 +17,7 @@ APP_STARTED        = new Date().toISOString()
 APP_PORT           = process.env.PORT || 3000
 APP_COOKIE_DOMAIN  = process.env.COOKIE_DOMAIN || ''
 APP_MONGODB        = process.env.MONGODB || 'mongodb://entu_mongodb:27017/'
+APP_JWT_SECRET     = process.env.JWT_SECRET || '123abc'
 
 GOOGLE_ID = process.env.GOOGLE_ID
 GOOGLE_SECRET = process.env.GOOGLE_SECRET
@@ -85,6 +87,14 @@ app.use(cparser())
 // parse POST requests
 app.use(bparser.json())
 app.use(bparser.urlencoded({extended: true}))
+
+// JWT
+app.use(expressJwt({ secret: APP_JWT_SECRET }).unless({
+    path: [
+        '/auth',
+        '/status',
+    ]
+}))
 
 // save request info to request collection and get user session
 app.use(entu.requestLog)
