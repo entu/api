@@ -47,51 +47,54 @@ router.get('/requests', function(req, res, next) {
             ]).toArray(callback)
         },
         function(result, callback) {
-            var seriesTotals = {}
-            var seriesData = {}
-            for (var i in result) {
-                if(!result.hasOwnProperty(i)) { continue }
+            // var seriesTotals = {}
+            // var seriesData = {}
+            //
+            // for (var i in result) {
+            //     if(!result.hasOwnProperty(i)) { continue }
+            //
+            //     var host = op.get(result[i], '_id.host').replace('.entu.ee', '')
+            //     var date = op.get(result[i], '_id.date')
+            //     var count = op.get(result[i], 'count')
+            //
+            //     op.set(seriesTotals, date, op.get(seriesTotals, date, 0) + count)
+            //     op.set(seriesData, [host, 'sum'], op.get(seriesData, [host, 'sum'], 0) + count)
+            //     op.set(seriesData, [host, 'name'], host)
+            //     op.push(seriesData, [host, 'data'], [date, count])
+            //     op.set(seriesData, [host, 'incomplete_from'], today.toISOString().substr(0, 10))
+            // }
+            //
+            // seriesData = _.sortBy(_.values(seriesData), 'sum').reverse().slice(0, top)
+            // seriesData.unshift({
+            //     name: '*',
+            //     data: _.map(seriesTotals, function(num, key){
+            //         return [key, num]
+            //     }),
+            //     incomplete_from: today.toISOString().substr(0, 10)
+            // })
+            //
+            // for (var i in seriesData) {
+            //     if(!seriesData.hasOwnProperty(i)) { continue }
+            //
+            //     for (var n in seriesData[i].data) {
+            //         if(!seriesData[i].data.hasOwnProperty(n)) { continue }
+            //
+            //         seriesData[i].data[n][1] = (date === today.toISOString().substr(0, 10)) ? seriesData[i].data[n][1] / (today.getHours() * 60 + today.getMinutes()) : seriesData[i].data[n][1] / 1440
+            //         seriesData[i].data[n][1] = Math.round(seriesData[i].data[n][1] * 100) / 100
+            //     }
+            //
+            // }
+            //
+            // var graphData = {
+            //     x_axis: {
+            //         type: 'datetime'
+            //     },
+            //     series: seriesData
+            // }
+            //
+            // callback(null, graphData)
 
-                var host = op.get(result[i], '_id.host').replace('.entu.ee', '')
-                var date = op.get(result[i], '_id.date')
-                var count = op.get(result[i], 'count')
-
-                op.set(seriesTotals, date, op.get(seriesTotals, date, 0) + count)
-                op.set(seriesData, [host, 'sum'], op.get(seriesData, [host, 'sum'], 0) + count)
-                op.set(seriesData, [host, 'name'], host)
-                op.push(seriesData, [host, 'data'], [date, count])
-                op.set(seriesData, [host, 'incomplete_from'], today.toISOString().substr(0, 10))
-            }
-
-            seriesData = _.sortBy(_.values(seriesData), 'sum').reverse().slice(0, top)
-            seriesData.unshift({
-                name: '*',
-                data: _.map(seriesTotals, function(num, key){
-                    return [key, num]
-                }),
-                incomplete_from: today.toISOString().substr(0, 10)
-            })
-
-            for (var i in seriesData) {
-                if(!seriesData.hasOwnProperty(i)) { continue }
-
-                for (var n in seriesData[i].data) {
-                    if(!seriesData[i].data.hasOwnProperty(n)) { continue }
-
-                    seriesData[i].data[n][1] = (date === today.toISOString().substr(0, 10)) ? seriesData[i].data[n][1] / (today.getHours() * 60 + today.getMinutes()) : seriesData[i].data[n][1] / 1440
-                    seriesData[i].data[n][1] = Math.round(seriesData[i].data[n][1] * 100) / 100
-                }
-
-            }
-
-            var graphData = {
-                x_axis: {
-                    type: 'datetime'
-                },
-                series: seriesData
-            }
-
-            callback(null, graphData)
+            callback(null, result)
         },
     ], function(err, result) {
         if(err) { return next(err) }
