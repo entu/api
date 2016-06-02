@@ -7,18 +7,20 @@ var router = require('express').Router()
 
 
 router.get('/session/:sessionId', function(req, res, next) {
-    if(!req.path.sessionId) { return next([400, 'No session']) }
+    if(!req.params.sessionId) { return next([400, 'No session']) }
 
     var conection
     var session
 
     async.waterfall([
         function(callback) {
+            console.log(req.params.sessionId);
+
             entu.dbConnection('entu', callback)
         },
         function(con, callback) {
             conection = con
-            conection.collection('session').findAndModify({ _id: entu.objectId(req.path.sessionId), deleted: { $exists: false } }, [[ '_id', 1 ]], { '$set': { deleted: new Date() } }, callback)
+            conection.collection('session').findAndModify({ _id: entu.objectId(req.params.sessionId), deleted: { $exists: false } }, [[ '_id', 1 ]], { '$set': { deleted: new Date() } }, callback)
         },
         function(sess, callback) {
             if(!sess.value) { return callback([400, 'No session']) }
@@ -34,12 +36,12 @@ router.get('/session/:sessionId', function(req, res, next) {
                         entu.dbConnection(database, callback)
                     },
                     function(con, callback) {
-                        conection.collection('entityVersion').findOne({'entu_user.value': session.user.email, _deleted: { $exists: false }}, {_id: false, _entity: true}, function(err, person) {
+                        con.collection('entityVersion').findOne({'entu_user.value': session.user.email, _deleted: { $exists: false }}, {_id: false, _entity: true}, function(err, person) {
                             if(err) { return callback(err) }
                             if(!person) { return callback(null) }
 
                             callback(null, {
-                                name: NaN,
+                                name: null,
                                 db: database,
                                 token: jwt.sign({ db: database, _entity: person._entity }, APP_JWT_SECRET)
                             })
@@ -52,8 +54,8 @@ router.get('/session/:sessionId', function(req, res, next) {
         if(err) { return next(err) }
 
         res.send({
-            version: APP_VERSION,
             result: _.indexBy(persons, 'db'),
+            version: APP_VERSION,
             started: APP_STARTED
         })
     })
