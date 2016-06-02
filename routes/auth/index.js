@@ -7,7 +7,7 @@ var router = require('express').Router()
 
 
 router.get('/session/:sessionId', function(req, res, next) {
-    if(!sessionId) { return next([400, 'No session']) }
+    if(!req.path.sessionId) { return next([400, 'No session']) }
 
     var conection
     var session
@@ -18,7 +18,7 @@ router.get('/session/:sessionId', function(req, res, next) {
         },
         function(con, callback) {
             conection = con
-            conection.collection('session').findAndModify({ _id: entu.objectId(sessionId), deleted: { $exists: false } }, [[ '_id', 1 ]], { '$set': { deleted: new Date() } }, callback)
+            conection.collection('session').findAndModify({ _id: entu.objectId(req.path.sessionId), deleted: { $exists: false } }, [[ '_id', 1 ]], { '$set': { deleted: new Date() } }, callback)
         },
         function(sess, callback) {
             if(!sess.value) { return callback([400, 'No session']) }
