@@ -36,6 +36,7 @@ router.get('/session', function(req, res, next) {
                     function(con, callback) {
                         conection.collection('entityVersion').findOne({'entu_user.value': session.user.email, _deleted: { $exists: false }}, {_id: false, _entity: true}, function(err, person) {
                             if(err) { return callback(err) }
+                            if(!person) { return callback(null) }
 
                             callback(null, {
                                 name: NaN,
