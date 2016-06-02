@@ -69,11 +69,7 @@ router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/lo
             res.clearCookie('redirect')
             res.redirect(redirectUrl + '?session=' + sessionId)
         } else {
-            res.send({
-                result: { session: sessionId },
-                version: APP_VERSION,
-                started: APP_STARTED
-            })
+            res.redirect('/auth/session/' + sessionId)
         }
     })
 })

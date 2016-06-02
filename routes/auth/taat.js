@@ -66,11 +66,7 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
             res.clearCookie('redirect')
             res.redirect(redirectUrl + '?session=' + sessionId)
         } else {
-            res.send({
-                result: { session: sessionId },
-                version: APP_VERSION,
-                started: APP_STARTED
-            })
+            res.redirect('/auth/session/' + sessionId)
         }
     })
 })
