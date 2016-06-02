@@ -87,9 +87,14 @@ app.use(cparser())
 app.use(bparser.json())
 app.use(bparser.urlencoded({extended: true}))
 
-// save request info to request collection and get user session
+// save request info to request collection
 app.use(entu.requestLog)
-app.use(entu.getUserSession)
+
+// routes mapping
+app.use('/', require('./routes/index'))
+app.use('/auth', require('./routes/auth/index'))
+app.use('/status', require('./routes/status'))
+app.use('/user', expressJwt({ secret: APP_JWT_SECRET }), require('./routes/user'))
 
 // provider mapping (only if configured)
 if(GOOGLE_ID && GOOGLE_SECRET) { app.use('/auth/google', require('./routes/auth/google')) }
@@ -97,12 +102,6 @@ if(FACEBOOK_ID && FACEBOOK_SECRET) { app.use('/auth/facebook', require('./routes
 if(TWITTER_KEY && TWITTER_SECRET) { app.use('/auth/twitter', require('./routes/auth/twitter')) }
 if(LIVE_ID && LIVE_SECRET) { app.use('/auth/live', require('./routes/auth/live')) }
 if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) { app.use('/auth/taat', require('./routes/auth/taat')) }
-
-// routes mapping
-app.use('/', require('./routes/index'))
-app.use('/auth', require('./routes/auth/index'))
-app.use('/status', require('./routes/status'))
-app.use('/user', expressJwt({ secret: APP_JWT_SECRET }), require('./routes/user'))
 
 // logs to getsentry.com - error
 if(process.env.SENTRY_DSN) {

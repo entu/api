@@ -1,9 +1,9 @@
 var _      = require('underscore')
 var async  = require('async')
-var entu   = require('../../helpers/entu')
 var jwt    = require('jsonwebtoken')
 var router = require('express').Router()
 
+var entu   = require('../../helpers/entu')
 
 
 router.get('/session/:sessionId', function(req, res, next) {
@@ -14,8 +14,6 @@ router.get('/session/:sessionId', function(req, res, next) {
 
     async.waterfall([
         function(callback) {
-            console.log(req.params.sessionId);
-
             entu.dbConnection('entu', callback)
         },
         function(con, callback) {
@@ -36,18 +34,18 @@ router.get('/session/:sessionId', function(req, res, next) {
                         entu.dbConnection(database, callback)
                     },
                     function(con, callback) {
-                        con.collection('entityVersion').findOne({'entu_user.value': session.user.email, _deleted: { $exists: false }}, {_id: false, _entity: true}, function(err, person) {
-                            if(err) { return callback(err) }
-                            if(!person) { return callback(null) }
-
-                            callback(null, {
-                                name: null,
-                                db: database,
-                                token: jwt.sign({ db: database, _entity: person._entity }, APP_JWT_SECRET)
-                            })
-                        })
+                        con.collection('entityVersion').findOne({'entu_user.value': session.user.email, _deleted: { $exists: false }}, {_id: false, _entity: true}, callback)
                     },
-                ], callback)
+                ], function(err, person) {
+                    if(err) { return callback(err) }
+                    if(!person) { return callback(null) }
+
+                    callback(null, {
+                        name: null,
+                        db: database,
+                        token: jwt.sign({ db: database, _entity: person._entity }, APP_JWT_SECRET)
+                    })
+                })
             }, callback)
         },
     ], function(err, persons) {
