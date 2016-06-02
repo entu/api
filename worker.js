@@ -15,7 +15,6 @@ var entu       = require('./helpers/entu')
 APP_VERSION        = process.env.VERSION || require('./package').version
 APP_STARTED        = new Date().toISOString()
 APP_PORT           = process.env.PORT || 3000
-APP_COOKIE_DOMAIN  = process.env.COOKIE_DOMAIN || ''
 APP_MONGODB        = process.env.MONGODB || 'mongodb://entu_mongodb:27017/'
 APP_JWT_SECRET     = process.env.JWT_SECRET || '123abc'
 
@@ -88,23 +87,9 @@ app.use(cparser())
 app.use(bparser.json())
 app.use(bparser.urlencoded({extended: true}))
 
-// JWT
-app.use(expressJwt({ secret: APP_JWT_SECRET }).unless({
-    path: [
-        '/auth',
-        '/status',
-    ]
-}))
-
 // save request info to request collection and get user session
 app.use(entu.requestLog)
 app.use(entu.getUserSession)
-
-// routes mapping
-app.use('/', require('./routes/index'))
-app.use('/auth/exit', require('./routes/auth/exit'))
-app.use('/status', require('./routes/status'))
-app.use('/user', require('./routes/user'))
 
 // provider mapping (only if configured)
 if(GOOGLE_ID && GOOGLE_SECRET) { app.use('/auth/google', require('./routes/auth/google')) }
@@ -113,13 +98,19 @@ if(TWITTER_KEY && TWITTER_SECRET) { app.use('/auth/twitter', require('./routes/a
 if(LIVE_ID && LIVE_SECRET) { app.use('/auth/live', require('./routes/auth/live')) }
 if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) { app.use('/auth/taat', require('./routes/auth/taat')) }
 
+// routes mapping
+app.use('/', require('./routes/index'))
+app.use('/auth', require('./routes/auth/index'))
+app.use('/status', require('./routes/status'))
+app.use('/user', expressJwt({ secret: APP_JWT_SECRET }), require('./routes/user'))
+
 // logs to getsentry.com - error
 if(process.env.SENTRY_DSN) {
     app.use(raven.middleware.express.errorHandler(ravenClient))
 }
 
 // show 404
-app.use(function(req, res) {
+app.use(function(req, res, next) {
     res.status(404).send({
         error: 'Not found',
         version: APP_VERSION,
@@ -130,7 +121,7 @@ app.use(function(req, res) {
 // show error
 app.use(function(err, req, res, next) {
     var code = 500
-    var error = err
+    var error = err.message || err
     if (err.constructor === Array) {
         code = err[0]
         error = err[1]

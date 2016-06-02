@@ -2,8 +2,27 @@ var _       = require('underscore')
 var async   = require('async')
 var mongo   = require('mongodb')
 var op      = require('object-path')
-var random  = require('randomstring')
 var request = require('request')
+
+
+
+// returns random v4 UUID
+var UUID = function(a) {
+    return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, UUID)
+}
+exports.UUID = UUID
+
+
+
+// returns MongoDb Id
+var objectId = function(id) {
+    try {
+        return new mongo.ObjectID(id)
+    } catch (e) {
+
+    }
+}
+exports.objectId = objectId
 
 
 
@@ -106,12 +125,11 @@ exports.getUserSession = function(req, res, next) {
 
 
 // Create user session
-exports.sessionStart = function(params, callback) {
+exports.addUserSession = function(params, callback) {
     if(!params.user) { return callback(new Error('No user')) }
 
     var session = {
-        created: new Date(),
-        key: random.generate(64),
+        created: new Date()
     }
 
     if(op.get(params, 'user.id')) { op.set(session, 'user.id', op.get(params, 'user.id')) }
@@ -148,16 +166,14 @@ exports.sessionStart = function(params, callback) {
         if(err) { return callback(err) }
         if(!r) { return callback(r) }
 
-        session._id = r.insertedId
-
-        callback(null, session)
+        callback(null, r.insertedId)
     })
 }
 
 
 
 // Destoy user session
-exports.sessionEnd = function(sessionKey, callback) {
+exports.deleteUserSession = function(sessionKey, callback) {
     if(!sessionKey) { return callback(new Error('No session key')) }
 
     async.waterfall([
