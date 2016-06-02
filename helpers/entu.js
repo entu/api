@@ -28,26 +28,20 @@ exports.objectId = objectId
 
 // returns db connection (creates if not set)
 var dbConnection = function(db, callback) {
-    async.series([
-        function(callback) {
-            if(_.has(APP_ENTU_DBS, db)) {
-                APP_ENTU_DBS[db].admin().ping(callback)
-            } else {
-                callback(new Error('No db connection'))
-            }
-        },
-    ], function(err) {
-        if(!err) { callback(null, APP_ENTU_DBS[db]) }
-
+    if(_.has(APP_ENTU_DBS, db)) {
+        callback(null, APP_ENTU_DBS[db])
+    } else {
         mongo.MongoClient.connect(APP_MONGODB + db, { server: { autoReconnect: true } }, function(err, connection) {
-            if(err) {
-                callback(err)
-            } else {
-                APP_ENTU_DBS[db] = connection
-                callback(null, APP_ENTU_DBS[db])
-            }
+            if(err) { return callback(err) }
+
+            connection.on('close', function(err) {
+                delete APP_ENTU_DBS[db]
+            })
+
+            APP_ENTU_DBS[db] = connection
+            callback(null, APP_ENTU_DBS[db])
         })
-    })
+    }
 }
 exports.dbConnection = dbConnection
 
@@ -182,6 +176,26 @@ exports.deleteUserSession = function(sessionKey, callback) {
         },
         function(connection, callback) {
             connection.collection('session').deleteMany({key: sessionKey}, callback)
+        },
+    ], function(err) {
+        if(err) { return callback(err) }
+
+        callback(null, {})
+    })
+}
+
+
+
+// Get entities
+exports.getEntity = function(id, callback) {
+    if(!id) { return callback(new Error('No id')) }
+
+    async.waterfall([
+        function(callback) {
+            dbConnection('entu', callback)
+        },
+        function(connection, callback) {
+            connection.collection('session').findOne({_id: sessionKey}).toArray(callback)
         },
     ], function(err) {
         if(err) { return callback(err) }
