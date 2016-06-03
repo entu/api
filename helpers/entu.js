@@ -68,7 +68,7 @@ exports.jwtCheck = function(req, res, next) {
     if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
 
     jwt.verify(parts[1], APP_JWT_SECRET, { issuer: req.hostname }, function(err, decoded) {
-        if(err) { return next(err) }
+        if(err) { return next([401, err]) }
 
         req.user = decoded
 
@@ -114,44 +114,9 @@ exports.requestLog = function(req, res, next) {
 
 
 
-// Create requestlog entry on response finish
-exports.getUserSession = function(req, res, next) {
-    var start = Date.now()
-
-    var session = req.get('X-Auth-Id')
-
-    try {
-        var session_id = new mongo.ObjectID(session.split('.')[0])
-        var session_key = session.split('.')[1]
-    } catch (e) {
-        return next(null)
-    }
-
-    if(!session_id || !session_key) { return next(null) }
-
-    async.waterfall([
-        function(callback) {
-            dbConnection('entu', callback)
-        },
-        function(connection, callback) {
-            connection.collection('session').findOne({ _id: session_id, key: session_key }, callback)
-        },
-    ], function(err, session) {
-        if(err) { return next(err) }
-        if(!session || !session._id || !session.key) { return next([403, 'No user']) }
-
-        res.locals.user = session
-
-        next(null)
-    })
-
-}
-
-
-
 // Create user session
 exports.addUserSession = function(params, callback) {
-    if(!params.user) { return callback(new Error('No user')) }
+    if(!params.user) { return callback(new Error('no user')) }
 
     var session = {
         created: new Date()
@@ -189,48 +154,7 @@ exports.addUserSession = function(params, callback) {
         },
     ], function(err, r) {
         if(err) { return callback(err) }
-        if(!r) { return callback(r) }
 
         callback(null, r.insertedId)
-    })
-}
-
-
-
-// Destoy user session
-exports.deleteUserSession = function(sessionKey, callback) {
-    if(!sessionKey) { return callback(new Error('No session key')) }
-
-    async.waterfall([
-        function(callback) {
-            dbConnection('entu', callback)
-        },
-        function(connection, callback) {
-            connection.collection('session').deleteMany({key: sessionKey}, callback)
-        },
-    ], function(err) {
-        if(err) { return callback(err) }
-
-        callback(null, {})
-    })
-}
-
-
-
-// Get entities
-exports.getEntity = function(id, callback) {
-    if(!id) { return callback(new Error('No id')) }
-
-    async.waterfall([
-        function(callback) {
-            dbConnection('entu', callback)
-        },
-        function(connection, callback) {
-            connection.collection('session').findOne({_id: sessionKey}).toArray(callback)
-        },
-    ], function(err) {
-        if(err) { return callback(err) }
-
-        callback(null, {})
     })
 }
