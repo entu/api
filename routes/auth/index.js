@@ -45,9 +45,9 @@ router.get('/session/:sessionId', function(req, res, next) {
                         db: database,
                         token: jwt.sign({}, APP_JWT_SECRET, {
                             issuer: req.hostname,
-                            audience: database
+                            audience: database,
                             subject: person._entity.toString(),
-                            expiresIn: '14d',
+                            expiresIn: '14d'
                         })
                     })
                 })
