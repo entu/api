@@ -3,7 +3,6 @@ if(process.env.NEW_RELIC_LICENSE_KEY) { require('newrelic') }
 var bparser    = require('body-parser')
 var cparser    = require('cookie-parser')
 var express    = require('express')
-var expressJwt = require('express-jwt')
 var passport   = require('passport')
 var raven      = require('raven')
 
