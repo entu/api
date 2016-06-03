@@ -6,12 +6,7 @@ var entu   = require('../helpers/entu')
 
 
 router.get('/', function(req, res, next) {
-    res.send({
-        result: req.user,
-        version: APP_VERSION,
-        started: APP_STARTED
-    })
-
+    res.respond(req.user)
 })
 
 

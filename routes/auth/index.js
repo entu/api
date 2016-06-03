@@ -54,11 +54,7 @@ router.get('/session/:sessionId', function(req, res, next) {
     ], function(err, persons) {
         if(err) { return next(err) }
 
-        res.send({
-            result: _.indexBy(persons, 'db'),
-            version: APP_VERSION,
-            started: APP_STARTED
-        })
+        res.respond(_.indexBy(persons, 'db'))
     })
 })
 

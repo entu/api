@@ -87,8 +87,9 @@ app.use(cparser())
 app.use(bparser.json())
 app.use(bparser.urlencoded({extended: true}))
 
-// save request info to request collection
+// save request info to request collection, check JWT, custom JSON output
 app.use(entu.requestLog)
+app.use(entu.customResponder)
 app.use(entu.jwtCheck)
 
 // routes mapping
@@ -122,11 +123,7 @@ app.use(function(err, req, res, next) {
         code = err[0]
         error = err[1]
     }
-    res.status(code).send({
-        error: error.toString(),
-        version: APP_VERSION,
-        started: APP_STARTED
-    })
+    res.respond(error.toString(), code)
 })
 
 // start server

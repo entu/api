@@ -99,7 +99,7 @@ router.get('/requests', function(req, res, next) {
     ], function(err, result) {
         if(err) { return next(err) }
 
-        res.send(result)
+        res.respond(result)
     })
 })
 

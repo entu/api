@@ -61,6 +61,28 @@ exports.dbConnection = dbConnection
 
 
 
+// send out JSON
+exports.customResponder = function(req, res, next) {
+    res.respond = function(body, errorCode) {
+        var message = {
+            version: APP_VERSION,
+            ms: Date.now() - req.startDt,
+            auth: !!req.user
+        }
+
+        if (errorCode) {
+            message.error = body
+            res.status(errorCode).send(message)
+        } else {
+            message.result = body
+            res.send(message)
+        }
+    }
+    next(null)
+}
+
+
+
 // check JWT header
 exports.jwtCheck = function(req, res, next) {
     var parts = op.get(req, 'headers.authorization', '').split(' ')
@@ -80,13 +102,13 @@ exports.jwtCheck = function(req, res, next) {
 
 // Create requestlog entry on response finish
 exports.requestLog = function(req, res, next) {
-    var start = Date.now()
+    req.startDt = Date.now()
 
     res.on('finish', function() {
         var request = {
             date: new Date(),
             ip: req.ip,
-            ms: Date.now() - start,
+            ms: Date.now() - req.startDt,
             status: res.statusCode,
             method: req.method,
             host: req.hostname,
