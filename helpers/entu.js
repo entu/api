@@ -1,5 +1,6 @@
 var _       = require('underscore')
 var async   = require('async')
+var jwt    = require('jsonwebtoken')
 var mongo   = require('mongodb')
 var op      = require('object-path')
 var request = require('request')
@@ -34,6 +35,19 @@ var dbConnection = function(db, callback) {
         mongo.MongoClient.connect(APP_MONGODB + db, { server: { autoReconnect: true } }, function(err, connection) {
             if(err) { return callback(err) }
 
+            // connection.collection('entityVersion').createIndex({ _mid: 1 }, { background:true }, function(err, indexName) {
+            //     if(err) { console.log(db, err) }
+            //     if(indexName) { console.log(db, indexName) }
+            // })
+            // connection.collection('entityVersion').createIndex({ _deleted: 1 }, { background:true }, function(err, indexName) {
+            //     if(err) { console.log(db, err) }
+            //     if(indexName) { console.log(db, indexName) }
+            // })
+            // connection.collection('entityVersion').createIndex({ 'entu_user.value': 1 }, { background:true }, function(err, indexName) {
+            //     if(err) { console.log(db, err) }
+            //     if(indexName) { console.log(db, indexName) }
+            // })
+
             connection.on('close', function(err) {
                 delete APP_ENTU_DBS[db]
             })
@@ -44,6 +58,23 @@ var dbConnection = function(db, callback) {
     }
 }
 exports.dbConnection = dbConnection
+
+
+
+// check JWT header
+exports.jwtCheck = function(req, res, next) {
+    var parts = op.get(req, 'headers.authorization', '').split(' ')
+
+    if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
+
+    jwt.verify(parts[1], APP_JWT_SECRET, { issuer: req.hostname }, function(err, decoded) {
+        if(err) { return next(err) }
+
+        req.user = decoded
+
+        next(null)
+    })
+}
 
 
 
@@ -78,7 +109,7 @@ exports.requestLog = function(req, res, next) {
         })
     })
 
-    next()
+    next(null)
 }
 
 
@@ -111,7 +142,7 @@ exports.getUserSession = function(req, res, next) {
 
         res.locals.user = session
 
-        next()
+        next(null)
     })
 
 }
