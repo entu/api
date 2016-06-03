@@ -43,7 +43,12 @@ router.get('/session/:sessionId', function(req, res, next) {
                     callback(null, {
                         name: null,
                         db: database,
-                        token: jwt.sign({ db: database, _entity: person._entity }, APP_JWT_SECRET)
+                        token: jwt.sign({}, APP_JWT_SECRET, {
+                            issuer: req.hostname,
+                            audience: database
+                            subject: person._entity.toString(),
+                            expiresIn: '14d',
+                        })
                     })
                 })
             }, callback)
