@@ -71,6 +71,7 @@ exports.customResponder = function(req, res, next) {
         }
 
         if (errorCode) {
+            message.errorCode = errorCode
             message.error = body
             res.status(errorCode).send(message)
         } else {
@@ -130,7 +131,10 @@ exports.requestLog = function(req, res, next) {
                 connection.collection('request').insertOne(request, callback)
             },
         ], function(err) {
-            if(err) { return next(err) }
+            if(err) {
+                console.error(err.toString(), '- Can\'t save request')
+                return next(null)
+            }
         })
     })
 
