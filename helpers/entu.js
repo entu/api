@@ -87,12 +87,15 @@ exports.customResponder = function(req, res, next) {
 exports.jwtCheck = function(req, res, next) {
     var parts = op.get(req, 'headers.authorization', '').split(' ')
 
+    op.set(req, 'customer', req.query.customer)
+
     if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
 
-    jwt.verify(parts[1], APP_JWT_SECRET, { issuer: req.hostname }, function(err, decoded) {
+    jwt.verify(parts[1], APP_JWT_SECRET, { issuer: req.hostname, audience: req.query.customer }, function(err, decoded) {
         if(err) { return next([401, err]) }
 
-        req.user = decoded
+        op.set(req, 'user', decoded.sub)
+        op.set(req, 'customer', decoded.aud)
 
         next(null)
     })
