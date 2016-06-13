@@ -24,25 +24,36 @@ var getVersions = function(callback) {
     connection.query(sql, function(err, rows) {
         if(err) { return callback(err) }
 
+        console.log(new Date())
+
         var entityVersions = {}
+
+        var entitiesCount = 0
+        var versionsCount = 0
+        var timer = new Date()
 
         var entities = _.groupBy(rows, 'entity_id')
         for (var e in entities) {
             if (!entities.hasOwnProperty(e)) { continue }
-            // if (!entities[e].entity_deleted !== null) { continue }
+            // if (!entity.entity_deleted !== null) { continue }
+
+            var entity = entities[e]
 
             var dates = ['']
-            for (var p in entities[e]) {
-                if (!entities[e].hasOwnProperty(p)) { continue }
+            for (var p in entity) {
+                if (!entity.hasOwnProperty(p)) { continue }
+
+                var property = entity[p]
+
                 dates.push([
-                    (entities[e][p].property_created_at || ''),
-                    (entities[e][p].property_created_by || ''),
-                    entities[e][p].property_definition === '_deleted_at' || entities[e][p].property_definition === '_deleted_by' ? 'del' : ''
+                    (property.property_created_at || ''),
+                    (property.property_created_by || ''),
+                    property.property_definition === '_deleted_at' || property.property_definition === '_deleted_by' ? 'del' : ''
                 ].join('#'))
                 dates.push([
-                    (entities[e][p].property_deleted_at || ''),
-                    (entities[e][p].property_deleted_by || ''),
-                    entities[e][p].property_definition === '_deleted_at' || entities[e][p].property_definition === '_deleted_by' ? 'del' : ''
+                    (property.property_deleted_at || ''),
+                    (property.property_deleted_by || ''),
+                    property.property_definition === '_deleted_at' || property.property_definition === '_deleted_by' ? 'del' : ''
                 ].join('#'))
             }
             dates = _.uniq(dates)
@@ -50,48 +61,52 @@ var getVersions = function(callback) {
             for (var d in dates) {
                 if (!dates.hasOwnProperty(d)) { continue }
 
+                var date = dates[d].split('#')[0]
+
                 var references = []
                 var files = []
-                for (var p in entities[e]) {
-                    if (!entities[e].hasOwnProperty(p)) { continue }
-                    if (!entities[e][p].property_value) { continue }
+                for (var p in entity) {
+                    if (!entity.hasOwnProperty(p)) { continue }
 
-                    var date = dates[d].split('#')[0]
-                    if (entities[e][p].property_created_at && entities[e][p].property_created_at > date) { continue }
-                    if (entities[e][p].property_deleted_at && entities[e][p].property_deleted_at <= date) { continue }
+                    var property = entity[p]
+
+                    if (!property.property_value) { continue }
+
+                    if (property.property_created_at && property.property_created_at > date) { continue }
+                    if (property.property_deleted_at && property.property_deleted_at <= date) { continue }
 
                     var value = {}
-                    if (entities[e][p].property_type) { value.type = entities[e][p].property_type }
-                    if (entities[e][p].property_language) { value.lang = entities[e][p].property_language }
+                    if (property.property_type) { value.type = property.property_type }
+                    if (property.property_language) { value.lang = property.property_language }
 
-                    switch(entities[e][p].property_type) {
+                    switch(property.property_type) {
                         case 'integer':
-                            value.value = parseInt(entities[e][p].property_value, 10)
+                            value.value = parseInt(property.property_value, 10)
                             break
                         case 'decimal':
-                            value.value = parseFloat(entities[e][p].property_value, 10)
+                            value.value = parseFloat(property.property_value, 10)
                             break
                         case 'boolean':
-                            value.value = entities[e][p].property_value === '1'
+                            value.value = property.property_value === '1'
                             break
                         case 'reference':
-                            value.value = entities[e][p].property_value
-                            references.push(entities[e][p].property_definition)
+                            value.value = property.property_value
+                            references.push(property.property_definition)
                             break
                         case 'date':
-                            value.value = new Date(entities[e][p].property_value)
+                            value.value = new Date(property.property_value)
                             break
                         case 'datetime':
-                            value.value = new Date(entities[e][p].property_value.replace(' ', 'T') + '-0000')
+                            value.value = new Date(property.property_value.replace(' ', 'T') + '-0000')
                             break
                         case 'file':
-                            value.value = parseInt(entities[e][p].property_value, 10)
-                            files.push(entities[e][p].property_definition)
+                            value.value = parseInt(property.property_value, 10)
+                            files.push(property.property_definition)
                             break
                         default:
-                            value.value = entities[e][p].property_value
+                            value.value = property.property_value
                     }
-                    op.push(entityVersions, [e, dates[d], entities[e][p].property_definition], value)
+                    op.push(entityVersions, [e, dates[d], property.property_definition], value)
                 }
                 if (!op.get(entityVersions, [e, dates[d]])) { continue }
 
@@ -102,6 +117,14 @@ var getVersions = function(callback) {
             }
 
             var versions = _.sortBy(_.values(entityVersions[e]), '_versionId')
+
+            entitiesCount = entitiesCount + 1
+            versionsCount = versionsCount + versions.length
+            if (entitiesCount % 100 === 0) {
+                var now = new Date()
+                console.log(new Date(), entitiesCount, versionsCount, versionsCount / (now - timer) * 100)
+                // timer = new Date()
+            }
 
             if (versions.length < 2) { continue }
 
