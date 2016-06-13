@@ -24,27 +24,21 @@ var getVersions = function(callback) {
     connection.query(sql, function(err, rows) {
         if(err) { return callback(err) }
 
-        console.log(new Date())
+        // console.log(new Date())
 
-        var entityVersions = {}
+        var entityVersions = []
 
         var entitiesCount = 0
         var versionsCount = 0
         var timer = new Date()
 
-        var entities = _.groupBy(rows, 'entity_id')
-        for (var e in entities) {
-            if (!entities.hasOwnProperty(e)) { continue }
-            // if (!entity.entity_deleted !== null) { continue }
+        var entities = _.values(_.groupBy(rows, 'entity_id'))
 
-            var entity = entities[e]
+        _.each(_.values(_.groupBy(rows, 'entity_id')), function(entity) {
+            var versions = {}
+            var dates = ['##']
 
-            var dates = ['']
-            for (var p in entity) {
-                if (!entity.hasOwnProperty(p)) { continue }
-
-                var property = entity[p]
-
+            _.each(entity, function(property) {
                 dates.push([
                     (property.property_created_at || ''),
                     (property.property_created_by || ''),
@@ -55,25 +49,18 @@ var getVersions = function(callback) {
                     (property.property_deleted_by || ''),
                     property.property_definition === '_deleted_at' || property.property_definition === '_deleted_by' ? 'del' : ''
                 ].join('#'))
-            }
+            })
             dates = _.uniq(dates)
 
-            for (var d in dates) {
-                if (!dates.hasOwnProperty(d)) { continue }
-
-                var date = dates[d].split('#')[0]
-
+            _.each(dates, function(date) {
                 var references = []
                 var files = []
-                for (var p in entity) {
-                    if (!entity.hasOwnProperty(p)) { continue }
 
-                    var property = entity[p]
+                _.each(entity, function(property) {
+                    if (!property.property_value) { return }
 
-                    if (!property.property_value) { continue }
-
-                    if (property.property_created_at && property.property_created_at > date) { continue }
-                    if (property.property_deleted_at && property.property_deleted_at <= date) { continue }
+                    if (property.property_created_at && property.property_created_at > date.split('#')[0]) { return }
+                    if (property.property_deleted_at && property.property_deleted_at <= date.split('#')[0]) { return }
 
                     var value = {}
                     if (property.property_type) { value.type = property.property_type }
@@ -106,29 +93,29 @@ var getVersions = function(callback) {
                         default:
                             value.value = property.property_value
                     }
-                    op.push(entityVersions, [e, dates[d], property.property_definition], value)
-                }
-                if (!op.get(entityVersions, [e, dates[d]])) { continue }
+                    op.push(versions, [date, property.property_definition], value)
+                })
+                if (!op.get(versions, [date])) { return }
 
-                op.set(entityVersions, [e, dates[d], '_versionId'], dates[d])
+                op.set(versions, [date, '_versionId'], date)
 
-                if (_.uniq(references).length > 0) { op.set(entityVersions, [e, dates[d], '_references'], _.uniq(references)) }
-                if (_.uniq(files).length > 0) { op.set(entityVersions, [e, dates[d], '_files'], _.uniq(files)) }
-            }
+                if (_.uniq(references).length > 0) { op.set(versions, [date, '_references'], _.uniq(references)) }
+                if (_.uniq(files).length > 0) { op.set(versions, [date, '_files'], _.uniq(files)) }
+            })
 
-            var versions = _.sortBy(_.values(entityVersions[e]), '_versionId')
+            var versions = _.sortBy(_.values(versions), '_versionId')
+            var versionsLength = versions.length
 
-            entitiesCount = entitiesCount + 1
-            versionsCount = versionsCount + versions.length
-            if (entitiesCount % 100 === 0) {
-                var now = new Date()
-                console.log(new Date(), entitiesCount, versionsCount, versionsCount / (now - timer) * 100)
-                // timer = new Date()
-            }
+            // entitiesCount = entitiesCount + 1
+            // versionsCount = versionsCount + versions.length
+            // if (entitiesCount % 1000 === 0) {
+            //     var now = new Date()
+            //     console.log(new Date(), entitiesCount, versionsCount, versionsCount / (now - timer) * 100)
+            // }
 
-            if (versions.length < 2) { continue }
+            if (versionsLength < 2) { return }
 
-            for (var i = 0; i < versions.length; i++) {
+            for (var i = 0; i < versionsLength; i++) {
                 if (i > 0 && versions[i]._versionId.split('#')[0]) {
                     versions[i]._created_at = {
                         type: 'datetime',
@@ -155,15 +142,14 @@ var getVersions = function(callback) {
                 }
             }
 
-            for (var i in entityVersions[e]) {
-                if (!entityVersions[e].hasOwnProperty(i)) { continue }
-                if (entityVersions[e][i]._versionId.split('#')[2] !== 'del') { continue }
+            for (var x = 0; x < versionsLength; x++) {
+                if (versions[x]._versionId.split('#')[2] !== 'del') { continue }
 
-                delete entityVersions[e][i]
+                delete versions[x]
             }
 
-            entityVersions[e] = _.sortBy(_.values(entityVersions[e]), '_versionId')
-        }
+            entityVersions.push(versions)
+        })
 
         callback(null, entityVersions)
     })
@@ -175,9 +161,8 @@ console.log(new Date())
 getVersions(function(err, data) {
     if(err) { return console.error(err.toString()) }
 
-    console.log(_.values(data).length)
-    // console.log(JSON.stringify(_.values(data)[1], null, '  '))
-    console.log(new Date())
+    console.log(new Date(), data.length)
+    // console.log(JSON.stringify(data[0], null, '  '))
 
     process.exit(0)
 })
