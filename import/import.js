@@ -6,19 +6,23 @@ var op     = require('object-path')
 var router = require('express').Router()
 
 
-
-require.extensions['.sql'] = function(module, filename) {
-    module.exports = fs.readFileSync(filename, 'utf8')
-}
-
-
-
+require.extensions['.sql'] = function(module, filename) { module.exports = fs.readFileSync(filename, 'utf8') }
 var sql = require('./data.sql')
 
 
 
-var getVersions = function(callback) {
+MYSQL_HOST = process.env.MYSQL_HOST || '127.0.0.1'
+MYSQL_USER = process.env.MYSQL_USER
+MYSQL_PASSWORD = process.env.MYSQL_PASSWORD
+
+
+
+var getVersions = function(mysqlDb, callback) {
     var connection = mysql.createConnection({
+        host: MYSQL_HOST,
+        user: MYSQL_USER,
+        password: MYSQL_PASSWORD,
+        database: mysqlDb
     })
 
     connection.query(sql, function(err, rows) {
@@ -157,12 +161,35 @@ var getVersions = function(callback) {
 
 
 
-console.log(new Date())
-getVersions(function(err, data) {
-    if(err) { return console.error(err.toString()) }
+async.waterfall([
+    function(callback) {
+        var connection = mysql.createConnection({
+            host: MYSQL_HOST,
+            user: MYSQL_USER,
+            password: MYSQL_PASSWORD,
+            database: 'entu'
+        })
+        connection.query('SELECT DISTINCT TABLE_SCHEMA AS db FROM information_schema.TABLES WHERE TABLE_SCHEMA NOT IN ("information_schema", "performance_schema", "mysql", "sys") ORDER BY TABLE_SCHEMA;', callback)
+    },
+    function(rows, fields, callback) {
+        callback(null, _.map(rows, function(row) {
+            return row.db
+        }))
+    },
+    function(databases, callback) {
+        console.log(new Date())
+        async.eachSeries(databases, function(db) {
+            getVersions(db, function(err, entities) {
+                if(err) { return callback(err) }
+                console.log(new Date(), db, entities.length)
+            })
+        }, callback)
+    },
+], function(err) {
+    if(err) {
+        console.error(err.toString())
+        process.exit(1)
+    }
 
-    console.log(new Date(), data.length)
-    // console.log(JSON.stringify(data[0], null, '  '))
-
-    process.exit(0)
+    process.exit(1)
 })
