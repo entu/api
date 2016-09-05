@@ -38,6 +38,21 @@ FROM (
         NULL AS property_deleted_by
     FROM entity
     WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
+    /* entity sharing */
+    UNION SELECT
+        id AS entity_id,
+        IF(is_deleted = 1, 1, NULL) AS entity_deleted,
+        '_sharing' AS property_definition,
+        'string' AS property_type,
+        NULL AS property_language,
+        sharing AS property_value,
+        created AS property_created_at,
+        IF(CAST(created_by AS UNSIGNED) > 0, CAST(created_by AS UNSIGNED), NULL) AS property_created_by,
+        NULL AS property_deleted_at,
+        NULL AS property_deleted_by
+    FROM entity
+    WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
+    AND sharing IS NOT NULL
     /* entity created at */
     UNION SELECT
         id AS entity_id,
@@ -102,7 +117,7 @@ FROM (
     /* properties */
     UNION SELECT
         p.entity_id,
-        IF(e.is_deleted = 1, 1, NULL) AS entity_deleted_at,
+        IF(e.is_deleted = 1, 1, NULL) AS entity_deleted,
         pd.dataproperty AS property_definition,
         pd.datatype AS property_type,
         CASE IF(pd.multilingual = 1, p.language, NULL)
@@ -138,7 +153,7 @@ FROM (
     /* parents */
     UNION SELECT
         r.related_entity_id AS entity_id,
-        IF(e.is_deleted = 1, 1, NULL) AS entity_deleted_at,
+        IF(e.is_deleted = 1, 1, NULL) AS entity_deleted,
         '_parent' AS property_definition,
         'reference' AS property_type,
         NULL AS property_language,
@@ -155,7 +170,7 @@ FROM (
     /* rights */
     UNION SELECT
         r.entity_id,
-        IF(e.is_deleted = 1, 1, NULL) AS entity_deleted_at,
+        IF(e.is_deleted = 1, 1, NULL) AS entity_deleted,
         CONCAT('_', r.relationship_definition_keyname) AS property_definition,
         'reference' AS property_type,
         NULL AS property_language,
@@ -178,4 +193,5 @@ ORDER BY
     property_definition,
     property_language,
     property_type,
-    property_value;
+    property_value
+-- LIMIT 50;
