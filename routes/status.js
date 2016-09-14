@@ -64,13 +64,12 @@ router.get('/sql', function(req, res, next) {
                         }
                     }
 
+
                     var customerConnection = mysql.createConnection(config)
                     customerConnection.query(mysql.format(require('../import/kill.sql'), parseInt(customerConf.process)), function (err, rows) {
-                        if (err) { console.log(err) }
-                        console.log('KILL:', customerConf.name, parseInt(customerConf.process))
-                        customerConnection.end(function (err) {
-                            callback(null)
-                        })
+                        console.log('KILL:', customerConf.name, 'process', parseInt(customerConf.process))
+                        if (err) { console.log(err.message) }
+                        customerConnection.end(callback)
                     })
                 })
             }, function (err, rows) {
@@ -78,13 +77,10 @@ router.get('/sql', function(req, res, next) {
                 callback(null, rows)
             })
         },
-        function(nothing, callback) {
-            connection.end(function (err) {
-                callback(null)
-            })
-        },
     ], function(err, result) {
         if(err) { return next(err) }
+
+        connection.end()
 
         res.respond(result)
     })
