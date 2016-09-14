@@ -58,16 +58,31 @@ router.get('/sql', function(req, res, next) {
 
                 async.waterfall([
                     function (callback) {
-                        customerConnection.query(require('../import/processlist.sql'), callback)
+                        customerConnection.query(require('../import/processlist.sql'), function (err, rows) {
+                            if (err) { console.log(err.message) }
+                            if (rows) { console.log(rows) }
+                            callback(err, rows)
+                        })
                     },
                     function (processlist, callback) {
                         async.each(processlist, function (p, callback) {
                             console.log('KILL:', customer.database, 'process nr', p.id)
-                            customerConnection.query(mysql.format(require('../import/kill.sql'), parseInt(p.id)), callback)
-                        }, callback)
+                            customerConnection.query(mysql.format(require('../import/kill.sql'), parseInt(p.id)), function (err, rows) {
+                                if (err) { console.log(err.message) }
+                                if (rows) { console.log(rows) }
+                                callback(err, rows)
+                            })
+                        }, function (err, rows) {
+                            if (err) { console.log(err.message) }
+                            if (rows) { console.log(rows) }
+                            callback(err, rows)
+                        })
                     },
                     function (callback) {
-                        customerConnection.end(callback)
+                        customerConnection.end(function (err) {
+                            if (err) { console.log(err.message) }
+                            callback(err)
+                        })
                     },
                 ], function (err, rows) {
                     if (err) { console.log(err.message) }
@@ -75,7 +90,11 @@ router.get('/sql', function(req, res, next) {
                     callback(err, rows)
                 })
 
-            }, callback)
+            }, function (err, rows) {
+                if (err) { console.log(err.message) }
+                if (rows) { console.log(rows) }
+                callback(err, rows)
+            })
         },
     ], function(err, result) {
         if(err) { return next(err) }
