@@ -60,7 +60,6 @@ router.get('/sql', function(req, res, next) {
                     function (callback) {
                         customerConnection.query(require('../import/processlist.sql'), function (err, rows) {
                             if (err) { console.log(err.message) }
-                            if (rows) { console.log(rows) }
                             callback(err, rows)
                         })
                     },
@@ -69,12 +68,10 @@ router.get('/sql', function(req, res, next) {
                             console.log('KILL:', customer.database, 'process nr', p.id)
                             customerConnection.query(mysql.format(require('../import/kill.sql'), parseInt(p.id)), function (err, rows) {
                                 if (err) { console.log(err.message) }
-                                if (rows) { console.log(rows) }
                                 callback(err, rows)
                             })
                         }, function (err, rows) {
                             if (err) { console.log(err.message) }
-                            if (rows) { console.log(rows) }
                             callback(err, rows)
                         })
                     },
@@ -86,13 +83,11 @@ router.get('/sql', function(req, res, next) {
                     },
                 ], function (err, rows) {
                     if (err) { console.log(err.message) }
-                    if (rows) { console.log(rows) }
                     callback(err, rows)
                 })
 
             }, function (err, rows) {
                 if (err) { console.log(err.message) }
-                if (rows) { console.log(rows) }
                 callback(err, rows)
             })
         },
