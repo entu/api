@@ -62,6 +62,7 @@ router.get('/sql', function(req, res, next) {
                     },
                     function (processlist, callback) {
                         async.each(processlist, function (p, callback) {
+                            console.log('KILL:', customer.database, 'process nr', p.id)
                             customerConnection.query(mysql.format(require('../import/kill.sql'), parseInt(p.id)), callback)
                         }, callback)
                     },
