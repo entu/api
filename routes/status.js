@@ -21,7 +21,6 @@ router.get('/sql', function(req, res, next) {
         password: MYSQL_PASSWORD,
         database: 'entu'
     }
-
     if (MYSQL_SSL_PATH) {
         config.ssl = {
             cert: fs.readFileSync(path.join(MYSQL_SSL_PATH, 'mysql-client-cert.pem')),
@@ -35,47 +34,47 @@ router.get('/sql', function(req, res, next) {
 
     async.waterfall([
         function(callback) {
-            connection.query(require('../import/processlist.sql'), function (err, rows) {
+            connection.query(require('../import/customer_conf.sql'), function (err, rows) {
                 callback(err, rows)
             })
         },
-        function(processes, callback) {
-            async.each(processes, function (p, callback) {
-                connection.query(mysql.format(require('../import/customer_conf.sql'), [p.id, p.db]), function (err, rows) {
-                    if(err) { callback(err) }
-
-                    var customerConf = {}
-                    for (var i = 0; i < rows.length; i++) {
-                        customerConf[rows[i].p] = rows[i].v
+        function(customers, callback) {
+            async.each(customers, function (customer, callback) {
+                var config = {
+                    host: customer.host,
+                    user: customer.user,
+                    password: customer.password,
+                    database: customer.database
+                }
+                if (customer.ssl) {
+                    config.ssl = {
+                        cert: fs.readFileSync(path.join(customer.ssl, 'mysql-client-cert.pem')),
+                        key: fs.readFileSync(path.join(customer.ssl, 'mysql-client-key.pem')),
+                        ca: fs.readFileSync(path.join(customer.ssl, 'mysql-server-ca.pem'))
                     }
+                }
 
-                    var config = {
-                        host: customerConf.host,
-                        user: customerConf.user,
-                        password: customerConf.password,
-                        database: customerConf.name
-                    }
+                var customerConnection = mysql.createConnection(config)
 
-                    if (customerConf.ssl) {
-                        config.ssl = {
-                            cert: fs.readFileSync(path.join(customerConf.ssl, 'mysql-client-cert.pem')),
-                            key: fs.readFileSync(path.join(customerConf.ssl, 'mysql-client-key.pem')),
-                            ca: fs.readFileSync(path.join(customerConf.ssl, 'mysql-server-ca.pem'))
-                        }
-                    }
-
-
-                    var customerConnection = mysql.createConnection(config)
-                    customerConnection.query(mysql.format(require('../import/kill.sql'), parseInt(customerConf.process)), function (err, rows) {
-                        console.log('KILL:', customerConf.name, 'process', parseInt(customerConf.process))
-                        if (err) { console.log(err.message) }
+                async.waterfall([
+                    function (callback) {
+                        customerConnection.query(require('../import/processlist.sql'), callback)
+                    },
+                    function (processlist, callback) {
+                        async.each(processlist, function (p, callback) {
+                            customerConnection.query(mysql.format(require('../import/kill.sql'), parseInt(p.id)), callback)
+                        }, callback)
+                    },
+                    function (callback) {
                         customerConnection.end(callback)
-                    })
+                    },
+                ], function (err, rows) {
+                    if (err) { console.log(err.message) }
+                    if (rows) { console.log(rows) }
+                    callback(err, rows)
                 })
-            }, function (err, rows) {
-                if(err) { callback(err) }
-                callback(null, rows)
-            })
+
+            }, callback)
         },
     ], function(err, result) {
         if(err) { return next(err) }

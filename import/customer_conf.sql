@@ -1,19 +1,44 @@
 SELECT
-    'process' AS p,
-    ? AS v
-UNION SELECT
-    REPLACE(property_definition.dataproperty, 'database-', '') AS k,
-    property.value_string AS v
+    (
+        SELECT value_string
+        FROM property
+        WHERE is_deleted = 0
+        AND entity_id = relationship.related_entity_id
+        AND property_definition_keyname = 'customer-database-host'
+    ) AS host,
+    (
+        SELECT value_string
+        FROM property
+        WHERE is_deleted = 0
+        AND entity_id = relationship.related_entity_id
+        AND property_definition_keyname = 'customer-database-name'
+    ) AS `database`,
+    (
+        SELECT value_string
+        FROM property
+        WHERE is_deleted = 0
+        AND entity_id = relationship.related_entity_id
+        AND property_definition_keyname = 'customer-database-user'
+    ) AS user,
+    (
+        SELECT value_string
+        FROM property
+        WHERE is_deleted = 0
+        AND entity_id = relationship.related_entity_id
+        AND property_definition_keyname = 'customer-database-password'
+    ) AS password,
+    (
+        SELECT value_string
+        FROM property
+        WHERE is_deleted = 0
+        AND entity_id = relationship.related_entity_id
+        AND property_definition_keyname = 'customer-database-ssl'
+    ) AS `ssl`
 FROM
-    property,
-    property_definition
-WHERE property.property_definition_keyname = property_definition.keyname
-AND property.is_deleted = 0
-AND property_definition.dataproperty IN ('database-host', 'database-name', 'database-user', 'database-password', 'database-ssl')
-AND entity_id = (
-    SELECT entity_id
-    FROM property
-    WHERE property_definition_keyname = 'customer-database-name'
-    AND value_string = ?
-    LIMIT 1
-);
+    relationship,
+    entity
+WHERE entity.id = relationship.related_entity_id
+AND relationship.is_deleted = 0
+AND relationship.relationship_definition_keyname = 'child'
+AND relationship.entity_id = 210658
+AND entity.is_deleted = 0
