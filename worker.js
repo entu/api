@@ -11,11 +11,17 @@ var entu       = require('./helpers/entu')
 
 
 // global variables (and list of all used environment variables)
-APP_VERSION        = process.env.VERSION || require('./package').version
-APP_STARTED        = new Date().toISOString()
-APP_PORT           = process.env.PORT || 3000
-APP_MONGODB        = process.env.MONGODB || 'mongodb://entu_mongodb:27017/'
-APP_JWT_SECRET     = process.env.JWT_SECRET || '123abc'
+APP_VERSION = process.env.VERSION || require('./package').version
+APP_STARTED = new Date().toISOString()
+APP_PORT = process.env.PORT || 3000
+APP_JWT_SECRET = process.env.JWT_SECRET || '123abc'
+
+APP_MONGODB = process.env.MONGODB || 'mongodb://entu_mongodb:27017/'
+
+MYSQL_HOST = process.env.MYSQL_HOST || '127.0.0.1'
+MYSQL_USER = process.env.MYSQL_USER
+MYSQL_PASSWORD = process.env.MYSQL_PASSWORD
+MYSQL_SSL_PATH = process.env.MYSQL_SSL_PATH
 
 GOOGLE_ID = process.env.GOOGLE_ID
 GOOGLE_SECRET = process.env.GOOGLE_SECRET
