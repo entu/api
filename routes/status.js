@@ -78,7 +78,7 @@ router.get('/sql', function(req, res, next) {
                             callback(err, rows)
                         })
                     },
-                    function (callback) {
+                    function (data, callback) {
                         customerConnection.end(function (err) {
                             if (err) { console.log(err.message) }
                             callback(err)
