@@ -24,9 +24,9 @@ router.get('/sql', function(req, res, next) {
 
     if (MYSQL_SSL_PATH) {
         config.ssl = {
-            cert: fs.readFileSync(path.join(MYSQL_SSL_PATH, 'client-cert.pem')),
-            key: fs.readFileSync(path.join(MYSQL_SSL_PATH, 'client-key.pem')),
-            ca: fs.readFileSync(path.join(MYSQL_SSL_PATH, 'server-ca.pem'))
+            cert: fs.readFileSync(path.join(MYSQL_SSL_PATH, 'mysql-client-cert.pem')),
+            key: fs.readFileSync(path.join(MYSQL_SSL_PATH, 'mysql-client-key.pem')),
+            ca: fs.readFileSync(path.join(MYSQL_SSL_PATH, 'mysql-server-ca.pem'))
         }
     }
 
@@ -58,9 +58,9 @@ router.get('/sql', function(req, res, next) {
 
                     if (customerConf.ssl) {
                         config.ssl = {
-                            cert: fs.readFileSync(path.join(customerConf.ssl, 'client-cert.pem')),
-                            key: fs.readFileSync(path.join(customerConf.ssl, 'client-key.pem')),
-                            ca: fs.readFileSync(path.join(customerConf.ssl, 'server-ca.pem'))
+                            cert: fs.readFileSync(path.join(customerConf.ssl, 'mysql-client-cert.pem')),
+                            key: fs.readFileSync(path.join(customerConf.ssl, 'mysql-client-key.pem')),
+                            ca: fs.readFileSync(path.join(customerConf.ssl, 'mysql-server-ca.pem'))
                         }
                     }
 
