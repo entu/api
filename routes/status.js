@@ -59,35 +59,35 @@ router.get('/sql', function(req, res, next) {
                 async.waterfall([
                     function (callback) {
                         customerConnection.query(require('../import/processlist.sql'), function (err, rows) {
-                            if (err) { console.log(err.message) }
+                            if (err) { console.log(new Date(), err.message) }
                             callback(err, rows)
                         })
                     },
                     function (processlist, callback) {
                         async.each(processlist, function (p, callback) {
-                            console.log('KILL:', customer.database, 'process nr', p.id)
+                            console.log(new Date(), 'KILL:', customer.database, 'process nr', p.id)
                             customerConnection.query(mysql.format(require('../import/kill.sql'), parseInt(p.id)), function (err, rows) {
-                                if (err) { console.log(err.message) }
+                                if (err) { console.log(new Date(), err.message) }
                                 callback(err, rows)
                             })
                         }, function (err, rows) {
-                            if (err) { console.log(err.message) }
+                            if (err) { console.log(new Date(), err.message) }
                             callback(err, rows)
                         })
                     },
                     function (data, callback) {
                         customerConnection.end(function (err) {
-                            if (err) { console.log(err.message) }
+                            if (err) { console.log(new Date(), err.message) }
                             callback(err)
                         })
                     },
                 ], function (err, rows) {
-                    if (err) { console.log(err.message) }
+                    if (err) { console.log(new Date(), err.message) }
                     callback(err, rows)
                 })
 
             }, function (err, rows) {
-                if (err) { console.log(err.message) }
+                if (err) { console.log(new Date(), err.message) }
                 callback(err, rows)
             })
         },
