@@ -19,7 +19,7 @@
     "node": "6.0.x"
   },
   "dependencies": {
-    "async": "1.x",
+    "async": "2.x",
     "body-parser": "1.x",
     "cluster": "0.x",
     "cookie-parser": "1.x",

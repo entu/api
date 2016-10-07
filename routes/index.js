@@ -1,5 +1,4 @@
-var router   = require('express').Router()
-
+var router = require('express').Router()
 
 
 router.get('/', function(req, res) {
