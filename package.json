@@ -35,8 +35,9 @@
     "passport-saml": "0.x",
     "passport-twitter": "1.x",
     "passport-windowslive": "1.x",
-    "raven": "0.x",
+    "raven": "1.x",
     "request": "2.x",
+    "soap": "0.x",
     "underscore": "1.x"
   }
 }
