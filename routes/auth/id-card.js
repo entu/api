@@ -15,21 +15,19 @@ router.get('/', function(req, res) {
 
 
 router.get('/callback', function(req, res, next) {
-    if (req.headers.ssl_client_verify !== 'SUCCESS' || !req.headers.ssl_client_cert) {
-        return next(new Error('ID-Card error'))
-    }
-
-    var url = 'https://digidocservice.sk.ee/?wsdl'
-    var args = {
-        Certificate: req.headers.ssl_client_cert
-    }
-
     async.waterfall([
         function (callback) {
-            soap.createClient(url, callback)
+            if (req.headers.ssl_client_verify === 'SUCCESS' && req.headers.ssl_client_cert) {
+                callback(null)
+            } else {
+                callback(new Error('ID-Card reading error'))
+            }
+        },
+        function (callback) {
+            soap.createClient('https://digidocservice.sk.ee/?wsdl', callback)
         },
         function (client, callback) {
-            client.CheckCertificate(args, callback)
+            client.CheckCertificate({ Certificate: req.headers.ssl_client_cert }, callback)
         },
         function (result, callback) {
             if(op.get(result, ['Status', '$value']) !== 'GOOD') { return callback(new Error('Not valid ID-Card')) }
