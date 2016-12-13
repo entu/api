@@ -1,4 +1,5 @@
 var _      = require('underscore')
+var async  = require('async')
 var op     = require('object-path')
 var router = require('express').Router()
 var soap   = require('soap')
@@ -23,9 +24,15 @@ router.get('/callback', function(req, res, next) {
         Certificate: req.headers.ssl_client_cert
     }
 
-    soap.createClient(url, function(err, client) {
-        client.CheckCertificate(args, function(err, result) {
-            if(op.get(result, ['Status', '$value']) !== 'GOOD') { return next(new Error('Not valid ID-Card')) }
+    async.waterfall([
+        function (callback) {
+            soap.createClient(url, callback)
+        },
+        function (client, callback) {
+            client.CheckCertificate(args, callback)
+        },
+        function (result, callback) {
+            if(op.get(result, ['Status', '$value']) !== 'GOOD') { return callback(new Error('Not valid ID-Card')) }
 
             var user = {}
             var name = _.compact([
@@ -37,23 +44,19 @@ router.get('/callback', function(req, res, next) {
             op.set(user, 'id', op.get(result, ['UserIDCode', '$value']))
             op.set(user, 'name', name)
 
-            entu.addUserSession({
-                request: req,
-                user: user
-            }, function(err, sessionId) {
-                if(err) { return next(err) }
+            entu.addUserSession({ request: req, user: user }, callback)
+        }
+    ], function (err, sessionId) {
+        if(err) { return next(err) }
 
-                var redirectUrl = req.cookies.redirect
-                if(redirectUrl) {
-                    res.clearCookie('redirect')
-                    res.redirect(redirectUrl + '?session=' + sessionId)
-                } else {
-                    res.redirect('/auth/session/' + sessionId)
-                }
-            })
-        })
+        var redirectUrl = req.cookies.redirect
+        if(redirectUrl) {
+            res.clearCookie('redirect')
+            res.redirect(redirectUrl + '?session=' + sessionId)
+        } else {
+            res.redirect('/auth/session/' + sessionId)
+        }
     })
-
 })
 
 
