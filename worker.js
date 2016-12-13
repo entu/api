@@ -104,6 +104,8 @@ app.use('/status', require('./routes/status'))
 app.use('/user', require('./routes/user'))
 
 // provider mapping (only if configured)
+app.use('/auth/id-card', require('./routes/auth/id-card'))
+
 if(GOOGLE_ID && GOOGLE_SECRET) { app.use('/auth/google', require('./routes/auth/google')) }
 if(FACEBOOK_ID && FACEBOOK_SECRET) { app.use('/auth/facebook', require('./routes/auth/facebook')) }
 if(TWITTER_KEY && TWITTER_SECRET) { app.use('/auth/twitter', require('./routes/auth/twitter')) }
