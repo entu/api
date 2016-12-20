@@ -24,11 +24,7 @@ router.get('/callback', function(req, res, next) {
             }
         },
         function (callback) {
-            soap.createClient('https://digidocservice.sk.ee/?wsdl', {}, function(err, client) {
-                if(err) { return callback(err) }
-
-                callback(null, client)
-            })
+            soap.createClient('https://digidocservice.sk.ee/?wsdl', {}, callback)
         },
         function (client, callback) {
             client.CheckCertificate({ Certificate: req.headers.ssl_client_cert }, function(err, result) {
@@ -52,11 +48,7 @@ router.get('/callback', function(req, res, next) {
             op.set(user, 'name', name)
             op.set(user, 'email', op.get(result, ['UserIDCode', '$value']) + '@eesti.ee')
 
-            entu.addUserSession({ request: req, user: user }, function(err, sessionId) {
-                if(err) { return callback(err) }
-
-                callback(null, sessionId)
-            })
+            entu.addUserSession({ request: req, user: user }, callback)
         }
     ], function (err, sessionId) {
         if(err) { return next(err) }
