@@ -15,8 +15,6 @@ router.get('/', function(req, res) {
 
 
 router.get('/callback', function(req, res, next) {
-    console.log(req.headers.ssl_client_cert)
-
     async.waterfall([
         function (callback) {
             if (req.headers.ssl_client_verify === 'SUCCESS' && req.headers.ssl_client_cert) {
@@ -26,13 +24,22 @@ router.get('/callback', function(req, res, next) {
             }
         },
         function (callback) {
-            soap.createClient('https://digidocservice.sk.ee/?wsdl', callback)
+            soap.createClient('https://digidocservice.sk.ee/?wsdl', {}, function(err, client) {
+                if(err) { return callback(err) }
+
+                callback(null, client)
+            })
         },
         function (client, callback) {
-            client.CheckCertificate({ Certificate: req.headers.ssl_client_cert }, callback)
+            client.CheckCertificate({ Certificate: req.headers.ssl_client_cert }, function(err, result) {
+                if(err) { return callback(err) }
+
+                callback(null, result)
+            })
         },
         function (result, callback) {
             if(op.get(result, ['Status', '$value']) !== 'GOOD') { return callback(new Error('Not valid ID-Card')) }
+            if(!op.get(result, ['UserIDCode', '$value'])) { return callback(new Error('Not ID code')) }
 
             var user = {}
             var name = _.compact([
@@ -43,8 +50,13 @@ router.get('/callback', function(req, res, next) {
             op.set(user, 'provider', 'id-card')
             op.set(user, 'id', op.get(result, ['UserIDCode', '$value']))
             op.set(user, 'name', name)
+            op.set(user, 'email', op.get(result, ['UserIDCode', '$value']) + '@eesti.ee')
 
-            entu.addUserSession({ request: req, user: user }, callback)
+            entu.addUserSession({ request: req, user: user }, function(err, sessionId) {
+                if(err) { return callback(err) }
+
+                callback(null, sessionId)
+            })
         }
     ], function (err, sessionId) {
         if(err) { return next(err) }
