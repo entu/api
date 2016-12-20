@@ -15,6 +15,8 @@ router.get('/', function(req, res) {
 
 
 router.get('/callback', function(req, res, next) {
+    console.log(req.headers.ssl_client_cert)
+
     async.waterfall([
         function (callback) {
             if (req.headers.ssl_client_verify === 'SUCCESS' && req.headers.ssl_client_cert) {
@@ -42,11 +44,7 @@ router.get('/callback', function(req, res, next) {
             op.set(user, 'id', op.get(result, ['UserIDCode', '$value']))
             op.set(user, 'name', name)
 
-            entu.addUserSession({ request: req, user: user }, function (err, sessionId) {
-                if (err) { return callback(err) }
-
-                callback(null, sessionId)
-            })
+            entu.addUserSession({ request: req, user: user }, callback)
         }
     ], function (err, sessionId) {
         if(err) { return next(err) }
