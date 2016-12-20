@@ -79,7 +79,7 @@ app.set('trust proxy', true)
 
 // logs to getsentry.com - start
 if(process.env.SENTRY_DSN) {
-    app.use(raven.middleware.express.requestHandler(ravenClient))
+    app.use(raven.requestHandler(ravenClient))
 }
 
 // Initialize Passport
@@ -114,7 +114,7 @@ if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) { app.use('/auth/taat', req
 
 // logs to getsentry.com - error
 if(process.env.SENTRY_DSN) {
-    app.use(raven.middleware.express.errorHandler(ravenClient))
+    app.use(raven.errorHandler(ravenClient))
 }
 
 // show 404
