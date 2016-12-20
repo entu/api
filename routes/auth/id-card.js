@@ -42,7 +42,11 @@ router.get('/callback', function(req, res, next) {
             op.set(user, 'id', op.get(result, ['UserIDCode', '$value']))
             op.set(user, 'name', name)
 
-            entu.addUserSession({ request: req, user: user }, callback)
+            entu.addUserSession({ request: req, user: user }, function (err, sessionId) {
+                if (err) { return callback(err) }
+
+                callback(null, sessionId)
+            })
         }
     ], function (err, sessionId) {
         if(err) { return next(err) }
