@@ -57,13 +57,13 @@ passport.deserializeUser(function(user, done) {
 
 // initialize getsentry.com client
 if(process.env.SENTRY_DSN) {
-    var ravenClient = new raven.Client({
+    raven.config(process.env.SENTRY_DSN, {
         release: APP_VERSION,
         dataCallback: function(data) {
             delete data.request.env
             return data
         }
-    })
+    }).install()
 }
 
 
