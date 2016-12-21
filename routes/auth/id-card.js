@@ -15,6 +15,8 @@ router.get('/', function(req, res) {
 
 
 router.get('/callback', function(req, res, next) {
+    console.log(JSON.stringify(req.headers, null, '  '))
+
     async.waterfall([
         function (callback) {
             if (req.headers.ssl_client_verify === 'SUCCESS' && req.headers.ssl_client_cert) {
@@ -34,6 +36,8 @@ router.get('/callback', function(req, res, next) {
             })
         },
         function (result, callback) {
+            console.log(JSON.stringify(result, null, '  '))
+
             if(op.get(result, ['Status', '$value']) !== 'GOOD') { return callback(new Error('Not valid ID-Card')) }
             if(!op.get(result, ['UserIDCode', '$value'])) { return callback(new Error('Not ID code')) }
 
