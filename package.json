@@ -13,10 +13,7 @@
     "url": "https://github.com/argoroots/entu-api/issues"
   },
   "scripts": {
-    "start": "node ./master.js"
-  },
-  "engines": {
-    "node": "6.0.x"
+    "start": "node ./worker.js"
   },
   "dependencies": {
     "async": "2.x",
