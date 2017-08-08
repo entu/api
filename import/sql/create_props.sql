@@ -20,12 +20,10 @@ CREATE TABLE `props` (
   `definition` varchar(32) DEFAULT NULL,
   `language` varchar(2) DEFAULT NULL,
   `type` varchar(16) DEFAULT NULL,
-  `value_string` varchar(512) DEFAULT NULL,
+  `value_text` text DEFAULT NULL,
   `value_integer` int(11) DEFAULT NULL,
   `value_decimal` decimal(15,4) DEFAULT NULL,
-  `value_date` date DEFAULT NULL,
-  `value_datetime` datetime DEFAULT NULL,
-  `value_text` text,
+  `value_date` datetime DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
   `created_by` int(11) DEFAULT NULL,
   `deleted_at` datetime DEFAULT NULL,
@@ -34,14 +32,7 @@ CREATE TABLE `props` (
   KEY `entity_id` (`entity_id`),
   KEY `definition` (`definition`),
   KEY `language` (`language`),
-  KEY `type` (`type`),
-  KEY `value_string` (`value_string`),
-  KEY `value_integer` (`value_integer`),
-  KEY `value_decimal` (`value_decimal`),
-  KEY `value_date` (`value_date`),
-  KEY `value_datetime` (`value_datetime`),
-  KEY `created_at` (`created_at`),
-  KEY `deleted_at` (`deleted_at`)
+  KEY `type` (`type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -59,7 +50,7 @@ WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'co
 
 
 /* entity definition */
-INSERT INTO props (entity_id, definition, type, value_string, created_at, created_by)
+INSERT INTO props (entity_id, definition, type, value_text, created_at, created_by)
 SELECT
     id,
     '_definition',
@@ -72,7 +63,7 @@ WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'co
 
 
 /* entity created at */
-INSERT INTO props (entity_id, definition, type, value_datetime, created_at, created_by)
+INSERT INTO props (entity_id, definition, type, value_date, created_at, created_by)
 SELECT
     id,
     '_created_at',
@@ -100,7 +91,7 @@ AND IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL) IS NOT NULL
 
 
 /* entity deleted at */
-INSERT INTO props (entity_id, definition, type, value_datetime, created_at, created_by)
+INSERT INTO props (entity_id, definition, type, value_date, created_at, created_by)
 SELECT
     id,
     '_deleted_at',
@@ -165,7 +156,7 @@ AND r.relationship_definition_keyname IN ('editor', 'expander', 'owner', 'viewer
 
 
 /* entity sharing */
-INSERT INTO props (entity_id, definition, type, value_string, created_at, created_by)
+INSERT INTO props (entity_id, definition, type, value_text, created_at, created_by)
 SELECT
     id,
     '_sharing',
@@ -179,7 +170,7 @@ AND sharing IS NOT NULL;
 
 
 /* properties */
-INSERT INTO props (entity_id, definition, type, language, value_string, value_text, value_integer, value_decimal, value_date, value_datetime, created_at, created_by, deleted_at, deleted_by)
+INSERT INTO props (entity_id, definition, type, language, value_text, value_integer, value_decimal, value_date, created_at, created_by, deleted_at, deleted_by)
 SELECT
     p.entity_id,
     pd.dataproperty,
@@ -191,9 +182,6 @@ SELECT
     END,
     CASE pd.datatype
         WHEN 'string' THEN TRIM(p.value_string)
-        ELSE NULL
-    END,
-    CASE pd.datatype
         WHEN 'text' THEN TRIM(p.value_text)
         ELSE NULL
     END,
@@ -210,9 +198,6 @@ SELECT
     END,
     CASE pd.datatype
         WHEN 'date' THEN DATE_FORMAT(p.value_datetime, '%Y-%m-%d')
-        ELSE NULL
-    END,
-    CASE pd.datatype
         WHEN 'datetime' THEN DATE_FORMAT(CONVERT_TZ(p.value_datetime, 'Europe/Tallinn', 'UTC'), '%Y-%m-%d %H:%i:%s')
         ELSE NULL
     END,
