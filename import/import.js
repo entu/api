@@ -133,20 +133,8 @@ var importProps = function(mysqlDb, callback) {
             mongoCon.collection('property').updateMany({ deleted_by: null }, { $unset: { deleted_by: '' } }, callback)
         },
         function(r, callback) {
-            console.log((new Date()).toISOString(), mysqlDb, 'rename created_at field to created.at')
-            mongoCon.collection('property').updateMany({ created_at: { $ne: null } }, { $rename: { 'created_at': 'created.at' } }, callback)
-        },
-        function(r, callback) {
-            console.log((new Date()).toISOString(), mysqlDb, 'rename created_by field to created.by')
-            mongoCon.collection('property').updateMany({ created_by: { $ne: null } }, { $rename: { 'created_by': 'created.by' } }, callback)
-        },
-        function(r, callback) {
-            console.log((new Date()).toISOString(), mysqlDb, 'rename deleted_at field to deleted.at')
-            mongoCon.collection('property').updateMany({ deleted_at: { $ne: null } }, { $rename: { 'deleted_at': 'deleted.at' } }, callback)
-        },
-        function(r, callback) {
-            console.log((new Date()).toISOString(), mysqlDb, 'rename deleted_by field to deleted.by')
-            mongoCon.collection('property').updateMany({ deleted_by: { $ne: null } }, { $rename: { 'deleted_by': 'deleted.by' } }, callback)
+            console.log((new Date()).toISOString(), mysqlDb, 'rename created and deleted fields')
+            mongoCon.collection('property').updateMany({ $rename: { 'created_at': 'created.at', 'created_by': 'created.by', 'deleted_at': 'deleted.at', 'deleted_by': 'deleted.by' } }, callback)
         },
 
         function(r, callback) {
