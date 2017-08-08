@@ -67,7 +67,7 @@ var importProps = function(mysqlDb, callback) {
                 { key: { entity: 1 } },
                 { key: { type: 1 } },
                 { key: { def: 1 } },
-                { key: { value_integer: 1 } },
+                // { key: { value: 1 } },
                 { key: { 'created.by': 1 } },
                 { key: { 'deleted.by': 1 } },
             ], callback)
@@ -94,6 +94,23 @@ var importProps = function(mysqlDb, callback) {
         function(props, fields, callback) {
             console.log((new Date()).toISOString(), mysqlDb, 'insert props to mongodb')
             mongoCon.collection('property').insertMany(props, callback)
+        },
+
+        function(r, callback) {
+            console.log((new Date()).toISOString(), mysqlDb, 'rename value_text to value')
+            mongoCon.collection('property').updateMany({ value: { $exists: false }, value_text: { $ne: null } }, { $rename: { 'value_text': 'value' } }, callback)
+        },
+        function(r, callback) {
+            console.log((new Date()).toISOString(), mysqlDb, 'rename value_integer to value')
+            mongoCon.collection('property').updateMany({ value: { $exists: false }, value_integer: { $ne: null } }, { $rename: { 'value_integer': 'value' } }, callback)
+        },
+        function(r, callback) {
+            console.log((new Date()).toISOString(), mysqlDb, 'rename value_decimal to value')
+            mongoCon.collection('property').updateMany({ value: { $exists: false }, value_decimal: { $ne: null } }, { $rename: { 'value_decimal': 'value' } }, callback)
+        },
+        function(r, callback) {
+            console.log((new Date()).toISOString(), mysqlDb, 'rename value_date to value')
+            mongoCon.collection('property').updateMany({ value: { $exists: false }, value_date: { $ne: null } }, { $rename: { 'value_date': 'value' } }, callback)
         },
 
         function(r, callback) {
@@ -132,9 +149,10 @@ var importProps = function(mysqlDb, callback) {
             console.log((new Date()).toISOString(), mysqlDb, 'delete empty deleted_by field')
             mongoCon.collection('property').updateMany({ deleted_by: null }, { $unset: { deleted_by: '' } }, callback)
         },
+
         function(r, callback) {
-            console.log((new Date()).toISOString(), mysqlDb, 'rename created and deleted fields')
-            mongoCon.collection('property').updateMany({ $rename: { 'created_at': 'created.at', 'created_by': 'created.by', 'deleted_at': 'deleted.at', 'deleted_by': 'deleted.by' } }, callback)
+            console.log((new Date()).toISOString(), mysqlDb, 'rename created/deleted fields')
+            mongoCon.collection('property').updateMany({}, { $rename: { 'created_at': 'created.at', 'created_by': 'created.by', 'deleted_at': 'deleted.at', 'deleted_by': 'deleted.by' } }, callback)
         },
 
         function(r, callback) {
@@ -151,7 +169,7 @@ var importProps = function(mysqlDb, callback) {
                         mongoCon.collection('property').updateMany({ entity: entity.mid }, { $set: { entity: entity._id } }, callback)
                     },
                     function(callback) {
-                        mongoCon.collection('property').updateMany({ type: 'reference', value_integer: entity.mid }, { $set: { value_integer: entity._id } }, callback)
+                        mongoCon.collection('property').updateMany({ type: 'reference', value: entity.mid }, { $set: { value: entity._id } }, callback)
                     },
                     function(callback) {
                         mongoCon.collection('property').updateMany({ 'created.by': entity.mid }, { $set: { 'created.by': entity._id } }, callback)
@@ -159,12 +177,7 @@ var importProps = function(mysqlDb, callback) {
                     function(callback) {
                         mongoCon.collection('property').updateMany({ 'deleted.by': entity.mid }, { $set: { 'deleted.by': entity._id } }, callback)
                     },
-                ], function (err) {
-                    if(err) { return callback(err) }
-
-                    console.log(entity)
-                    callback(null)
-                })
+                ], callback)
             }, callback)
         },
     ], function(err, r) {

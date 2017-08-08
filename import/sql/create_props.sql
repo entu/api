@@ -20,7 +20,7 @@ CREATE TABLE `props` (
   `definition` varchar(32) DEFAULT NULL,
   `language` varchar(2) DEFAULT NULL,
   `type` varchar(16) DEFAULT NULL,
-  `value_text` text DEFAULT NULL,
+  `value_text` text,
   `value_integer` int(11) DEFAULT NULL,
   `value_decimal` decimal(15,4) DEFAULT NULL,
   `value_date` datetime DEFAULT NULL,
