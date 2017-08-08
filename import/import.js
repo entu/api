@@ -42,6 +42,7 @@ var importProps = function(mysqlDb, callback) {
             mongoCon = con
             mongoCon.listCollections({ name: 'entity' }).toArray(callback)
         },
+
         function(collections, callback) {
             if (collections.length > 0) {
                 mongoCon.dropCollection('entity', callback)
@@ -60,13 +61,24 @@ var importProps = function(mysqlDb, callback) {
             }
         },
 
-        // function(r, callback) {
-        //     console.log((new Date()).toISOString(), mysqlDb, 'create props table')
-        //     sqlCon.query(require('./sql/create_props.sql'), callback)
-        // },
-        //
-        // function(r, f, callback) {
         function(r, callback) {
+            console.log((new Date()).toISOString(), mysqlDb, 'create mongodb indexes')
+            mongoCon.collection('property').createIndexes([
+                { key: { entity: 1 } },
+                { key: { type: 1 } },
+                { key: { def: 1 } },
+                { key: { value_integer: 1 } },
+                { key: { 'created.by': 1 } },
+                { key: { 'deleted.by': 1 } },
+            ], callback)
+        },
+
+        function(r, callback) {
+            console.log((new Date()).toISOString(), mysqlDb, 'create props table')
+            sqlCon.query(require('./sql/create_props.sql'), callback)
+        },
+
+        function(r, f, callback) {
             console.log((new Date()).toISOString(), mysqlDb, 'get entities from mysql')
             sqlCon.query(require('./sql/entity.sql'), callback)
         },
@@ -85,8 +97,8 @@ var importProps = function(mysqlDb, callback) {
         },
 
         function(r, callback) {
-            console.log((new Date()).toISOString(), mysqlDb, 'delete empty language field')
-            mongoCon.collection('property').updateMany({ language: null }, { $unset: { language: '' } }, callback)
+            console.log((new Date()).toISOString(), mysqlDb, 'delete empty lang field')
+            mongoCon.collection('property').updateMany({ lang: null }, { $unset: { lang: '' } }, callback)
         },
         function(r, callback) {
             console.log((new Date()).toISOString(), mysqlDb, 'delete empty value_text field')
@@ -119,6 +131,53 @@ var importProps = function(mysqlDb, callback) {
         function(r, callback) {
             console.log((new Date()).toISOString(), mysqlDb, 'delete empty deleted_by field')
             mongoCon.collection('property').updateMany({ deleted_by: null }, { $unset: { deleted_by: '' } }, callback)
+        },
+        function(r, callback) {
+            console.log((new Date()).toISOString(), mysqlDb, 'rename created_at field to created.at')
+            mongoCon.collection('property').updateMany({ created_at: { $ne: null } }, { $rename: { 'created_at': 'created.at' } }, callback)
+        },
+        function(r, callback) {
+            console.log((new Date()).toISOString(), mysqlDb, 'rename created_by field to created.by')
+            mongoCon.collection('property').updateMany({ created_by: { $ne: null } }, { $rename: { 'created_by': 'created.by' } }, callback)
+        },
+        function(r, callback) {
+            console.log((new Date()).toISOString(), mysqlDb, 'rename deleted_at field to deleted.at')
+            mongoCon.collection('property').updateMany({ deleted_at: { $ne: null } }, { $rename: { 'deleted_at': 'deleted.at' } }, callback)
+        },
+        function(r, callback) {
+            console.log((new Date()).toISOString(), mysqlDb, 'rename deleted_by field to deleted.by')
+            mongoCon.collection('property').updateMany({ deleted_by: { $ne: null } }, { $rename: { 'deleted_by': 'deleted.by' } }, callback)
+        },
+
+        function(r, callback) {
+            console.log((new Date()).toISOString(), mysqlDb, 'get entities')
+
+            mongoCon.collection('entity').find({}).sort({ mid: 1 }).toArray(callback)
+        },
+        function(entities, callback) {
+            console.log((new Date()).toISOString(), mysqlDb, 'set references to entity._id')
+
+            async.eachSeries(entities, function(entity, callback) {
+                async.parallel([
+                    function(callback) {
+                        mongoCon.collection('property').updateMany({ entity: entity.mid }, { $set: { entity: entity._id } }, callback)
+                    },
+                    function(callback) {
+                        mongoCon.collection('property').updateMany({ type: 'reference', value_integer: entity.mid }, { $set: { value_integer: entity._id } }, callback)
+                    },
+                    function(callback) {
+                        mongoCon.collection('property').updateMany({ 'created.by': entity.mid }, { $set: { 'created.by': entity._id } }, callback)
+                    },
+                    function(callback) {
+                        mongoCon.collection('property').updateMany({ 'deleted.by': entity.mid }, { $set: { 'deleted.by': entity._id } }, callback)
+                    },
+                ], function (err) {
+                    if(err) { return callback(err) }
+
+                    console.log(entity)
+                    callback(null)
+                })
+            }, callback)
         },
     ], function(err, r) {
         if(err) { return callback(err) }
