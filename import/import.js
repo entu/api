@@ -143,7 +143,7 @@ var importProps = function(mysqlDb, callback) {
         },
 
         function(callback) {
-            log('add files info')
+            log('parse file info to separate parameters')
 
             mongoCon.collection('property').find({ type: 'file', value_text: { $exists: true } }).toArray(function(err, files) {
                 if(err) { return callback(err) }
@@ -172,7 +172,7 @@ var importProps = function(mysqlDb, callback) {
         },
 
         function(callback) {
-            log('replace mysql numeric ids with mongodb ids')
+            log('replace mysql numeric ids with mongodb _ids')
 
             mongoCon.collection('entity').find({}).sort({ mid: 1 }).toArray(function (err, entities) {
                 if(err) { return callback(err) }
