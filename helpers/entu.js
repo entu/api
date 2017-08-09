@@ -32,7 +32,7 @@ var dbConnection = function(db, callback) {
     if(_.has(APP_ENTU_DBS, db)) {
         callback(null, APP_ENTU_DBS[db])
     } else {
-        mongo.MongoClient.connect(APP_MONGODB + db, { server: { autoReconnect: true } }, function(err, connection) {
+        mongo.MongoClient.connect(APP_MONGODB + db, { ssl: true, sslValidate: false, autoReconnect: true }, function(err, connection) {
             if(err) { return callback(err) }
 
             // connection.collection('entityVersion').createIndex({ _mid: 1 }, { background:true }, function(err, indexName) {
