@@ -174,23 +174,23 @@ var importProps = function(mysqlDb, callback) {
         function(callback) {
             log('replace mysql numeric ids with mongodb _ids')
 
-            mongoCon.collection('entity').find({}).sort({ mid: 1 }).toArray(function (err, entities) {
+            mongoCon.collection('entity').find({}).sort({ _mid: 1 }).toArray(function (err, entities) {
                 if(err) { return callback(err) }
 
                 var l = entities.length
                 async.eachSeries(entities, function(entity, callback) {
                     async.parallel([
                         function(callback) {
-                            mongoCon.collection('property').updateMany({ entity: entity.mid }, { $set: { entity: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ entity: entity._mid }, { $set: { entity: entity._id } }, callback)
                         },
                         function(callback) {
-                            mongoCon.collection('property').updateMany({ type: 'reference', value_integer: entity.mid }, { $set: { value_integer: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ type: 'reference', value_integer: entity._mid }, { $set: { value_integer: entity._id } }, callback)
                         },
                         function(callback) {
-                            mongoCon.collection('property').updateMany({ created_by: entity.mid }, { $set: { created_by: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ created_by: entity._mid }, { $set: { created_by: entity._id } }, callback)
                         },
                         function(callback) {
-                            mongoCon.collection('property').updateMany({ deleted_by: entity.mid }, { $set: { deleted_by: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ deleted_by: entity._mid }, { $set: { deleted_by: entity._id } }, callback)
                         },
                     ], function(err) {
                         if(err) { return callback(err) }
@@ -285,7 +285,7 @@ var importProps = function(mysqlDb, callback) {
 
                         p._access = _.map(_.union(p._viewer, p._expander, p._editor, p._owner), 'reference')
 
-                        mongoCon.collection('entity').update({ _id: entity._id }, p, function (err) {
+                        mongoCon.collection('entity').update({ _id: entity._id }, { '$set': p, }, function (err) {
                             if(err) { return callback(err) }
 
                             l--

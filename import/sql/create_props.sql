@@ -36,19 +36,6 @@ CREATE TABLE `props` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-/* entity id */
-INSERT INTO props (entity, definition, type, value_integer, created_at, created_by)
-SELECT
-    id,
-    '_mid',
-    'integer',
-    id,
-    created,
-    IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL)
-FROM entity
-WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property');
-
-
 /* entity definition */
 INSERT INTO props (entity, definition, type, value_text, created_at, created_by)
 SELECT
@@ -141,7 +128,7 @@ AND r.relationship_definition_keyname = 'child';
 INSERT INTO props (entity, definition, type, value_integer, created_at, created_by, deleted_at, deleted_by)
 SELECT
     r.entity_id,
-    CONCAT('_', r.relationship_definition_keyname),
+    CONCAT('_', REPLACE(r.relationship_definition_keyname, '-', '_')),
     'reference',
     r.related_entity_id,
     IFNULL(r.created, e.created),
@@ -173,7 +160,7 @@ AND sharing IS NOT NULL;
 INSERT INTO props (entity, definition, type, language, value_text, value_integer, value_decimal, value_date, created_at, created_by, deleted_at, deleted_by)
 SELECT
     p.entity_id,
-    pd.dataproperty,
+    REPLACE(pd.dataproperty, '-', '_'),
     pd.datatype,
     CASE IF(pd.multilingual = 1, TRIM(p.language), NULL)
         WHEN 'estonian' THEN 'et'
