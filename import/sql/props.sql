@@ -7,6 +7,7 @@ SELECT
     value_integer,
     value_decimal,
     value_date,
+    value_file,
     created_at,
     created_by,
     deleted_at,

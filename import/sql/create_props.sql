@@ -20,10 +20,11 @@ CREATE TABLE `props` (
   `definition` varchar(32) DEFAULT NULL,
   `language` varchar(2) DEFAULT NULL,
   `type` varchar(16) DEFAULT NULL,
-  `value_text` text,
+  `value_text` text DEFAULT NULL,
   `value_integer` int(11) DEFAULT NULL,
   `value_decimal` decimal(15,4) DEFAULT NULL,
   `value_date` datetime DEFAULT NULL,
+  `value_file` text DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
   `created_by` int(11) DEFAULT NULL,
   `deleted_at` datetime DEFAULT NULL,
@@ -170,7 +171,7 @@ AND sharing IS NOT NULL;
 
 
 /* properties */
-INSERT INTO props (entity, definition, type, language, value_text, value_integer, value_decimal, value_date, created_at, created_by, deleted_at, deleted_by)
+INSERT INTO props (entity, definition, type, language, value_text, value_integer, value_decimal, value_date, value_file, created_at, created_by, deleted_at, deleted_by)
 SELECT
     p.entity_id,
     pd.dataproperty,
@@ -189,7 +190,6 @@ SELECT
         WHEN 'integer' THEN p.value_integer
         WHEN 'boolean' THEN p.value_boolean
         WHEN 'reference' THEN p.value_reference
-        WHEN 'file' THEN p.value_file
         ELSE NULL
     END,
     CASE pd.datatype
@@ -199,6 +199,23 @@ SELECT
     CASE pd.datatype
         WHEN 'date' THEN DATE_FORMAT(p.value_datetime, '%Y-%m-%d')
         WHEN 'datetime' THEN DATE_FORMAT(CONVERT_TZ(p.value_datetime, 'Europe/Tallinn', 'UTC'), '%Y-%m-%d %H:%i:%s')
+        ELSE NULL
+    END,
+    CASE pd.datatype
+        WHEN 'file' THEN (
+            SELECT TRIM(CONCAT(
+                'A:',
+                IFNULL(TRIM(filename), ''),
+                '\nB:',
+                IFNULL(TRIM(md5), ''),
+                '\nC:',
+                IFNULL(TRIM(s3_key), ''),
+                '\nD:',
+                IFNULL(TRIM(url), ''),
+                '\nE:',
+                IFNULL(filesize, '')
+            )) FROM file WHERE id = p.value_file LIMIT 1
+        )
         ELSE NULL
     END,
     IFNULL(IF(p.created >= '2000-01-01', p.created, NULL), IF(e.created >= '2000-01-01', e.created, NULL)),
