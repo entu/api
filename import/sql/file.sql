@@ -1,0 +1,3 @@
+SELECT *
+FROM file
+ORDER BY id;

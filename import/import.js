@@ -148,6 +148,34 @@ var importProps = function(mysqlDb, callback) {
         },
 
         function(callback) {
+            log('add files info')
+
+            sqlCon.query(require('./sql/file.sql'), function(err, files) {
+                if(err) { return callback(err) }
+
+                var l = files.length
+                async.eachSeries(files, function(file, callback) {
+                    var fileInfo = {}
+                    if (file.filename) { fileInfo.filename = file.filename }
+                    if (file.md5) { fileInfo.md5 = file.md5 }
+                    if (file.url) { fileInfo.url = file.url }
+                    if (file.s3_key) { fileInfo.s3 = file.s3_key }
+                    if (file.filesize) { fileInfo.size = file.filesize }
+
+                    mongoCon.collection('property').updateMany({ type: 'file', value_integer: file.id }, { $unset: { type: '', value_integer: '' }, $set: fileInfo }, function(err) {
+                        if(err) { return callback(err) }
+
+                        l--
+                        if (l % 100 === 0) {
+                            log(l + ' files to go')
+                        }
+                        callback(null)
+                    })
+                }, callback)
+            })
+        },
+
+        function(callback) {
             log('replace mysql numeric ids with mongodb ids')
 
             mongoCon.collection('entity').find({}).sort({ mid: 1 }).toArray(function (err, entities) {
@@ -182,20 +210,44 @@ var importProps = function(mysqlDb, callback) {
         },
 
         function(callback) {
-            log('rename value_text to value')
-            mongoCon.collection('property').updateMany({ value: { $exists: false }, value_text: { $ne: null } }, { $rename: { 'value_text': 'value' } }, callback)
+            log('rename value_text to string')
+            mongoCon.collection('property').updateMany({ type: 'string' }, { $unset: { type: '' }, $rename: { 'value_text': 'string' } }, callback)
         },
         function(callback) {
-            log('rename value_integer to value')
-            mongoCon.collection('property').updateMany({ value: { $exists: false }, value_integer: { $ne: null } }, { $rename: { 'value_integer': 'value' } }, callback)
+            log('rename value_text to text')
+            mongoCon.collection('property').updateMany({ type: 'text' }, { $unset: { type: '' }, $rename: { 'value_text': 'text' } }, callback)
         },
         function(callback) {
-            log('rename value_decimal to value')
-            mongoCon.collection('property').updateMany({ value: { $exists: false }, value_decimal: { $ne: null } }, { $rename: { 'value_decimal': 'value' } }, callback)
+            log('rename value_integer to integer')
+            mongoCon.collection('property').updateMany({ type: 'integer' }, { $unset: { type: '' }, $rename: { 'value_integer': 'integer' } }, callback)
         },
         function(callback) {
-            log('rename value_date to value')
-            mongoCon.collection('property').updateMany({ value: { $exists: false }, value_date: { $ne: null } }, { $rename: { 'value_date': 'value' } }, callback)
+            log('rename value_integer to reference')
+            mongoCon.collection('property').updateMany({ type: 'reference' }, { $unset: { type: '' }, $rename: { 'value_integer': 'reference' } }, callback)
+        },
+        function(callback) {
+            log('rename value_integer to boolean')
+            mongoCon.collection('property').updateMany({ type: 'boolean' }, { $unset: { type: '' }, $rename: { 'value_integer': 'boolean' } }, callback)
+        },
+        function(callback) {
+            log('convert true booleans')
+            mongoCon.collection('property').updateMany({ type: 'boolean', boolean: 1 }, { $set: { 'boolean': true } }, callback)
+        },
+        function(callback) {
+            log('convert false booleans')
+            mongoCon.collection('property').updateMany({ type: 'boolean', boolean: 0 }, { $set: { 'boolean': false } }, callback)
+        },
+        function(callback) {
+            log('rename value_decimal to decimal')
+            mongoCon.collection('property').updateMany({ type: 'decimal' }, { $unset: { type: '' }, $rename: { 'value_decimal': 'decimal' } }, callback)
+        },
+        function(callback) {
+            log('rename value_date to date')
+            mongoCon.collection('property').updateMany({ type: 'date' }, { $unset: { type: '' }, $rename: { 'value_date': 'date' } }, callback)
+        },
+        function(callback) {
+            log('rename value_date to datetime')
+            mongoCon.collection('property').updateMany({ type: 'datetime' }, { $unset: { type: '' }, $rename: { 'value_date': 'datetime' } }, callback)
         },
 
         function(callback) {
