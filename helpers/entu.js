@@ -1,6 +1,6 @@
 var _       = require('lodash')
 var async   = require('async')
-var jwt    = require('jsonwebtoken')
+var jwt     = require('jsonwebtoken')
 var mongo   = require('mongodb')
 var op      = require('object-path')
 var request = require('request')

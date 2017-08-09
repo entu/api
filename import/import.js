@@ -90,7 +90,7 @@ var importProps = function(mysqlDb, callback) {
 
         function(callback) {
             log('insert entities to mongodb')
-            sqlCon.query(require('./sql/entity.sql'), function(err, entities) {
+            sqlCon.query(require('./sql/get_entities.sql'), function(err, entities) {
                 if(err) { return callback(err) }
 
                 mongoCon.collection('entity').insertMany(entities, callback)
@@ -98,7 +98,7 @@ var importProps = function(mysqlDb, callback) {
         },
         function(callback) {
             log('insert props to mongodb')
-            sqlCon.query(require('./sql/props.sql'), function(err, props) {
+            sqlCon.query(require('./sql/get_properties.sql'), function(err, props) {
                 if(err) { return callback(err) }
 
                 mongoCon.collection('property').insertMany(props, callback)
@@ -319,7 +319,7 @@ var connection = mysql.createConnection({
     user: MYSQL_USER,
     password: MYSQL_PASSWORD
 })
-connection.query(require('./sql/db.sql'), function(err, rows) {
+connection.query(require('./sql/get_databases.sql'), function(err, rows) {
     if(err) {
         console.error(err.toString())
         process.exit(1)

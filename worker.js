@@ -100,7 +100,6 @@ app.use(entu.jwtCheck)
 // routes mapping
 app.use('/', require('./routes/index'))
 app.use('/auth', require('./routes/auth/index'))
-app.use('/status', require('./routes/status'))
 app.use('/user', require('./routes/user'))
 
 // provider mapping (only if configured)
