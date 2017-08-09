@@ -1,10 +1,10 @@
-var _     = require('underscore')
-var async = require('async')
-var fs    = require('fs')
-var mongo = require('mongodb')
-var mysql = require('mysql')
-var op    = require('object-path')
-var path  = require('path')
+const _     = require('underscore')
+const async = require('async')
+const fs    = require('fs')
+const mongo = require('mongodb')
+const mysql = require('mysql')
+const op    = require('object-path')
+const path  = require('path')
 
 
 
@@ -12,11 +12,11 @@ require.extensions['.sql'] = function(module, filename) { module.exports = fs.re
 
 
 
-MYSQL_HOST = process.env.MYSQL_HOST || '127.0.0.1'
-MYSQL_PORT = process.env.MYSQL_PORT || 3306
-MYSQL_USER = process.env.MYSQL_USER
-MYSQL_PASSWORD = process.env.MYSQL_PASSWORD
-MONGODB = process.env.MONGODB || 'mongodb://localhost:27017/'
+const MYSQL_HOST = process.env.MYSQL_HOST || '127.0.0.1'
+const MYSQL_PORT = process.env.MYSQL_PORT || 3306
+const MYSQL_USER = process.env.MYSQL_USER
+const MYSQL_PASSWORD = process.env.MYSQL_PASSWORD
+const MONGODB = process.env.MONGODB || 'mongodb://localhost:27017/'
 
 
 
