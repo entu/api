@@ -161,3 +161,10 @@ exports.addUserSession = function(params, callback) {
         callback(null, r.insertedId)
     })
 }
+
+
+
+// Get entities
+exports.getEntities = function(params, callback) {
+
+}

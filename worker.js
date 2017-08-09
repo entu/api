@@ -17,6 +17,7 @@ APP_PORT = process.env.PORT || 3000
 APP_JWT_SECRET = process.env.JWT_SECRET || '123abc'
 
 APP_MONGODB = process.env.MONGODB || 'mongodb://entu_mongodb:27017/'
+APP_DATABASES = process.env.DATABASES.split(',') || []
 
 GOOGLE_ID = process.env.GOOGLE_ID
 GOOGLE_SECRET = process.env.GOOGLE_SECRET

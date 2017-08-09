@@ -22,7 +22,8 @@ router.get('/session/:sessionId', function(req, res, next) {
             if(!sess.value) { return callback([400, new Error('no session')]) }
 
             session = sess.value
-            conection.admin().listDatabases(callback)
+            // conection.admin().listDatabases(callback)
+            callback(null, APP_DATABASES)
         },
         function(databases, callback) {
             async.map(databases.databases, function(db, callback) {
@@ -32,7 +33,7 @@ router.get('/session/:sessionId', function(req, res, next) {
                         entu.dbConnection(database, callback)
                     },
                     function(con, callback) {
-                        con.collection('entityVersion').findOne({'entu_user.value': session.user.email, _deleted: { $exists: false }}, {_id: false, _entity: true}, callback)
+                        con.collection('entity').findOne({'entu_user.string': session.user.email, _deleted: { $exists: false }}, {_id: false, _entity: true}, callback)
                     },
                 ], function(err, person) {
                     if(err) { return callback(err) }
