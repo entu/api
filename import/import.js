@@ -248,6 +248,10 @@ var importProps = function(mysqlDb, callback) {
         },
 
         function(callback) {
+            log('drop mongodb indexes')
+            mongoCon.collection('property').dropAllIndexes(callback)
+        },
+        function(callback) {
             log('repair mongodb')
             mongoCon.command({ repairDatabase: 1 }, callback)
         },
