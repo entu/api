@@ -35,19 +35,6 @@ var dbConnection = function(db, callback) {
         mongo.MongoClient.connect(APP_MONGODB + db, { ssl: true, sslValidate: false, autoReconnect: true }, function(err, connection) {
             if(err) { return callback(err) }
 
-            // connection.collection('entityVersion').createIndex({ _mid: 1 }, { background:true }, function(err, indexName) {
-            //     if(err) { console.log(db, err) }
-            //     if(indexName) { console.log(db, indexName) }
-            // })
-            // connection.collection('entityVersion').createIndex({ _deleted: 1 }, { background:true }, function(err, indexName) {
-            //     if(err) { console.log(db, err) }
-            //     if(indexName) { console.log(db, indexName) }
-            // })
-            // connection.collection('entityVersion').createIndex({ 'entu_user.value': 1 }, { background:true }, function(err, indexName) {
-            //     if(err) { console.log(db, err) }
-            //     if(indexName) { console.log(db, indexName) }
-            // })
-
             connection.on('close', function(err) {
                 delete APP_ENTU_DBS[db]
             })
@@ -79,6 +66,7 @@ exports.customResponder = function(req, res, next) {
             res.send(message)
         }
     }
+
     next(null)
 }
 
@@ -161,20 +149,6 @@ exports.addUserSession = function(params, callback) {
     if(op.get(params, 'request.cookies.redirect')) { op.set(session, 'redirect', op.get(params, 'request.cookies.redirect')) }
 
     async.waterfall([
-        function(callback) {
-            if(!op.get(params, 'request.ip')) { return callback(null) }
-
-            request.get({url: 'https://geoip.entu.eu/json/' + op.get(params, 'request.ip'), strictSSL: true, json: true, timeout: 1000}, function(error, response, body) {
-                if(!body) { return callback(null) }
-
-                var geo = _.pick(body, _.identity)
-                delete geo.ip
-
-                op.set(session, 'geo', geo)
-
-                callback(null)
-            })
-        },
         function(callback) {
             dbConnection('entu', callback)
         },
