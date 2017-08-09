@@ -78,13 +78,13 @@ var importProps = function(mysqlDb, callback) {
         },
 
         function(callback) {
-            log('create mongodb indexes')
+            log('create mongodb indexes for import')
             mongoCon.collection('property').createIndexes([
                 { key: { entity: 1 } },
                 { key: { type: 1 } },
                 { key: { value_integer: 1 } },
                 { key: { created_by: 1 } },
-                { key: { deleted_by: 1 } },
+                { key: { deleted_by: 1 } }
             ], callback)
         },
 
@@ -248,13 +248,65 @@ var importProps = function(mysqlDb, callback) {
         },
 
         function(callback) {
-            log('drop mongodb indexes')
+            log('drop mongodb indexes for import')
             mongoCon.collection('property').dropAllIndexes(callback)
         },
         function(callback) {
             log('repair mongodb')
             mongoCon.command({ repairDatabase: 1 }, callback)
         },
+
+        function(callback) {
+            log('create entity indexes')
+            mongoCon.collection('entity').createIndexes([
+                { key: { _access: 1 } }
+            ], callback)
+        },
+
+        function(callback) {
+            log('create property indexes')
+            mongoCon.collection('property').createIndexes([
+                { key: { entity: 1 } },
+                { key: { deleted: 1 } }
+            ], callback)
+        },
+
+        function(callback) {
+            log('create entities')
+
+            mongoCon.collection('entity').find({}, { _id: true }).sort({ _id: 1 }).toArray(function (err, entities) {
+                if(err) { return callback(err) }
+
+                var l = entities.length
+                async.eachSeries(entities, function(entity, callback) {
+
+                    mongoCon.collection('property').find({ entity: entity._id, deleted: { '$exists': false } }).toArray(function (err, properties) {
+                        if(err) { return callback(err) }
+
+                        var p = _.mapValues(_.groupBy(properties, 'definition'), function(o) {
+                            return _.map(o, function(p) {
+                                return _.omit(p, ['_id', 'entity', 'definition', 'created'])
+                            })
+                        })
+
+                        p._access = _.map(_.union(p._viewer, p._expander, p._editor, p._owner), 'reference')
+
+                        mongoCon.collection('entity').update({ _id: entity._id }, p, function (err) {
+                            if(err) { return callback(err) }
+
+                            l--
+                            if (l % 1000 === 0 && l > 0) {
+                                log(l + ' entities to go')
+                            }
+                            callback(null)
+                        })
+                    })
+                }, callback)
+            })
+        },
+
+
+
     ], function(err) {
         if(err) { return callback(err) }
 
