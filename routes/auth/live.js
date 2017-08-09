@@ -1,4 +1,4 @@
-var _        = require('underscore')
+var _        = require('lodash')
 var live     = require('passport-windowslive').Strategy
 var op       = require('object-path')
 var passport = require('passport')

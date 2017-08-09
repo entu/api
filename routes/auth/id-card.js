@@ -1,4 +1,4 @@
-var _      = require('underscore')
+var _      = require('lodash')
 var async  = require('async')
 var op     = require('object-path')
 var router = require('express').Router()

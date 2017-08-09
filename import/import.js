@@ -1,4 +1,4 @@
-const _     = require('underscore')
+const _     = require('lodash')
 const async = require('async')
 const fs    = require('fs')
 const mongo = require('mongodb')

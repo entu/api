@@ -1,4 +1,4 @@
-var _        = require('underscore')
+var _        = require('lodash')
 var facebook = require('passport-facebook').Strategy
 var op       = require('object-path')
 var passport = require('passport')

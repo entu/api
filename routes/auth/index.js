@@ -1,4 +1,4 @@
-var _      = require('underscore')
+var _      = require('lodash')
 var async  = require('async')
 var jwt    = require('jsonwebtoken')
 var router = require('express').Router()

@@ -1,4 +1,4 @@
-var _        = require('underscore')
+var _        = require('lodash')
 var fs       = require('fs')
 var op       = require('object-path')
 var passport = require('passport')

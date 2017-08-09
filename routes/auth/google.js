@@ -1,4 +1,4 @@
-var _        = require('underscore')
+var _        = require('lodash')
 var google   = require('passport-google-oauth').OAuth2Strategy
 var op       = require('object-path')
 var passport = require('passport')
