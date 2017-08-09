@@ -1,5 +1,5 @@
 SELECT DISTINCT
-    entity_id AS mid
+    entity AS mid
 FROM props
 ORDER BY
-    entity_id;
+    entity;

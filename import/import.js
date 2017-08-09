@@ -41,6 +41,11 @@ var importProps = function(mysqlDb, callback) {
 
     async.series([
         function(callback) {
+            log('create props table')
+            sqlCon.query(require('./sql/create_props.sql'), callback)
+        },
+
+        function(callback) {
             mongo.MongoClient.connect(MONGODB, { ssl: true, sslValidate: false }, function (err, con) {
                 if(err) { return callback(err) }
 
@@ -82,16 +87,10 @@ var importProps = function(mysqlDb, callback) {
             mongoCon.collection('property').createIndexes([
                 { key: { entity: 1 } },
                 { key: { type: 1 } },
-                { key: { def: 1 } },
                 { key: { value_integer: 1 } },
                 { key: { created_by: 1 } },
                 { key: { deleted_by: 1 } },
             ], callback)
-        },
-
-        function(callback) {
-            log('create props table')
-            sqlCon.query(require('./sql/create_props.sql'), callback)
         },
 
         function(callback) {
@@ -112,8 +111,8 @@ var importProps = function(mysqlDb, callback) {
         },
 
         function(callback) {
-            log('delete empty lang field')
-            mongoCon.collection('property').updateMany({ lang: null }, { $unset: { lang: '' } }, callback)
+            log('delete empty language field')
+            mongoCon.collection('property').updateMany({ language: null }, { $unset: { language: '' } }, callback)
         },
         function(callback) {
             log('delete empty value_text field')

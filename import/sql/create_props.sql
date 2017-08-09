@@ -16,7 +16,7 @@ UPDATE relationship SET deleted = NULL WHERE CAST(deleted AS CHAR(20)) = '0000-0
 DROP TABLE IF EXISTS props;
 CREATE TABLE `props` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `entity_id` int(11) unsigned DEFAULT NULL,
+  `entity` int(11) unsigned DEFAULT NULL,
   `definition` varchar(32) DEFAULT NULL,
   `language` varchar(2) DEFAULT NULL,
   `type` varchar(16) DEFAULT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE `props` (
   `deleted_at` datetime DEFAULT NULL,
   `deleted_by` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `entity_id` (`entity_id`),
+  KEY `entity` (`entity`),
   KEY `definition` (`definition`),
   KEY `language` (`language`),
   KEY `type` (`type`)
@@ -37,7 +37,7 @@ CREATE TABLE `props` (
 
 
 /* entity id */
-INSERT INTO props (entity_id, definition, type, value_integer, created_at, created_by)
+INSERT INTO props (entity, definition, type, value_integer, created_at, created_by)
 SELECT
     id,
     '_mid',
@@ -50,7 +50,7 @@ WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'co
 
 
 /* entity definition */
-INSERT INTO props (entity_id, definition, type, value_text, created_at, created_by)
+INSERT INTO props (entity, definition, type, value_text, created_at, created_by)
 SELECT
     id,
     '_definition',
@@ -63,7 +63,7 @@ WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'co
 
 
 /* entity created at */
-INSERT INTO props (entity_id, definition, type, value_date, created_at, created_by)
+INSERT INTO props (entity, definition, type, value_date, created_at, created_by)
 SELECT
     id,
     '_created_at',
@@ -77,7 +77,7 @@ AND created IS NOT NULL;
 
 
 /* entity created by */
-INSERT INTO props (entity_id, definition, type, value_integer, created_at, created_by)
+INSERT INTO props (entity, definition, type, value_integer, created_at, created_by)
 SELECT
     id,
     '_created_by',
@@ -91,7 +91,7 @@ AND IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL) IS NOT NULL
 
 
 /* entity deleted at */
-INSERT INTO props (entity_id, definition, type, value_date, created_at, created_by)
+INSERT INTO props (entity, definition, type, value_date, created_at, created_by)
 SELECT
     id,
     '_deleted_at',
@@ -105,7 +105,7 @@ AND is_deleted = 1;
 
 
 /* entity deleted by */
-INSERT INTO props (entity_id, definition, type, value_integer, created_at, created_by)
+INSERT INTO props (entity, definition, type, value_integer, created_at, created_by)
 SELECT
     id,
     '_deleted_by',
@@ -120,13 +120,13 @@ AND is_deleted = 1;
 
 
 /* parents */
-INSERT INTO props (entity_id, definition, type, value_integer, created_at, created_by, deleted_at, deleted_by)
+INSERT INTO props (entity, definition, type, value_integer, created_at, created_by, deleted_at, deleted_by)
 SELECT
     r.related_entity_id,
     '_parent',
     'reference',
     r.entity_id,
-    IF(r.created IS NULL, e.created, r.created),
+    IFNULL(r.created, e.created),
     IF(TRIM(r.created_by) REGEXP '^-?[0-9]+$', TRIM(r.created_by), IF(TRIM(e.created_by) REGEXP '^-?[0-9]+$', TRIM(e.created_by), NULL)),
     IF(r.is_deleted = 1, IFNULL(r.deleted, NOW()), NULL),
     IF(TRIM(r.deleted_by) REGEXP '^-?[0-9]+$', TRIM(r.deleted_by), IF(TRIM(e.deleted_by) REGEXP '^-?[0-9]+$', TRIM(e.deleted_by), NULL))
@@ -138,13 +138,13 @@ AND r.relationship_definition_keyname = 'child';
 
 
 /* rights */
-INSERT INTO props (entity_id, definition, type, value_integer, created_at, created_by, deleted_at, deleted_by)
+INSERT INTO props (entity, definition, type, value_integer, created_at, created_by, deleted_at, deleted_by)
 SELECT
     r.entity_id,
     CONCAT('_', r.relationship_definition_keyname),
     'reference',
     r.related_entity_id,
-    IF(r.created IS NULL, e.created, r.created),
+    IFNULL(r.created, e.created),
     IF(TRIM(r.created_by) REGEXP '^-?[0-9]+$', TRIM(r.created_by), IF(TRIM(e.created_by) REGEXP '^-?[0-9]+$', TRIM(e.created_by), NULL)),
     IF(r.is_deleted = 1, IFNULL(r.deleted, NOW()), NULL),
     IF(TRIM(r.deleted_by) REGEXP '^-?[0-9]+$', TRIM(r.deleted_by), IF(TRIM(e.deleted_by) REGEXP '^-?[0-9]+$', TRIM(e.deleted_by), NULL))
@@ -156,7 +156,7 @@ AND r.relationship_definition_keyname IN ('editor', 'expander', 'owner', 'viewer
 
 
 /* entity sharing */
-INSERT INTO props (entity_id, definition, type, value_text, created_at, created_by)
+INSERT INTO props (entity, definition, type, value_text, created_at, created_by)
 SELECT
     id,
     '_sharing',
@@ -170,7 +170,7 @@ AND sharing IS NOT NULL;
 
 
 /* properties */
-INSERT INTO props (entity_id, definition, type, language, value_text, value_integer, value_decimal, value_date, created_at, created_by, deleted_at, deleted_by)
+INSERT INTO props (entity, definition, type, language, value_text, value_integer, value_decimal, value_date, created_at, created_by, deleted_at, deleted_by)
 SELECT
     p.entity_id,
     pd.dataproperty,
@@ -201,10 +201,10 @@ SELECT
         WHEN 'datetime' THEN DATE_FORMAT(CONVERT_TZ(p.value_datetime, 'Europe/Tallinn', 'UTC'), '%Y-%m-%d %H:%i:%s')
         ELSE NULL
     END,
-    IF(p.created IS NULL, e.created, p.created),
+    IFNULL(IF(p.created >= '2000-01-01', p.created, NULL), IF(e.created >= '2000-01-01', e.created, NULL)),
     IF(TRIM(p.created_by) REGEXP '^-?[0-9]+$', TRIM(p.created_by), IF(TRIM(e.created_by) REGEXP '^-?[0-9]+$', TRIM(e.created_by), NULL)),
-    IF(p.is_deleted = 1, IFNULL(p.deleted, NOW()), NULL),
-    IF(TRIM(p.deleted_by) REGEXP '^-?[0-9]+$', TRIM(p.deleted_by), IF(TRIM(e.deleted_by) REGEXP '^-?[0-9]+$', TRIM(e.deleted_by), NULL))
+    IF(p.is_deleted = 1, IF(p.deleted >= '2000-01-01', p.deleted, NOW()), NULL),
+    IF(p.is_deleted = 1, IF(TRIM(p.deleted_by) REGEXP '^-?[0-9]+$', TRIM(p.deleted_by), IF(TRIM(e.deleted_by) REGEXP '^-?[0-9]+$', TRIM(e.deleted_by), NULL)), NULL)
 FROM
     property AS p,
     property_definition AS pd,
