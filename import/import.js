@@ -126,10 +126,6 @@ var importProps = function(mysqlDb, callback) {
             mongoCon.collection('property').updateMany({ value_date: null }, { $unset: { value_date: '' } }, callback)
         },
         function(callback) {
-            log('delete empty value_file field')
-            mongoCon.collection('property').updateMany({ value_file: null }, { $unset: { value_file: '' } }, callback)
-        },
-        function(callback) {
             log('delete empty created_at field')
             mongoCon.collection('property').updateMany({ created_at: null }, { $unset: { created_at: '' } }, callback)
         },
@@ -149,20 +145,20 @@ var importProps = function(mysqlDb, callback) {
         function(callback) {
             log('add files info')
 
-            mongoCon.collection('property').find({ value_file: { $exists: true } }).toArray(function(err, files) {
+            mongoCon.collection('property').find({ type: 'file', value_text: { $exists: true } }).toArray(function(err, files) {
                 if(err) { return callback(err) }
 
                 var l = files.length
                 async.eachSeries(files, function(file, callback) {
-                    var fileArray = file.value_file.split('\n')
+                    var fileArray = file.value_text.split('\n')
                     var fileInfo = {}
                     if (fileArray[0].substr(0, 2) === 'A:' && fileArray[0].substr(2)) { fileInfo.filename = fileArray[0].substr(2) }
                     if (fileArray[1].substr(0, 2) === 'B:' && fileArray[1].substr(2)) { fileInfo.md5 = fileArray[1].substr(2) }
                     if (fileArray[2].substr(0, 2) === 'C:' && fileArray[2].substr(2)) { fileInfo.s3 = fileArray[2].substr(2) }
                     if (fileArray[3].substr(0, 2) === 'D:' && fileArray[3].substr(2)) { fileInfo.url = fileArray[3].substr(2) }
-                    if (fileArray[4].substr(0, 2) === 'E:' && fileArray[4].substr(2)) { fileInfo.size = parseInt(ileArray[4].substr(2), 10) }
+                    if (fileArray[4].substr(0, 2) === 'E:' && fileArray[4].substr(2)) { fileInfo.size = parseInt(fileArray[4].substr(2), 10) }
 
-                    mongoCon.collection('property').updateMany({ _id: file._id }, { $unset: { type: '', value_file: '' }, $set: fileInfo }, function(err) {
+                    mongoCon.collection('property').updateMany({ _id: file._id }, { $unset: { type: '', value_text: '' }, $set: fileInfo }, function(err) {
                         if(err) { return callback(err) }
 
                         l--
