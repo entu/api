@@ -252,22 +252,16 @@ var importProps = function(mysqlDb, callback) {
             mongoCon.collection('property').dropAllIndexes(callback)
         },
         function(callback) {
-            log('repair mongodb')
-            mongoCon.command({ repairDatabase: 1 }, callback)
-        },
-
-        function(callback) {
-            log('create entity indexes')
-            mongoCon.collection('entity').createIndexes([
-                { key: { _access: 1 } }
-            ], callback)
-        },
-
-        function(callback) {
             log('create property indexes')
             mongoCon.collection('property').createIndexes([
                 { key: { entity: 1 } },
                 { key: { deleted: 1 } }
+            ], callback)
+        },
+        function(callback) {
+            log('create entity indexes')
+            mongoCon.collection('entity').createIndexes([
+                { key: { _access: 1 } }
             ], callback)
         },
 
@@ -285,7 +279,7 @@ var importProps = function(mysqlDb, callback) {
 
                         var p = _.mapValues(_.groupBy(properties, 'definition'), function(o) {
                             return _.map(o, function(p) {
-                                return _.omit(p, ['_id', 'entity', 'definition', 'created'])
+                                return _.omit(p, ['entity', 'definition', 'created'])
                             })
                         })
 
@@ -305,8 +299,10 @@ var importProps = function(mysqlDb, callback) {
             })
         },
 
-
-
+        function(callback) {
+            log('repair mongodb')
+            mongoCon.command({ repairDatabase: 1 }, callback)
+        },
     ], function(err) {
         if(err) { return callback(err) }
 
