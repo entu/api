@@ -279,7 +279,7 @@ var importProps = function(mysqlDb, callback) {
 
                         var p = _.mapValues(_.groupBy(properties, 'definition'), function(o) {
                             return _.map(o, function(p) {
-                                return _.omit(p, ['entity', 'definition', 'created'])
+                                return _.omit(p, ['entity', 'definition', 'created', 'md5', 's3', 'url'])
                             })
                         })
 
