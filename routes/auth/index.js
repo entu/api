@@ -55,7 +55,7 @@ router.get('/session/:sessionId', function(req, res, next) {
     ], function(err, persons) {
         if(err) { return next(err) }
 
-        res.respond(_.indexBy(persons, 'db'))
+        res.respond(_.groupBy(persons, 'db'))
     })
 })
 
