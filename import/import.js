@@ -162,7 +162,7 @@ var importProps = function(mysqlDb, callback) {
                         if(err) { return callback(err) }
 
                         l--
-                        if (l % 1000 === 0) {
+                        if (l % 1000 === 0 && l > 0) {
                             log(l + ' files to go')
                         }
                         callback(null)
@@ -187,16 +187,16 @@ var importProps = function(mysqlDb, callback) {
                             mongoCon.collection('property').updateMany({ type: 'reference', value_integer: entity.mid }, { $set: { value_integer: entity._id } }, callback)
                         },
                         function(callback) {
-                            mongoCon.collection('property').updateMany({ 'created_by': entity.mid }, { $set: { 'created_by': entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ created_by: entity.mid }, { $set: { created_by: entity._id } }, callback)
                         },
                         function(callback) {
-                            mongoCon.collection('property').updateMany({ 'deleted_by': entity.mid }, { $set: { 'deleted_by': entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ deleted_by: entity.mid }, { $set: { deleted_by: entity._id } }, callback)
                         },
                     ], function(err) {
                         if(err) { return callback(err) }
 
                         l--
-                        if (l % 1000 === 0) {
+                        if (l % 1000 === 0 && l > 0) {
                             log(l + ' entities to go')
                         }
                         callback(null)
@@ -207,48 +207,44 @@ var importProps = function(mysqlDb, callback) {
 
         function(callback) {
             log('rename value_text to string')
-            mongoCon.collection('property').updateMany({ type: 'string' }, { $unset: { type: '' }, $rename: { 'value_text': 'string' } }, callback)
+            mongoCon.collection('property').updateMany({ type: 'string' }, { $unset: { type: '' }, $rename: { value_text: 'string' } }, callback)
         },
         function(callback) {
             log('rename value_text to text')
-            mongoCon.collection('property').updateMany({ type: 'text' }, { $unset: { type: '' }, $rename: { 'value_text': 'text' } }, callback)
+            mongoCon.collection('property').updateMany({ type: 'text' }, { $unset: { type: '' }, $rename: { value_text: 'text' } }, callback)
         },
         function(callback) {
             log('rename value_integer to integer')
-            mongoCon.collection('property').updateMany({ type: 'integer' }, { $unset: { type: '' }, $rename: { 'value_integer': 'integer' } }, callback)
+            mongoCon.collection('property').updateMany({ type: 'integer' }, { $unset: { type: '' }, $rename: { value_integer: 'integer' } }, callback)
         },
         function(callback) {
             log('rename value_integer to reference')
-            mongoCon.collection('property').updateMany({ type: 'reference' }, { $unset: { type: '' }, $rename: { 'value_integer': 'reference' } }, callback)
+            mongoCon.collection('property').updateMany({ type: 'reference' }, { $unset: { type: '' }, $rename: { value_integer: 'reference' } }, callback)
         },
         function(callback) {
-            log('rename value_integer to boolean')
-            mongoCon.collection('property').updateMany({ type: 'boolean' }, { $unset: { type: '' }, $rename: { 'value_integer': 'boolean' } }, callback)
+            log('rename value_integer to boolean true')
+            mongoCon.collection('property').updateMany({ type: 'boolean', value_integer: 1 }, { $unset: { type: '', value_integer: '' }, $set: { boolean: true } }, callback)
         },
         function(callback) {
-            log('convert true booleans')
-            mongoCon.collection('property').updateMany({ type: 'boolean', boolean: 1 }, { $set: { 'boolean': true } }, callback)
-        },
-        function(callback) {
-            log('convert false booleans')
-            mongoCon.collection('property').updateMany({ type: 'boolean', boolean: 0 }, { $set: { 'boolean': false } }, callback)
+            log('rename value_integer to boolean false')
+            mongoCon.collection('property').updateMany({ type: 'boolean', value_integer: 0 }, { $unset: { type: '', value_integer: '' }, $set: { boolean: false } }, callback)
         },
         function(callback) {
             log('rename value_decimal to decimal')
-            mongoCon.collection('property').updateMany({ type: 'decimal' }, { $unset: { type: '' }, $rename: { 'value_decimal': 'decimal' } }, callback)
+            mongoCon.collection('property').updateMany({ type: 'decimal' }, { $unset: { type: '' }, $rename: { value_decimal: 'decimal' } }, callback)
         },
         function(callback) {
             log('rename value_date to date')
-            mongoCon.collection('property').updateMany({ type: 'date' }, { $unset: { type: '' }, $rename: { 'value_date': 'date' } }, callback)
+            mongoCon.collection('property').updateMany({ type: 'date' }, { $unset: { type: '' }, $rename: { value_date: 'date' } }, callback)
         },
         function(callback) {
             log('rename value_date to datetime')
-            mongoCon.collection('property').updateMany({ type: 'datetime' }, { $unset: { type: '' }, $rename: { 'value_date': 'datetime' } }, callback)
+            mongoCon.collection('property').updateMany({ type: 'datetime' }, { $unset: { type: '' }, $rename: { value_date: 'datetime' } }, callback)
         },
 
         function(callback) {
             log('rename created/deleted fields')
-            mongoCon.collection('property').updateMany({}, { $rename: { 'created_at': 'created.at', 'created_by': 'created.by', 'deleted_at': 'deleted.at', 'deleted_by': 'deleted.by' } }, callback)
+            mongoCon.collection('property').updateMany({}, { $rename: { created_at: 'created.at', created_by: 'created.by', deleted_at: 'deleted.at', deleted_by: 'deleted.by' } }, callback)
         },
 
         function(callback) {
