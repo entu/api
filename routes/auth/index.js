@@ -26,7 +26,7 @@ router.get('/session/:sessionId', function(req, res, next) {
             callback(null, APP_CUSTOMERS)
         },
         function(customers, callback) {
-            async.each(customers, function(customer, callback) {
+            async.map(customers, function(customer, callback) {
                 async.waterfall([
                     function(callback) {
                         entu.dbConnection(customer, callback)
@@ -40,11 +40,11 @@ router.get('/session/:sessionId', function(req, res, next) {
 
                     callback(null, {
                         name: null,
-                        db: database,
+                        db: customer,
                         token: jwt.sign({}, APP_JWT_SECRET, {
                             issuer: req.hostname,
-                            audience: database,
-                            subject: person._entity.toString(),
+                            audience: customer,
+                            subject: person._id.toString(),
                             expiresIn: '14d'
                         })
                     })
