@@ -12,7 +12,7 @@ router.get('/', function(req, res, next) {
 
 
 router.get('/:entityId', function(req, res, next) {
-    entityId = entu.objectId(entityId)
+    entityId = entu.objectId(req.params.entityId)
 
     if (!entityId) { return callback([422, new Error('Invalid Entity ID')]) }
     if (!req.user) { return callback([403, new Error('Forbidden')]) }
