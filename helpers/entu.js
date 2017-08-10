@@ -2,7 +2,6 @@ var _       = require('lodash')
 var async   = require('async')
 var jwt     = require('jsonwebtoken')
 var mongo   = require('mongodb')
-var op      = require('object-path')
 var request = require('request')
 
 
@@ -93,7 +92,7 @@ exports.customResponder = function (req, res, next) {
 
 // check JWT header
 exports.jwtCheck = function (req, res, next) {
-    var parts = op.get(req, 'headers.authorization', '').split(' ')
+    var parts = _.get(req, 'headers.authorization', '').split(' ')
     let jwtConf = {
         issuer: req.hostname
     }
@@ -108,8 +107,8 @@ exports.jwtCheck = function (req, res, next) {
     jwt.verify(parts[1], APP_JWT_SECRET, jwtConf, function (err, decoded) {
         if(err) { return next([401, err]) }
 
-        op.set(req, 'user', decoded.sub)
-        op.set(req, 'customer', decoded.aud)
+        _.set(req, 'user', decoded.sub)
+        _.set(req, 'customer', decoded.aud)
 
         next(null)
     })
@@ -164,14 +163,14 @@ exports.addUserSession = function (params, callback) {
         created: new Date()
     }
 
-    if(op.get(params, 'user.id')) { op.set(session, 'user.id', op.get(params, 'user.id')) }
-    if(op.get(params, 'user.provider')) { op.set(session, 'user.provider', op.get(params, 'user.provider')) }
-    if(op.get(params, 'user.name')) { op.set(session, 'user.name', op.get(params, 'user.name')) }
-    if(op.get(params, 'user.email')) { op.set(session, 'user.email', op.get(params, 'user.email')) }
-    if(op.get(params, 'user.picture')) { op.set(session, 'user.picture', op.get(params, 'user.picture')) }
-    if(op.get(params, 'request.ip')) { op.set(session, 'ip', op.get(params, 'request.ip')) }
-    if(op.get(params, 'request.headers.user-agent')) { op.set(session, 'browser', op.get(params, 'request.headers.user-agent')) }
-    if(op.get(params, 'request.cookies.redirect')) { op.set(session, 'redirect', op.get(params, 'request.cookies.redirect')) }
+    if(_.get(params, 'user.id')) { _.set(session, 'user.id', _.get(params, 'user.id')) }
+    if(_.get(params, 'user.provider')) { _.set(session, 'user.provider', _.get(params, 'user.provider')) }
+    if(_.get(params, 'user.name')) { _.set(session, 'user.name', _.get(params, 'user.name')) }
+    if(_.get(params, 'user.email')) { _.set(session, 'user.email', _.get(params, 'user.email')) }
+    if(_.get(params, 'user.picture')) { _.set(session, 'user.picture', _.get(params, 'user.picture')) }
+    if(_.get(params, 'request.ip')) { _.set(session, 'ip', _.get(params, 'request.ip')) }
+    if(_.get(params, 'request.headers.user-agent')) { _.set(session, 'browser', _.get(params, 'request.headers.user-agent')) }
+    if(_.get(params, 'request.cookies.redirect')) { _.set(session, 'redirect', _.get(params, 'request.cookies.redirect')) }
 
     async.waterfall([
         function (callback) {

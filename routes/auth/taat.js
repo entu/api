@@ -1,6 +1,5 @@
 var _        = require('lodash')
 var fs       = require('fs')
-var op       = require('object-path')
 var passport = require('passport')
 var router   = require('express').Router()
 var saml     = require('passport-saml').Strategy
@@ -46,14 +45,14 @@ router.get('/auth', passport.authenticate('saml', { scope: [], session: false })
 
 
 router.post('/', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function (req, res, next) {
-    op.del(req, ['user', '_json'])
-    op.del(req, ['user', '_raw'])
+    _.del(req, ['user', '_json'])
+    _.del(req, ['user', '_raw'])
 
     var user = {}
-    op.set(user, 'provider', 'taat.' + op.get(req, ['user', 'schacHomeOrganization']))
-    op.set(user, 'id', op.get(req, ['user', 'urn:mace:dir:attribute-def:eduPersonTargetedID']))
-    op.set(user, 'name', op.get(req, ['user', 'urn:mace:dir:attribute-def:cn']))
-    op.set(user, 'email', op.get(req, ['user', 'urn:mace:dir:attribute-def:mail']))
+    _.set(user, 'provider', 'taat.' + _.get(req, ['user', 'schacHomeOrganization']))
+    _.set(user, 'id', _.get(req, ['user', 'urn:mace:dir:attribute-def:eduPersonTargetedID']))
+    _.set(user, 'name', _.get(req, ['user', 'urn:mace:dir:attribute-def:cn']))
+    _.set(user, 'email', _.get(req, ['user', 'urn:mace:dir:attribute-def:mail']))
 
     entu.addUserSession({
         request: req,

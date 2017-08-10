@@ -1,5 +1,4 @@
 var _        = require('lodash')
-var op       = require('object-path')
 var passport = require('passport')
 var router   = require('express').Router()
 var twitter  = require('passport-twitter').Strategy
@@ -47,16 +46,16 @@ router.get('/auth', passport.authenticate('twitter'), function () {
 router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/login' }), function (req, res, next) {
     var user = {}
     var name = _.compact([
-        op.get(req, ['user', 'name', 'givenName']),
-        op.get(req, ['user', 'name', 'middleName']),
-        op.get(req, ['user', 'name', 'familyName'])
+        _.get(req, ['user', 'name', 'givenName']),
+        _.get(req, ['user', 'name', 'middleName']),
+        _.get(req, ['user', 'name', 'familyName'])
     ]).join(' ')
 
-    op.set(user, 'provider', 'twitter')
-    op.set(user, 'id', op.get(req, ['user', 'id']))
-    op.set(user, 'name', name)
-    op.set(user, 'email', op.get(req, ['user', 'emails', 0, 'value']))
-    op.set(user, 'picture', op.get(req, ['user', 'photos', 0, 'value']))
+    _.set(user, 'provider', 'twitter')
+    _.set(user, 'id', _.get(req, ['user', 'id']))
+    _.set(user, 'name', name)
+    _.set(user, 'email', _.get(req, ['user', 'emails', 0, 'value']))
+    _.set(user, 'picture', _.get(req, ['user', 'photos', 0, 'value']))
 
     entu.addUserSession({
         request: req,

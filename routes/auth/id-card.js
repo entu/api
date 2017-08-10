@@ -1,6 +1,5 @@
 var _      = require('lodash')
 var async  = require('async')
-var op     = require('object-path')
 var router = require('express').Router()
 var soap   = require('soap')
 
@@ -38,19 +37,19 @@ router.get('/callback', function (req, res, next) {
         function (result, callback) {
             console.log(JSON.stringify(result, null, '  '))
 
-            if(op.get(result, ['Status', '$value']) !== 'GOOD') { return callback(new Error('Not valid ID-Card')) }
-            if(!op.get(result, ['UserIDCode', '$value'])) { return callback(new Error('Not ID code')) }
+            if(_.get(result, ['Status', '$value']) !== 'GOOD') { return callback(new Error('Not valid ID-Card')) }
+            if(!_.get(result, ['UserIDCode', '$value'])) { return callback(new Error('Not ID code')) }
 
             var user = {}
             var name = _.compact([
-                op.get(result, ['UserGivenname', '$value']),
-                op.get(result, ['UserSurname', '$value'])
+                _.get(result, ['UserGivenname', '$value']),
+                _.get(result, ['UserSurname', '$value'])
             ]).join(' ')
 
-            op.set(user, 'provider', 'id-card')
-            op.set(user, 'id', op.get(result, ['UserIDCode', '$value']))
-            op.set(user, 'name', name)
-            op.set(user, 'email', op.get(result, ['UserIDCode', '$value']) + '@eesti.ee')
+            _.set(user, 'provider', 'id-card')
+            _.set(user, 'id', _.get(result, ['UserIDCode', '$value']))
+            _.set(user, 'name', name)
+            _.set(user, 'email', _.get(result, ['UserIDCode', '$value']) + '@eesti.ee')
 
             entu.addUserSession({ request: req, user: user }, callback)
         }

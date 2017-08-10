@@ -3,7 +3,6 @@ const async = require('async')
 const fs    = require('fs')
 const mongo = require('mongodb')
 const mysql = require('mysql')
-const op    = require('object-path')
 const path  = require('path')
 
 
