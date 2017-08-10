@@ -133,3 +133,7 @@ app.use(function(err, req, res, next) {
 app.listen(APP_PORT, function() {
     console.log(new Date().toString() + ' started listening port ' + APP_PORT)
 })
+
+
+
+console.log(JSON.stringify(process.env, null, 3))
