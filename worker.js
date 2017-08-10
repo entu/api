@@ -95,7 +95,7 @@ app.use(entu.jwtCheck)
 
 // Redirect HTTP to HTTPS
 app.use(function (req, res, next) {
-    if (req.protocol.toLowerCase() !== 'https') { next([418, 'I\'m a teapot']) }
+    if (req.protocol.toLowerCase() !== 'https') { next([418, 'I\'m a teapot']) } else { next() }
 })
 
 // routes mapping
