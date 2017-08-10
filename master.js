@@ -14,12 +14,12 @@ for(var i = 0; i < cpuCount; i += 1) {
 }
 
 // Listen for new workers
-cluster.on('online', function(worker) {
+cluster.on('online', function (worker) {
     console.log(new Date().toString() + ' worker ' + worker.id + ' started')
 })
 
 // Listen for dying workers nad replace the dead worker, we're not sentimental
-cluster.on('exit', function(worker, code, signal) {
+cluster.on('exit', function (worker, code, signal) {
     if(signal) {
         console.error('Worker #' + worker.id + ' was killed by signal: ' + signal)
     } else if(code !== 0) {

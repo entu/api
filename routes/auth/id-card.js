@@ -8,13 +8,13 @@ var entu   = require('../../helpers/entu')
 
 
 
-router.get('/', function(req, res) {
+router.get('/', function (req, res) {
     res.redirect('https://id.entu.ee/auth/id-card/callback')
 })
 
 
 
-router.get('/callback', function(req, res, next) {
+router.get('/callback', function (req, res, next) {
     console.log(JSON.stringify(req.headers, null, '  '))
 
     async.waterfall([
@@ -29,7 +29,7 @@ router.get('/callback', function(req, res, next) {
             soap.createClient('https://digidocservice.sk.ee/?wsdl', {}, callback)
         },
         function (client, callback) {
-            client.CheckCertificate({ Certificate: req.headers.ssl_client_cert }, function(err, result) {
+            client.CheckCertificate({ Certificate: req.headers.ssl_client_cert }, function (err, result) {
                 if(err) { return callback(err) }
 
                 callback(null, result)

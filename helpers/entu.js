@@ -8,7 +8,7 @@ var request = require('request')
 
 
 // returns random v4 UUID
-var UUID = function(a) {
+var UUID = function (a) {
     return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, UUID)
 }
 exports.UUID = UUID
@@ -16,7 +16,7 @@ exports.UUID = UUID
 
 
 // returns MongoDb Id
-var objectId = function(id) {
+var objectId = function (id) {
     try {
         return new mongo.ObjectID(id)
     } catch (e) {
@@ -28,28 +28,28 @@ exports.objectId = objectId
 
 
 // returns db connection (creates if not set)
-var dbConnection = function(customer, callback) {
+var dbConnection = function (customer, callback) {
     if(_.has(APP_DBS, customer)) {
         callback(null, APP_DBS[customer])
     } else {
         async.waterfall([
-            function(callback) {
+            function (callback) {
                 mongo.MongoClient.connect(APP_MONGODB, { ssl: true, sslValidate: false, autoReconnect: true }, callback)
             },
-            function(connection, callback) {
+            function (connection, callback) {
                 connection.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false } }, { _id: false, 'mongodb.string': true }, callback)
             },
-            function(url, callback) {
+            function (url, callback) {
                 let mongoUrl = url.mongodb[0].string
 
                 if (!mongoUrl) { return callback('No MongoDb url')}
 
                 mongo.MongoClient.connect(mongoUrl, { ssl: true, sslValidate: false, autoReconnect: true }, callback)
             },
-        ], function(err, connection) {
+        ], function (err, connection) {
             if(err) { return callback(err) }
 
-            connection.on('close', function(err) {
+            connection.on('close', function (err) {
                 delete APP_DBS[customer]
             })
 
@@ -63,8 +63,8 @@ exports.dbConnection = dbConnection
 
 
 // send out JSON
-exports.customResponder = function(req, res, next) {
-    res.respond = function(body, errorCode) {
+exports.customResponder = function (req, res, next) {
+    res.respond = function (body, errorCode) {
         var message = {
             version: APP_VERSION,
             ms: Date.now() - req.startDt,
@@ -89,7 +89,7 @@ exports.customResponder = function(req, res, next) {
 
 
 // check JWT header
-exports.jwtCheck = function(req, res, next) {
+exports.jwtCheck = function (req, res, next) {
     var parts = op.get(req, 'headers.authorization', '').split(' ')
     let jwtConf = {
         issuer: req.hostname
@@ -102,7 +102,7 @@ exports.jwtCheck = function(req, res, next) {
 
     if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
 
-    jwt.verify(parts[1], APP_JWT_SECRET, jwtConf, function(err, decoded) {
+    jwt.verify(parts[1], APP_JWT_SECRET, jwtConf, function (err, decoded) {
         if(err) { return next([401, err]) }
 
         op.set(req, 'user', decoded.sub)
@@ -115,10 +115,10 @@ exports.jwtCheck = function(req, res, next) {
 
 
 // Create requestlog entry on response finish
-exports.requestLog = function(req, res, next) {
+exports.requestLog = function (req, res, next) {
     req.startDt = Date.now()
 
-    res.on('finish', function() {
+    res.on('finish', function () {
         var request = {
             date: new Date(),
             ip: req.ip,
@@ -134,13 +134,13 @@ exports.requestLog = function(req, res, next) {
         if(req.browser) { request.browser = req.headers['user-agent'] }
 
         async.waterfall([
-            function(callback) {
+            function (callback) {
                 dbConnection('entu', callback)
             },
-            function(connection, callback) {
+            function (connection, callback) {
                 connection.collection('request').insertOne(request, callback)
             },
-        ], function(err) {
+        ], function (err) {
             if(err) {
                 console.error(err.toString(), '- Can\'t save request')
                 return next(null)
@@ -154,7 +154,7 @@ exports.requestLog = function(req, res, next) {
 
 
 // Create user session
-exports.addUserSession = function(params, callback) {
+exports.addUserSession = function (params, callback) {
     if(!params.user) { return callback(new Error('no user')) }
 
     var session = {
@@ -171,13 +171,13 @@ exports.addUserSession = function(params, callback) {
     if(op.get(params, 'request.cookies.redirect')) { op.set(session, 'redirect', op.get(params, 'request.cookies.redirect')) }
 
     async.waterfall([
-        function(callback) {
+        function (callback) {
             dbConnection('entu', callback)
         },
-        function(connection, callback) {
+        function (connection, callback) {
             connection.collection('session').insertOne(session, callback)
         },
-    ], function(err, r) {
+    ], function (err, r) {
         if(err) { return callback(err) }
 
         callback(null, r.insertedId)
@@ -187,6 +187,6 @@ exports.addUserSession = function(params, callback) {
 
 
 // Get entities
-exports.getEntities = function(params, callback) {
+exports.getEntities = function (params, callback) {
 
 }

@@ -41,11 +41,11 @@ TAAT_PRIVATECERT = process.env.TAAT_PRIVATECERT
 
 
 // passport (de)serialize
-passport.serializeUser(function(user, done) {
+passport.serializeUser(function (user, done) {
     done(null, user)
 })
 
-passport.deserializeUser(function(user, done) {
+passport.deserializeUser(function (user, done) {
     done(null, user)
 })
 
@@ -55,7 +55,7 @@ passport.deserializeUser(function(user, done) {
 if(process.env.SENTRY_DSN) {
     raven.config(process.env.SENTRY_DSN, {
         release: APP_VERSION,
-        dataCallback: function(data) {
+        dataCallback: function (data) {
             delete data.request.env
             return data
         }
@@ -114,12 +114,12 @@ if(process.env.SENTRY_DSN) {
 }
 
 // show 404
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     next([404, new Error('not found')])
 })
 
 // show error
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
     var code = 500
     var error = err
     if (err.constructor === Array) {
@@ -130,6 +130,6 @@ app.use(function(err, req, res, next) {
 })
 
 // start server
-app.listen(APP_PORT, function() {
+app.listen(APP_PORT, function () {
     console.log(new Date().toString() + ' started listening port ' + APP_PORT)
 })

@@ -8,7 +8,7 @@ const path  = require('path')
 
 
 
-require.extensions['.sql'] = function(module, filename) { module.exports = fs.readFileSync(filename, 'utf8') }
+require.extensions['.sql'] = function (module, filename) { module.exports = fs.readFileSync(filename, 'utf8') }
 
 
 
@@ -26,7 +26,7 @@ var log = function (s) {
 
 
 
-var importProps = function(mysqlDb, callback) {
+var importProps = function (mysqlDb, callback) {
     log('start database ' +  mysqlDb + ' import')
 
     var mongoCon = NaN
@@ -40,12 +40,12 @@ var importProps = function(mysqlDb, callback) {
     })
 
     async.series([
-        function(callback) {
+        function (callback) {
             log('create props table')
             sqlCon.query(require('./sql/create_props.sql'), callback)
         },
 
-        function(callback) {
+        function (callback) {
             mongo.MongoClient.connect(MONGODB, { ssl: true, sslValidate: false }, function (err, con) {
                 if(err) { return callback(err) }
 
@@ -54,8 +54,8 @@ var importProps = function(mysqlDb, callback) {
             })
         },
 
-        function(callback) {
-            mongoCon.listCollections({ name: 'entity' }).toArray(function(err, collections) {
+        function (callback) {
+            mongoCon.listCollections({ name: 'entity' }).toArray(function (err, collections) {
                 if(err) { return callback(err) }
 
                 if (collections.length > 0) {
@@ -65,8 +65,8 @@ var importProps = function(mysqlDb, callback) {
                 }
             })
         },
-        function(callback) {
-            mongoCon.listCollections({ name: 'property' }).toArray(function(err, collections) {
+        function (callback) {
+            mongoCon.listCollections({ name: 'property' }).toArray(function (err, collections) {
                 if(err) { return callback(err) }
 
                 if (collections.length > 0) {
@@ -77,7 +77,7 @@ var importProps = function(mysqlDb, callback) {
             })
         },
 
-        function(callback) {
+        function (callback) {
             log('create mongodb indexes for import')
             mongoCon.collection('property').createIndexes([
                 { key: { entity: 1 } },
@@ -88,68 +88,68 @@ var importProps = function(mysqlDb, callback) {
             ], callback)
         },
 
-        function(callback) {
+        function (callback) {
             log('insert entities to mongodb')
-            sqlCon.query(require('./sql/get_entities.sql'), function(err, entities) {
+            sqlCon.query(require('./sql/get_entities.sql'), function (err, entities) {
                 if(err) { return callback(err) }
 
                 mongoCon.collection('entity').insertMany(entities, callback)
             })
         },
-        function(callback) {
+        function (callback) {
             log('insert props to mongodb')
-            sqlCon.query(require('./sql/get_properties.sql'), function(err, props) {
+            sqlCon.query(require('./sql/get_properties.sql'), function (err, props) {
                 if(err) { return callback(err) }
 
                 mongoCon.collection('property').insertMany(props, callback)
             })
         },
 
-        function(callback) {
+        function (callback) {
             log('delete empty language field')
             mongoCon.collection('property').updateMany({ language: null }, { $unset: { language: '' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('delete empty value_text field')
             mongoCon.collection('property').updateMany({ value_text: null }, { $unset: { value_text: '' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('delete empty value_integer field')
             mongoCon.collection('property').updateMany({ value_integer: null }, { $unset: { value_integer: '' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('delete empty value_decimal field')
             mongoCon.collection('property').updateMany({ value_decimal: null }, { $unset: { value_decimal: '' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('delete empty value_date field')
             mongoCon.collection('property').updateMany({ value_date: null }, { $unset: { value_date: '' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('delete empty created_at field')
             mongoCon.collection('property').updateMany({ created_at: null }, { $unset: { created_at: '' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('delete empty created_by field')
             mongoCon.collection('property').updateMany({ created_by: null }, { $unset: { created_by: '' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('delete empty deleted_at field')
             mongoCon.collection('property').updateMany({ deleted_at: null }, { $unset: { deleted_at: '' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('delete empty deleted_by field')
             mongoCon.collection('property').updateMany({ deleted_by: null }, { $unset: { deleted_by: '' } }, callback)
         },
 
-        function(callback) {
+        function (callback) {
             log('parse file info to separate parameters')
 
-            mongoCon.collection('property').find({ type: 'file', value_text: { $exists: true } }).toArray(function(err, files) {
+            mongoCon.collection('property').find({ type: 'file', value_text: { $exists: true } }).toArray(function (err, files) {
                 if(err) { return callback(err) }
 
                 var l = files.length
-                async.eachSeries(files, function(file, callback) {
+                async.eachSeries(files, function (file, callback) {
                     var fileArray = file.value_text.split('\n')
                     var fileInfo = {}
                     if (fileArray[0].substr(0, 2) === 'A:' && fileArray[0].substr(2)) { fileInfo.filename = fileArray[0].substr(2) }
@@ -158,7 +158,7 @@ var importProps = function(mysqlDb, callback) {
                     if (fileArray[3].substr(0, 2) === 'D:' && fileArray[3].substr(2)) { fileInfo.url = fileArray[3].substr(2) }
                     if (fileArray[4].substr(0, 2) === 'E:' && fileArray[4].substr(2)) { fileInfo.size = parseInt(fileArray[4].substr(2), 10) }
 
-                    mongoCon.collection('property').updateMany({ _id: file._id }, { $unset: { type: '', value_text: '' }, $set: fileInfo }, function(err) {
+                    mongoCon.collection('property').updateMany({ _id: file._id }, { $unset: { type: '', value_text: '' }, $set: fileInfo }, function (err) {
                         if(err) { return callback(err) }
 
                         l--
@@ -171,28 +171,28 @@ var importProps = function(mysqlDb, callback) {
             })
         },
 
-        function(callback) {
+        function (callback) {
             log('replace mysql numeric ids with mongodb _ids')
 
             mongoCon.collection('entity').find({}).sort({ _mid: 1 }).toArray(function (err, entities) {
                 if(err) { return callback(err) }
 
                 var l = entities.length
-                async.eachSeries(entities, function(entity, callback) {
+                async.eachSeries(entities, function (entity, callback) {
                     async.parallel([
-                        function(callback) {
+                        function (callback) {
                             mongoCon.collection('property').updateMany({ entity: entity._mid }, { $set: { entity: entity._id } }, callback)
                         },
-                        function(callback) {
+                        function (callback) {
                             mongoCon.collection('property').updateMany({ type: 'reference', value_integer: entity._mid }, { $set: { value_integer: entity._id } }, callback)
                         },
-                        function(callback) {
+                        function (callback) {
                             mongoCon.collection('property').updateMany({ created_by: entity._mid }, { $set: { created_by: entity._id } }, callback)
                         },
-                        function(callback) {
+                        function (callback) {
                             mongoCon.collection('property').updateMany({ deleted_by: entity._mid }, { $set: { deleted_by: entity._id } }, callback)
                         },
-                    ], function(err) {
+                    ], function (err) {
                         if(err) { return callback(err) }
 
                         l--
@@ -205,80 +205,80 @@ var importProps = function(mysqlDb, callback) {
             })
         },
 
-        function(callback) {
+        function (callback) {
             log('rename value_text to string')
             mongoCon.collection('property').updateMany({ type: 'string' }, { $unset: { type: '' }, $rename: { value_text: 'string' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('rename value_text to text')
             mongoCon.collection('property').updateMany({ type: 'text' }, { $unset: { type: '' }, $rename: { value_text: 'text' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('rename value_integer to integer')
             mongoCon.collection('property').updateMany({ type: 'integer' }, { $unset: { type: '' }, $rename: { value_integer: 'integer' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('rename value_integer to reference')
             mongoCon.collection('property').updateMany({ type: 'reference' }, { $unset: { type: '' }, $rename: { value_integer: 'reference' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('rename value_integer to boolean true')
             mongoCon.collection('property').updateMany({ type: 'boolean', value_integer: 1 }, { $unset: { type: '', value_integer: '' }, $set: { boolean: true } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('rename value_integer to boolean false')
             mongoCon.collection('property').updateMany({ type: 'boolean', value_integer: 0 }, { $unset: { type: '', value_integer: '' }, $set: { boolean: false } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('rename value_decimal to decimal')
             mongoCon.collection('property').updateMany({ type: 'decimal' }, { $unset: { type: '' }, $rename: { value_decimal: 'decimal' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('rename value_date to date')
             mongoCon.collection('property').updateMany({ type: 'date' }, { $unset: { type: '' }, $rename: { value_date: 'date' } }, callback)
         },
-        function(callback) {
+        function (callback) {
             log('rename value_date to datetime')
             mongoCon.collection('property').updateMany({ type: 'datetime' }, { $unset: { type: '' }, $rename: { value_date: 'datetime' } }, callback)
         },
 
-        function(callback) {
+        function (callback) {
             log('rename created/deleted fields')
             mongoCon.collection('property').updateMany({}, { $rename: { created_at: 'created.at', created_by: 'created.by', deleted_at: 'deleted.at', deleted_by: 'deleted.by' } }, callback)
         },
 
-        function(callback) {
+        function (callback) {
             log('drop mongodb indexes for import')
             mongoCon.collection('property').dropAllIndexes(callback)
         },
-        function(callback) {
+        function (callback) {
             log('create property indexes')
             mongoCon.collection('property').createIndexes([
                 { key: { entity: 1 } },
                 { key: { deleted: 1 } }
             ], callback)
         },
-        function(callback) {
+        function (callback) {
             log('create entity indexes')
             mongoCon.collection('entity').createIndexes([
                 { key: { _access: 1 } }
             ], callback)
         },
 
-        function(callback) {
+        function (callback) {
             log('create entities')
 
             mongoCon.collection('entity').find({}, { _id: true }).sort({ _id: 1 }).toArray(function (err, entities) {
                 if(err) { return callback(err) }
 
                 var l = entities.length
-                async.eachSeries(entities, function(entity, callback) {
+                async.eachSeries(entities, function (entity, callback) {
 
                     mongoCon.collection('property').find({ entity: entity._id, deleted: { '$exists': false } }).toArray(function (err, properties) {
                         if(err) { return callback(err) }
 
-                        var p = _.mapValues(_.groupBy(properties, 'definition'), function(o) {
-                            return _.map(o, function(p) {
+                        var p = _.mapValues(_.groupBy(properties, 'definition'), function (o) {
+                            return _.map(o, function (p) {
                                 return _.omit(p, ['entity', 'definition', 'created', 'md5', 's3', 'url'])
                             })
                         })
@@ -299,11 +299,11 @@ var importProps = function(mysqlDb, callback) {
             })
         },
 
-        function(callback) {
+        function (callback) {
             log('repair mongodb')
             mongoCon.command({ repairDatabase: 1 }, callback)
         },
-    ], function(err) {
+    ], function (err) {
         if(err) { return callback(err) }
 
         log('end database ' +  mysqlDb + ' import')
@@ -319,15 +319,15 @@ var connection = mysql.createConnection({
     user: MYSQL_USER,
     password: MYSQL_PASSWORD
 })
-connection.query(require('./sql/get_databases.sql'), function(err, rows) {
+connection.query(require('./sql/get_databases.sql'), function (err, rows) {
     if(err) {
         console.error(err.toString())
         process.exit(1)
     }
 
-    async.eachSeries(rows, function(row, callback) {
+    async.eachSeries(rows, function (row, callback) {
         importProps(row.db, callback)
-    }, function(err) {
+    }, function (err) {
         if(err) {
             console.error(err.toString())
             process.exit(1)

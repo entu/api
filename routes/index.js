@@ -2,13 +2,13 @@ var router = require('express').Router()
 
 
 
-router.get('/', function(req, res) {
+router.get('/', function (req, res) {
     res.respond(true)
 })
 
 
 
-router.get('/test', function() {
+router.get('/test', function () {
     throw new Error('böö')
 })
 

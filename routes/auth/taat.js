@@ -15,8 +15,8 @@ passport.use(new saml({
         cert: fs.readFileSync(TAAT_CERT, 'utf-8'),
         privateCert: fs.readFileSync(TAAT_PRIVATECERT, 'utf-8')
     },
-    function(profile, done) {
-        process.nextTick(function() {
+    function (profile, done) {
+        process.nextTick(function () {
             return done(null, profile)
         })
     }
@@ -24,7 +24,7 @@ passport.use(new saml({
 
 
 
-router.get('/', function(req, res) {
+router.get('/', function (req, res) {
     res.clearCookie('redirect')
     res.clearCookie('session')
 
@@ -39,13 +39,13 @@ router.get('/', function(req, res) {
 
 
 
-router.get('/auth', passport.authenticate('saml', { scope: [], session: false }), function() {
+router.get('/auth', passport.authenticate('saml', { scope: [], session: false }), function () {
 
 })
 
 
 
-router.post('/', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function(req, res, next) {
+router.post('/', passport.authenticate('saml', { failureRedirect: '/login', session: false }), function (req, res, next) {
     op.del(req, ['user', '_json'])
     op.del(req, ['user', '_raw'])
 
@@ -58,7 +58,7 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
     entu.addUserSession({
         request: req,
         user: user
-    }, function(err, sessionId) {
+    }, function (err, sessionId) {
         if(err) { return next(err) }
 
         var redirectUrl = req.cookies.redirect

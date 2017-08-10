@@ -7,14 +7,14 @@ var entu   = require('../helpers/entu')
 
 
 
-router.get('/', function(req, res, next) {
+router.get('/', function (req, res, next) {
     if (!req.customer) { return next([400, new Error('No customer parameter')]) }
 
     async.waterfall([
-        function(callback) {
+        function (callback) {
             entu.dbConnection(req.customer, callback)
         },
-        function(connection, callback) {
+        function (connection, callback) {
             let props = _.compact(op.get(req, 'query.props', '').split(','))
             let filter = {}
             let fields = {}
@@ -24,7 +24,7 @@ router.get('/', function(req, res, next) {
             filter._access = entu.objectId(req.user)
 
             if (props.length > 0) {
-                _.forEach(props, function(f) {
+                _.forEach(props, function (f) {
                     op.set(fields, f, true)
                 })
                 op.set(fields, '_access', true)
@@ -32,7 +32,7 @@ router.get('/', function(req, res, next) {
 
             connection.collection('entity').find(filter, fields).limit(limit).toArray(callback)
         },
-    ], function(err, entities) {
+    ], function (err, entities) {
         if (err) { return next(err) }
 
         res.respond(_.map(entities, function (entity) {
@@ -46,22 +46,22 @@ router.get('/', function(req, res, next) {
 
 
 
-router.get('/:entityId', function(req, res, next) {
+router.get('/:entityId', function (req, res, next) {
     var entityId = entu.objectId(req.params.entityId)
 
     if (!entityId) { return next([422, new Error('Invalid Entity ID')]) }
     if (!req.customer) { return next([400, new Error('No customer parameter')]) }
 
     async.waterfall([
-        function(callback) {
+        function (callback) {
             entu.dbConnection(req.customer, callback)
         },
-        function(connection, callback) {
+        function (connection, callback) {
             let props = _.compact(op.get(req, 'query.props', '').split(','))
             let config = {}
 
             if (props.length > 0) {
-                _.forEach(props, function(f) {
+                _.forEach(props, function (f) {
                     op.set(config, ['fields', f], true)
                 })
                 op.set(config, 'fields._access', true)
@@ -69,7 +69,7 @@ router.get('/:entityId', function(req, res, next) {
 
             connection.collection('entity').findOne({ _id: entityId }, config, callback)
         },
-    ], function(err, entity) {
+    ], function (err, entity) {
         if (err) { return next(err) }
 
         if (!entity) { return next([404, new Error('Entity not found')]) }
