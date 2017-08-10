@@ -22,7 +22,6 @@ router.get('/session/:sessionId', function(req, res, next) {
             if(!sess.value) { return callback([400, new Error('no session')]) }
 
             session = sess.value
-            // conection.admin().listDatabases(callback)
             callback(null, APP_CUSTOMERS)
         },
         function(customers, callback) {
@@ -39,8 +38,8 @@ router.get('/session/:sessionId', function(req, res, next) {
                     if(!person) { return callback(null) }
 
                     callback(null, {
-                        name: null,
-                        db: customer,
+                        title: null,
+                        customer: customer,
                         token: jwt.sign({}, APP_JWT_SECRET, {
                             issuer: req.hostname,
                             audience: customer,
@@ -54,7 +53,9 @@ router.get('/session/:sessionId', function(req, res, next) {
     ], function(err, persons) {
         if(err) { return next(err) }
 
-        res.respond(_.groupBy(persons, 'db'))
+        res.respond(_.mapValues(_.groupBy(persons, 'customer'), _.first), function (o) {
+            return
+        })
     })
 })
 
