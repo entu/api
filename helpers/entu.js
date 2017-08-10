@@ -28,19 +28,33 @@ exports.objectId = objectId
 
 
 // returns db connection (creates if not set)
-var dbConnection = function(db, callback) {
-    if(_.has(APP_ENTU_DBS, db)) {
-        callback(null, APP_ENTU_DBS[db])
+var dbConnection = function(customer, callback) {
+    if(_.has(APP_DBS, customer)) {
+        callback(null, APP_DBS[customer])
     } else {
-        mongo.MongoClient.connect(APP_MONGODB + db, { ssl: true, sslValidate: false, autoReconnect: true }, function(err, connection) {
+        async.waterfall([
+            function(callback) {
+                mongo.MongoClient.connect(APP_MONGODB, { ssl: true, sslValidate: false, autoReconnect: true }, callback)
+            },
+            function(connection, callback) {
+                connection.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false }, { _id: false, 'mongodb.string': true }, callback)
+            },
+            function(url, callback) {
+                let mongoUrl = url.mongodb[0].string
+
+                if (!mongoUrl) { return callback('No MongoDb url')}
+
+                mongo.MongoClient.connect(mongoUrl, { ssl: true, sslValidate: false, autoReconnect: true }, callback)
+            },
+        ], function(err, connection) {
             if(err) { return callback(err) }
 
             connection.on('close', function(err) {
-                delete APP_ENTU_DBS[db]
+                delete APP_DBS[customer]
             })
 
-            APP_ENTU_DBS[db] = connection
-            callback(null, APP_ENTU_DBS[db])
+            APP_DBS[customer] = connection
+            callback(null, APP_DBS[customer])
         })
     }
 }

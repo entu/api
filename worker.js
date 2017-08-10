@@ -17,7 +17,9 @@ APP_PORT = process.env.PORT || 3000
 APP_JWT_SECRET = process.env.JWT_SECRET || '123abc'
 
 APP_MONGODB = process.env.MONGODB || 'mongodb://entu_mongodb:27017/'
-APP_DATABASES = process.env.DATABASES.split(',') || []
+APP_CUSTOMERS = process.env.CUSTOMERS.split(',') || []
+
+APP_DBS = {}
 
 GOOGLE_ID = process.env.GOOGLE_ID
 GOOGLE_SECRET = process.env.GOOGLE_SECRET
@@ -35,8 +37,6 @@ TAAT_ENTRYPOINT = process.env.TAAT_ENTRYPOINT
 TAAT_ISSUER = process.env.TAAT_ISSUER
 TAAT_CERT = process.env.TAAT_CERT
 TAAT_PRIVATECERT = process.env.TAAT_PRIVATECERT
-
-APP_ENTU_DBS = {}
 
 
 

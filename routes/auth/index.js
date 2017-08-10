@@ -23,14 +23,13 @@ router.get('/session/:sessionId', function(req, res, next) {
 
             session = sess.value
             // conection.admin().listDatabases(callback)
-            callback(null, APP_DATABASES)
+            callback(null, APP_CUSTOMERS)
         },
-        function(databases, callback) {
-            async.map(databases.databases, function(db, callback) {
-                var database = db.name
+        function(customers, callback) {
+            async.each(customers, function(customer, callback) {
                 async.waterfall([
                     function(callback) {
-                        entu.dbConnection(database, callback)
+                        entu.dbConnection(customer, callback)
                     },
                     function(con, callback) {
                         con.collection('entity').findOne({'entu_user.string': session.user.email, _deleted: { $exists: false }}, {_id: false, _entity: true}, callback)
