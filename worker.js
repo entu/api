@@ -11,7 +11,7 @@ var entu       = require('./helpers/entu')
 
 
 // global variables (and list of all used environment variables)
-APP_VERSION = process.env.SOURCE_VERSION || require('./package').version
+APP_VERSION = process.env.VERSION || process.env.HEROKU_SLUG_COMMIT || require('./package').version
 APP_STARTED = new Date().toISOString()
 APP_PORT = process.env.PORT || 3000
 APP_JWT_SECRET = process.env.JWT_SECRET || '123abc'
