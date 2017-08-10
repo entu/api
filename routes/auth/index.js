@@ -6,6 +6,7 @@ var router = require('express').Router()
 var entu   = require('../../helpers/entu')
 
 
+
 router.get('/session/:sessionId', function (req, res, next) {
     var conection
     var session

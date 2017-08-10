@@ -78,6 +78,13 @@ if(process.env.SENTRY_DSN) {
     app.use(raven.requestHandler())
 }
 
+// Redirect HTTP to HTTPS
+app.use(function (req, res, next) {
+    if (req.protocol !== 'HTTPS') {
+        res.redirect(301, 'https://' + req.hostname + req.originalUrl)
+    }
+})
+
 // Initialize Passport
 app.use(passport.initialize())
 
