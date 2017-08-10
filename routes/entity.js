@@ -24,7 +24,7 @@ router.get('/:entityId', function(req, res, next) {
             entu.dbConnection(req.customer, callback)
         },
         function(connection, callback) {
-            let props = op.get(req, 'query.props', '').split(',')
+            let props = _.compact(op.get(req, 'query.props', '').split(','))
             let config = {}
 
             if (props.length > 0) {
