@@ -24,13 +24,17 @@ router.get('/:entityId', function(req, res, next) {
             entu.dbConnection(req.customer, callback)
         },
         function(connection, callback) {
-            let fields = {}
-            _.forEach(op.get(req, 'query.props', '').split(','), function(f) {
-                fields[f] = true
-            })
-            fields._access = true
+            let props = op.get(req, 'query.props', '').split(',')
+            let config = {}
 
-            connection.collection('entity').findOne({ _id: entityId }, { fields: fields }, callback)
+            if (props.length > 0) {
+                _.forEach(props, function(f) {
+                    config.fields[f] = true
+                })
+                config.fields._access = true
+            }
+
+            connection.collection('entity').findOne({ _id: entityId }, config, callback)
         },
     ], function(err, entity) {
         if (err) { return next(err) }
