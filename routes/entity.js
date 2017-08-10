@@ -25,7 +25,7 @@ router.get('/:entityId', function(req, res, next) {
         },
         function(connection, callback) {
             let fields = {}
-            _.forEach(op.get(req, 'query.customer', '').split(','), function(f) {
+            _.forEach(op.get(req, 'query.props', '').split(','), function(f) {
                 fields[f] = true
             })
             fields._access = true
