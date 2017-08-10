@@ -22,7 +22,7 @@ router.get('/:entityId', function(req, res, next) {
             entu.dbConnection(req.customer, callback)
         },
         function(connection, callback) {
-            connection.collection('entity').findOne({ _id: entityId, _access: req.user }, { _mid: false }, callback)
+            connection.collection('entity').findOne({ _id: entityId }, { _mid: false }, callback)
         },
     ], function(err, entity) {
         if (err) { return next(err) }
