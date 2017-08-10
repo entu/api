@@ -50,12 +50,10 @@ router.get('/session/:sessionId', function(req, res, next) {
                 })
             }, callback)
         },
-    ], function(err, persons) {
+    ], function(err, customers) {
         if(err) { return next(err) }
 
-        res.respond(_.mapValues(_.groupBy(persons, 'customer'), _.first), function (o) {
-            return
-        })
+        res.respond(_.mapValues(_.groupBy(customers, 'customer'), _.first))
     })
 })
 
