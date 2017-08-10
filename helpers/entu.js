@@ -37,7 +37,7 @@ var dbConnection = function(customer, callback) {
                 mongo.MongoClient.connect(APP_MONGODB, { ssl: true, sslValidate: false, autoReconnect: true }, callback)
             },
             function(connection, callback) {
-                connection.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false }, { _id: false, 'mongodb.string': true }, callback)
+                connection.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false } }, { _id: false, 'mongodb.string': true }, callback)
             },
             function(url, callback) {
                 let mongoUrl = url.mongodb[0].string
