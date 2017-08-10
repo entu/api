@@ -20,7 +20,7 @@ router.get('/:entityId', function(req, res, next) {
 
     async.waterfall([
         function(callback) {
-            dbConnection(req.customer, callback)
+            entu.dbConnection(req.customer, callback)
         },
         function(connection, callback) {
             connection.collection('entity').findOne({ _id: entityId, _access: req.user }, { _mid: false, _access: false }, callback)
