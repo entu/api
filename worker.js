@@ -80,7 +80,7 @@ if(process.env.SENTRY_DSN) {
 
 // Redirect HTTP to HTTPS
 app.use(function (req, res, next) {
-    if (req.protocol !== 'HTTPS') {
+    if (req.protocol.toLowerCase() !== 'https') {
         res.redirect(301, 'https://' + req.hostname + req.originalUrl)
     }
 })
