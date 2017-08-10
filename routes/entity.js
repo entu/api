@@ -20,7 +20,7 @@ router.get('/', function(req, res, next) {
             let fields = {}
             let limit = req.query.limit || 100
 
-            if(req.query.def) { 'filter.definition.string' = req.query.def }
+            if(req.query.def) { '_definition.string': req.query.def }
             filter._access = entu.objectId(req.user)
 
             if (props.length > 0) {
