@@ -35,7 +35,7 @@ router.get('/:entityId', function(req, res, next) {
             return s.toString()
         })
 
-        if (access.indexOf(req.user) !== -1 || op.get(entity, '_sharing.0.string', '') === 'public') {
+        if (access.indexOf(req.user) !== -1 || op.get(entity, '_sharing.0.string', '') === 'public access is disabled for now') {
             delete entity._access
             res.respond(entity)
         } else {
