@@ -12,7 +12,7 @@ router.get('/', function(req, res, next) {
 
 
 router.get('/:entityId', function(req, res, next) {
-    entityId = entu.objectId(req.params.entityId)
+    var entityId = entu.objectId(req.params.entityId)
 
     if (!entityId) { return next([422, new Error('Invalid Entity ID')]) }
     if (!req.user) { return next([403, new Error('Forbidden')]) }
@@ -26,7 +26,9 @@ router.get('/:entityId', function(req, res, next) {
             connection.collection('entity').findOne({ _id: entityId, _access: req.user }, { _mid: false, _access: false }, callback)
         },
     ], function(err, entity) {
-        if(err) { return callback(err) }
+        if(err) { return next(err) }
+
+        if(!entity) { next([404, new Error('Entity not found')]) }
 
         res.respond(entity)
     })
