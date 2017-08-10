@@ -24,7 +24,13 @@ router.get('/:entityId', function(req, res, next) {
             entu.dbConnection(req.customer, callback)
         },
         function(connection, callback) {
-            connection.collection('entity').findOne({ _id: entityId }, { _mid: false }, callback)
+            let fields = {}
+            _.forEach(op.get(req, 'query.customer', '').split(','), function(f) {
+                fields[f] = true
+            })
+            fields._mid = false
+
+            connection.collection('entity').findOne({ _id: entityId }, { fields: fields }, callback)
         },
     ], function(err, entity) {
         if (err) { return next(err) }
