@@ -8,7 +8,40 @@ var entu   = require('../helpers/entu')
 
 
 router.get('/', function(req, res, next) {
-    res.respond(req.user)
+    if (!req.customer) { return next([400, new Error('No customer parameter')]) }
+
+    async.waterfall([
+        function(callback) {
+            entu.dbConnection(req.customer, callback)
+        },
+        function(connection, callback) {
+            let props = _.compact(op.get(req, 'query.props', '').split(','))
+            let filter = {}
+            let fields = {}
+            let limit = req.query.limit || 100
+
+            if(req.query.def) { 'filter.definition.string' = req.query.def }
+            filter._access = entu.objectId(req.user)
+
+            if (props.length > 0) {
+                _.forEach(props, function(f) {
+                    op.set(fields, f, true)
+                })
+                op.set(fields, '_access', true)
+            }
+            fields._mid = false
+
+            connection.collection('entity').find(filter, fields).limit(limit).toArray(callback)
+        },
+    ], function(err, entities) {
+        if (err) { return next(err) }
+
+        res.respond(_.map(entities, function (entity) {
+            delete entity._access
+            return entity
+        }))
+
+    })
 })
 
 
@@ -52,7 +85,6 @@ router.get('/:entityId', function(req, res, next) {
         } else {
             return next([403, new Error('Forbidden')])
         }
-
     })
 })
 
