@@ -14,9 +14,9 @@ router.get('/', function(req, res, next) {
 router.get('/:entityId', function(req, res, next) {
     entityId = entu.objectId(req.params.entityId)
 
-    if (!entityId) { return callback([422, new Error('Invalid Entity ID')]) }
-    if (!req.user) { return callback([403, new Error('Forbidden')]) }
-    if (!req.customer) { return callback([400, new Error('No customer parameter')]) }
+    if (!entityId) { return next([422, new Error('Invalid Entity ID')]) }
+    if (!req.user) { return next([403, new Error('Forbidden')]) }
+    if (!req.customer) { return next([400, new Error('No customer parameter')]) }
 
     async.waterfall([
         function(callback) {
