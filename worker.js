@@ -82,6 +82,8 @@ if(process.env.SENTRY_DSN) {
 app.use(function (req, res, next) {
     if (req.protocol.toLowerCase() !== 'https') {
         res.redirect(301, 'https://' + req.hostname + req.originalUrl)
+    } else {
+        next()
     }
 })
 
