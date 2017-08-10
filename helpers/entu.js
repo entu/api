@@ -91,10 +91,18 @@ exports.customResponder = function(req, res, next) {
 // check JWT header
 exports.jwtCheck = function(req, res, next) {
     var parts = op.get(req, 'headers.authorization', '').split(' ')
+    let jwtConf = {
+        issuer: req.hostname
+    }
+
+    if (req.query.customer) {
+        req.customer = req.query.customer
+        jwtConf.audience = req.query.customer
+    }
 
     if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
 
-    jwt.verify(parts[1], APP_JWT_SECRET, { issuer: req.hostname }, function(err, decoded) {
+    jwt.verify(parts[1], APP_JWT_SECRET, jwtConf, function(err, decoded) {
         if(err) { return next([401, err]) }
 
         op.set(req, 'user', decoded.sub)
