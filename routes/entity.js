@@ -29,7 +29,6 @@ router.get('/', function(req, res, next) {
                 })
                 op.set(fields, '_access', true)
             }
-            fields._mid = false
 
             connection.collection('entity').find(filter, fields).limit(limit).toArray(callback)
         },
@@ -37,6 +36,7 @@ router.get('/', function(req, res, next) {
         if (err) { return next(err) }
 
         res.respond(_.map(entities, function (entity) {
+            delete entity._mid
             delete entity._access
             return entity
         }))
