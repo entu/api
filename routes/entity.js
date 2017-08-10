@@ -29,9 +29,9 @@ router.get('/:entityId', function(req, res, next) {
 
             if (props.length > 0) {
                 _.forEach(props, function(f) {
-                    config.fields[f] = true
+                    op.set(config, ['fields', f], true)
                 })
-                config.fields._access = true
+                op.set(config, 'fields._access', true)
             }
 
             connection.collection('entity').findOne({ _id: entityId }, config, callback)
