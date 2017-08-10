@@ -28,7 +28,7 @@ router.get('/:entityId', function(req, res, next) {
     ], function(err, entity) {
         if(err) { return next(err) }
 
-        if(!entity) { next([404, new Error('Entity not found')]) }
+        if(!entity) { return next([404, new Error('Entity not found')]) }
 
         res.respond(entity)
     })
