@@ -72,8 +72,10 @@ exports.customResponder = function(req, res, next) {
         }
 
         if (errorCode) {
-            message.errorCode = errorCode
-            message.error = body
+            message.error{
+                code = errorCode
+                message = body
+            }
             res.status(errorCode).send(message)
         } else {
             message.result = body
