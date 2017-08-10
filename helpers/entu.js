@@ -105,7 +105,7 @@ exports.jwtCheck = function(req, res, next) {
     jwt.verify(parts[1], APP_JWT_SECRET, jwtConf, function(err, decoded) {
         if(err) { return next([401, err]) }
 
-        op.set(req, 'user', decoded.sub)
+        op.set(req, 'user', objectId(decoded.sub))
         op.set(req, 'customer', decoded.aud)
 
         next(null)
