@@ -28,7 +28,6 @@ router.get('/:entityId', function(req, res, next) {
             _.forEach(op.get(req, 'query.customer', '').split(','), function(f) {
                 fields[f] = true
             })
-            fields._mid = false
 
             connection.collection('entity').findOne({ _id: entityId }, { fields: fields }, callback)
         },
@@ -42,6 +41,7 @@ router.get('/:entityId', function(req, res, next) {
         })
 
         if (access.indexOf(req.user) !== -1 || op.get(entity, '_sharing.0.string', '') === 'public access is disabled for now') {
+            delete entity._mid
             delete entity._access
             res.respond(entity)
         } else {
