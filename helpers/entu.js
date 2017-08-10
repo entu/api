@@ -72,7 +72,7 @@ exports.customResponder = function(req, res, next) {
         }
 
         if (errorCode) {
-            message.error{
+            message.error = {
                 code = errorCode
                 message = body
             }
