@@ -157,7 +157,7 @@ exports.requestLog = function (req, res, next) {
 
 // Create user session
 exports.addUserSession = function (params, callback) {
-    if(!params.user) { return callback(new Error('no user')) }
+    if(!params.user) { return callback('No user') }
 
     var session = {
         created: new Date()

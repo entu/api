@@ -95,7 +95,7 @@ app.use(entu.jwtCheck)
 
 // Redirect HTTP to HTTPS
 app.use(function (req, res, next) {
-    if (req.protocol.toLowerCase() !== 'https') { next([418, new Error('I\'m a teapot')]) }
+    if (req.protocol.toLowerCase() !== 'https') { next([418, 'I\'m a teapot']) }
 })
 
 // routes mapping
@@ -120,7 +120,7 @@ if(process.env.SENTRY_DSN) {
 
 // show 404
 app.use(function (req, res, next) {
-    next([404, new Error('not found')])
+    next([404, 'Not found'])
 })
 
 // show error

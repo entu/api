@@ -7,7 +7,7 @@ var entu   = require('../helpers/entu')
 
 
 router.get('/', function (req, res, next) {
-    if (!req.customer) { return next([400, new Error('No customer parameter')]) }
+    if (!req.customer) { return next([400, 'No customer parameter']) }
 
     async.waterfall([
         function (callback) {
@@ -48,8 +48,8 @@ router.get('/', function (req, res, next) {
 router.get('/:entityId', function (req, res, next) {
     var entityId = entu.objectId(req.params.entityId)
 
-    if (!entityId) { return next([422, new Error('Invalid Entity ID')]) }
-    if (!req.customer) { return next([400, new Error('No customer parameter')]) }
+    if (!entityId) { return next([422, 'Invalid Entity ID']) }
+    if (!req.customer) { return next([400, 'No customer parameter']) }
 
     async.waterfall([
         function (callback) {
@@ -71,7 +71,7 @@ router.get('/:entityId', function (req, res, next) {
     ], function (err, entity) {
         if (err) { return next(err) }
 
-        if (!entity) { return next([404, new Error('Entity not found')]) }
+        if (!entity) { return next([404, 'Entity not found']) }
 
         let access = _.map(_.get(entity, '_access', []), function (s) {
             return s.toString()
@@ -82,7 +82,7 @@ router.get('/:entityId', function (req, res, next) {
             delete entity._access
             res.respond(entity)
         } else {
-            return next([403, new Error('Forbidden')])
+            return next([403, 'Forbidden'])
         }
     })
 })

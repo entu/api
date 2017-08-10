@@ -20,7 +20,7 @@ router.get('/session/:sessionId', function (req, res, next) {
             conection.collection('session').findAndModify({ _id: entu.objectId(req.params.sessionId), deleted: { $exists: false } }, [[ '_id', 1 ]], { '$set': { deleted: new Date() } }, callback)
         },
         function (sess, callback) {
-            if(!sess.value) { return callback([400, new Error('no session')]) }
+            if(!sess.value) { return callback([400, 'No session']) }
 
             session = sess.value
             callback(null, APP_CUSTOMERS)

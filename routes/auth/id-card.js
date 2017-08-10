@@ -21,7 +21,7 @@ router.get('/callback', function (req, res, next) {
             if (req.headers.ssl_client_verify === 'SUCCESS' && req.headers.ssl_client_cert) {
                 callback(null)
             } else {
-                callback(new Error('ID-Card reading error'))
+                callback('ID-Card reading error')
             }
         },
         function (callback) {
@@ -37,8 +37,8 @@ router.get('/callback', function (req, res, next) {
         function (result, callback) {
             console.log(JSON.stringify(result, null, '  '))
 
-            if(_.get(result, ['Status', '$value']) !== 'GOOD') { return callback(new Error('Not valid ID-Card')) }
-            if(!_.get(result, ['UserIDCode', '$value'])) { return callback(new Error('Not ID code')) }
+            if(_.get(result, ['Status', '$value']) !== 'GOOD') { return callback('Not valid ID-Card') }
+            if(!_.get(result, ['UserIDCode', '$value'])) { return callback('Not ID code') }
 
             var user = {}
             var name = _.compact([
