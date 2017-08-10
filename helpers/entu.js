@@ -78,6 +78,9 @@ exports.customResponder = function (req, res, next) {
             }
             res.status(errorCode).send(message)
         } else {
+            if (body.constructor === Array) {
+                message.count = body.length
+            }
             message.result = body
             res.send(message)
         }
@@ -182,11 +185,4 @@ exports.addUserSession = function (params, callback) {
 
         callback(null, r.insertedId)
     })
-}
-
-
-
-// Get entities
-exports.getEntities = function (params, callback) {
-
 }
