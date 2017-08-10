@@ -1,5 +1,6 @@
+var _      = require('lodash')
 var async  = require('async')
-var op      = require('object-path')
+var op     = require('object-path')
 var router = require('express').Router()
 
 var entu   = require('../helpers/entu')
@@ -30,7 +31,11 @@ router.get('/:entityId', function(req, res, next) {
 
         if (!entity) { return next([404, new Error('Entity not found')]) }
 
-        if (op.get(entity, '_access', []).indexOf(req.user) !== -1 || op.get(entity, '_sharing.0.string', '') === 'public') {
+        let access = _.map(op.get(entity, '_access', []), function (s) {
+            return s.toString()
+        })
+
+        if (access.indexOf(req.user) !== -1 || op.get(entity, '_sharing.0.string', '') === 'public') {
             delete entity._access
             res.respond(entity)
         } else {
