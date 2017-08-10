@@ -28,6 +28,7 @@ router.get('/:entityId', function(req, res, next) {
             _.forEach(op.get(req, 'query.customer', '').split(','), function(f) {
                 fields[f] = true
             })
+            fields._access = true
 
             connection.collection('entity').findOne({ _id: entityId }, { fields: fields }, callback)
         },
