@@ -18,7 +18,7 @@ router.get('/', function(req, res, next) {
             let props = _.compact(op.get(req, 'query.props', '').split(','))
             let filter = {}
             let fields = {}
-            let limit = req.query.limit || 100
+            let limit = _.toSafeInteger(req.query.limit) || 100
 
             if(req.query.def) { filter['_definition.string'] = req.query.def }
             filter._access = entu.objectId(req.user)
