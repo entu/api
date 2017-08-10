@@ -78,11 +78,6 @@ if(process.env.SENTRY_DSN) {
     app.use(raven.requestHandler())
 }
 
-// Redirect HTTP to HTTPS
-app.use(function (req, res, next) {
-    if (req.protocol.toLowerCase() !== 'https') { next([418, new Error('I\'m a teapot')]) }
-})
-
 // Initialize Passport
 app.use(passport.initialize())
 
@@ -97,6 +92,11 @@ app.use(bparser.urlencoded({extended: true}))
 app.use(entu.requestLog)
 app.use(entu.customResponder)
 app.use(entu.jwtCheck)
+
+// Redirect HTTP to HTTPS
+app.use(function (req, res, next) {
+    if (req.protocol.toLowerCase() !== 'https') { next([418, new Error('I\'m a teapot')]) }
+})
 
 // routes mapping
 app.use('/', require('./routes/index'))
