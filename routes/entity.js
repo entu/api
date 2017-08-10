@@ -29,9 +29,13 @@ router.get('/:entityId', function(req, res, next) {
         if (err) { return next(err) }
 
         if (!entity) { return next([404, new Error('Entity not found')]) }
-        if (op.get(entity, '_access', []).indexOf(req.user) === -1 && op.get(entity, '_sharing.0.string', '') !== 'public') { return next([403, new Error('Forbidden')]) }
+        if (op.get(entity, '_access', []).indexOf(req.user) !== -1 || op.get(entity, '_sharing.0.string', '') === 'public') {
+            delete entity._access
+            res.respond(entity)
+        } else {
+            return next([403, new Error('Forbidden')])
+        }
 
-        res.respond(entity)
     })
 })
 
