@@ -1,9 +1,11 @@
-var _        = require('lodash')
-var facebook = require('passport-facebook').Strategy
-var passport = require('passport')
-var router   = require('express').Router()
+'use strict'
 
-var entu   = require('../../helpers/entu')
+const _        = require('lodash')
+const facebook = require('passport-facebook').Strategy
+const passport = require('passport')
+const router   = require('express').Router()
+
+const entu   = require('../../helpers/entu')
 
 
 

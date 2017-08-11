@@ -1,8 +1,10 @@
-var _       = require('lodash')
-var async   = require('async')
-var jwt     = require('jsonwebtoken')
-var mongo   = require('mongodb')
-var request = require('request')
+'use strict'
+
+const _       = require('lodash')
+const async   = require('async')
+const jwt     = require('jsonwebtoken')
+const mongo   = require('mongodb')
+const request = require('request')
 
 
 

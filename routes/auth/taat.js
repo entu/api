@@ -1,10 +1,12 @@
-var _        = require('lodash')
-var fs       = require('fs')
-var passport = require('passport')
-var router   = require('express').Router()
-var saml     = require('passport-saml').Strategy
+'use strict'
 
-var entu   = require('../../helpers/entu')
+const _        = require('lodash')
+const fs       = require('fs')
+const passport = require('passport')
+const router   = require('express').Router()
+const saml     = require('passport-saml').Strategy
+
+const entu   = require('../../helpers/entu')
 
 
 

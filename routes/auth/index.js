@@ -1,9 +1,11 @@
-var _      = require('lodash')
-var async  = require('async')
-var jwt    = require('jsonwebtoken')
-var router = require('express').Router()
+'use strict'
 
-var entu   = require('../../helpers/entu')
+const _      = require('lodash')
+const async  = require('async')
+const jwt    = require('jsonwebtoken')
+const router = require('express').Router()
+
+const entu   = require('../../helpers/entu')
 
 
 

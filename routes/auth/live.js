@@ -1,9 +1,11 @@
-var _        = require('lodash')
-var live     = require('passport-windowslive').Strategy
-var passport = require('passport')
-var router   = require('express').Router()
+'use strict'
 
-var entu   = require('../../helpers/entu')
+const _        = require('lodash')
+const live     = require('passport-windowslive').Strategy
+const passport = require('passport')
+const router   = require('express').Router()
+
+const entu   = require('../../helpers/entu')
 
 
 

@@ -1,9 +1,11 @@
-var _      = require('lodash')
-var async  = require('async')
-var router = require('express').Router()
-var soap   = require('soap')
+'use strict'
 
-var entu   = require('../../helpers/entu')
+const _      = require('lodash')
+const async  = require('async')
+const router = require('express').Router()
+const soap   = require('soap')
+
+const entu   = require('../../helpers/entu')
 
 
 

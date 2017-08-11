@@ -1,12 +1,14 @@
+'use strict'
+
 if(process.env.NEW_RELIC_LICENSE_KEY) { require('newrelic') }
 
-var bparser    = require('body-parser')
-var cparser    = require('cookie-parser')
-var express    = require('express')
-var passport   = require('passport')
-var raven      = require('raven')
+const bparser    = require('body-parser')
+const cparser    = require('cookie-parser')
+const express    = require('express')
+const passport   = require('passport')
+const raven      = require('raven')
 
-var entu       = require('./helpers/entu')
+const entu       = require('./helpers/entu')
 
 
 

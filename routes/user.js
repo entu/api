@@ -1,7 +1,9 @@
-var async  = require('async')
-var router = require('express').Router()
+'use strict'
 
-var entu   = require('../helpers/entu')
+const async  = require('async')
+const router = require('express').Router()
+
+const entu   = require('../helpers/entu')
 
 
 

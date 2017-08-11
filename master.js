@@ -1,6 +1,8 @@
-var path     = require('path')
-var cluster  = require('cluster')
-var cpuCount = require('os').cpus().length
+'use strict'
+
+const path     = require('path')
+const cluster  = require('cluster')
+const cpuCount = require('os').cpus().length
 
 
 
@@ -9,7 +11,7 @@ cluster.setupMaster({
 })
 
 // Create a worker for each CPU
-for(var i = 0; i < cpuCount; i += 1) {
+for (var i = 0; i < cpuCount; i += 1) {
     cluster.fork()
 }
 

@@ -1,9 +1,11 @@
-var _        = require('lodash')
-var google   = require('passport-google-oauth').OAuth2Strategy
-var passport = require('passport')
-var router   = require('express').Router()
+'use strict'
 
-var entu   = require('../../helpers/entu')
+const _        = require('lodash')
+const google   = require('passport-google-oauth').OAuth2Strategy
+const passport = require('passport')
+const router   = require('express').Router()
+
+const entu   = require('../../helpers/entu')
 
 
 
