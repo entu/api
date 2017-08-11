@@ -13,29 +13,29 @@ const entu       = require('./helpers/entu')
 
 
 // global variables (and list of all used environment variables)
-const APP_VERSION = process.env.VERSION || process.env.HEROKU_SLUG_COMMIT || require('./package').version
-const APP_STARTED = new Date().toISOString()
-const APP_PORT = process.env.PORT || 3000
-const APP_JWT_SECRET = process.env.JWT_SECRET || '123abc'
+var APP_VERSION = process.env.VERSION || process.env.HEROKU_SLUG_COMMIT || require('./package').version
+var APP_STARTED = new Date().toISOString()
+var APP_PORT = process.env.PORT || 3000
+var APP_JWT_SECRET = process.env.JWT_SECRET || '123abc'
 
-const APP_MONGODB = process.env.MONGODB || 'mongodb://entu_mongodb:27017/'
+var APP_MONGODB = process.env.MONGODB || 'mongodb://entu_mongodb:27017/'
 
-const GOOGLE_ID = process.env.GOOGLE_ID
-const GOOGLE_SECRET = process.env.GOOGLE_SECRET
+var GOOGLE_ID = process.env.GOOGLE_ID
+var GOOGLE_SECRET = process.env.GOOGLE_SECRET
 
-const FACEBOOK_ID = process.env.FACEBOOK_ID
-const FACEBOOK_SECRET = process.env.FACEBOOK_SECRET
+var FACEBOOK_ID = process.env.FACEBOOK_ID
+var FACEBOOK_SECRET = process.env.FACEBOOK_SECRET
 
-const TWITTER_KEY = process.env.TWITTER_KEY
-const TWITTER_SECRET = process.env.TWITTER_SECRET
+var TWITTER_KEY = process.env.TWITTER_KEY
+var TWITTER_SECRET = process.env.TWITTER_SECRET
 
-const LIVE_ID = process.env.LIVE_ID
-const LIVE_SECRET = process.env.LIVE_SECRET
+var LIVE_ID = process.env.LIVE_ID
+var LIVE_SECRET = process.env.LIVE_SECRET
 
-const TAAT_ENTRYPOINT = process.env.TAAT_ENTRYPOINT
-const TAAT_ISSUER = process.env.TAAT_ISSUER
-const TAAT_CERT = process.env.TAAT_CERT
-const TAAT_PRIVATECERT = process.env.TAAT_PRIVATECERT
+var TAAT_ENTRYPOINT = process.env.TAAT_ENTRYPOINT
+var TAAT_ISSUER = process.env.TAAT_ISSUER
+var TAAT_CERT = process.env.TAAT_CERT
+var TAAT_PRIVATECERT = process.env.TAAT_PRIVATECERT
 
 var APP_CUSTOMERS = process.env.CUSTOMERS.split(',') || []
 var APP_DBS = {}
