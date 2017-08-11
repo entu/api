@@ -2,11 +2,12 @@
 
 if(process.env.NEW_RELIC_LICENSE_KEY) { require('newrelic') }
 
-const bparser    = require('body-parser')
-const cparser    = require('cookie-parser')
-const express    = require('express')
-const passport   = require('passport')
-const raven      = require('raven')
+const _        = require('lodash')
+const bparser  = require('body-parser')
+const cparser  = require('cookie-parser')
+const express  = require('express')
+const passport = require('passport')
+const raven    = require('raven')
 
 
 
