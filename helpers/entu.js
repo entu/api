@@ -31,7 +31,7 @@ exports.objectId = objectId
 // returns db connection (creates if not set)
 var dbConnection = function (customer, callback) {
     if(_.has(APP_DBS, customer)) {
-        callback(null, APP_DBS[customer])
+        return callback(null, APP_DBS[customer])
     } else {
         async.waterfall([
             function (callback) {
@@ -55,7 +55,7 @@ var dbConnection = function (customer, callback) {
             })
 
             APP_DBS[customer] = connection
-            callback(null, APP_DBS[customer])
+            return callback(null, APP_DBS[customer])
         })
     }
 }
@@ -90,6 +90,6 @@ exports.addUserSession = function (params, callback) {
     ], function (err, r) {
         if(err) { return callback(err) }
 
-        callback(null, r.insertedId)
+        return callback(null, r.insertedId)
     })
 }
