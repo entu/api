@@ -2,23 +2,22 @@
 
 if(process.env.NEW_RELIC_LICENSE_KEY) { require('newrelic') }
 
-const _        = require('lodash')
-const async   = require('async')
-const bparser  = require('body-parser')
-const cparser  = require('cookie-parser')
-const express  = require('express')
-const jwt     = require('jsonwebtoken')
+const _ = require('lodash')
+const async = require('async')
+const bparser = require('body-parser')
+const cparser = require('cookie-parser')
+const express = require('express')
+const jwt = require('jsonwebtoken')
 const passport = require('passport')
-const raven    = require('raven')
+const raven = require('raven')
 
-const entu   = require('./helpers/entu')
+const entu = require('./helpers/entu')
 
 
 
 // global variables (and list of all used environment variables)
 const APP_VERSION = process.env.VERSION || process.env.HEROKU_SLUG_COMMIT || require('./package').version
 const APP_STARTED = new Date().toISOString()
-const APP_PORT = process.env.PORT || 3000
 
 // MONGODB
 // CUSTOMERS

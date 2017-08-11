@@ -1,11 +1,11 @@
 'use strict'
 
-const _      = require('lodash')
-const async  = require('async')
-const jwt    = require('jsonwebtoken')
+const _ = require('lodash')
+const async = require('async')
+const jwt = require('jsonwebtoken')
 const router = require('express').Router()
 
-const entu   = require('../../helpers/entu')
+const entu = require('../../helpers/entu')
 
 
 

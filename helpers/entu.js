@@ -1,10 +1,8 @@
 'use strict'
 
-const _       = require('lodash')
-const async   = require('async')
-const jwt     = require('jsonwebtoken')
-const mongo   = require('mongodb')
-const request = require('request')
+const _ = require('lodash')
+const async = require('async')
+const mongo = require('mongodb')
 
 var APP_DBS = {}
 

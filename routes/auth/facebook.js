@@ -1,11 +1,11 @@
 'use strict'
 
-const _        = require('lodash')
+const _ = require('lodash')
 const facebook = require('passport-facebook').Strategy
 const passport = require('passport')
-const router   = require('express').Router()
+const router = require('express').Router()
 
-const entu   = require('../../helpers/entu')
+const entu = require('../../helpers/entu')
 
 
 

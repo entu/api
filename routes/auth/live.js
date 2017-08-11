@@ -1,11 +1,11 @@
 'use strict'
 
-const _        = require('lodash')
-const live     = require('passport-windowslive').Strategy
+const _ = require('lodash')
+const live = require('passport-windowslive').Strategy
 const passport = require('passport')
-const router   = require('express').Router()
+const router = require('express').Router()
 
-const entu   = require('../../helpers/entu')
+const entu = require('../../helpers/entu')
 
 
 

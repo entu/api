@@ -1,11 +1,11 @@
 'use strict'
 
-const _        = require('lodash')
+const _ = require('lodash')
 const passport = require('passport')
-const router   = require('express').Router()
-const twitter  = require('passport-twitter').Strategy
+const router = require('express').Router()
+const twitter = require('passport-twitter').Strategy
 
-const entu   = require('../../helpers/entu')
+const entu = require('../../helpers/entu')
 
 
 

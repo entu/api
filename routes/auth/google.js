@@ -1,11 +1,11 @@
 'use strict'
 
-const _        = require('lodash')
-const google   = require('passport-google-oauth').OAuth2Strategy
+const _ = require('lodash')
+const google = require('passport-google-oauth').OAuth2Strategy
 const passport = require('passport')
-const router   = require('express').Router()
+const router = require('express').Router()
 
-const entu   = require('../../helpers/entu')
+const entu = require('../../helpers/entu')
 
 
 

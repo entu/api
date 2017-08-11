@@ -1,12 +1,12 @@
 'use strict'
 
-const _        = require('lodash')
-const fs       = require('fs')
+const _ = require('lodash')
+const fs = require('fs')
 const passport = require('passport')
-const router   = require('express').Router()
-const saml     = require('passport-saml').Strategy
+const router = require('express').Router()
+const saml = require('passport-saml').Strategy
 
-const entu   = require('../../helpers/entu')
+const entu = require('../../helpers/entu')
 
 
 
