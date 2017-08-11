@@ -11,6 +11,8 @@ const jwt     = require('jsonwebtoken')
 const passport = require('passport')
 const raven    = require('raven')
 
+const entu   = require('./helpers/entu')
+
 
 
 // global variables (and list of all used environment variables)
