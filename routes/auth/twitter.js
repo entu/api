@@ -10,8 +10,8 @@ const entu   = require('../../helpers/entu')
 
 
 passport.use(new twitter({
-        consumerKey: TWITTER_KEY,
-        consumerSecret: TWITTER_SECRET,
+        consumerKey: process.env.TWITTER_KEY,
+        consumerSecret: process.env.TWITTER_SECRET,
         callbackURL: '/auth/twitter/callback',
         proxy: true
     },

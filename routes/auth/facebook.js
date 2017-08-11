@@ -10,8 +10,8 @@ const entu   = require('../../helpers/entu')
 
 
 passport.use(new facebook({
-        clientID: FACEBOOK_ID,
-        clientSecret: FACEBOOK_SECRET,
+        clientID: process.env.FACEBOOK_ID,
+        clientSecret: process.env.FACEBOOK_SECRET,
         callbackURL: '/auth/facebook/callback',
         profileFields: ['id', 'name', 'email', 'picture'],
         proxy: true

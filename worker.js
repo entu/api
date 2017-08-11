@@ -8,37 +8,34 @@ const express    = require('express')
 const passport   = require('passport')
 const raven      = require('raven')
 
-const entu       = require('./helpers/entu')
-
 
 
 // global variables (and list of all used environment variables)
-var APP_VERSION = process.env.VERSION || process.env.HEROKU_SLUG_COMMIT || require('./package').version
-var APP_STARTED = new Date().toISOString()
-var APP_PORT = process.env.PORT || 3000
-var APP_JWT_SECRET = process.env.JWT_SECRET || '123abc'
+const APP_VERSION = process.env.VERSION || process.env.HEROKU_SLUG_COMMIT || require('./package').version
+const APP_STARTED = new Date().toISOString()
+const APP_PORT = process.env.PORT || 3000
 
-var APP_MONGODB = process.env.MONGODB || 'mongodb://entu_mongodb:27017/'
+// MONGODB
+// CUSTOMERS
+// JWT_SECRET
 
-var GOOGLE_ID = process.env.GOOGLE_ID
-var GOOGLE_SECRET = process.env.GOOGLE_SECRET
+// GOOGLE_ID
+// GOOGLE_SECRET
 
-var FACEBOOK_ID = process.env.FACEBOOK_ID
-var FACEBOOK_SECRET = process.env.FACEBOOK_SECRET
+// FACEBOOK_ID
+// FACEBOOK_SECRET
 
-var TWITTER_KEY = process.env.TWITTER_KEY
-var TWITTER_SECRET = process.env.TWITTER_SECRET
+// TWITTER_KEY
+// TWITTER_SECRET
 
-var LIVE_ID = process.env.LIVE_ID
-var LIVE_SECRET = process.env.LIVE_SECRET
+// LIVE_ID
+// LIVE_SECRET
 
-var TAAT_ENTRYPOINT = process.env.TAAT_ENTRYPOINT
-var TAAT_ISSUER = process.env.TAAT_ISSUER
-var TAAT_CERT = process.env.TAAT_CERT
-var TAAT_PRIVATECERT = process.env.TAAT_PRIVATECERT
+// TAAT_ENTRYPOINT
+// TAAT_ISSUER
+// TAAT_CERT
+// TAAT_PRIVATECERT
 
-var APP_CUSTOMERS = process.env.CUSTOMERS.split(',') || []
-var APP_DBS = {}
 
 
 // passport (de)serialize
@@ -55,7 +52,7 @@ passport.deserializeUser(function (user, done) {
 // initialize getsentry.com client
 if(process.env.SENTRY_DSN) {
     raven.config(process.env.SENTRY_DSN, {
-        release: APP_VERSION,
+        release: process.env.VERSION || process.env.HEROKU_SLUG_COMMIT || require('./package').version,
         dataCallback: function (data) {
             delete data.request.env
             return data
@@ -89,12 +86,96 @@ app.use(cparser())
 app.use(bparser.json())
 app.use(bparser.urlencoded({extended: true}))
 
-// save request info to request collection, check JWT, custom JSON output
-app.use(entu.requestLog)
-app.use(entu.customResponder)
-app.use(entu.jwtCheck)
+// save request info to request collection
+app.use(function (req, res, next) {
+    req.startDt = Date.now()
 
-// Redirect HTTP to HTTPS
+    res.on('finish', function () {
+        var request = {
+            date: new Date(),
+            ip: req.ip,
+            ms: Date.now() - req.startDt,
+            status: res.statusCode,
+            method: req.method,
+            host: req.hostname,
+            browser: req.headers['user-agent'],
+        }
+        if(req.path) { request.path = req.path }
+        if(!_.isEmpty(req.query)) { request.query = req.query }
+        if(!_.isEmpty(req.body)) { request.body = req.body }
+        if(req.browser) { request.browser = req.headers['user-agent'] }
+
+        async.waterfall([
+            function (callback) {
+                dbConnection('entu', callback)
+            },
+            function (connection, callback) {
+                connection.collection('request').insertOne(request, callback)
+            },
+        ], function (err) {
+            if(err) {
+                console.error(err.toString(), '- Can\'t save request')
+                return next(null)
+            }
+        })
+    })
+
+    next(null)
+})
+
+//custom JSON output
+app.use(function (req, res, next) {
+    res.respond = function (body, errorCode) {
+        var message = {
+            release: APP_VERSION,
+            startDt: APP_STARTED,
+            ms: Date.now() - req.startDt,
+            auth: !!req.user
+        }
+
+        if (errorCode) {
+            message.error = {
+                code: errorCode,
+                message: body
+            }
+            res.status(errorCode).send(message)
+        } else {
+            if (body.constructor === Array) {
+                message.count = body.length
+            }
+            message.result = body
+            res.send(message)
+        }
+    }
+
+    next(null)
+})
+
+// check JWT
+app.use(function (req, res, next) {
+    var parts = _.get(req, 'headers.authorization', '').split(' ')
+    let jwtConf = {
+        issuer: req.hostname
+    }
+
+    if (req.query.customer) {
+        req.customer = req.query.customer
+        jwtConf.audience = req.query.customer
+    }
+
+    if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
+
+    jwt.verify(parts[1], process.env.JWT_SECRET, jwtConf, function (err, decoded) {
+        if(err) { return next([401, err]) }
+
+        _.set(req, 'user', decoded.sub)
+        _.set(req, 'customer', decoded.aud)
+
+        next(null)
+    })
+})
+
+// redirect HTTP to HTTPS
 app.use(function (req, res, next) {
     if (req.protocol.toLowerCase() !== 'https') { next([418, 'I\'m a teapot']) } else { next() }
 })
@@ -108,11 +189,11 @@ app.use('/entity', require('./routes/entity'))
 // provider mapping (only if configured)
 app.use('/auth/id-card', require('./routes/auth/id-card'))
 
-if(GOOGLE_ID && GOOGLE_SECRET) { app.use('/auth/google', require('./routes/auth/google')) }
-if(FACEBOOK_ID && FACEBOOK_SECRET) { app.use('/auth/facebook', require('./routes/auth/facebook')) }
-if(TWITTER_KEY && TWITTER_SECRET) { app.use('/auth/twitter', require('./routes/auth/twitter')) }
-if(LIVE_ID && LIVE_SECRET) { app.use('/auth/live', require('./routes/auth/live')) }
-if(TAAT_ENTRYPOINT && TAAT_CERT && TAAT_PRIVATECERT) { app.use('/auth/taat', require('./routes/auth/taat')) }
+if(process.env.GOOGLE_ID && process.env.GOOGLE_SECRET) { app.use('/auth/google', require('./routes/auth/google')) }
+if(process.env.FACEBOOK_ID && process.env.FACEBOOK_SECRET) { app.use('/auth/facebook', require('./routes/auth/facebook')) }
+if(process.env.TWITTER_KEY && process.env.TWITTER_SECRET) { app.use('/auth/twitter', require('./routes/auth/twitter')) }
+if(process.env.LIVE_ID && process.env.LIVE_SECRET) { app.use('/auth/live', require('./routes/auth/live')) }
+if(process.env.TAAT_ENTRYPOINT && process.env.TAAT_CERT && process.env.TAAT_PRIVATECERT) { app.use('/auth/taat', require('./routes/auth/taat')) }
 
 // logs to getsentry.com - error
 if(process.env.SENTRY_DSN) {
@@ -136,6 +217,6 @@ app.use(function (err, req, res, next) {
 })
 
 // start server
-app.listen(APP_PORT, function () {
-    console.log(new Date().toString() + ' started listening port ' + APP_PORT)
+app.listen(process.env.PORT, function () {
+    console.log(new Date().toString() + ' started listening port ' + process.env.PORT)
 })

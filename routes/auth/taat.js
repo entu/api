@@ -11,10 +11,10 @@ const entu   = require('../../helpers/entu')
 
 
 passport.use(new saml({
-        entryPoint: TAAT_ENTRYPOINT,
-        issuer: TAAT_ISSUER,
-        cert: fs.readFileSync(TAAT_CERT, 'utf-8'),
-        privateCert: fs.readFileSync(TAAT_PRIVATECERT, 'utf-8')
+        entryPoint: process.env.TAAT_ENTRYPOINT,
+        issuer: process.env.TAAT_ISSUER,
+        cert: fs.readFileSync(process.env.TAAT_CERT, 'utf-8'),
+        privateCert: fs.readFileSync(process.env.TAAT_PRIVATECERT, 'utf-8')
     },
     function (profile, done) {
         process.nextTick(function () {

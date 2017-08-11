@@ -10,8 +10,8 @@ const entu   = require('../../helpers/entu')
 
 
 passport.use(new live({
-        clientID: LIVE_ID,
-        clientSecret: LIVE_SECRET,
+        clientID: process.env.LIVE_ID,
+        clientSecret: process.env.LIVE_SECRET,
         callbackURL: '/auth/live/callback',
         proxy: true
     },

@@ -10,8 +10,8 @@ const entu   = require('../../helpers/entu')
 
 
 passport.use(new google({
-        clientID: GOOGLE_ID,
-        clientSecret: GOOGLE_SECRET,
+        clientID: process.env.GOOGLE_ID,
+        clientSecret: process.env.GOOGLE_SECRET,
         callbackURL: '/auth/google/callback',
         proxy: true
     },

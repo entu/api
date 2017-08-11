@@ -6,6 +6,8 @@ const jwt     = require('jsonwebtoken')
 const mongo   = require('mongodb')
 const request = require('request')
 
+var APP_DBS = {}
+
 
 
 // returns random v4 UUID
@@ -35,7 +37,7 @@ var dbConnection = function (customer, callback) {
     } else {
         async.waterfall([
             function (callback) {
-                mongo.MongoClient.connect(APP_MONGODB, { ssl: true, sslValidate: false, autoReconnect: true }, callback)
+                mongo.MongoClient.connect(process.env.MONGODB, { ssl: true, sslValidate: false, autoReconnect: true }, callback)
             },
             function (connection, callback) {
                 connection.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false } }, { _id: false, 'mongodb.string': true }, callback)
@@ -60,100 +62,6 @@ var dbConnection = function (customer, callback) {
     }
 }
 exports.dbConnection = dbConnection
-
-
-
-// send out JSON
-exports.customResponder = function (req, res, next) {
-    res.respond = function (body, errorCode) {
-        var message = {
-            version: APP_VERSION,
-            ms: Date.now() - req.startDt,
-            auth: !!req.user
-        }
-
-        if (errorCode) {
-            message.error = {
-                code: errorCode,
-                message: body
-            }
-            res.status(errorCode).send(message)
-        } else {
-            if (body.constructor === Array) {
-                message.count = body.length
-            }
-            message.result = body
-            res.send(message)
-        }
-    }
-
-    next(null)
-}
-
-
-
-// check JWT header
-exports.jwtCheck = function (req, res, next) {
-    var parts = _.get(req, 'headers.authorization', '').split(' ')
-    let jwtConf = {
-        issuer: req.hostname
-    }
-
-    if (req.query.customer) {
-        req.customer = req.query.customer
-        jwtConf.audience = req.query.customer
-    }
-
-    if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
-
-    jwt.verify(parts[1], APP_JWT_SECRET, jwtConf, function (err, decoded) {
-        if(err) { return next([401, err]) }
-
-        _.set(req, 'user', decoded.sub)
-        _.set(req, 'customer', decoded.aud)
-
-        next(null)
-    })
-}
-
-
-
-// Create requestlog entry on response finish
-exports.requestLog = function (req, res, next) {
-    req.startDt = Date.now()
-
-    res.on('finish', function () {
-        var request = {
-            date: new Date(),
-            ip: req.ip,
-            ms: Date.now() - req.startDt,
-            status: res.statusCode,
-            method: req.method,
-            host: req.hostname,
-            browser: req.headers['user-agent'],
-        }
-        if(req.path) { request.path = req.path }
-        if(!_.isEmpty(req.query)) { request.query = req.query }
-        if(!_.isEmpty(req.body)) { request.body = req.body }
-        if(req.browser) { request.browser = req.headers['user-agent'] }
-
-        async.waterfall([
-            function (callback) {
-                dbConnection('entu', callback)
-            },
-            function (connection, callback) {
-                connection.collection('request').insertOne(request, callback)
-            },
-        ], function (err) {
-            if(err) {
-                console.error(err.toString(), '- Can\'t save request')
-                return next(null)
-            }
-        })
-    })
-
-    next(null)
-}
 
 
 
