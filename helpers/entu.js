@@ -21,7 +21,7 @@ var objectId = function (id) {
     try {
         return new mongo.ObjectID(id)
     } catch (e) {
-
+        return null
     }
 }
 exports.objectId = objectId

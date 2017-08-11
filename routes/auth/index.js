@@ -25,7 +25,7 @@ router.get('/session/:sessionId', function (req, res, next) {
             if(!sess.value) { return callback([400, 'No session']) }
 
             session = sess.value
-            callback(null, process.env.CUSTOMERS.split(','))
+            return callback(null, process.env.CUSTOMERS.split(','))
         },
         function (customers, callback) {
             async.map(customers, function (customer, callback) {
@@ -40,7 +40,7 @@ router.get('/session/:sessionId', function (req, res, next) {
                     if(err) { return callback(err) }
                     if(!person) { return callback(null) }
 
-                    callback(null, {
+                    return callback(null, {
                         title: null,
                         customer: customer,
                         token: jwt.sign({}, process.env.JWT_SECRET, {

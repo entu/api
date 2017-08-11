@@ -21,9 +21,9 @@ router.get('/callback', function (req, res, next) {
     async.waterfall([
         function (callback) {
             if (req.headers.ssl_client_verify === 'SUCCESS' && req.headers.ssl_client_cert) {
-                callback(null)
+                return callback(null)
             } else {
-                callback('ID-Card reading error')
+                return callback('ID-Card reading error')
             }
         },
         function (callback) {
@@ -33,7 +33,7 @@ router.get('/callback', function (req, res, next) {
             client.CheckCertificate({ Certificate: req.headers.ssl_client_cert }, function (err, result) {
                 if(err) { return callback(err) }
 
-                callback(null, result)
+                return callback(null, result)
             })
         },
         function (result, callback) {

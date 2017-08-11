@@ -50,7 +50,7 @@ var importProps = function (mysqlDb, callback) {
                 if(err) { return callback(err) }
 
                 mongoCon = con
-                callback(null)
+                return callback(null)
             })
         },
 
@@ -61,7 +61,7 @@ var importProps = function (mysqlDb, callback) {
                 if (collections.length > 0) {
                     mongoCon.dropCollection('entity', callback)
                 } else {
-                    callback(null)
+                    return callback(null)
                 }
             })
         },
@@ -72,7 +72,7 @@ var importProps = function (mysqlDb, callback) {
                 if (collections.length > 0) {
                     mongoCon.dropCollection('property', callback)
                 } else {
-                    callback(null)
+                    return callback(null)
                 }
             })
         },
@@ -165,7 +165,7 @@ var importProps = function (mysqlDb, callback) {
                         if (l % 1000 === 0 && l > 0) {
                             log(l + ' files to go')
                         }
-                        callback(null)
+                        return callback(null)
                     })
                 }, callback)
             })
@@ -199,7 +199,7 @@ var importProps = function (mysqlDb, callback) {
                         if (l % 1000 === 0 && l > 0) {
                             log(l + ' entities to go')
                         }
-                        callback(null)
+                        return callback(null)
                     })
                 }, callback)
             })
@@ -292,7 +292,7 @@ var importProps = function (mysqlDb, callback) {
                             if (l % 1000 === 0 && l > 0) {
                                 log(l + ' entities to go')
                             }
-                            callback(null)
+                            return callback(null)
                         })
                     })
                 }, callback)
@@ -307,7 +307,7 @@ var importProps = function (mysqlDb, callback) {
         if(err) { return callback(err) }
 
         log('end database ' +  mysqlDb + ' import')
-        callback(null)
+        return callback(null)
     })
 }
 
