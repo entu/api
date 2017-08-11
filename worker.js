@@ -3,9 +3,11 @@
 if(process.env.NEW_RELIC_LICENSE_KEY) { require('newrelic') }
 
 const _        = require('lodash')
+const async   = require('async')
 const bparser  = require('body-parser')
 const cparser  = require('cookie-parser')
 const express  = require('express')
+const jwt     = require('jsonwebtoken')
 const passport = require('passport')
 const raven    = require('raven')
 
