@@ -15,8 +15,8 @@ passport.use(new twitter({
         callbackURL: '/auth/twitter/callback',
         proxy: true
     },
-    function (token, tokenSecret, profile, done) {
-        process.nextTick(function () {
+    (token, tokenSecret, profile, done) => {
+        process.nextTick(() => {
             return done(null, profile)
         })
   }
@@ -24,7 +24,7 @@ passport.use(new twitter({
 
 
 
-router.get('/', function (req, res) {
+router.get('/', (req, res) => {
     res.clearCookie('redirect')
     res.clearCookie('session')
 
@@ -39,13 +39,13 @@ router.get('/', function (req, res) {
 
 
 
-router.get('/auth', passport.authenticate('twitter'), function () {
+router.get('/auth', passport.authenticate('twitter'), () => {
 
 })
 
 
 
-router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/login' }), function (req, res, next) {
+router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/login' }), (req, res, next) => {
     var user = {}
     var name = _.compact([
         _.get(req, ['user', 'name', 'givenName']),
@@ -62,7 +62,7 @@ router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/lo
     entu.addUserSession({
         request: req,
         user: user
-    }, function (err, sessionId) {
+    }, (err, sessionId) => {
         if(err) { return next(err) }
 
         var redirectUrl = req.cookies.redirect

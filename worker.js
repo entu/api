@@ -43,11 +43,11 @@ const APP_STARTED = new Date().toISOString()
 
 
 // passport (de)serialize
-passport.serializeUser(function (user, done) {
+passport.serializeUser((user, done) => {
     done(null, user)
 })
 
-passport.deserializeUser(function (user, done) {
+passport.deserializeUser((user, done) => {
     done(null, user)
 })
 
@@ -57,7 +57,7 @@ passport.deserializeUser(function (user, done) {
 if(process.env.SENTRY_DSN) {
     raven.config(process.env.SENTRY_DSN, {
         release: process.env.VERSION || process.env.HEROKU_SLUG_COMMIT || require('./package').version,
-        dataCallback: function (data) {
+        dataCallback: (data) => {
             delete data.request.env
             return data
         }
@@ -91,10 +91,10 @@ app.use(bparser.json())
 app.use(bparser.urlencoded({extended: true}))
 
 // save request info to request collection
-app.use(function (req, res, next) {
+app.use((req, res, next) => {
     req.startDt = Date.now()
 
-    res.on('finish', function () {
+    res.on('finish', () => {
         var request = {
             date: new Date(),
             ip: req.ip,
@@ -110,13 +110,13 @@ app.use(function (req, res, next) {
         if(req.browser) { request.browser = req.headers['user-agent'] }
 
         async.waterfall([
-            function (callback) {
+            (callback) => {
                 entu.dbConnection('entu', callback)
             },
-            function (connection, callback) {
+            (connection, callback) => {
                 connection.collection('request').insertOne(request, callback)
             },
-        ], function (err) {
+        ], (err) => {
             if(err) {
                 console.error(err.toString(), '- Can\'t save request')
                 return next(null)
@@ -128,8 +128,8 @@ app.use(function (req, res, next) {
 })
 
 //custom JSON output
-app.use(function (req, res, next) {
-    res.respond = function (body, errorCode) {
+app.use((req, res, next) => {
+    res.respond = (body, errorCode) => {
         var message = {
             release: APP_VERSION,
             startDt: APP_STARTED,
@@ -156,7 +156,7 @@ app.use(function (req, res, next) {
 })
 
 // check JWT
-app.use(function (req, res, next) {
+app.use((req, res, next) => {
     var parts = _.get(req, 'headers.authorization', '').split(' ')
     let jwtConf = {
         issuer: req.hostname
@@ -169,7 +169,7 @@ app.use(function (req, res, next) {
 
     if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
 
-    jwt.verify(parts[1], process.env.JWT_SECRET, jwtConf, function (err, decoded) {
+    jwt.verify(parts[1], process.env.JWT_SECRET, jwtConf, (err, decoded) => {
         if(err) { return next([401, err]) }
 
         _.set(req, 'user', decoded.sub)
@@ -180,7 +180,7 @@ app.use(function (req, res, next) {
 })
 
 // redirect HTTP to HTTPS
-app.use(function (req, res, next) {
+app.use((req, res, next) => {
     if (req.protocol.toLowerCase() !== 'https') { next([418, 'I\'m a teapot']) } else { next() }
 })
 
@@ -205,12 +205,12 @@ if(process.env.SENTRY_DSN) {
 }
 
 // show 404
-app.use(function (req, res, next) {
+app.use((req, res, next) => {
     next([404, 'Not found'])
 })
 
 // show error
-app.use(function (err, req, res, next) {
+app.use((err, req, res, next) => {
     var code = 500
     var error = err
     if (err.constructor === Array) {
@@ -221,6 +221,6 @@ app.use(function (err, req, res, next) {
 })
 
 // start server
-app.listen(process.env.PORT, function () {
+app.listen(process.env.PORT, () => {
     console.log(new Date().toString() + ' started listening port ' + process.env.PORT)
 })

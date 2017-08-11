@@ -9,34 +9,34 @@ const entu = require('../../helpers/entu')
 
 
 
-router.get('/', function (req, res) {
+router.get('/', (req, res) => {
     res.redirect('https://id.entu.ee/auth/id-card/callback')
 })
 
 
 
-router.get('/callback', function (req, res, next) {
+router.get('/callback', (req, res, next) => {
     console.log(JSON.stringify(req.headers, null, '  '))
 
     async.waterfall([
-        function (callback) {
+        (callback) => {
             if (req.headers.ssl_client_verify === 'SUCCESS' && req.headers.ssl_client_cert) {
                 return callback(null)
             } else {
                 return callback('ID-Card reading error')
             }
         },
-        function (callback) {
+        (callback) => {
             soap.createClient('https://digidocservice.sk.ee/?wsdl', {}, callback)
         },
-        function (client, callback) {
-            client.CheckCertificate({ Certificate: req.headers.ssl_client_cert }, function (err, result) {
+        (client, callback) => {
+            client.CheckCertificate({ Certificate: req.headers.ssl_client_cert }, (err, result) => {
                 if(err) { return callback(err) }
 
                 return callback(null, result)
             })
         },
-        function (result, callback) {
+        (result, callback) => {
             console.log(JSON.stringify(result, null, '  '))
 
             if(_.get(result, ['Status', '$value']) !== 'GOOD') { return callback('Not valid ID-Card') }
@@ -55,7 +55,7 @@ router.get('/callback', function (req, res, next) {
 
             entu.addUserSession({ request: req, user: user }, callback)
         }
-    ], function (err, sessionId) {
+    ], (err, sessionId) => {
         if(err) { return next(err) }
 
         var redirectUrl = req.cookies.redirect

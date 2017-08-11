@@ -15,8 +15,8 @@ passport.use(new google({
         callbackURL: '/auth/google/callback',
         proxy: true
     },
-    function (accessToken, refreshToken, profile, done) {
-        process.nextTick(function () {
+    (accessToken, refreshToken, profile, done) => {
+        process.nextTick(() => {
             return done(null, profile)
         })
     }
@@ -24,7 +24,7 @@ passport.use(new google({
 
 
 
-router.get('/', function (req, res) {
+router.get('/', (req, res) => {
     res.clearCookie('redirect')
     res.clearCookie('session')
 
@@ -39,13 +39,13 @@ router.get('/', function (req, res) {
 
 
 
-router.get('/auth', passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'], session: false }), function () {
+router.get('/auth', passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'], session: false }), () => {
 
 })
 
 
 
-router.get('/callback', passport.authenticate('google', { failureRedirect: '/login', session: false }), function (req, res, next) {
+router.get('/callback', passport.authenticate('google', { failureRedirect: '/login', session: false }), (req, res, next) => {
     var user = {}
     var name = _.compact([
         _.get(req, ['user', 'name', 'givenName']),
@@ -62,7 +62,7 @@ router.get('/callback', passport.authenticate('google', { failureRedirect: '/log
     entu.addUserSession({
         request: req,
         user: user
-    }, function (err, sessionId) {
+    }, (err, sessionId) => {
         if(err) { return next(err) }
 
         var redirectUrl = req.cookies.redirect

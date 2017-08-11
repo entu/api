@@ -8,14 +8,14 @@ const entu = require('../helpers/entu')
 
 
 
-router.get('/', function (req, res, next) {
+router.get('/', (req, res, next) => {
     if (!req.customer) { return next([400, 'No customer parameter']) }
 
     async.waterfall([
-        function (callback) {
+        (callback) => {
             entu.dbConnection(req.customer, callback)
         },
-        function (connection, callback) {
+        (connection, callback) => {
             let props = _.compact(_.get(req, 'query.props', '').split(','))
             let filter = {}
             let fields = {}
@@ -25,7 +25,7 @@ router.get('/', function (req, res, next) {
             filter._access = entu.objectId(req.user)
 
             if (props.length > 0) {
-                _.forEach(props, function (f) {
+                _.forEach(props, (f) => {
                     _.set(fields, f, true)
                 })
                 _.set(fields, '_access', true)
@@ -33,10 +33,10 @@ router.get('/', function (req, res, next) {
 
             connection.collection('entity').find(filter, fields).limit(limit).toArray(callback)
         },
-    ], function (err, entities) {
+    ], (err, entities) => {
         if (err) { return next(err) }
 
-        res.respond(_.map(entities, function (entity) {
+        res.respond(_.map(entities, (entity) => {
             delete entity._mid
             delete entity._access
             return entity
@@ -47,22 +47,22 @@ router.get('/', function (req, res, next) {
 
 
 
-router.get('/:entityId', function (req, res, next) {
+router.get('/:entityId', (req, res, next) => {
     var entityId = entu.objectId(req.params.entityId)
 
     if (!entityId) { return next([422, 'Invalid Entity ID']) }
     if (!req.customer) { return next([400, 'No customer parameter']) }
 
     async.waterfall([
-        function (callback) {
+        (callback) => {
             entu.dbConnection(req.customer, callback)
         },
-        function (connection, callback) {
+        (connection, callback) => {
             let props = _.compact(_.get(req, 'query.props', '').split(','))
             let config = {}
 
             if (props.length > 0) {
-                _.forEach(props, function (f) {
+                _.forEach(props, (f) => {
                     _.set(config, ['fields', f], true)
                 })
                 _.set(config, 'fields._access', true)
@@ -70,12 +70,12 @@ router.get('/:entityId', function (req, res, next) {
 
             connection.collection('entity').findOne({ _id: entityId }, config, callback)
         },
-    ], function (err, entity) {
+    ], (err, entity) => {
         if (err) { return next(err) }
 
         if (!entity) { return next([404, 'Entity not found']) }
 
-        let access = _.map(_.get(entity, '_access', []), function (s) {
+        let access = _.map(_.get(entity, '_access', []), (s) => {
             return s.toString()
         })
 

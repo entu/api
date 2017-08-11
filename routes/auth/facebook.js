@@ -16,8 +16,8 @@ passport.use(new facebook({
         profileFields: ['id', 'name', 'email', 'picture'],
         proxy: true
     },
-    function (accessToken, refreshToken, profile, done) {
-        process.nextTick(function () {
+    (accessToken, refreshToken, profile, done) => {
+        process.nextTick(() => {
             return done(null, profile)
         })
   }
@@ -25,7 +25,7 @@ passport.use(new facebook({
 
 
 
-router.get('/', function (req, res) {
+router.get('/', (req, res) => {
     res.clearCookie('redirect')
     res.clearCookie('session')
 
@@ -40,13 +40,13 @@ router.get('/', function (req, res) {
 
 
 
-router.get('/auth', passport.authenticate('facebook', { scope: ['public_profile', 'email'], session: false }), function () {
+router.get('/auth', passport.authenticate('facebook', { scope: ['public_profile', 'email'], session: false }), () => {
 
 })
 
 
 
-router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login', session: false }), function (req, res, next) {
+router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login', session: false }), (req, res, next) => {
     var user = {}
     var name = _.compact([
         _.get(req, ['user', 'name', 'givenName']),
@@ -63,7 +63,7 @@ router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/l
     entu.addUserSession({
         request: req,
         user: user
-    }, function (err, sessionId) {
+    }, (err, sessionId) => {
         if(err) { return next(err) }
 
         var redirectUrl = req.cookies.redirect

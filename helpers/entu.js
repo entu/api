@@ -9,7 +9,7 @@ var APP_DBS = {}
 
 
 // returns random v4 UUID
-var UUID = function (a) {
+var UUID = (a) => {
     return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, UUID)
 }
 exports.UUID = UUID
@@ -17,7 +17,7 @@ exports.UUID = UUID
 
 
 // returns MongoDb Id
-var objectId = function (id) {
+var objectId = (id) => {
     try {
         return new mongo.ObjectID(id)
     } catch (e) {
@@ -29,28 +29,28 @@ exports.objectId = objectId
 
 
 // returns db connection (creates if not set)
-var dbConnection = function (customer, callback) {
+var dbConnection = (customer, callback) => {
     if(_.has(APP_DBS, customer)) {
         return callback(null, APP_DBS[customer])
     } else {
         async.waterfall([
-            function (callback) {
+            (callback) => {
                 mongo.MongoClient.connect(process.env.MONGODB, { ssl: true, sslValidate: false, autoReconnect: true }, callback)
             },
-            function (connection, callback) {
+            (connection, callback) => {
                 connection.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false } }, { _id: false, 'mongodb.string': true }, callback)
             },
-            function (url, callback) {
+            (url, callback) => {
                 let mongoUrl = url.mongodb[0].string
 
                 if (!mongoUrl) { return callback('No MongoDb url')}
 
                 mongo.MongoClient.connect(mongoUrl, { ssl: true, sslValidate: false, autoReconnect: true }, callback)
             },
-        ], function (err, connection) {
+        ], (err, connection) => {
             if(err) { return callback(err) }
 
-            connection.on('close', function (err) {
+            connection.on('close', (err) => {
                 delete APP_DBS[customer]
             })
 
@@ -64,7 +64,7 @@ exports.dbConnection = dbConnection
 
 
 // Create user session
-exports.addUserSession = function (params, callback) {
+exports.addUserSession = (params, callback) => {
     if(!params.user) { return callback('No user') }
 
     var session = {
@@ -81,13 +81,13 @@ exports.addUserSession = function (params, callback) {
     if(_.get(params, 'request.cookies.redirect')) { _.set(session, 'redirect', _.get(params, 'request.cookies.redirect')) }
 
     async.waterfall([
-        function (callback) {
+        (callback) => {
             dbConnection('entu', callback)
         },
-        function (connection, callback) {
+        (connection, callback) => {
             connection.collection('session').insertOne(session, callback)
         },
-    ], function (err, r) {
+    ], (err, r) => {
         if(err) { return callback(err) }
 
         return callback(null, r.insertedId)
