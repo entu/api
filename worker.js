@@ -110,7 +110,7 @@ app.use(function (req, res, next) {
 
         async.waterfall([
             function (callback) {
-                dbConnection('entu', callback)
+                entu.dbConnection('entu', callback)
             },
             function (connection, callback) {
                 connection.collection('request').insertOne(request, callback)
