@@ -210,7 +210,7 @@ app.use((req, res, next) => {
 })
 
 // show error
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
     var code = 500
     var error = err
     if (err.constructor === Array) {
