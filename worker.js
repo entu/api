@@ -142,13 +142,13 @@ app.use((req, res, next) => {
                 code: errorCode,
                 message: body
             }
-            res.status(errorCode).send(message)
+            res.status(errorCode).json(message)
         } else {
             if (body.constructor === Array) {
                 message.count = body.length
             }
             message.result = body
-            res.send(message)
+            res.json(message)
         }
     }
 
@@ -210,14 +210,12 @@ app.use((req, res, next) => {
 })
 
 // show error
-app.use((err, req, res) => {
-    var code = 500
-    var error = err
+app.use((err, req, res, next) => {
     if (err.constructor === Array) {
-        code = err[0]
-        error = err[1]
+        res.respond(err[1], err[0])
+    } else {
+        res.respond(err.toString(), 500)
     }
-    res.respond(error.toString(), code)
 })
 
 // start server
