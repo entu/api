@@ -35,7 +35,7 @@ var dbConnection = (customer, callback) => {
     } else {
         async.waterfall([
             (callback) => {
-                mongo.MongoClient.connect(process.env.MONGODB, { ssl: true, sslValidate: true, sslCA: [process.env.MONGODB_CA], autoReconnect: true }, callback)
+                mongo.MongoClient.connect(process.env.MONGODB, { ssl: true, sslValidate: true, autoReconnect: true }, callback)
             },
             (connection, callback) => {
                 connection.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false } }, { _id: false, 'mongodb.string': true }, callback)
@@ -45,7 +45,7 @@ var dbConnection = (customer, callback) => {
 
                 if (!mongoUrl) { return callback('No MongoDb url')}
 
-                mongo.MongoClient.connect(mongoUrl, { ssl: true, sslValidate: true, sslCA: [process.env.MONGODB_CA], autoReconnect: true }, callback)
+                mongo.MongoClient.connect(mongoUrl, { ssl: true, sslValidate: true, autoReconnect: true }, callback)
             },
         ], (err, connection) => {
             if(err) { return callback(err) }
