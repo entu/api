@@ -16,7 +16,7 @@ const entu = require('./helpers/entu')
 
 
 // global variables (and list of all used environment variables)
-const APP_VERSION = process.env.VERSION || process.env.HEROKU_SLUG_COMMIT || require('./package').version
+const APP_VERSION = process.env.VERSION || process.env.HEROKU_SLUG_COMMIT.substr(0, 7) || require('./package').version
 const APP_STARTED = new Date().toISOString()
 
 // MONGODB
@@ -181,7 +181,7 @@ app.use((req, res, next) => {
 
 // redirect HTTP to HTTPS
 app.use((req, res, next) => {
-    if (req.protocol.toLowerCase() !== 'https') { next([418, 'I\'m a teapot']) } else { next() }
+    if (req.hostname !== 'localhost' && req.protocol.toLowerCase() !== 'https') { next([418, 'I\'m a teapot']) } else { next() }
 })
 
 // routes mapping
