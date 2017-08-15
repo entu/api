@@ -332,9 +332,9 @@ connection.query(require('./sql/get_databases.sql'), (err, rows) => {
     }, (err) => {
         if(err) {
             console.error(err.toString())
-            process.exit(1)
+            process.exit(0)
         }
 
-        process.exit(1)
+        process.exit(0)
     })
 })
