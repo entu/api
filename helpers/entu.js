@@ -33,25 +33,32 @@ var dbConnection = (customer, callback) => {
     if(_.has(APP_DBS, customer)) {
         return callback(null, APP_DBS[customer])
     } else {
+        var entuDb
         async.waterfall([
             (callback) => {
-                mongo.MongoClient.connect(process.env.MONGODB, { ssl: true, sslValidate: true, autoReconnect: true }, callback)
+                mongo.MongoClient.connect(process.env.MONGODB, { ssl: true, sslValidate: true }, callback)
             },
             (connection, callback) => {
-                connection.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false } }, { _id: false, 'mongodb.string': true }, callback)
+                entuDb = connection
+                entuDb.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false } }, { _id: false, 'mongodb.string': true }, callback)
             },
             (url, callback) => {
+                entuDb.close()
+
                 let mongoUrl = url.mongodb[0].string
 
                 if (!mongoUrl) { return callback('No MongoDb url')}
 
-                mongo.MongoClient.connect(mongoUrl, { ssl: true, sslValidate: true, autoReconnect: true }, callback)
+                mongo.MongoClient.connect(mongoUrl, { ssl: true, sslValidate: true }, callback)
             },
         ], (err, connection) => {
             if(err) { return callback(err) }
 
+            console.log('Connected to ' + customer)
+
             connection.on('close', () => {
                 delete APP_DBS[customer]
+                console.log('Disconnected from ' + customer)
             })
 
             APP_DBS[customer] = connection
