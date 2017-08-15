@@ -118,8 +118,7 @@ app.use((req, res, next) => {
             },
         ], (err) => {
             if(err) {
-                console.error(err.toString(), '- Can\'t save request')
-                return next(null)
+                console.error('Can\'t save request: ' + err.toString())
             }
         })
     })
