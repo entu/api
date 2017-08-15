@@ -28,7 +28,7 @@ var log = (s) => {
 
 
 
-var importProps = (mysqlDb, callback) => {
+var importProps = (mysqlDb) => {
     log('start database ' +  mysqlDb + ' import')
 
     var mongoCon = NaN
@@ -306,10 +306,10 @@ var importProps = (mysqlDb, callback) => {
             mongoCon.command({ repairDatabase: 1 }, callback)
         },
     ], (err) => {
-        if(err) { return callback(err) }
+        if(err) { return err }
 
         log('end database ' +  mysqlDb + ' import\n')
-        return callback(null)
+        return null
     })
 }
 
@@ -327,14 +327,11 @@ connection.query(require('./sql/get_databases.sql'), (err, rows) => {
         process.exit(1)
     }
 
-    async.eachSeries(rows, (row, callback) => {
-        importProps(row.db, callback)
-    }, (err) => {
+    for (var i = 0; i < rows.length; i++) {
+        err = importProps(rows[i].db)
+
         if(err) {
             console.error(err.toString())
-            process.exit(1)
         }
-
-        process.exit(1)
-    })
+    }
 })
