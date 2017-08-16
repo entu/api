@@ -1,11 +1,8 @@
 'use strict'
 
-if(process.env.NEW_RELIC_LICENSE_KEY) { require('newrelic') }
-
 const _ = require('lodash')
 const async = require('async')
 const bparser = require('body-parser')
-const cparser = require('cookie-parser')
 const express = require('express')
 const jwt = require('jsonwebtoken')
 const mongo = require('mongodb')
@@ -123,9 +120,6 @@ if(process.env.SENTRY_DSN) {
 
 // Initialize Passport
 app.use(passport.initialize())
-
-// parse Cookies
-app.use(cparser())
 
 // parse POST requests
 app.use(bparser.json())
