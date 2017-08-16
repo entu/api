@@ -74,7 +74,6 @@ var app = express()
 app.locals.dbs = {}
 app.locals.db = (customer, callback) => {
     if(_.has(app, ['locals', 'dbs', customer])) {
-        console.log('use existing connection for ' + customer)
         return callback(null, app.locals.dbs[customer])
     } else {
         var entuDb
@@ -87,9 +86,6 @@ app.locals.db = (customer, callback) => {
                 entuDb.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false } }, { _id: false, 'mongodb.string': true }, callback)
             },
             (url, callback) => {
-                console.log('c ' + customer)
-                console.log(url)
-                console.log(_.get(url, 'mongodb.0.string'))
                 if (!_.has(url, 'mongodb.0.string')) { return callback('No MongoDb url')}
 
                 mongo.MongoClient.connect(_.get(url, 'mongodb.0.string'), { ssl: true, sslValidate: true }, callback)
@@ -108,8 +104,6 @@ app.locals.db = (customer, callback) => {
             },
         ], (err) => {
             if(err) { return callback(err) }
-
-            console.log('Connected to ' + customer)
 
             return callback(null, app.locals.dbs[customer])
         })
