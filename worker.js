@@ -80,16 +80,16 @@ app.locals.db = (customer, callback) => {
         var entuDb
         async.waterfall([
             (callback) => {
-                console.log('a ' + customer)
                 mongo.MongoClient.connect(process.env.MONGODB, { ssl: true, sslValidate: true }, callback)
             },
             (connection, callback) => {
-                console.log('b ' + customer)
                 entuDb = connection
                 entuDb.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false } }, { _id: false, 'mongodb.string': true }, callback)
             },
             (url, callback) => {
                 console.log('c ' + customer)
+                console.log(url)
+                console.log(_.get(url, 'mongodb.0.string'))
                 if (!_.has(url, 'mongodb.0.string')) { return callback('No MongoDb url')}
 
                 mongo.MongoClient.connect(_.get(url, 'mongodb.0.string'), { ssl: true, sslValidate: true }, callback)
