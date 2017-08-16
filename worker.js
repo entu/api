@@ -73,9 +73,12 @@ var app = express()
 // returns db connection (creates if not set)
 app.locals.dbs = {}
 app.locals.db = (customer, callback) => {
+    console.log('get db')
     if(_.has(app, ['locals', 'dbs', customer])) {
+        console.log('use existing connection for ' + customer)
         return callback(null, app.locals.dbs[customer])
     } else {
+        console.log('Start connecting to ' + customer)
         var entuDb
         async.waterfall([
             (callback) => {
