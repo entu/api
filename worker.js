@@ -8,10 +8,9 @@ const bparser = require('body-parser')
 const cparser = require('cookie-parser')
 const express = require('express')
 const jwt = require('jsonwebtoken')
+const mongo = require('mongodb')
 const passport = require('passport')
 const raven = require('raven')
-
-const entu = require('./helpers/entu')
 
 
 
