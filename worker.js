@@ -73,7 +73,6 @@ var app = express()
 // returns db connection (creates if not set)
 app.locals.dbs = {}
 app.locals.db = (customer, callback) => {
-    console.log('get db')
     if(_.has(app, ['locals', 'dbs', customer])) {
         console.log('use existing connection for ' + customer)
         return callback(null, app.locals.dbs[customer])
@@ -89,25 +88,28 @@ app.locals.db = (customer, callback) => {
                 entuDb.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false } }, { _id: false, 'mongodb.string': true }, callback)
             },
             (url, callback) => {
-                entuDb.close()
+                // entuDb.close()
+                if (!_.has(url, 'mongodb.0.string')) { return callback('No MongoDb url')}
 
-                let mongoUrl = url.mongodb[0].string
-
-                if (!mongoUrl) { return callback('No MongoDb url')}
-
-                mongo.MongoClient.connect(mongoUrl, { ssl: true, sslValidate: true }, callback)
+                mongo.MongoClient.connect(_.get(url, 'mongodb.0.string'), { ssl: true, sslValidate: true }, callback)
             },
-        ], (err, connection) => {
+            (connection, callback) => {
+                console.log('Connected to ' + customer)
+
+                connection.on('close', () => {
+                    delete app.locals.dbs[customer]
+                    console.log('Disconnected from ' + customer)
+                })
+
+                app.locals.dbs[customer] = connection
+
+                entuDb.close(callback)
+            },
+        ], (err) => {
             if(err) { return callback(err) }
 
             console.log('Connected to ' + customer)
 
-            connection.on('close', () => {
-                delete app.locals.dbs[customer]
-                console.log('Disconnected from ' + customer)
-            })
-
-            app.locals.dbs[customer] = connection
             return callback(null, app.locals.dbs[customer])
         })
     }
