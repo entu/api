@@ -4,8 +4,6 @@ const _ = require('lodash')
 const async = require('async')
 const mongo = require('mongodb')
 
-var APP_DBS = {}
-
 
 
 // returns random v4 UUID
@@ -30,8 +28,8 @@ exports.objectId = objectId
 
 // returns db connection (creates if not set)
 var dbConnection = (customer, callback) => {
-    if(_.has(APP_DBS, customer)) {
-        return callback(null, APP_DBS[customer])
+    if(_.has(app, ['locals', 'dbs', customer])) {
+        return callback(null, app.locals.dbs[customer])
     } else {
         var entuDb
         async.waterfall([
@@ -57,12 +55,12 @@ var dbConnection = (customer, callback) => {
             console.log('Connected to ' + customer)
 
             connection.on('close', () => {
-                delete APP_DBS[customer]
+                delete app.locals.dbs[customer]
                 console.log('Disconnected from ' + customer)
             })
 
-            APP_DBS[customer] = connection
-            return callback(null, APP_DBS[customer])
+            app.locals.dbs[customer] = connection
+            return callback(null, app.locals.dbs[customer])
         })
     }
 }

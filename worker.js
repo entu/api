@@ -69,6 +69,9 @@ if(process.env.SENTRY_DSN) {
 // start express app
 var app = express()
 
+// set locals
+app.locals.dbs = {}
+
 // Hide Powered By
 app.disable('x-powered-by')
 
