@@ -26,48 +26,6 @@ exports.objectId = objectId
 
 
 
-// returns db connection (creates if not set)
-var dbConnection = (customer, callback) => {
-    if(_.has(app, ['locals', 'dbs', customer])) {
-        return callback(null, app.locals.dbs[customer])
-    } else {
-        var entuDb
-        async.waterfall([
-            (callback) => {
-                mongo.MongoClient.connect(process.env.MONGODB, { ssl: true, sslValidate: true }, callback)
-            },
-            (connection, callback) => {
-                entuDb = connection
-                entuDb.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false } }, { _id: false, 'mongodb.string': true }, callback)
-            },
-            (url, callback) => {
-                entuDb.close()
-
-                let mongoUrl = url.mongodb[0].string
-
-                if (!mongoUrl) { return callback('No MongoDb url')}
-
-                mongo.MongoClient.connect(mongoUrl, { ssl: true, sslValidate: true }, callback)
-            },
-        ], (err, connection) => {
-            if(err) { return callback(err) }
-
-            console.log('Connected to ' + customer)
-
-            connection.on('close', () => {
-                delete app.locals.dbs[customer]
-                console.log('Disconnected from ' + customer)
-            })
-
-            app.locals.dbs[customer] = connection
-            return callback(null, app.locals.dbs[customer])
-        })
-    }
-}
-exports.dbConnection = dbConnection
-
-
-
 // Create user session
 exports.addUserSession = (params, callback) => {
     if(!params.user) { return callback('No user') }
@@ -87,7 +45,7 @@ exports.addUserSession = (params, callback) => {
 
     async.waterfall([
         (callback) => {
-            dbConnection('entu', callback)
+            params.request.app.locals.db('entu', callback)
         },
         (connection, callback) => {
             connection.collection('session').insertOne(session, callback)

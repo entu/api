@@ -15,7 +15,7 @@ router.get('/session/:sessionId', (req, res, next) => {
 
     async.waterfall([
         (callback) => {
-            entu.dbConnection('entu', callback)
+            req.app.locals.db('entu', callback)
         },
         (con, callback) => {
             conection = con
@@ -31,7 +31,7 @@ router.get('/session/:sessionId', (req, res, next) => {
             async.map(customers, (customer, callback) => {
                 async.waterfall([
                     (callback) => {
-                        entu.dbConnection(customer, callback)
+                        req.app.locals.db(customer, callback)
                     },
                     (con, callback) => {
                         con.collection('entity').findOne({ 'entu_user.string': session.user.email, _deleted: { $exists: false } }, { _id: true }, callback)

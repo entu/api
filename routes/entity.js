@@ -13,7 +13,7 @@ router.get('/', (req, res, next) => {
 
     async.waterfall([
         (callback) => {
-            entu.dbConnection(req.customer, callback)
+            req.app.locals.db(req.customer, callback)
         },
         (connection, callback) => {
             let props = _.compact(_.get(req, 'query.props', '').split(','))
@@ -55,7 +55,7 @@ router.get('/:entityId', (req, res, next) => {
 
     async.waterfall([
         (callback) => {
-            entu.dbConnection(req.customer, callback)
+            req.app.locals.db(req.customer, callback)
         },
         (connection, callback) => {
             let props = _.compact(_.get(req, 'query.props', '').split(','))
