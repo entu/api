@@ -18,6 +18,7 @@ const MYSQL_HOST = process.env.MYSQL_HOST || '127.0.0.1'
 const MYSQL_PORT = process.env.MYSQL_PORT || 3306
 const MYSQL_USER = process.env.MYSQL_USER
 const MYSQL_PASSWORD = process.env.MYSQL_PASSWORD
+const MYSQL_SSL_PATH = process.env.MYSQL_SSL_PATH
 const MONGODB = process.env.MONGODB || 'mongodb://localhost:27017/'
 
 
@@ -38,7 +39,12 @@ var importProps = (mysqlDb, callback) => {
         user: MYSQL_USER,
         password: MYSQL_PASSWORD,
         database: mysqlDb,
-        multipleStatements: true
+        multipleStatements: true,
+        ssl: {
+            key: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-key.pem'),
+            cert: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-cert.pem'),
+            ca: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-server-ca.pem')
+        }
     })
 
     async.series([
@@ -319,7 +325,12 @@ var connection = mysql.createConnection({
     host: MYSQL_HOST,
     port: MYSQL_PORT,
     user: MYSQL_USER,
-    password: MYSQL_PASSWORD
+    password: MYSQL_PASSWORD,
+    ssl: {
+        key: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-key.pem'),
+        cert: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-cert.pem'),
+        ca: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-server-ca.pem')
+    }
 })
 connection.query(require('./sql/get_databases.sql'), (err, rows) => {
     if(err) {
