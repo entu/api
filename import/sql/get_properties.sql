@@ -16,4 +16,5 @@ ORDER BY
     entity,
     definition,
     language,
-    type;
+    type
+LIMIT ? OFFSET ?;

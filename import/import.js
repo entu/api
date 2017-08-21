@@ -106,11 +106,23 @@ var importProps = (mysqlDb, callback) => {
         },
         (callback) => {
             log('insert props to mongodb')
-            sqlCon.query(require('./sql/get_properties.sql'), (err, props) => {
-                if(err) { return callback(err) }
 
-                mongoCon.collection('property').insertMany(props, callback)
-            })
+            var limit = 100000
+            var count = limit
+            var offset = 0
+
+            async.whilst(
+                () => { return count === limit },
+                (callback) => {
+                    sqlCon.query(require('./sql/get_properties.sql'), [limit, offset], (err, props) => {
+                        if(err) { return callback(err) }
+
+                        count = props.length
+                        offset = offset + count
+
+                        mongoCon.collection('property').insertMany(props, callback)
+                    })
+                }, callback)
         },
 
         (callback) => {
