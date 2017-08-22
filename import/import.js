@@ -126,6 +126,11 @@ var importProps = (mysqlDb, callback) => {
         },
 
         (callback) => {
+            log('close mysql connection')
+            sqlCon.end(callback)
+        },
+
+        (callback) => {
             log('delete empty language field')
             mongoCon.collection('property').updateMany({ language: null }, { $unset: { language: '' } }, callback)
         },
@@ -349,6 +354,9 @@ connection.query(require('./sql/get_databases.sql'), (err, rows) => {
         console.error(err.toString())
         process.exit(1)
     }
+
+    let dbs = _.map(rows, 'db')
+    connection.end()
 
     async.eachSeries(rows, (row, callback) => {
         importProps(row.db, callback)
