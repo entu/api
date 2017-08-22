@@ -20,6 +20,7 @@ CREATE TABLE `props` (
   `definition` varchar(32) DEFAULT NULL,
   `language` varchar(2) DEFAULT NULL,
   `type` varchar(16) DEFAULT NULL,
+  `public` int(1) DEFAULT NULL,
   `value_text` text DEFAULT NULL,
   `value_integer` int(11) DEFAULT NULL,
   `value_decimal` decimal(15,4) DEFAULT NULL,
@@ -157,7 +158,7 @@ AND sharing IS NOT NULL;
 
 
 /* properties */
-INSERT INTO props (entity, definition, type, language, value_text, value_integer, value_decimal, value_date, created_at, created_by, deleted_at, deleted_by)
+INSERT INTO props (entity, definition, type, language, public, value_text, value_integer, value_decimal, value_date, created_at, created_by, deleted_at, deleted_by)
 SELECT
     p.entity_id,
     REPLACE(pd.dataproperty, '-', '_'),
@@ -167,6 +168,7 @@ SELECT
         WHEN 'english' THEN 'en'
         ELSE NULL
     END,
+    (SELECT 1 FROM property_definition WHERE public = 1 AND is_deleted = 0 AND keyname = pd.keyname LIMIT 1),
     CASE pd.datatype
         WHEN 'string' THEN TRIM(p.value_string)
         WHEN 'text' THEN TRIM(p.value_text)
