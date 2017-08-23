@@ -19,18 +19,19 @@ router.get('/', (req, res, next) => {
             let filter = {}
             let fields = {}
             let limit = _.toSafeInteger(req.query.limit) || 100
+            let skip = _.toSafeInteger(req.query.skip) || 0
 
             if(req.query.def) { filter['_definition.string'] = req.query.def }
             filter._access = new ObjectID(req.user)
 
             if (props.length > 0) {
                 _.forEach(props, (f) => {
-                    _.set(fields, f, true)
+                    fields[f] = true
                 })
                 _.set(fields, '_access', true)
             }
 
-            connection.collection('entity').find(filter, fields).limit(limit).toArray(callback)
+            connection.collection('entity').find(filter, fields).sort({ _id: 1 }).limit(limit).skip(limit).toArray(callback)
         },
     ], (err, entities) => {
         if (err) { return next(err) }
