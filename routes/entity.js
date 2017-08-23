@@ -2,6 +2,7 @@
 
 const _ = require('lodash')
 const async = require('async')
+const ObjectID = require('mongodb').ObjectID
 const router = require('express').Router()
 
 
@@ -20,7 +21,7 @@ router.get('/', (req, res, next) => {
             let limit = _.toSafeInteger(req.query.limit) || 100
 
             if(req.query.def) { filter['_definition.string'] = req.query.def }
-            filter._access = new mongo.ObjectID(req.user)
+            filter._access = new ObjectID(req.user)
 
             if (props.length > 0) {
                 _.forEach(props, (f) => {
