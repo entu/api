@@ -64,7 +64,7 @@ router.get('/:entityId', (req, res, next) => {
                 _.set(config, 'fields._access', true)
             }
 
-            connection.collection('entity').findOne({ _id: new mongo.ObjectID(req.params.entityId) }, config, callback)
+            connection.collection('entity').findOne({ _id: new ObjectID(req.params.entityId) }, config, callback)
         },
     ], (err, entity) => {
         if (err) { return next(err) }
