@@ -121,6 +121,9 @@ if(process.env.SENTRY_DSN) {
 // Initialize Passport
 app.use(passport.initialize())
 
+// parse Cookies
+app.use(cparser())
+
 // parse POST requests
 app.use(bparser.json())
 app.use(bparser.urlencoded({extended: true}))
