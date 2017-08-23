@@ -187,7 +187,7 @@ var importProps = (mysqlDb, callback) => {
                         if(err) { return callback(err) }
 
                         l--
-                        if (l % 1000 === 0 && l > 0) {
+                        if (l % 10000 === 0 && l > 0) {
                             log(l + ' files to go')
                         }
                         return callback(null)
@@ -221,7 +221,7 @@ var importProps = (mysqlDb, callback) => {
                         if(err) { return callback(err) }
 
                         l--
-                        if (l % 1000 === 0 && l > 0) {
+                        if (l % 10000 === 0 && l > 0) {
                             log(l + ' entities to go')
                         }
                         return callback(null)
@@ -314,7 +314,7 @@ var importProps = (mysqlDb, callback) => {
                             if(err) { return callback(err) }
 
                             l--
-                            if (l % 1000 === 0 && l > 0) {
+                            if (l % 10000 === 0 && l > 0) {
                                 log(l + ' entities to go')
                             }
                             return callback(null)
