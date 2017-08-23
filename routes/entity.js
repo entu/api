@@ -20,7 +20,7 @@ router.get('/', (req, res, next) => {
             let limit = _.toSafeInteger(req.query.limit) || 100
 
             if(req.query.def) { filter['_definition.string'] = req.query.def }
-            filter._access = { $oid: req.user }
+            filter._access = new mongo.ObjectID(req.user)
 
             if (props.length > 0) {
                 _.forEach(props, (f) => {
@@ -63,7 +63,7 @@ router.get('/:entityId', (req, res, next) => {
                 _.set(config, 'fields._access', true)
             }
 
-            connection.collection('entity').findOne({ _id: { $oid: req.params.entityId } }, config, callback)
+            connection.collection('entity').findOne({ _id: new mongo.ObjectID(req.params.entityId) }, config, callback)
         },
     ], (err, entity) => {
         if (err) { return next(err) }
