@@ -5,8 +5,6 @@ const async = require('async')
 const jwt = require('jsonwebtoken')
 const router = require('express').Router()
 
-const entu = require('../../helpers/entu')
-
 
 
 router.get('/session/:sessionId', (req, res, next) => {
@@ -19,7 +17,7 @@ router.get('/session/:sessionId', (req, res, next) => {
         },
         (con, callback) => {
             conection = con
-            conection.collection('session').findAndModify({ _id: entu.objectId(req.params.sessionId), deleted: { $exists: false } }, [[ '_id', 1 ]], { '$set': { deleted: new Date() } }, callback)
+            conection.collection('session').findAndModify({ _id: { $oid: req.params.sessionId }, deleted: { $exists: false } }, [[ '_id', 1 ]], { '$set': { deleted: new Date() } }, callback)
         },
         (sess, callback) => {
             if(!sess.value) { return callback([400, 'No session']) }

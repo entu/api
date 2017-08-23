@@ -14,18 +14,6 @@ exports.UUID = UUID
 
 
 
-// returns MongoDb Id
-var objectId = (id) => {
-    try {
-        return new mongo.ObjectID(id)
-    } catch (e) {
-        return null
-    }
-}
-exports.objectId = objectId
-
-
-
 // Create user session
 exports.addUserSession = (params, callback) => {
     if(!params.user) { return callback('No user') }
