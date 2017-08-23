@@ -328,6 +328,10 @@ var importProps = (mysqlDb, callback) => {
             log('repair mongodb')
             mongoCon.command({ repairDatabase: 1 }, callback)
         },
+        (callback) => {
+            log('close mongodb connection')
+            mongoCon.close(callback)
+        },
     ], (err) => {
         if(err) { return callback(err) }
 
