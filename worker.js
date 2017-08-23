@@ -3,6 +3,7 @@
 const _ = require('lodash')
 const async = require('async')
 const bparser = require('body-parser')
+const cparser = require('cookie-parser')
 const express = require('express')
 const jwt = require('jsonwebtoken')
 const mongo = require('mongodb')
