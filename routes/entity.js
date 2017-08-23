@@ -16,8 +16,10 @@ router.get('/', (req, res, next) => {
         },
         (connection, callback) => {
             let props = _.compact(_.get(req, 'query.props', '').split(','))
+            let sort = _.compact(_.get(req, 'query.sort', '').split(','))
             let filter = {}
             let fields = {}
+            let sortFields = {}
             let limit = _.toSafeInteger(req.query.limit) || 100
             let skip = _.toSafeInteger(req.query.skip) || 0
 
@@ -29,6 +31,18 @@ router.get('/', (req, res, next) => {
                     fields[f] = true
                 })
                 _.set(fields, '_access', true)
+            }
+
+            if (sort.length > 0) {
+                _.forEach(sort, (f) => {
+                    if (f.substr(0, 1) === '-') {
+                        sortFields[f.substr(1)] = -1
+                    } else {
+                        sortFields[f] = 1
+                    }
+                })
+            } else {
+                sortFields = { _id: 1 }
             }
 
             connection.collection('entity').find(filter, fields).sort({ _id: 1 }).limit(limit).skip(limit).toArray(callback)
