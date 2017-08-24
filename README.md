@@ -22,7 +22,7 @@ Returns list of JWT tokens. Tokens are customer specific. Use this token in Bear
 
 
 
-## Entity
+## Entities
 
 ### GET /entity
 *Get list of entities*
@@ -40,3 +40,12 @@ Returns list of JWT tokens. Tokens are customer specific. Use this token in Bear
 | parameter | | |
 | -- | -- | -- |
 | props | optional | Comma separated list of properties to get. If not set all properties are returned. |
+
+
+
+
+
+## Files
+
+### GET /file/{_id}
+*Get file*

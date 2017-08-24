@@ -17,6 +17,7 @@
     },
     "dependencies": {
         "async": "2.*",
+        "aws-sdk": "2.*",
         "body-parser": "1.*",
         "cluster": "0.*",
         "cookie-parser": "1.*",
@@ -24,12 +25,12 @@
         "jsonwebtoken": "7.*",
         "lodash": "4.*",
         "mongodb": "2.*",
+        "passport": "0.*",
         "passport-facebook": "2.*",
         "passport-google-oauth": "1.*",
         "passport-saml": "0.*",
         "passport-twitter": "1.*",
         "passport-windowslive": "1.*",
-        "passport": "0.*",
         "raven": "2.*",
         "request": "2.*",
         "soap": "0.*"

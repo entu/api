@@ -225,8 +225,8 @@ app.use((req, res, next) => {
 // routes mapping
 app.use('/', require('./routes/index'))
 app.use('/auth', require('./routes/auth/index'))
-app.use('/user', require('./routes/user'))
 app.use('/entity', require('./routes/entity'))
+app.use('/file', require('./routes/file'))
 
 // provider mapping (only if configured)
 app.use('/auth/id-card', require('./routes/auth/id-card'))

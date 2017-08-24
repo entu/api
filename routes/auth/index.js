@@ -9,7 +9,7 @@ const router = require('express').Router()
 
 
 router.get('/session/:sessionId', (req, res, next) => {
-    var conection
+    var connection
     var session
 
     async.waterfall([
@@ -17,8 +17,8 @@ router.get('/session/:sessionId', (req, res, next) => {
             req.app.locals.db('entu', callback)
         },
         (con, callback) => {
-            conection = con
-            conection.collection('session').findAndModify({ _id: new ObjectID(req.params.sessionId), deleted: { $exists: false } }, [[ '_id', 1 ]], { '$set': { deleted: new Date() } }, callback)
+            connection = con
+            connection.collection('session').findAndModify({ _id: new ObjectID(req.params.sessionId), deleted: { $exists: false } }, [[ '_id', 1 ]], { '$set': { deleted: new Date() } }, callback)
         },
         (sess, callback) => {
             if(!sess.value) { return callback([400, 'No session']) }
