@@ -378,7 +378,7 @@ var importFiles = (mysqlDb, callback) => {
             sqlCon.query(require('./sql/get_files.sql'), [limit, offset], (err, files) => {
                 if(err) { return callback(err) }
 
-                count = props.length
+                count = files.length
                 offset = offset + count
 
                 var s3 = new aws.S3()
