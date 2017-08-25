@@ -377,7 +377,7 @@ var importFiles = (mysqlDb, callback) => {
             var s3 = new aws.S3()
             var l = files.length
 
-            async.eachSeries(files, (file, callback) => {
+            async.each(files, (file, callback) => {
                 if (!file.s3_key && !file.url) {
                     console.log(file.id + ' - No S3 key for file ')
                     return callback(null)
@@ -406,7 +406,7 @@ var importFiles = (mysqlDb, callback) => {
                     fs.writeFileSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1), md5), data.Body)
 
                     l--
-                    if (l % 10000 === 0 && l > 0) {
+                    if (l % 1000 === 0 && l > 0) {
                         log(l + ' files to go')
                     }
                     return callback(null)
