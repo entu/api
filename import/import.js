@@ -446,10 +446,12 @@ var importFiles = (mysqlDb, callback) => {
                     }
                 }, callback)
             })
-        }, callback)
+        }, (err) => {
+            if(err) { return callback(err) }
 
-    log('end ' +  mysqlDb + ' files import')
-    return callback(null)
+            log('end ' +  mysqlDb + ' files import')
+            return callback(null)
+        })
 }
 
 
