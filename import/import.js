@@ -425,9 +425,10 @@ var importFiles = (mysqlDb, callback) => {
                             }
 
                             let md5 = crypto.createHash('md5').update(data.Body).digest('hex')
-                            if(file.md5 && file.md5 !== md5) {
-                                log(file.id + ' - MD5 not same ' + md5)
-                            }
+                            let size = data.Body.length
+
+                            if(file.md5 && file.md5 !== md5) { log(file.id + ' - md5 not same ' + md5) }
+                            if(file.filesize !== size) { log(file.id + ' - size not same ' + size) }
 
                             if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))) {
                                 fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))
