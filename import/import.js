@@ -370,7 +370,6 @@ var importFiles = (mysqlDb, callback) => {
 
     async.waterfall([
         (callback) => {
-            log('import files')
             sqlCon.query(require('./sql/get_files.sql'), callback)
         },
         (files, fields, callback) => {
