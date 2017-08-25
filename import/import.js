@@ -394,24 +394,24 @@ var importFiles = (mysqlDb, callback) => {
                             let f = fs.readFileSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5))
                             fs.writeFileSync(path.join(process.env.FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5), f)
 
-                            console.log(file.id + ' - Copied local file')
+                            log(file.id + ' - Copied local file')
                         } else {
-                            console.log(file.id + ' - No local file')
+                            log(file.id + ' - No local file')
                         }
                     } else {
-                        console.log(file.id + ' - No file')
+                        log(file.id + ' - No file')
                     }
                     return callback(null)
                 }
                 s3.getObject({ Bucket: process.env.AWS_S3_BUCKET, Key: file.s3_key }, (err, data) => {
                     if(err) {
-                        console.log(file.id + ' - ' + err.toString())
+                        log(file.id + ' - ' + err.toString())
                         return callback(null)
                     }
 
                     let md5 = crypto.createHash('md5').update(data.Body).digest('hex')
                     if(file.md5 && file.md5 !== md5) {
-                        console.log(file.id + ' - MD5 not same ' + md5)
+                        log(file.id + ' - MD5 not same ' + md5)
                     }
 
                     if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))) {
