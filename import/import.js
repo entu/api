@@ -375,7 +375,7 @@ var importFiles = (mysqlDb, callback) => {
     async.whilst(
         () => { return count === limit },
         (callback) => {
-            sqlCon.query(require('./sql/get_files.sql'), [limit, offset], (err, props) => {
+            sqlCon.query(require('./sql/get_files.sql'), [limit, offset], (err, files) => {
                 if(err) { return callback(err) }
 
                 count = props.length
