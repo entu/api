@@ -2,9 +2,12 @@
 
 const _ = require('lodash')
 const async = require('async')
+const aws = require('aws-sdk')
+const crypto = require('crypto')
 const fs = require('fs')
 const mongo = require('mongodb')
 const mysql = require('mysql')
+const path = require('path')
 
 
 
@@ -342,6 +345,85 @@ var importProps = (mysqlDb, callback) => {
 
 
 
+var importFiles = (mysqlDb, callback) => {
+    log('start ' +  mysqlDb + ' files import')
+
+    var mongoCon = NaN
+    var sqlCon = mysql.createConnection({
+        host: MYSQL_HOST,
+        port: MYSQL_PORT,
+        user: MYSQL_USER,
+        password: MYSQL_PASSWORD,
+        database: mysqlDb,
+        multipleStatements: true,
+        ssl: {
+            key: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-key.pem'),
+            cert: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-cert.pem'),
+            ca: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-server-ca.pem')
+        }
+    })
+
+    aws.config = new aws.Config()
+    aws.config.accessKeyId = process.env.AWS_ACCESS_KEY_ID
+    aws.config.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
+    aws.config.region = process.env.AWS_REGION
+
+    async.waterfall([
+        (callback) => {
+            log('import files')
+            sqlCon.query(require('./sql/get_files.sql'), callback)
+        },
+        (files, fields, callback) => {
+            var s3 = new aws.S3()
+            var l = files.length
+
+            async.eachSeries(files, (file, callback) => {
+                if (!file.s3_key && !file.url) {
+                    console.log(file.id + ' - No S3 key for file ')
+                    return callback(null)
+                }
+                s3.getObject({ Bucket: process.env.AWS_S3_BUCKET, Key: file.s3_key }, (err, data) => {
+                    if(err) {
+                        console.log(file.id + ' - ' + err.toString())
+                        return callback(null)
+                    }
+
+                    let md5 = crypto.createHash('md5').update(data.Body).digest('hex')
+                    if(file.md5 && file.md5 !== md5) {
+                        console.log(file.id + ' - MD5 not same ' + md5)
+                    }
+
+                    if (!fs.existsSync(process.env.FILES_PATH)) {
+                        fs.mkdirSync(process.env.FILES_PATH)
+                    }
+                    if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb))) {
+                        fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb))
+                    }
+                    if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))) {
+                        fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))
+                    }
+
+                    fs.writeFileSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1), md5), data.Body)
+
+                    l--
+                    if (l % 10000 === 0 && l > 0) {
+                        log(l + ' files to go')
+                    }
+                    return callback(null)
+                })
+            }, callback)
+        },
+    ], (err) => {
+        if(err) { return callback(err) }
+
+        log('end ' +  mysqlDb + ' files import')
+        return callback(null)
+    })
+
+}
+
+
+
 var connection = mysql.createConnection({
     host: MYSQL_HOST,
     port: MYSQL_PORT,
@@ -363,7 +445,8 @@ connection.query(require('./sql/get_databases.sql'), (err, rows) => {
     connection.end()
 
     async.eachSeries(rows, (row, callback) => {
-        importProps(row.db, callback)
+        importFiles(row.db, callback)
+        // importProps(row.db, callback)
     }, (err) => {
         if(err) {
             console.error(err.toString())

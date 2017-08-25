@@ -36,6 +36,7 @@
         "soap": "0.*"
     },
     "devDependencies": {
+        "crypto": "1.*",
         "mysql": "2.*"
     }
 }
