@@ -383,7 +383,7 @@ var importFiles = (mysqlDb, callback) => {
                 fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb))
             }
 
-            async.each(files, (file, callback) => {
+            async.eachSeries(files, (file, callback) => {
                 if (!file.s3_key) {
                     // if (file.md5) {
                     //     if (fs.existsSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5))) {
