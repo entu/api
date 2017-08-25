@@ -393,14 +393,22 @@ var importFiles = (mysqlDb, callback) => {
                             let f = fs.readFileSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5))
                             fs.writeFileSync(path.join(process.env.FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5), f)
 
-                            log(file.id + ' - Copied local file')
+                            sqlCon.query(require('./sql/update_files.sql'), ['Copied local file', file.id], (err) => {
+                                if(err) { return callback(err) }
+                                return callback(null)
+                            })
                         } else {
-                            log(file.id + ' - No local file')
+                            sqlCon.query(require('./sql/update_files.sql'), ['No local file', file.id], (err) => {
+                                if(err) { return callback(err) }
+                                return callback(null)
+                            })
                         }
                     } else {
-                        log(file.id + ' - No file')
+                        sqlCon.query(require('./sql/update_files.sql'), ['No file', file.id], (err) => {
+                            if(err) { return callback(err) }
+                            return callback(null)
+                        })
                     }
-                    return callback(null)
                 }
                 s3.getObject({ Bucket: process.env.AWS_S3_BUCKET, Key: file.s3_key }, (err, data) => {
                     if(err) {
@@ -423,7 +431,11 @@ var importFiles = (mysqlDb, callback) => {
                     if (l % 1000 === 0 && l > 0) {
                         log(l + ' files to go')
                     }
-                    return callback(null)
+
+                    sqlCon.query(require('./sql/update_files.sql'), ['OK', file.id], (err) => {
+                        if(err) { return callback(err) }
+                        return callback(null)
+                    })
                 })
             }, callback)
         },

@@ -5,4 +5,5 @@ SELECT
     url
 FROM file
 WHERE url IS NULL
+AND changed IS NULL
 ORDER BY id;
