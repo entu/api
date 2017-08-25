@@ -377,9 +377,30 @@ var importFiles = (mysqlDb, callback) => {
             var s3 = new aws.S3()
             var l = files.length
 
+            if (!fs.existsSync(process.env.FILES_PATH)) {
+                fs.mkdirSync(process.env.FILES_PATH)
+            }
+            if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb))) {
+                fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb))
+            }
+
             async.each(files, (file, callback) => {
                 if (!file.s3_key && !file.url) {
-                    console.log(file.id + ' - No S3 key for file ')
+                    if (file.md5) {
+                        if (fs.existsSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5))) {
+                            if (!fs.existsSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1)))) {
+                                fs.mkdirSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1)))
+                            }
+                            let f = fs.readFileSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5))
+                            fs.writeFileSync(path.join(process.env.FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5), f)
+
+                            console.log(file.id + ' - Copied local file')
+                        } else {
+                            console.log(file.id + ' - No local file')
+                        }
+                    } else {
+                        console.log(file.id + ' - No file')
+                    }
                     return callback(null)
                 }
                 s3.getObject({ Bucket: process.env.AWS_S3_BUCKET, Key: file.s3_key }, (err, data) => {
@@ -393,12 +414,6 @@ var importFiles = (mysqlDb, callback) => {
                         console.log(file.id + ' - MD5 not same ' + md5)
                     }
 
-                    if (!fs.existsSync(process.env.FILES_PATH)) {
-                        fs.mkdirSync(process.env.FILES_PATH)
-                    }
-                    if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb))) {
-                        fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb))
-                    }
                     if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))) {
                         fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))
                     }
