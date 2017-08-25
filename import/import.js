@@ -382,7 +382,6 @@ var importFiles = (mysqlDb, callback) => {
                 offset = offset + count
 
                 var s3 = new aws.S3()
-                var l = files.length
 
                 if (!fs.existsSync(process.env.FILES_PATH)) {
                     fs.mkdirSync(process.env.FILES_PATH)
@@ -421,8 +420,8 @@ var importFiles = (mysqlDb, callback) => {
                     } else {
                         s3.getObject({ Bucket: process.env.AWS_S3_BUCKET, Key: file.s3_key }, (err, data) => {
                             if(err) {
-                                log(file.id + ' - ' + err.toString())
-                                return callback(null)
+                                sqlCon.query(require('./sql/update_files.sql'), [err.toString(), file.id], callback)
+                                return
                             }
 
                             let md5 = crypto.createHash('md5').update(data.Body).digest('hex')
@@ -435,11 +434,6 @@ var importFiles = (mysqlDb, callback) => {
                             }
 
                             fs.writeFileSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1), md5), data.Body)
-
-                            l--
-                            if (l % 1000 === 0 && l > 0) {
-                                log(l + ' files to go')
-                            }
 
                             sqlCon.query(require('./sql/update_files.sql'), ['S3', file.id], callback)
                         })
