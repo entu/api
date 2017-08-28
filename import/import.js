@@ -430,6 +430,7 @@ var importFiles = (mysqlDb, callback) => {
 
                     sqlCon.query(require('./sql/update_files.sql'), [md5, size, 'S3', file.id], callback)
                 })
+            }
         }, (err) => {
             if(err) { return callback(err) }
 
