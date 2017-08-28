@@ -368,85 +368,76 @@ var importFiles = (mysqlDb, callback) => {
     aws.config.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
     aws.config.region = process.env.AWS_REGION
 
-    var limit = 10
-    var count = limit
-    var offset = 0
+    sqlCon.query(require('./sql/get_files.sql'), (err, files) => {
+        if(err) { return callback(err) }
 
-    async.whilst(
-        () => { return count === limit },
-        (callback) => {
-            sqlCon.query(require('./sql/get_files.sql'), [limit, offset], (err, files) => {
-                if(err) { return callback(err) }
+        count = files.length
+        offset = offset + count
 
-                count = files.length
-                offset = offset + count
+        var s3 = new aws.S3()
 
-                var s3 = new aws.S3()
+        if (!fs.existsSync(process.env.FILES_PATH)) {
+            fs.mkdirSync(process.env.FILES_PATH)
+        }
+        if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb))) {
+            fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb))
+        }
 
-                if (!fs.existsSync(process.env.FILES_PATH)) {
-                    fs.mkdirSync(process.env.FILES_PATH)
-                }
-                if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb))) {
-                    fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb))
-                }
+        async.eachSeries(files, (file, callback) => {
+            if (!file.s3_key) {
+                if (file.md5) {
+                    if (fs.existsSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5))) {
+                        if (!fs.existsSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1)))) {
+                            fs.mkdirSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1)))
+                        }
+                        let f = fs.readFileSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5))
+                        fs.writeFileSync(path.join(process.env.FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5), f)
 
-                async.each(files, (file, callback) => {
-                    if (!file.s3_key) {
-                        // if (file.md5) {
-                        //     if (fs.existsSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5))) {
-                        //         if (!fs.existsSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1)))) {
-                        //             fs.mkdirSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1)))
-                        //         }
-                        //         let f = fs.readFileSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5))
-                        //         fs.writeFileSync(path.join(process.env.FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5), f)
-                        //
-                        //         sqlCon.query(require('./sql/update_files.sql'), ['Copied local file', file.id], (err) => {
-                        //             if(err) { return callback(err) }
-                        //             return callback(null)
-                        //         })
-                        //     } else {
-                        //         sqlCon.query(require('./sql/update_files.sql'), ['No local file', file.id], (err) => {
-                        //             if(err) { return callback(err) }
-                        //             return callback(null)
-                        //         })
-                        //     }
-                        // } else {
-                        //     sqlCon.query(require('./sql/update_files.sql'), ['No file', file.id], (err) => {
-                        //         if(err) { return callback(err) }
-                        //         return callback(null)
-                        //     })
-                        // }
-                        return callback(null)
+                        sqlCon.query(require('./sql/update_files_error.sql'), ['Copied local file', file.id], (err) => {
+                            if(err) { return callback(err) }
+                            return callback(null)
+                        })
                     } else {
-                        s3.getObject({ Bucket: process.env.AWS_S3_BUCKET, Key: file.s3_key }, (err, data) => {
-                            if(err) {
-                                sqlCon.query(require('./sql/update_files_error.sql'), [err.toString(), file.id], callback)
-                                return
-                            }
-
-                            let md5 = crypto.createHash('md5').update(data.Body).digest('hex')
-                            let size = data.Body.length
-
-                            if(file.md5 && file.md5 !== md5) { log(file.id + ' - md5 not same ' + md5) }
-                            if(file.filesize !== size) { log(file.id + ' - size not same ' + size) }
-
-                            if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))) {
-                                fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))
-                            }
-
-                            fs.writeFileSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1), md5), data.Body)
-
-                            sqlCon.query(require('./sql/update_files.sql'), [md5, 'S3', file.id], callback)
+                        sqlCon.query(require('./sql/update_files_error.sql'), ['No local file', file.id], (err) => {
+                            if(err) { return callback(err) }
+                            return callback(null)
                         })
                     }
-                }, callback)
-            })
+                } else {
+                    sqlCon.query(require('./sql/update_files_error.sql'), ['No file', file.id], (err) => {
+                        if(err) { return callback(err) }
+                        return callback(null)
+                    })
+                }
+            } else {
+                s3.getObject({ Bucket: process.env.AWS_S3_BUCKET, Key: file.s3_key }, (err, data) => {
+                    if(err) {
+                        sqlCon.query(require('./sql/update_files_error.sql'), [err.toString(), file.id], callback)
+                        return
+                    }
+
+                    let md5 = crypto.createHash('md5').update(data.Body).digest('hex')
+                    let size = data.Body.length
+
+                    if(file.md5 && file.md5 !== md5) { log(file.id + ' - md5 not same ' + md5) }
+                    if(file.filesize !== size) { log(file.id + ' - size not same ' + size) }
+
+                    if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))) {
+                        fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))
+                    }
+
+                    fs.writeFileSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1), md5), data.Body)
+
+                    sqlCon.query(require('./sql/update_files.sql'), [md5, size, 'S3', file.id], callback)
+                })
+            }
         }, (err) => {
             if(err) { return callback(err) }
 
             log('end ' +  mysqlDb + ' files import')
             return callback(null)
         })
+    }
 }
 
 
