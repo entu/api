@@ -7,5 +7,6 @@ SELECT
 FROM file
 WHERE url IS NULL
 AND changed IS NULL
+AND s3_key IS NOT NULL
 ORDER BY id
 LIMIT ? OFFSET ?;
