@@ -420,7 +420,7 @@ var importFiles = (mysqlDb, callback) => {
                     } else {
                         s3.getObject({ Bucket: process.env.AWS_S3_BUCKET, Key: file.s3_key }, (err, data) => {
                             if(err) {
-                                sqlCon.query(require('./sql/update_files.sql'), [err.toString(), file.id], callback)
+                                sqlCon.query(require('./sql/update_files_error.sql'), [err.toString(), file.id], callback)
                                 return
                             }
 
@@ -436,7 +436,7 @@ var importFiles = (mysqlDb, callback) => {
 
                             fs.writeFileSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1), md5), data.Body)
 
-                            sqlCon.query(require('./sql/update_files.sql'), ['S3', file.id], callback)
+                            sqlCon.query(require('./sql/update_files.sql'), [md5, 'S3', file.id], callback)
                         })
                     }
                 }, callback)
