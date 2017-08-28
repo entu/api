@@ -371,9 +371,6 @@ var importFiles = (mysqlDb, callback) => {
     sqlCon.query(require('./sql/get_files.sql'), (err, files) => {
         if(err) { return callback(err) }
 
-        count = files.length
-        offset = offset + count
-
         var s3 = new aws.S3()
 
         if (!fs.existsSync(process.env.FILES_PATH)) {
