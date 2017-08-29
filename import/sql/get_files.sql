@@ -7,4 +7,4 @@ SELECT
 FROM file
 WHERE url IS NULL
 AND changed IS NULL
-ORDER BY id;
+ORDER BY filesize;
