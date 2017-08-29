@@ -100,6 +100,23 @@ var importProps = (mysqlDb, callback) => {
         },
 
         (callback) => {
+            log('insert definition entities to mongodb')
+            sqlCon.query(require('./sql/get_definition_entities.sql'), (err, entities) => {
+                if(err) { return callback(err) }
+
+                mongoCon.collection('entity').insertMany(entities, callback)
+            })
+        },
+        (callback) => {
+            log('insert definition properties to mongodb')
+            sqlCon.query(require('./sql/get_definition_properties.sql'), (err, entities) => {
+                if(err) { return callback(err) }
+
+                mongoCon.collection('property').insertMany(entities, callback)
+            })
+        },
+
+        (callback) => {
             log('insert entities to mongodb')
             sqlCon.query(require('./sql/get_entities.sql'), (err, entities) => {
                 if(err) { return callback(err) }
@@ -107,6 +124,7 @@ var importProps = (mysqlDb, callback) => {
                 mongoCon.collection('entity').insertMany(entities, callback)
             })
         },
+
         (callback) => {
             log('insert props to mongodb')
 
