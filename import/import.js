@@ -409,7 +409,7 @@ var importFiles = (mysqlDb, callback) => {
                         }
                         fs.writeFileSync(path.join(process.env.FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5), f)
 
-                        sqlCon.query(require('./sql/update_files_error.sql'), ['Copied local file', file.id], (err) => {
+                        sqlCon.query(require('./sql/update_files.sql'), [file.md5, f.length, 'Copied local file', file.id], (err) => {
                             if(err) { return callback(err) }
                             return callback(null)
                         })
