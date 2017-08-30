@@ -269,11 +269,11 @@ var importProps = (mysqlDb, callback) => {
         },
         (callback) => {
             log('rename value_integer to boolean true')
-            mongoCon.collection('property').updateMany({ type: 'boolean', value_integer: 1 }, { $unset: { type: '', value_integer: '' }, $set: { boolean: true } }, callback)
+            mongoCon.collection('property').updateMany({ type: 'boolean', value_integer: $in: [1, '1'] }, { $unset: { type: '', value_integer: '' }, $set: { boolean: true } }, callback)
         },
         (callback) => {
             log('rename value_integer to boolean false')
-            mongoCon.collection('property').updateMany({ type: 'boolean', value_integer: 0 }, { $unset: { type: '', value_integer: '' }, $set: { boolean: false } }, callback)
+            mongoCon.collection('property').updateMany({ type: 'boolean', value_integer: $in: [0, '0'] }, { $unset: { type: '', value_integer: '' }, $set: { boolean: false } }, callback)
         },
         (callback) => {
             log('rename value_decimal to decimal')

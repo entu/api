@@ -209,7 +209,7 @@ FROM (
     /* property is list */
     UNION SELECT
         CONCAT(entity_definition_keyname, '_', dataproperty) AS entity_id,
-        'is_list' AS property_definition,
+        'list' AS property_definition,
         'boolean' AS property_type,
         NULL AS property_language,
         NULL AS value_text,
