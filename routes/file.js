@@ -27,7 +27,7 @@ router.get('/:propertyId', (req, res, next) => {
             file = property
             if (!file.s3) { return callback([404, 'File S3 not set']) }
 
-            connection.collection('entity').findOne({ _id: file.entity, deleted_at: { '$exists': false }, deleted_by: { '$exists': false } }, { _id: false, _access: true }, callback)
+            connection.collection('entity').findOne({ _id: file.entity, _deleted: { '$exists': false } }, { _id: false, _access: true }, callback)
         },
         (entity, callback) => {
             if (!entity) { return callback([404, 'Entity not found']) }

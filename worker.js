@@ -81,7 +81,7 @@ app.locals.db = (customer, callback) => {
             },
             (connection, callback) => {
                 entuDb = connection
-                entuDb.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, deleted_at: { '$exists': false }, deleted_by: { '$exists': false } }, { _id: false, 'mongodb.string': true }, callback)
+                entuDb.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true }, _deleted: { '$exists': false } }, { _id: false, 'mongodb.string': true }, callback)
             },
             (url, callback) => {
                 if (!_.has(url, 'mongodb.0.string')) { return callback('No MongoDb url')}
