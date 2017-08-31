@@ -289,7 +289,7 @@ var importProps = (mysqlDb, callback) => {
         },
 
         (callback) => {
-            log('rename created/deleted fields')
+            log('rename property created/deleted fields')
             mongoCon.collection('property').updateMany({}, { $rename: { created_at: 'created.at', created_by: 'created.by', deleted_at: 'deleted.at', deleted_by: 'deleted.by' } }, callback)
         },
 
@@ -323,23 +323,30 @@ var importProps = (mysqlDb, callback) => {
                     mongoCon.collection('property').find({ entity: entity._id, deleted: { '$exists': false } }).toArray((err, properties) => {
                         if(err) { return callback(err) }
 
-                        var p = _.mapValues(_.groupBy(properties, 'definition'), (o) => {
+                        let p = _.mapValues(_.groupBy(properties, 'definition'), (o) => {
                             return _.map(o, (p) => {
-                                return _.omit(p, ['entity', 'definition', 'created', 'md5', 's3', 'url'])
+                                return _.omit(p, ['entity', 'definition', 'created', 's3', 'url'])
                             })
                         })
 
-                        p._access = _.map(_.union(p._viewer, p._expander, p._editor, p._owner), 'reference')
+                        let access = _.map(_.union(p._viewer, p._expander, p._editor, p._owner), 'reference')
+                        if (access.length > 0) {
+                            p._access = access
+                        }
 
-                        mongoCon.collection('entity').update({ _id: entity._id }, { '$set': p, }, (err) => {
-                            if(err) { return callback(err) }
+                        if (!_.isEmpty(p)) {
+                            mongoCon.collection('entity').update({ _id: entity._id }, { '$set': p, }, (err) => {
+                                if(err) { return callback(err) }
 
-                            l--
-                            if (l % 10000 === 0 && l > 0) {
-                                log(l + ' entities to go')
-                            }
+                                l--
+                                if (l % 10000 === 0 && l > 0) {
+                                    log(l + ' entities to go')
+                                }
+                                return callback(null)
+                            })
+                        } else {
                             return callback(null)
-                        })
+                        }
                     })
                 }, callback)
             })
@@ -479,8 +486,8 @@ connection.query(require('./sql/get_databases.sql'), (err, rows) => {
     connection.end()
 
     async.eachSeries(rows, (row, callback) => {
-        importFiles(row.db, callback)
-        // importProps(row.db, callback)
+        // importFiles(row.db, callback)
+        importProps(row.db, callback)
     }, (err) => {
         if(err) {
             console.error(err.toString())

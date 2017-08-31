@@ -50,60 +50,31 @@ FROM entity
 WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property');
 
 
-/* entity created at */
-INSERT INTO props (entity, definition, type, value_date, created_at, created_by)
+/* entity created at/by */
+INSERT INTO props (entity, definition, type, value_integer, created_at, created_by)
 SELECT
     id,
-    '_created_at',
-    'datetime',
-    created,
+    '_created',
+    'boolean',
+    1,
     created,
     IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL)
 FROM entity
 WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
-AND created IS NOT NULL;
+AND (created IS NOT NULL OR IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL) IS NOT NULL);
 
 
-/* entity created by */
+/* entity deleted at/by */
 INSERT INTO props (entity, definition, type, value_integer, created_at, created_by)
 SELECT
     id,
-    '_created_by',
-    'reference',
-    IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL),
-    created,
-    IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL)
-FROM entity
-WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
-AND IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL) IS NOT NULL;
-
-
-/* entity deleted at */
-INSERT INTO props (entity, definition, type, value_date, created_at, created_by)
-SELECT
-    id,
-    '_deleted_at',
-    'datetime',
-    IFNULL(deleted, NOW()),
-    IFNULL(deleted, NOW()),
-    IF(TRIM(deleted_by) REGEXP '^-?[0-9]+$', TRIM(deleted_by), NULL)
-FROM entity
-WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
-AND is_deleted = 1;
-
-
-/* entity deleted by */
-INSERT INTO props (entity, definition, type, value_integer, created_at, created_by)
-SELECT
-    id,
-    '_deleted_by',
-    'reference',
-    IF(TRIM(deleted_by) REGEXP '^-?[0-9]+$', TRIM(deleted_by), NULL),
+    '_deleted',
+    'boolean',
+    1,
     deleted,
     IF(TRIM(deleted_by) REGEXP '^-?[0-9]+$', TRIM(deleted_by), NULL)
 FROM entity
 WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
-AND IF(TRIM(deleted_by) REGEXP '^-?[0-9]+$', TRIM(deleted_by), NULL) IS NOT NULL
 AND is_deleted = 1;
 
 

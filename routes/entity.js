@@ -25,6 +25,7 @@ router.get('/', (req, res, next) => {
 
             if(req.query.def) { filter['_definition.string'] = req.query.def }
             filter._access = new ObjectID(req.user)
+            filter._deleted = { $exists: false }
 
             if (props.length > 0) {
                 _.forEach(props, (f) => {
@@ -79,7 +80,7 @@ router.get('/:entityId', (req, res, next) => {
                 _.set(config, 'fields._access', true)
             }
 
-            connection.collection('entity').findOne({ _id: new ObjectID(req.params.entityId) }, config, callback)
+            connection.collection('entity').findOne({ _id: new ObjectID(req.params.entityId), _deleted: { $exists: false } }, config, callback)
         },
     ], (err, entity) => {
         if (err) { return next(err) }

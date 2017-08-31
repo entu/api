@@ -1,6 +1,5 @@
 SELECT DISTINCT
-    entity AS _mid,
-    NULL AS _access
+    entity AS _mid
 FROM props
 ORDER BY
     entity;
