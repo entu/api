@@ -44,3 +44,40 @@ exports.addUserSession = (params, callback) => {
         return callback(null, r.insertedId)
     })
 }
+
+
+
+// Aggregate entity from property collection
+exports.aggregateEntity = (req, entityId, property, callback) => {
+    var connection
+
+    async.waterfall([
+        (callback) => {
+            req.app.locals.db(req.customer, callback)
+        },
+        (con, callback) => {
+            connection = con
+
+            connection.collection('property').find({ entity: entityId, deleted: { '$exists': false } }).toArray((err, properties) => {
+                if(err) { return callback(err) }
+
+                let p = _.mapValues(_.groupBy(properties, 'definition'), (o) => {
+                    return _.map(o, (p) => {
+                        return _.omit(p, ['entity', 'definition', 'created', 's3', 'url'])
+                    })
+                })
+
+                let access = _.map(_.union(p._viewer, p._expander, p._editor, p._owner), 'reference')
+                if (access.length > 0) {
+                    p._access = access
+                }
+
+                if (!_.isEmpty(p)) {
+                    connection.collection('entity').update({ _id: entityId }, { '$set': p, }, callback)
+                } else {
+                    return callback(null)
+                }
+            })
+        },
+    ], callback)
+}
