@@ -5,6 +5,8 @@ const async = require('async')
 const ObjectID = require('mongodb').ObjectID
 const router = require('express').Router()
 
+const entu = require('../helpers/entu')
+
 
 
 router.get('/', (req, res, next) => {
@@ -104,21 +106,19 @@ router.get('/:entityId', (req, res, next) => {
 router.delete('/:entityId', (req, res, next) => {
     if (!req.customer) { return next([400, 'No customer parameter']) }
 
+    var eId = new ObjectID(req.params.entityId)
     var connection
-    var entity
 
     async.waterfall([
         (callback) => {
             req.app.locals.db(req.customer, callback)
         },
-        (con, callback) => {
+        (con, callback) => { // Get entity
             connection = con
-            connection.collection('entity').findOne({ _id: new ObjectID(req.params.entityId), _deleted: { $exists: false } }, { _owner: true }, callback)
+            connection.collection('entity').findOne({ _id: eId, _deleted: { $exists: false } }, { _owner: true }, callback)
         },
-        (e, callback) => {
-            if (!e) { return next([404, 'Entity not found']) }
-
-            entity = e
+        (entity, callback) => { // Check rights and create deleted property
+            if (!entity) { return next([404, 'Entity not found']) }
 
             let access = _.map(_.get(entity, '_owner', []), s => s.reference.toString())
 
@@ -126,10 +126,27 @@ router.delete('/:entityId', (req, res, next) => {
                 return next([403, 'Forbidden'])
             }
 
-            connection.collection('property').insertOne({ entity: entity._id, definition: '_deleted', boolean: true, created: { at: new Date(), by: new ObjectID(req.user) } }, callback)
+            connection.collection('property').insertOne({ entity: eId, definition: '_deleted', boolean: true, created: { at: new Date(), by: new ObjectID(req.user) } }, callback)
         },
-        (property, callback) => {
-            connection.collection('entity').updateOne({ _id: entity._id }, { $set: { _deleted: [{ _id: property.insertedId, boolean: true }] } }, callback)
+        (property, callback) => { // Aggregate entity
+            entu.aggregateEntity(req, eId, '_deleted', callback)
+        },
+        (r, callback) => { // Get reference properties
+            connection.collection('property').find({ reference: eId, deleted: { '$exists': false } }, { _id: true, entity: true, definition: true }).toArray(callback)
+        },
+        (properties, callback) => { // Delete reference properties
+            if (properties.length === 0) { return callback(null) }
+
+            async.each(properties, (property, callback) => {
+                async.series([
+                    (callback) => {
+                        connection.collection('property').updateOne({ _id: property._id }, { $set: { deleted: { at: new Date(), by: new ObjectID(req.user) } } }, callback)
+                    },
+                    (callback) => {
+                        entu.aggregateEntity(req, property.entity, property.definition, callback)
+                    },
+                ], callback)
+            }, callback)
         },
     ], (err, entity) => {
         if (err) { return next(err) }
