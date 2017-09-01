@@ -130,7 +130,7 @@ router.delete('/:entityId', (req, res, next) => {
                 return next([403, 'Forbidden'])
             }
 
-            connection.collection('property').insertOne({ entity: entity._id, definition: '_deleted', boolean: true }, callback)
+            connection.collection('property').insertOne({ entity: entity._id, definition: '_deleted', boolean: true, created: { at: new Date(), by: new ObjectID(req.user) } }, callback)
         },
         (property, callback) => {
             connection.collection('entity').updateOne({ _id: entity._id }, { $set: { _deleted: [{ _id: property.insertedId, boolean: true }] } }, callback)
