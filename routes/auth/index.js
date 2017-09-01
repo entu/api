@@ -18,7 +18,7 @@ router.get('/session/:sessionId', (req, res, next) => {
         },
         (con, callback) => {
             connection = con
-            connection.collection('session').findAndModify({ _id: new ObjectID(req.params.sessionId), deleted: { $exists: false } }, [[ '_id', 1 ]], { '$set': { deleted: new Date() } }, callback)
+            connection.collection('session').findOneAndUpdate({ _id: new ObjectID(req.params.sessionId), deleted: { $exists: false } }, { '$set': { deleted: new Date() } }, callback)
         },
         (sess, callback) => {
             if(!sess.value) { return callback([400, 'No session']) }
