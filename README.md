@@ -22,6 +22,7 @@ Returns list of JWT tokens. Tokens are customer specific. Use this token in Bear
 
 
 
+
 ## Entities
 
 ### GET /entity
@@ -40,6 +41,9 @@ Returns list of JWT tokens. Tokens are customer specific. Use this token in Bear
 | parameter | | |
 | -- | -- | -- |
 | props | optional | Comma separated list of properties to get. If not set all properties are returned. |
+
+### DELETE /entity/{_id}
+*Delete entity*
 
 
 

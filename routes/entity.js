@@ -103,4 +103,45 @@ router.get('/:entityId', (req, res, next) => {
 
 
 
+router.delete('/:entityId', (req, res, next) => {
+    if (!req.customer) { return next([400, 'No customer parameter']) }
+
+    var connection
+    var entity
+
+    async.waterfall([
+        (callback) => {
+            req.app.locals.db(req.customer, callback)
+        },
+        (con, callback) => {
+            connection = con
+            connection.collection('entity').findOne({ _id: new ObjectID(req.params.entityId), _deleted: { $exists: false } }, { _owner: true }, callback)
+        },
+        (e, callback) => {
+            if (!e) { return next([404, 'Entity not found']) }
+
+            entity = e
+
+            let access = _.map(_.get(entity, '_owner', []), (s) => {
+                return s.reference.toString()
+            })
+
+            if (access.indexOf(req.user) === -1) {
+                return next([403, 'Forbidden'])
+            }
+
+            connection.collection('property').insertOne({ entity: entity._id, definition: '_deleted', boolean: true }, callback)
+        },
+        (property, callback) => {
+            connection.collection('entity').updateOne({ _id: entity._id }, { $set: { _deleted: [{ _id: property.insertedId, boolean: true }] } }, callback)
+        },
+    ], (err, entity) => {
+        if (err) { return next(err) }
+
+        res.respond(true)
+    })
+})
+
+
+
 module.exports = router
