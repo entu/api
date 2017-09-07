@@ -22,7 +22,7 @@
         "cluster": "0.*",
         "cookie-parser": "1.*",
         "express": "4.*",
-        "jsonwebtoken": "7.*",
+        "jsonwebtoken": "8.*",
         "lodash": "4.*",
         "mongodb": "2.*",
         "passport": "0.*",
