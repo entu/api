@@ -43,11 +43,11 @@ var importProps = (mysqlDb, callback) => {
         password: MYSQL_PASSWORD,
         database: mysqlDb,
         multipleStatements: true,
-        ssl: {
-            key: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-key.pem'),
-            cert: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-cert.pem'),
-            ca: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-server-ca.pem')
-        }
+        // ssl: {
+        //     key: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-key.pem'),
+        //     cert: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-cert.pem'),
+        //     ca: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-server-ca.pem')
+        // }
     })
 
     async.series([
@@ -381,11 +381,11 @@ var importFiles = (mysqlDb, callback) => {
         password: MYSQL_PASSWORD,
         database: mysqlDb,
         multipleStatements: true,
-        ssl: {
-            key: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-key.pem'),
-            cert: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-cert.pem'),
-            ca: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-server-ca.pem')
-        }
+        // ssl: {
+        //     key: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-key.pem'),
+        //     cert: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-cert.pem'),
+        //     ca: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-server-ca.pem')
+        // }
     })
 
     aws.config = new aws.Config()
@@ -470,11 +470,11 @@ var connection = mysql.createConnection({
     port: MYSQL_PORT,
     user: MYSQL_USER,
     password: MYSQL_PASSWORD,
-    ssl: {
-        key: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-key.pem'),
-        cert: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-cert.pem'),
-        ca: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-server-ca.pem')
-    }
+    // ssl: {
+    //     key: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-key.pem'),
+    //     cert: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-cert.pem'),
+    //     ca: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-server-ca.pem')
+    // }
 })
 connection.query(require('./sql/get_databases.sql'), (err, rows) => {
     if(err) {
