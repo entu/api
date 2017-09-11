@@ -54,8 +54,8 @@ router.get('/', (req, res, next) => {
         if (err) { return next(err) }
 
         res.respond(_.map(entities, (entity) => {
-            delete entity._mid
-            delete entity._access
+            _.unset(entity, '_mid')
+            _.unset(entity, '_access')
             return entity
         }))
 
@@ -92,8 +92,8 @@ router.get('/:entityId', (req, res, next) => {
         let access = _.map(_.get(entity, '_access', []), s =>  s.toString())
 
         if (access.indexOf(req.user) !== -1 || _.get(entity, '_sharing.0.string', '') === 'public access is disabled for now') {
-            delete entity._mid
-            delete entity._access
+            _.unset(entity, '_mid')
+            _.unset(entity, '_access')
             res.respond(entity)
         } else {
             return next([403, 'Forbidden'])

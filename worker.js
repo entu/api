@@ -55,7 +55,7 @@ if(process.env.SENTRY_DSN) {
     raven.config(process.env.SENTRY_DSN, {
         release: process.env.VERSION || process.env.HEROKU_SLUG_COMMIT || require('./package').version,
         dataCallback: (data) => {
-            delete data.request.env
+            _.unset(data, 'request.env')
             return data
         }
     }).install()
@@ -92,7 +92,7 @@ app.locals.db = (customer, callback) => {
                 console.log('Connected to ' + customer)
 
                 connection.on('close', () => {
-                    delete app.locals.dbs[customer]
+                    _.unset(app, ['locals', 'dbs', customer])
                     console.log('Disconnected from ' + customer)
                 })
 
