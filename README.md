@@ -49,6 +49,15 @@ Returns list of JWT tokens. Tokens are customer specific. Use this token in Bear
 
 
 
+## Properties
+
+### DELETE /property/{_id}
+*Delete property*
+
+
+
+
+
 ## Files
 
 ### GET /file/{_id}
