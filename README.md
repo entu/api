@@ -54,5 +54,9 @@ Returns list of JWT tokens. Tokens are customer specific. Use this token in Bear
 ### GET /property/{_id}
 *Get property*
 
+| parameter | | |
+| -- | -- | -- |
+| download | optional | If set and it's file property, redirects to file url. |
+
 ### DELETE /property/{_id}
 *Delete property*

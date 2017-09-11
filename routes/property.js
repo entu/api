@@ -56,7 +56,11 @@ router.get('/:propertyId', (req, res, next) => {
             _.unset(property, 's3')
         }
 
-        res.respond(property)
+        if (_.get(property, 'url') && _.get(req, 'query.download')) {
+            res.redirect(_.get(property, 'url'))
+        } else {
+            res.respond(property)
+        }
     })
 })
 
