@@ -128,7 +128,7 @@ router.delete('/:entityId', (req, res, next) => {
 
             connection.collection('property').insertOne({ entity: eId, definition: '_deleted', boolean: true, created: { at: new Date(), by: new ObjectID(req.user) } }, callback)
         },
-        (property, callback) => { // Aggregate entity
+        (r, callback) => { // Aggregate entity
             entu.aggregateEntity(req, eId, '_deleted', callback)
         },
         (r, callback) => { // Get reference properties
