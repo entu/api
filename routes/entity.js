@@ -31,6 +31,21 @@ router.get('/', (req, res, next) => {
                         case 'reference':
                             filter[k] = new ObjectID(v)
                             break;
+                        case 'boolean':
+                            filter[k] = v.toLowerCase() === 'true'
+                            break;
+                        case 'integer':
+                            filter[k] = _.toSafeInteger(v)
+                            break;
+                        case 'decimal':
+                            filter[k] = _.toNumber(v)
+                            break;
+                        case 'date':
+                            filter[k] = new Date(v)
+                            break;
+                        case 'datetime':
+                            filter[k] = new Date(v)
+                            break;
                         default:
                             filter[k] = v
                     }
