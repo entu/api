@@ -57,7 +57,7 @@ Get list of entities. To filter entities by property value. Use dot separated li
 curl \
     -X GET \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
-    https://api.entu.ee/entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12
+    "https://api.entu.ee/entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12"
 ```
 
 
@@ -75,7 +75,7 @@ Get one entity with given id.
 curl \
     -X GET \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
-    https://api.entu.ee/entity/59abac1bb5684200016be61e
+    "https://api.entu.ee/entity/59abac1bb5684200016be61e"
 ```
 
 
@@ -87,7 +87,7 @@ Delete entity with given id.
 curl \
     -X DELETE \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
-    https://api.entu.ee/entity/59abac1bb5684200016be61e
+    "https://api.entu.ee/entity/59abac1bb5684200016be61e"
 ```
 
 
@@ -105,7 +105,7 @@ Get property with given id.
 curl \
     -X GET \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
-    https://api.entu.ee/property/59abac1bb5684200016be445?download
+    "https://api.entu.ee/property/59abac1bb5684200016be445?download"
 ```
 
 
@@ -117,5 +117,5 @@ Delete property with given id.
 curl \
     -X DELETE \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
-    https://api.entu.ee/entity/59abac1bb5684200016be445
+    "https://api.entu.ee/entity/59abac1bb5684200016be445"
 ```
