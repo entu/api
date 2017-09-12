@@ -33,8 +33,8 @@ All API calls return JSON object (except [social auth](#get-authfacebookgoogleli
 
 ## GET /auth/[facebook|google|live|twitter]
 Redirects user to given authentication provider (facebook, google, live or twitter). After successful authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added. Use this parameter to get JWT tokens from [/auth/{sessionId}](#get-authsessionid).
-- If next is not set user is redirected to [/auth/{sessionId}](#get-authsessionid).
+- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added. Use this parameter to get JWT tokens from [/auth/{sessionId}](#get-authsessionsessionid).
+- If next is not set user is redirected to [/auth/{sessionId}](#get-authsessionsessionid).
 
 #### Query parameters
 - **next** - Url where user is redirected after successful auth.
@@ -42,8 +42,8 @@ Redirects user to given authentication provider (facebook, google, live or twitt
 
 ## GET /auth/key
 Authenticates user by API key. API key must be sent in Bearer authorization header. After authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added. Use this parameter to get JWT tokens from [/auth/{sessionId}](#get-authsessionid).
-- If next is not set user is redirected to [/auth/{sessionId}](#get-authsessionid).
+- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added. Use this parameter to get JWT tokens from [/auth/{sessionId}](#get-authsessionsessionid).
+- If next is not set user is redirected to [/auth/{sessionId}](#get-authsessionsessionid).
 
 #### Query parameters
 - **next** - Url where user is redirected after successful auth.
@@ -52,12 +52,12 @@ Authenticates user by API key. API key must be sent in Bearer authorization head
 ```shell
 curl \
     -X GET \
-    -H "Authorization: Bearer 1NiIsInR5cCI6IkpXVCJ9" \
+    -H "Authorization: Bearer 2GKB5sASf8ApcjLYYR8JAufZsdGYZR4p" \
     "https://api.entu.ee/auth/key"
 ```
 
 
-## GET /auth/{sessionId}
+## GET /auth/session/{sessionId}
 Returns list of JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for all other requests.
 
 #### Example request
@@ -90,7 +90,7 @@ Get list of entities. To filter entities by property value. Use dot separated li
 ```shell
 curl \
     -X GET \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
     "https://api.entu.ee/entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12"
 ```
 
@@ -107,7 +107,7 @@ Get one entity with given id.
 ```shell
 curl \
     -X GET \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
     "https://api.entu.ee/entity/59abac1bb5684200016be61e"
 ```
 
@@ -119,7 +119,7 @@ Delete entity with given id.
 ```shell
 curl \
     -X DELETE \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
     "https://api.entu.ee/entity/59abac1bb5684200016be61e"
 ```
 
@@ -136,7 +136,7 @@ Get property with given id.
 ```shell
 curl \
     -X GET \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
     "https://api.entu.ee/property/59abac1bb5684200016be445?download"
 ```
 
@@ -148,6 +148,6 @@ Delete property with given id.
 ```shell
 curl \
     -X DELETE \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
     "https://api.entu.ee/entity/59abac1bb5684200016be445"
 ```
