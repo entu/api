@@ -1,19 +1,19 @@
 ## API
 #### Authentication
-- [GET /auth/[ facebook \| google \| live \| twitter ]](#get-auth-facebook-google-live-twitter)
+- [GET /auth/[ facebook \| google \| live \| twitter ]](#get-auth-facebook--google--live--twitter-)
 - [GET /auth/key](#get-authkey)
-- [GET /auth/session/{ \_id }](#get-authsession-_id)
+- [GET /auth/session/{ \_id }](#get-authsession-_id-)
 
 #### Entity
 - [GET /entity](#get-entity)
-- [GET /entity/{ \_id }](#get-entity-_id)
+- [GET /entity/{ \_id }](#get-entity-_id-)
 - POST /entity/{ \_id }
 - PUT /entity/{ \_id }
-- [DELETE /entity/{ \_id }](#delete-entity-_id)
+- [DELETE /entity/{ \_id }](#delete-entity-_id-)
 
 #### Property
-- [GET /property/{ \_id }](#get-property-_id)
-- [DELETE /property/{ \_id }](#delete-property-_id)
+- [GET /property/{ \_id }](#get-property-_id-)
+- [DELETE /property/{ \_id }](#delete-property-_id-)
 
 
 
@@ -53,8 +53,8 @@ All API calls return JSON object (except [social auth](#get-authfacebookgoogleli
 
 ## GET /auth/[ facebook \| google \| live \| twitter ]
 Redirects user to given authentication provider (facebook, google, live or twitter). After successful authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added to url. Use this parameter to get JWT tokens from [/auth/session/{ \_id }](#get-authsession-_id).
-- If next is not set user is redirected to [/auth/session/{ \_id }](#get-authsession-_id).
+- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added to url. Use this parameter to get JWT tokens from [/auth/session/{ \_id }](#get-authsession-_id-).
+- If next is not set user is redirected to [/auth/session/{ \_id }](#get-authsession-_id-).
 
 #### Query parameters
 - **next** - Url where user is redirected after successful auth.
@@ -62,8 +62,8 @@ Redirects user to given authentication provider (facebook, google, live or twitt
 
 ## GET /auth/key
 Authenticates user by API key. API key must be sent in Bearer authorization header. After authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added to url. Use this parameter to get JWT tokens from [/auth/session/{ \_id }](#get-authsession-_id).
-- If next is not set user is redirected to [/auth/session/{ \_id }](#get-authsession-_id).
+- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added to url. Use this parameter to get JWT tokens from [/auth/session/{ \_id }](#get-authsession-_id-).
+- If next is not set user is redirected to [/auth/session/{ \_id }](#get-authsession-_id-).
 
 #### Query parameters
 - **next** - Url where user is redirected after successful auth.
