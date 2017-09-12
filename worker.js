@@ -74,7 +74,7 @@ var app = express()
 app.locals.dbs = {}
 app.locals.db = (customer, callback) => {
     if(_.has(app, ['locals', 'dbs', customer])) {
-        return callback(null, app.locals.dbs[customer])
+        return callback(null, app.locals.dbs[customer].db(customer))
     } else {
         var entuDb
         async.waterfall([
@@ -105,7 +105,7 @@ app.locals.db = (customer, callback) => {
         ], (err) => {
             if(err) { return callback(err) }
 
-            return callback(null, app.locals.dbs[customer])
+            return callback(null, app.locals.dbs[customer].db(customer))
         })
     }
 }
