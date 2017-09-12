@@ -76,8 +76,6 @@ router.get('/', (req, res, next) => {
             filter._access = new ObjectID(req.user)
             filter._deleted = { $exists: false }
 
-            console.log(filter);
-
             if (props.length > 0) {
                 _.forEach(props, (f) => {
                     fields[f] = true
