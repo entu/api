@@ -35,7 +35,10 @@ router.get('/', (req, res, next) => {
                             filter[k] = v.toLowerCase() === 'true'
                             break;
                         case 'integer':
-                            filter[k] = _.toSafeInteger(v)
+                            filter[k] = _.toNumber(v)
+                            break;
+                        case 'size':
+                            filter[k] = _.toNumber(v)
                             break;
                         case 'decimal':
                             filter[k] = _.toNumber(v)
