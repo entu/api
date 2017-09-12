@@ -27,36 +27,47 @@ router.get('/', (req, res, next) => {
 
             _.forIn(_.get(req, 'query'), (v, k) => {
                 if (k.indexOf('.') > -1) {
-                    switch(k.split('.')[1]) {
+                    let value
+                    let fieldArray = k.split('.')
+
+                    switch(fieldArray[1]) {
                         case 'reference':
-                            filter[k] = new ObjectID(v)
+                            value = new ObjectID(v)
                             break;
                         case 'boolean':
-                            filter[k] = v.toLowerCase() === 'true'
+                            value = v.toLowerCase() === 'true'
                             break;
                         case 'integer':
-                            filter[k] = _.toNumber(v)
+                            value = _.toNumber(v)
                             break;
                         case 'size':
-                            filter[k] = _.toNumber(v)
+                            value = _.toNumber(v)
                             break;
                         case 'decimal':
-                            filter[k] = _.toNumber(v)
+                            value = _.toNumber(v)
                             break;
                         case 'date':
-                            filter[k] = new Date(v)
+                            value = new Date(v)
                             break;
                         case 'datetime':
-                            filter[k] = new Date(v)
+                            value = new Date(v)
                             break;
                         default:
-                            filter[k] = v
+                            value = v
+                    }
+
+                    if (fieldArray.length > 2 && ['gt', 'gte', 'lt', 'lte', 'ne'].indexOf(fieldArray[2]) > -1) {
+                        _.set(filter, [fieldArray.slice(0, 2).join('.'), '$' + fieldArray[2]], value)
+                    } else {
+                        _.set(filter, k, value)
                     }
                 }
             })
 
             filter._access = new ObjectID(req.user)
             filter._deleted = { $exists: false }
+
+            console.log(filter);
 
             if (props.length > 0) {
                 _.forEach(props, (f) => {

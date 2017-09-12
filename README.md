@@ -34,7 +34,13 @@ Returns list of JWT tokens. Tokens are customer specific. Use this token in Bear
 | sort | optional | Comma separated list of properties to use for sorting. Use - (minus) sign before property name for descending sort. If not set sorts by _id. |
 | limit | optional | How many entities to return. |
 | skip | optional | How many entities to skip in result. |
-| {property}.{data type} | optional | Filter by property value. |
+
+To filter entities by property value. Use dot separated list of property, data type and operator as parameter and filter as value. Operator is optional, but must be *eq*, *gt*, *gte*, *lt*, *lte* or *ne*.
+
+Example: */entity?forename.string=John&file.size.gte=1024&limit=12*
+
+### PUT /entity
+*Create new entity*
 
 ### GET /entity/{_id}
 *Get one entity*
