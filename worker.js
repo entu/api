@@ -145,8 +145,8 @@ app.use((req, res, next) => {
             host: req.hostname,
             browser: req.headers['user-agent'],
         }
-        if(req.path) { request.path = req.path }
-        if(!_.isEmpty(req.query)) { request.query = req.query }
+        if(req.path) { request.path = req.originalUrl.split('?')[0] }
+        if(!_.isEmpty(req.query)) { request.query = req.originalUrl.split('?')[1] }
         if(!_.isEmpty(req.body)) { request.body = req.body }
         if(req.browser) { request.browser = req.headers['user-agent'] }
 
