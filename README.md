@@ -40,6 +40,23 @@ Redirects user to given authentication provider (facebook, google, live or twitt
 - **next** - Url where user is redirected after successful auth.
 
 
+## GET /auth/key
+Authenticates user by API key. API key must be sent in Bearer authorization header. After authentication:
+- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added. Use this parameter to get JWT tokens from [/auth/{sessionId}](#get-authsessionid).
+- If next is not set user is redirected to [/auth/{sessionId}](#get-authsessionid).
+
+#### Query parameters
+- **next** - Url where user is redirected after successful auth.
+
+#### Example request
+```shell
+curl \
+    -X GET \
+    -H "Authorization: Bearer 1NiIsInR5cCI6IkpXVCJ9" \
+    "https://api.entu.ee/auth/key"
+```
+
+
 ## GET /auth/{sessionId}
 Returns list of JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for all other requests.
 

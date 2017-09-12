@@ -196,7 +196,7 @@ app.use((req, res, next) => {
 })
 
 // check JWT
-app.use((req, res, next) => {
+var jwtCheck = (req, res, next) => {
     var parts = _.get(req, 'headers.authorization', '').split(' ')
     let jwtConf = {
         issuer: req.hostname
@@ -217,7 +217,7 @@ app.use((req, res, next) => {
 
         next(null)
     })
-})
+}
 
 // redirect HTTP to HTTPS
 app.use((req, res, next) => {
@@ -227,12 +227,12 @@ app.use((req, res, next) => {
 // routes mapping
 app.use('/', require('./routes/index'))
 app.use('/auth', require('./routes/auth/index'))
-app.use('/entity', require('./routes/entity'))
-app.use('/property', require('./routes/property'))
+app.use('/auth/id-card', require('./routes/auth/id-card'))
+app.use('/auth/key', require('./routes/auth/key'))
+app.use('/entity', jwtCheck, require('./routes/entity'))
+app.use('/property', jwtCheck, require('./routes/property'))
 
 // provider mapping (only if configured)
-app.use('/auth/id-card', require('./routes/auth/id-card'))
-
 if(process.env.GOOGLE_ID && process.env.GOOGLE_SECRET) { app.use('/auth/google', require('./routes/auth/google')) }
 if(process.env.FACEBOOK_ID && process.env.FACEBOOK_SECRET) { app.use('/auth/facebook', require('./routes/auth/facebook')) }
 if(process.env.TWITTER_KEY && process.env.TWITTER_SECRET) { app.use('/auth/twitter', require('./routes/auth/twitter')) }
