@@ -3,7 +3,7 @@ All API calls return JSON object (except social auth).
 - Successful request contains *result* with corresponding response.
 - On error, *error* object is returned (instead of *result*) with *code* and *message* parameters.
 
-**Example:**
+**Example response:**
 ```json
 {
     "release": "7eae6de",
@@ -32,7 +32,7 @@ If next is not set user is redirected to /auth/{session ID}
 ## GET /auth/{session ID}
 Returns list of JWT tokens. Tokens are customer specific. Use this token in Bearer authorization header for all other requests.
 
-**Example:**
+**Example request:**
 ```shell
 curl \
     -X GET
@@ -52,7 +52,7 @@ Get list of entities. To filter entities by property value. Use dot separated li
 | limit | optional | How many entities to return. |
 | skip | optional | How many entities to skip in result. |
 
-**Example:**
+**Example request:**
 ```shell
 curl \
     -X GET \
@@ -70,7 +70,7 @@ Get one entity with given id.
 | -- | -- | -- |
 | props | optional | Comma separated list of properties to get. If not set all properties are returned. |
 
-**Example:**
+**Example request:**
 ```shell
 curl \
     -X GET \
@@ -82,7 +82,7 @@ curl \
 ## DELETE /entity/{_id}
 Delete entity with given id.
 
-**Example:**
+**Example request:**
 ```shell
 curl \
     -X DELETE \
@@ -100,7 +100,7 @@ Get property with given id.
 | -- | -- | -- |
 | download | optional | If set and it's file property, redirects to file url. |
 
-**Example:**
+**Example request:**
 ```shell
 curl \
     -X GET \
@@ -112,7 +112,7 @@ curl \
 ## DELETE /property/{_id}
 Delete property with given id.
 
-**Example:**
+**Example request:**
 ```shell
 curl \
     -X DELETE \
