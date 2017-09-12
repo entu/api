@@ -70,7 +70,7 @@ router.get('/callback', passport.authenticate('google', { failureRedirect: '/log
             res.clearCookie('redirect')
             res.redirect(redirectUrl + '?session=' + sessionId)
         } else {
-            res.redirect('/auth/session/' + sessionId)
+            res.redirect('/session/' + sessionId)
         }
     })
 })

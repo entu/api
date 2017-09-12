@@ -63,7 +63,7 @@ router.get('/callback', (req, res, next) => {
             res.clearCookie('redirect')
             res.redirect(redirectUrl + '?session=' + sessionId)
         } else {
-            res.redirect('/auth/session/' + sessionId)
+            res.redirect('/session/' + sessionId)
         }
     })
 })

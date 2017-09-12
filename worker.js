@@ -225,11 +225,11 @@ var jwtCheck = (req, res, next) => {
 
 // routes mapping
 app.use('/', require('./routes/index'))
-app.use('/auth', require('./routes/auth/index'))
 app.use('/auth/id-card', require('./routes/auth/id-card'))
 app.use('/auth/key', require('./routes/auth/key'))
 app.use('/entity', jwtCheck, require('./routes/entity'))
 app.use('/property', jwtCheck, require('./routes/property'))
+app.use('/session', require('./routes/session'))
 
 // provider mapping (only if configured)
 if(process.env.GOOGLE_ID && process.env.GOOGLE_SECRET) { app.use('/auth/google', require('./routes/auth/google')) }

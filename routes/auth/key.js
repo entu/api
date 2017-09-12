@@ -26,7 +26,7 @@ router.get('/', (req, res, next) => {
         if(req.query.next) {
             res.redirect(req.query.next + '?session=' + sessionId)
         } else {
-            res.redirect('/auth/session/' + sessionId)
+            res.redirect('/session/' + sessionId)
         }
     })
 })
