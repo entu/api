@@ -65,7 +65,7 @@ curl \
 Get one entity with given id.
 
 #### Parameters
-- **props** - comma separated list of properties to get. If not set all properties are returned. |
+- **props** - comma separated list of properties to get. If not set all properties are returned.
 
 #### Example request
 ```shell
@@ -94,7 +94,7 @@ curl \
 Get property with given id.
 
 #### Parameters
-- **download** - If set and it's file property, redirects to file url. |
+- **download** - If set and it's file property, redirects to file url.
 
 #### Example request
 ```shell
