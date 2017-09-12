@@ -1,5 +1,5 @@
 ## General
-All API calls return JSON object (except social auth).
+All API calls return JSON object (except [social auth](#get-authfacebookgooglelivetwitter)).
 - Successful request contains *result* with corresponding response.
 - On error, *error* object is returned (instead of *result*) with *code* and *message* parameters.
 
@@ -33,7 +33,7 @@ All API calls return JSON object (except social auth).
 
 ## GET /auth/[facebook|google|live|twitter]
 Redirects user to given authentication provider (facebook, google, live or twitter). After successful authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added. Use this parameter get JWT tokens from [/auth/{sessionId}](#get-authsessionid).
+- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added. Use this parameter to get JWT tokens from [/auth/{sessionId}](#get-authsessionid).
 - If next is not set user is redirected to [/auth/{sessionId}](#get-authsessionid).
 
 #### Query parameters
@@ -41,7 +41,7 @@ Redirects user to given authentication provider (facebook, google, live or twitt
 
 
 ## GET /auth/{sessionId}
-Returns list of JWT tokens (for all databases where user exists). Use this token in Bearer authorization header for all other requests.
+Returns list of JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for all other requests.
 
 #### Example request
 ```shell
@@ -54,7 +54,7 @@ curl \
 
 
 ## GET /entity
-Get list of entities. To filter entities by property value. Use dot separated list of *property*, *data type* and *operator* as query parameter(s). Operator is optional, but must be one of following:
+Get list of entities. To filter entities by property value. Use dot separated list of *property key*, *data type* and *operator* as query parameter(s). Operator is optional, but must be one of following:
 - **gt** - matches values that are greater than a specified value.
 - **gte** - Matches values that are greater than or equal to a specified value.
 - **lt** - Matches values that are less than a specified value.
