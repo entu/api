@@ -33,8 +33,8 @@ All API calls return JSON object (except [social auth](#get-authfacebookgoogleli
 
 ## GET /auth/[facebook|google|live|twitter]
 Redirects user to given authentication provider (facebook, google, live or twitter). After successful authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added. Use this parameter to get JWT tokens from [/auth/session/{_id}](#get-authsession-id).
-- If next is not set user is redirected to [/auth/session/{_id}](#get-authsession-id).
+- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added. Use this parameter to get JWT tokens from [/auth/session/{_id}](#get-authsession_id).
+- If next is not set user is redirected to [/auth/session/{_id}](#get-authsession_id).
 
 #### Query parameters
 - **next** - Url where user is redirected after successful auth.
@@ -42,8 +42,8 @@ Redirects user to given authentication provider (facebook, google, live or twitt
 
 ## GET /auth/key
 Authenticates user by API key. API key must be sent in Bearer authorization header. After authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added. Use this parameter to get JWT tokens from [/auth/session/{_id}](#get-authsession-id).
-- If next is not set user is redirected to [/auth/session/{_id}](#get-authsession-id).
+- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added. Use this parameter to get JWT tokens from [/auth/session/{_id}](#get-authsession_id).
+- If next is not set user is redirected to [/auth/session/{_id}](#get-authsession_id).
 
 #### Query parameters
 - **next** - Url where user is redirected after successful auth.
