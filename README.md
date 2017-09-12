@@ -1,5 +1,3 @@
-# Entu API
-
 ## Authentication
 
 ### GET /auth/[facebook|google|live|twitter]
