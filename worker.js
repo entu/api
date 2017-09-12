@@ -194,6 +194,11 @@ app.use((req, res, next) => {
     next(null)
 })
 
+// redirect HTTP to HTTPS
+app.use((req, res, next) => {
+    if (req.hostname !== 'localhost' && req.protocol.toLowerCase() !== 'https') { next([418, 'I\'m a teapot']) } else { next() }
+})
+
 // check JWT
 var jwtCheck = (req, res, next) => {
     var parts = _.get(req, 'headers.authorization', '').split(' ')
@@ -217,11 +222,6 @@ var jwtCheck = (req, res, next) => {
         next(null)
     })
 }
-
-// redirect HTTP to HTTPS
-app.use((req, res, next) => {
-    if (req.hostname !== 'localhost' && req.protocol.toLowerCase() !== 'https') { next([418, 'I\'m a teapot']) } else { next() }
-})
 
 // routes mapping
 app.use('/', require('./routes/index'))
