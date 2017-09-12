@@ -1,19 +1,19 @@
 ## API
 #### Authentication
-- [GET /auth/[facebook|google|live|twitter]](#get-authfacebookgooglelivetwitter)
+- [GET /auth/[ facebook \| google \| live \| twitter ]](#get-auth-facebook-google-live-twitter)
 - [GET /auth/key](#get-authkey)
-- [GET /auth/session/{_id}](#get-authsession_id)
+- [GET /auth/session/{ \_id }](#get-authsession-_id)
 
 #### Entity
 - [GET /entity](#get-entity)
-- [GET /entity/{_id}](#get-entity_id)
-- POST /entity/{_id}
-- PUT /entity/{_id}
-- [DELETE /entity/{_id}](#delete-entity_id)
+- [GET /entity/{ \_id }](#get-entity-_id)
+- POST /entity/{ \_id }
+- PUT /entity/{ \_id }
+- [DELETE /entity/{ \_id }](#delete-entity-_id)
 
 #### Property
-- [GET /property/{_id}](#get-property_id)
-- [DELETE /property/{_id}](#delete-property_id)
+- [GET /property/{ \_id }](#get-property-_id)
+- [DELETE /property/{ \_id }](#delete-property-_id)
 
 
 
@@ -51,10 +51,10 @@ All API calls return JSON object (except [social auth](#get-authfacebookgoogleli
 
 
 
-## GET /auth/[facebook|google|live|twitter]
+## GET /auth/[ facebook \| google \| live \| twitter ]
 Redirects user to given authentication provider (facebook, google, live or twitter). After successful authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added to url. Use this parameter to get JWT tokens from [/auth/session/{_id}](#get-authsession_id).
-- If next is not set user is redirected to [/auth/session/{_id}](#get-authsession_id).
+- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added to url. Use this parameter to get JWT tokens from [/auth/session/{ \_id }](#get-authsession-_id).
+- If next is not set user is redirected to [/auth/session/{ \_id }](#get-authsession-_id).
 
 #### Query parameters
 - **next** - Url where user is redirected after successful auth.
@@ -62,8 +62,8 @@ Redirects user to given authentication provider (facebook, google, live or twitt
 
 ## GET /auth/key
 Authenticates user by API key. API key must be sent in Bearer authorization header. After authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added to url. Use this parameter to get JWT tokens from [/auth/session/{_id}](#get-authsession_id).
-- If next is not set user is redirected to [/auth/session/{_id}](#get-authsession_id).
+- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added to url. Use this parameter to get JWT tokens from [/auth/session/{ \_id }](#get-authsession-_id).
+- If next is not set user is redirected to [/auth/session/{ \_id }](#get-authsession-_id).
 
 #### Query parameters
 - **next** - Url where user is redirected after successful auth.
@@ -77,7 +77,7 @@ curl \
 ```
 
 
-## GET /auth/session/{_id}
+## GET /auth/session/{ \_id }
 Returns list of JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for all other requests.
 
 #### Example request
@@ -117,7 +117,7 @@ curl \
 
 
 
-## GET /entity/{_id}
+## GET /entity/{ \_id }
 Get one entity with given id.
 
 #### Query parameters
@@ -132,7 +132,7 @@ curl \
 ```
 
 
-## DELETE /entity/{_id}
+## DELETE /entity/{ \_id }
 Delete entity with given id.
 
 #### Example request
@@ -146,7 +146,7 @@ curl \
 
 
 
-## GET /property/{_id}
+## GET /property/{ \_id }
 Get property with given id.
 
 #### Query parameters
@@ -161,7 +161,7 @@ curl \
 ```
 
 
-## DELETE /property/{_id}
+## DELETE /property/{ \_id }
 Delete property with given id.
 
 #### Example request
