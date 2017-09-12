@@ -34,6 +34,7 @@ Returns list of JWT tokens. Tokens are customer specific. Use this token in Bear
 | sort | optional | Comma separated list of properties to use for sorting. Use - (minus) sign before property name for descending sort. If not set sorts by _id. |
 | limit | optional | How many entities to return. |
 | skip | optional | How many entities to skip in result. |
+| {property}.{data type} | optional | Filter by property value. |
 
 ### GET /entity/{_id}
 *Get one entity*

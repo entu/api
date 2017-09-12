@@ -25,7 +25,18 @@ router.get('/', (req, res, next) => {
             let limit = _.toSafeInteger(req.query.limit) || 100
             let skip = _.toSafeInteger(req.query.skip) || 0
 
-            if(req.query.def) { filter['_definition.string'] = req.query.def }
+            _.forIn(_.get(req, 'query'), (v, k) => {
+                if (k.indexOf('.') > -1) {
+                    switch(k.split('.')[1]) {
+                        case 'reference':
+                            filter[k] = new ObjectID(v)
+                            break;
+                        default:
+                            filter[k] = v
+                    }
+                }
+            })
+
             filter._access = new ObjectID(req.user)
             filter._deleted = { $exists: false }
 
@@ -48,7 +59,7 @@ router.get('/', (req, res, next) => {
                 sortFields = { _id: 1 }
             }
 
-            connection.collection('entity').find(filter, fields).sort({ _id: 1 }).limit(limit).skip(limit).toArray(callback)
+            connection.collection('entity').find(filter, fields).sort({ _id: 1 }).limit(limit).skip(skip).toArray(callback)
         },
     ], (err, entities) => {
         if (err) { return next(err) }
