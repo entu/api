@@ -17,7 +17,12 @@ If next is not set user is redirected to /auth/{session ID}
 
 Returns list of JWT tokens. Tokens are customer specific. Use this token in Bearer authorization header for all other requests.
 
-
+**Example:**
+```
+curl \
+    -X GET
+    "https://api.entu.ee/auth/session/59abac1bb5684200016be4b8"
+```
 
 
 
@@ -35,10 +40,13 @@ Returns list of JWT tokens. Tokens are customer specific. Use this token in Bear
 
 To filter entities by property value. Use dot separated list of property, data type and operator as parameter and filter as value. Operator is optional, but must be *gt*, *gte*, *lt*, *lte*, *ne*, *regex* or *exists*.
 
-Example: */entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^apple/i&photo._id.exists=false&limit=12*
-
-### PUT /entity
-*Create new entity*
+**Example:**
+```
+curl \
+    -X GET \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
+    https://api.entu.ee/entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12
+```
 
 ### GET /entity/{_id}
 *Get one entity*
@@ -47,8 +55,24 @@ Example: */entity?forename.string=John&file.size.gte=1024&surname.string.regex=/
 | -- | -- | -- |
 | props | optional | Comma separated list of properties to get. If not set all properties are returned. |
 
+**Example:**
+```
+curl \
+    -X GET \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
+    https://api.entu.ee/entity/59abac1bb5684200016be61e
+```
+
 ### DELETE /entity/{_id}
 *Delete entity*
+
+**Example:**
+```
+curl \
+    -X DELETE \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
+    https://api.entu.ee/entity/59abac1bb5684200016be61e
+```
 
 
 
@@ -63,5 +87,21 @@ Example: */entity?forename.string=John&file.size.gte=1024&surname.string.regex=/
 | -- | -- | -- |
 | download | optional | If set and it's file property, redirects to file url. |
 
+**Example:**
+```
+curl \
+    -X GET \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
+    https://api.entu.ee/property/59abac1bb5684200016be445?download
+```
+
 ### DELETE /property/{_id}
 *Delete property*
+
+**Example:**
+```
+curl \
+    -X DELETE \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQ1NiIsInR5iOjE11NiIsInR5" \
+    https://api.entu.ee/entity/59abac1bb5684200016be445
+```
