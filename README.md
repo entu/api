@@ -1,19 +1,26 @@
 ## API
 #### Authentication
-- [GET /auth/[ facebook \| google \| live \| twitter ]](#get-auth-facebook--google--live--twitter-)
-- [GET /auth/key](#get-authkey)
-- [GET /session/{ \_id }](#get-session-_id-)
+- /auth/[ facebook \| google \| live \| twitter ]
+    - [GET](#get-auth-facebook--google--live--twitter-)
+- /auth/key
+    - [GET](#get-authkey)
+- /session/{ \_id }
+    - [GET](#get-session-_id-)
 
 #### Entity
-- [GET /entity](#get-entity)
-- [GET /entity/{ \_id }](#get-entity-_id-)
-- POST /entity/{ \_id }
-- PUT /entity/{ \_id }
-- [DELETE /entity/{ \_id }](#delete-entity-_id-)
+- /entity
+    - [GET](#get-entity)
+    - POST
+- /entity/{ \_id }
+    - [GET](#get-entity-_id-)
+    - POST
+    - PUT
+    - [DELETE](#delete-entity-_id-)
 
 #### Property
-- [GET /property/{ \_id }](#get-property-_id-)
-- [DELETE /property/{ \_id }](#delete-property-_id-)
+- /property/{ \_id }
+    - [GET](#get-property-_id-)
+    - [DELETE](#delete-property-_id-)
 
 
 
