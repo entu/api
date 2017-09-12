@@ -35,9 +35,9 @@ Returns list of JWT tokens. Tokens are customer specific. Use this token in Bear
 | limit | optional | How many entities to return. |
 | skip | optional | How many entities to skip in result. |
 
-To filter entities by property value. Use dot separated list of property, data type and operator as parameter and filter as value. Operator is optional, but must be *gt*, *gte*, *lt*, *lte*, *ne* or *regex*.
+To filter entities by property value. Use dot separated list of property, data type and operator as parameter and filter as value. Operator is optional, but must be *gt*, *gte*, *lt*, *lte*, *ne*, *regex* or *exists*.
 
-Example: */entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^apple/i&limit=12*
+Example: */entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^apple/i&photo._id.exists=false&limit=12*
 
 ### PUT /entity
 *Create new entity*

@@ -26,11 +26,14 @@ router.get('/', (req, res, next) => {
             let skip = _.toSafeInteger(req.query.skip) || 0
 
             _.forIn(_.get(req, 'query'), (v, k) => {
-                if (k.indexOf('.') > -1) {
-                    let value
+                if (k.indexOf('.') !== -1) {
                     let fieldArray = k.split('.')
+                    let field = _.get(fieldArray, 0)
+                    let type = _.get(fieldArray, 1)
+                    let operator = _.get(fieldArray, 2)
+                    let value
 
-                    switch(fieldArray[1]) {
+                    switch(type) {
                         case 'reference':
                             value = new ObjectID(v)
                             break;
@@ -53,16 +56,19 @@ router.get('/', (req, res, next) => {
                             value = new Date(v)
                             break;
                         default:
-                            value = v
+                            if (operator === 'regex' && v.indexOf('/') > -1) {
+                                value = new RegExp(v.split('/')[1], v.split('/')[2])
+                            } else if (operator === 'exists') {
+                                value = v.toLowerCase() === 'true'
+                            } else {
+                                value = v
+                            }
                     }
 
-                    if (fieldArray.length > 2 && ['gt', 'gte', 'lt', 'lte', 'ne', 'regex'].indexOf(fieldArray[2]) > -1) {
-                        if (fieldArray[2] === 'regex' && v.indexOf('/') > -1) {
-                            value = new RegExp(v.split('/')[1], v.split('/')[2])
-                        }
-                        _.set(filter, [fieldArray.slice(0, 2).join('.'), '$' + fieldArray[2]], value)
+                    if (['gt', 'gte', 'lt', 'lte', 'ne', 'regex', 'exists'].indexOf(operator) !== -1) {
+                        _.set(filter, [field + '.' + type, '$' + operator], value)
                     } else {
-                        filter[k] = value
+                        filter[field + '.' + type] = value
                     }
                 }
             })
