@@ -127,9 +127,8 @@ app.use(passport.initialize())
 // parse Cookies
 app.use(cparser())
 
-// parse POST requests
+// parse POST/PUT requests body
 app.use(bparser.json())
-app.use(bparser.urlencoded({extended: true}))
 
 // save request info to request collection
 app.use((req, res, next) => {
