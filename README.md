@@ -1,3 +1,23 @@
+## API
+#### Authentication
+- [GET /auth/[facebook|google|live|twitter]](#get-authfacebookgooglelivetwitter)
+- [GET /auth/key](#get-authkey)
+- [GET /auth/session/{_id}](#get-authsession_id)
+
+#### Entity
+- [GET /entity](#get-entity)
+- [GET /entity/{_id}](#get-entity_id)
+- POST /entity/{_id}
+- PUT /entity/{_id}
+- [DELETE /entity/{_id}](#delete-entity_id)
+
+#### Property
+- [GET /property/{_id}](#get-property_id)
+- [DELETE /property/{_id}](#delete-property_id)
+
+
+
+
 ## General
 All API calls return JSON object (except [social auth](#get-authfacebookgooglelivetwitter)).
 - Successful request contains *result* with corresponding response.
@@ -33,7 +53,7 @@ All API calls return JSON object (except [social auth](#get-authfacebookgoogleli
 
 ## GET /auth/[facebook|google|live|twitter]
 Redirects user to given authentication provider (facebook, google, live or twitter). After successful authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added. Use this parameter to get JWT tokens from [/auth/session/{_id}](#get-authsession_id).
+- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added to url. Use this parameter to get JWT tokens from [/auth/session/{_id}](#get-authsession_id).
 - If next is not set user is redirected to [/auth/session/{_id}](#get-authsession_id).
 
 #### Query parameters
@@ -42,7 +62,7 @@ Redirects user to given authentication provider (facebook, google, live or twitt
 
 ## GET /auth/key
 Authenticates user by API key. API key must be sent in Bearer authorization header. After authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added. Use this parameter to get JWT tokens from [/auth/session/{_id}](#get-authsession_id).
+- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added to url. Use this parameter to get JWT tokens from [/auth/session/{_id}](#get-authsession_id).
 - If next is not set user is redirected to [/auth/session/{_id}](#get-authsession_id).
 
 #### Query parameters
