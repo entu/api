@@ -56,10 +56,13 @@ router.get('/', (req, res, next) => {
                             value = v
                     }
 
-                    if (fieldArray.length > 2 && ['gt', 'gte', 'lt', 'lte', 'ne'].indexOf(fieldArray[2]) > -1) {
+                    if (fieldArray.length > 2 && ['gt', 'gte', 'lt', 'lte', 'ne', 'regex'].indexOf(fieldArray[2]) > -1) {
+                        if (fieldArray[2] === 'regex' && v.indexOf('/') > -1) {
+                            value = new RegExp(v.split('/')[1], v.split('/')[2])
+                        }
                         _.set(filter, [fieldArray.slice(0, 2).join('.'), '$' + fieldArray[2]], value)
                     } else {
-                        _.set(filter, k, value)
+                        filter[k] = value
                     }
                 }
             })
