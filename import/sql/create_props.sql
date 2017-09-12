@@ -37,6 +37,19 @@ CREATE TABLE `props` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+/* entity id */
+INSERT INTO props (entity, definition, type, value_integer, created_at, created_by)
+SELECT
+    id,
+    '_mid',
+    'integer',
+    id,
+    created,
+    IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL)
+FROM entity
+WHERE entity_definition_keyname NOT LIKE 'conf-%';
+
+
 /* entity definition */
 INSERT INTO props (entity, definition, type, value_text, created_at, created_by)
 SELECT
@@ -47,7 +60,7 @@ SELECT
     created,
     IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL)
 FROM entity
-WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property');
+WHERE entity_definition_keyname NOT LIKE 'conf-%';
 
 
 /* entity created at/by */
@@ -60,7 +73,7 @@ SELECT
     created,
     IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL)
 FROM entity
-WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
+WHERE entity_definition_keyname NOT LIKE 'conf-%'
 AND (created IS NOT NULL OR IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL) IS NOT NULL);
 
 
@@ -74,7 +87,7 @@ SELECT
     deleted,
     IF(TRIM(deleted_by) REGEXP '^-?[0-9]+$', TRIM(deleted_by), NULL)
 FROM entity
-WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
+WHERE entity_definition_keyname NOT LIKE 'conf-%'
 AND is_deleted = 1;
 
 
@@ -124,7 +137,7 @@ SELECT
     created,
     IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL)
 FROM entity
-WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
+WHERE entity_definition_keyname NOT LIKE 'conf-%'
 AND sharing IS NOT NULL;
 
 
@@ -186,6 +199,7 @@ WHERE pd.keyname = p.property_definition_keyname
 AND e.id = p.entity_id
 AND pd.formula = 0
 AND pd.dataproperty NOT IN ('entu-changed-at', 'entu-changed-by', 'entu-created-at', 'entu-created-by')
-AND e.entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property');
+AND pd.keyname NOT LIKE 'conf-%'
+AND e.entity_definition_keyname NOT LIKE 'conf-%';
 
 OPTIMIZE TABLE props;

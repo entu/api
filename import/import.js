@@ -353,6 +353,11 @@ var importProps = (mysqlDb, callback) => {
         },
 
         (callback) => {
+            log('delete deleted entities')
+            mongoCon.collection('entity').deleteMany({ _deleted: { $exists: true } }, callback)
+        },
+
+        (callback) => {
             log('repair mongodb')
             mongoCon.command({ repairDatabase: 1 }, callback)
         },

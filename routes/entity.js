@@ -129,7 +129,7 @@ router.get('/:entityId', (req, res, next) => {
                 _.set(config, 'fields._access', true)
             }
 
-            connection.collection('entity').findOne({ _id: new ObjectID(req.params.entityId), _deleted: { $exists: false } }, config, callback)
+            connection.collection('entity').findOne({ _id: new ObjectID(req.params.entityId) }, config, callback)
         },
     ], (err, entity) => {
         if (err) { return next(err) }
@@ -162,9 +162,9 @@ router.delete('/:entityId', (req, res, next) => {
         },
         (con, callback) => { // Get entity
             connection = con
-            connection.collection('entity').findOne({ _id: eId, _deleted: { $exists: false } }, { _owner: true }, callback)
+            connection.collection('entity').findOne({ _id: eId }, { _owner: true }, callback)
         },
-        (entity, callback) => { // Check rights and create deleted property
+        (entity, callback) => { // Check rights and create _deleted property
             if (!entity) { return next([404, 'Entity not found']) }
 
             let access = _.map(_.get(entity, '_owner', []), s => s.reference.toString())

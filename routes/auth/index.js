@@ -33,7 +33,7 @@ router.get('/session/:sessionId', (req, res, next) => {
                         req.app.locals.db(customer, callback)
                     },
                     (customerCon, callback) => {
-                        customerCon.collection('entity').findOne({ 'entu_user.string': session.user.email, _deleted: { $exists: false } }, { _id: true }, callback)
+                        customerCon.collection('entity').findOne({ 'entu_user.string': session.user.email }, { _id: true }, callback)
                     },
                 ], (err, person) => {
                     if(err) { return callback(err) }
