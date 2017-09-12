@@ -25,6 +25,7 @@
         "jsonwebtoken": "8.*",
         "lodash": "4.*",
         "mongodb": "2.*",
+        "newrelic": "2.*",
         "passport": "0.*",
         "passport-facebook": "2.*",
         "passport-google-oauth": "1.*",
