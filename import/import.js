@@ -92,7 +92,7 @@ var importProps = (mysqlDb, callback) => {
             log('create mongodb indexes for import')
             mongoCon.collection('property').createIndexes([
                 { key: { entity: 1 } },
-                { key: { definition: 1 } },
+                { key: { type: 1 } },
                 { key: { value_integer: 1 } },
                 { key: { created_by: 1 } },
                 { key: { deleted_by: 1 } }

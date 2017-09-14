@@ -14,7 +14,7 @@ SELECT
 FROM props
 ORDER BY
     entity,
-    definition,
+    type,
     language,
     type
 LIMIT ? OFFSET ?;
