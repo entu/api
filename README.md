@@ -122,6 +122,36 @@ curl \
 
 
 
+## POST /entity
+Create entity with given definition. Data must be sent as JSON. Returns new entity's \_id.
+
+#### Parameters
+- **definition** - Definition key.
+
+#### Example request
+```shell
+curl \
+    -X GET \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
+    -H "Content-Type: application/json" \
+    -d '{ "definition": "book" }'
+    "https://api.entu.ee/entity"
+```
+
+#### Example response
+```json
+{
+    "release": "2d93cc1",
+    "dt": "2015-09-14T06:43:18.000Z",
+    "ms": 167,
+    "auth": false,
+    "result": "bsskJkDWwQXHB8ut7vQvmWZ4"
+}
+```
+
+
+
+
 ## GET /entity/{ \_id }
 Get one entity with given id.
 

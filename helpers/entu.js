@@ -57,7 +57,6 @@ exports.aggregateEntity = (req, entityId, property, callback) => {
         },
         (con, callback) => {
             connection = con
-
             connection.collection('property').find({ entity: entityId, deleted: { '$exists': false } }).toArray((err, properties) => {
                 if(err) { return callback(err) }
 
