@@ -38,7 +38,6 @@ curl \
 ```json
 {
     "release": "c2bece3",
-    "startDt": "2017-09-14T09:50:58.564Z",
     "ms": 1037,
     "auth": false,
     "result": {
@@ -73,7 +72,6 @@ Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key c
 ```json
 {
     "release": "c2bece3",
-    "startDt": "2017-09-14T09:50:58.564Z",
     "ms": 1037,
     "auth": false,
     "result": "yp5xhSMf6uRnpJ5QKAeQ2RDT"
@@ -111,7 +109,6 @@ curl \
 ```json
 {
     "release": "c2bece3",
-    "startDt": "2017-09-14T09:50:58.564Z",
     "ms": 371,
     "auth": false,
     "count": 100,
@@ -140,7 +137,6 @@ curl \
 ```json
 {
     "release": "c2bece3",
-    "startDt": "2017-09-14T09:50:58.564Z",
     "ms": 67,
     "auth": false,
     "result": {}
@@ -165,7 +161,6 @@ curl \
 ```json
 {
     "release": "c2bece3",
-    "startDt": "2017-09-14T09:50:58.564Z",
     "ms": 46,
     "auth": false,
     "result": true
@@ -193,7 +188,6 @@ curl \
 ```json
 {
     "release": "c2bece3",
-    "startDt": "2017-09-14T09:50:58.564Z",
     "ms": 137,
     "auth": false,
     "result": {}
@@ -218,7 +212,6 @@ curl \
 ```json
 {
     "release": "c2bece3",
-    "startDt": "2017-09-14T09:50:58.564Z",
     "ms": 37,
     "auth": false,
     "result": true
