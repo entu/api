@@ -253,11 +253,7 @@ var importProps = (mysqlDb, callback) => {
 
         (callback) => {
             log('rename value_text to string')
-            mongoCon.collection('property').updateMany({ datatype: 'string' }, { $unset: { datatype: '' }, $rename: { value_text: 'string' } }, callback)
-        },
-        (callback) => {
-            log('rename value_text to text')
-            mongoCon.collection('property').updateMany({ datatype: 'text' }, { $unset: { datatype: '' }, $rename: { value_text: 'text' } }, callback)
+            mongoCon.collection('property').updateMany({ datatype: $in: ['string', 'text'] }, { $unset: { datatype: '' }, $rename: { value_text: 'string' } }, callback)
         },
         (callback) => {
             log('rename value_integer to integer')
