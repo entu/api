@@ -126,7 +126,7 @@ router.get('/', (req, res, next) => {
 router.post('/', (req, res, next) => {
     if (!req.customer) { return next([400, 'No customer parameter']) }
     if (!req.user) { return next([403, 'Forbidden']) }
-    if (!req.body.definition) { return next([400, 'No definition']) }
+    if (!req.body.type) { return next([400, 'No type']) }
 
     var connection
     var defaultParents = []
@@ -140,14 +140,14 @@ router.post('/', (req, res, next) => {
         },
         (con, callback) => {
             connection = con
-            connection.collection('entity').findOne({ '_definition.string': 'entity', 'key.string': req.body.definition }, { default_parent: true }, callback)
+            connection.collection('entity').findOne({ '_type.string': 'entity', 'key.string': req.body.type }, { default_parent: true }, callback)
         },
-        (definition, callback) => {
-            if (!definition) { return next([404, 'Definition not found']) }
+        (type, callback) => {
+            if (!type) { return next([404, 'Entity type not found']) }
 
-            defaultParents = definition.default_parent
+            defaultParents = type.default_parent
 
-            connection.collection('entity').find({ _parent: definition._id, '_definition.string': 'property', 'default': {$exists: true } }, { _id: false, default: true }, callback)
+            connection.collection('entity').find({ _parent: type._id, '_type.string': 'property', 'default': {$exists: true } }, { _id: false, default: true }, callback)
         },
         (defaults, callback) => {
             // defaultValues = _.map(defaults.default, 'reference')
@@ -158,11 +158,11 @@ router.post('/', (req, res, next) => {
             eId = entity.insertedId
 
             let properties = _.map(defaultParents, p => {
-                return { entity: eId, definition: '_parent', reference: p.reference, created: { at: createdDt, by: new ObjectID(req.user) } }
+                return { entity: eId, type: '_parent', reference: p.reference, created: { at: createdDt, by: new ObjectID(req.user) } }
             })
-            properties.push({ entity: eId, definition: '_definition', string: req.body.definition, created: { at: createdDt, by: new ObjectID(req.user) } })
-            properties.push({ entity: eId, definition: '_owner', reference: new ObjectID(req.user), created: { at: createdDt, by: new ObjectID(req.user) } })
-            properties.push({ entity: eId, definition: '_created', boolean: true, created: { at: createdDt, by: new ObjectID(req.user) } })
+            properties.push({ entity: eId, type: '_type', string: req.body.type, created: { at: createdDt, by: new ObjectID(req.user) } })
+            properties.push({ entity: eId, type: '_owner', reference: new ObjectID(req.user), created: { at: createdDt, by: new ObjectID(req.user) } })
+            properties.push({ entity: eId, type: '_created', boolean: true, created: { at: createdDt, by: new ObjectID(req.user) } })
 
             connection.collection('property').insertMany(properties, callback)
         },
@@ -240,13 +240,13 @@ router.delete('/:entityId', (req, res, next) => {
                 return next([403, 'Forbidden'])
             }
 
-            connection.collection('property').insertOne({ entity: eId, definition: '_deleted', boolean: true, created: { at: new Date(), by: new ObjectID(req.user) } }, callback)
+            connection.collection('property').insertOne({ entity: eId, type: '_deleted', boolean: true, created: { at: new Date(), by: new ObjectID(req.user) } }, callback)
         },
         (r, callback) => { // Aggregate entity
             entu.aggregateEntity(req, eId, '_deleted', callback)
         },
         (r, callback) => { // Get reference properties
-            connection.collection('property').find({ reference: eId, deleted: { '$exists': false } }, { entity: true, definition: true }).toArray(callback)
+            connection.collection('property').find({ reference: eId, deleted: { '$exists': false } }, { entity: true, type: true }).toArray(callback)
         },
         (properties, callback) => { // Delete reference properties
             if (properties.length === 0) { return callback(null) }
@@ -257,7 +257,7 @@ router.delete('/:entityId', (req, res, next) => {
                         connection.collection('property').updateOne({ _id: property._id }, { $set: { deleted: { at: new Date(), by: new ObjectID(req.user) } } }, callback)
                     },
                     (callback) => {
-                        entu.aggregateEntity(req, property.entity, property.definition, callback)
+                        entu.aggregateEntity(req, property.entity, property.type, callback)
                     },
                 ], callback)
             }, callback)

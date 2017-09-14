@@ -125,7 +125,7 @@ curl \
 Create new entity. Data must be sent as JSON. Returns created entity's \_id.
 
 #### Parameters
-- **definition** - Entity definition key.
+- **type** - Entity type. It's mandatory parameter.
 
 #### Example request
 ```shell
@@ -133,7 +133,7 @@ curl \
     -X GET \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     -H "Content-Type: application/json" \
-    -d '{ "definition": "book" }'
+    -d '{ "type": "book" }'
     "https://api.entu.ee/entity"
 ```
 

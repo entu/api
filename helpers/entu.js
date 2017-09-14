@@ -60,9 +60,9 @@ exports.aggregateEntity = (req, entityId, property, callback) => {
             connection.collection('property').find({ entity: entityId, deleted: { '$exists': false } }).toArray((err, properties) => {
                 if(err) { return callback(err) }
 
-                let p = _.mapValues(_.groupBy(properties, 'definition'), (o) => {
+                let p = _.mapValues(_.groupBy(properties, 'type'), (o) => {
                     return _.map(o, (p) => {
-                        return _.omit(p, ['entity', 'definition', 'created', 's3', 'url'])
+                        return _.omit(p, ['entity', 'type', 'created', 's3', 'url'])
                     })
                 })
 

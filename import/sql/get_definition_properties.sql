@@ -21,7 +21,7 @@ FROM (
     /* entity definition */
     UNION SELECT
         keyname AS entity_id,
-        '_definition' AS property_definition,
+        '_type' AS property_definition,
         'string' AS property_type,
         NULL AS property_language,
         'entity' AS value_text,
@@ -99,7 +99,7 @@ FROM (
     /* property definition */
     UNION SELECT
         CONCAT(entity_definition_keyname, '_', dataproperty) AS entity_id,
-        '_definition' AS property_definition,
+        '_type' AS property_definition,
         'string' AS property_type,
         NULL AS property_language,
         'property' AS value_text,

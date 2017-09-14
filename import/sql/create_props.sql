@@ -54,7 +54,7 @@ WHERE entity_definition_keyname NOT LIKE 'conf-%';
 INSERT INTO props (entity, definition, type, value_text, created_at, created_by)
 SELECT
     id,
-    '_definition',
+    '_type',
     'string',
     TRIM(LOWER(REPLACE(entity_definition_keyname, '-', '_'))),
     created,

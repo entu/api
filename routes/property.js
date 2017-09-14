@@ -78,7 +78,7 @@ router.delete('/:propertyId', (req, res, next) => {
         },
         (con, callback) => {
             connection = con
-            connection.collection('property').findOne({ _id: new ObjectID(req.params.propertyId), deleted: { $exists: false } }, {_id: false, entity: true, definition: true }, callback)
+            connection.collection('property').findOne({ _id: new ObjectID(req.params.propertyId), deleted: { $exists: false } }, {_id: false, entity: true, type: true }, callback)
         },
         (prop, callback) => {
             if (!prop) { return callback([404, 'Property not found']) }
@@ -97,7 +97,7 @@ router.delete('/:propertyId', (req, res, next) => {
             connection.collection('property').updateOne({ _id: property._id }, { $set: { deleted: { at: new Date(), by: new ObjectID(req.user) } } }, callback)
         },
         (r, callback) => { // Aggregate entity
-            entu.aggregateEntity(req, property.entity, property.definition, callback)
+            entu.aggregateEntity(req, property.entity, property.type, callback)
         },
     ], (err, url) => {
         if (err) { return next(err) }
