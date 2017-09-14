@@ -57,8 +57,7 @@ All API calls return JSON object (except [social auth](#get-authfacebookgoogleli
 
 
 ## GET /auth
-Authenticates user by API key. API key must be sent in Bearer authorization header. After authentication:
-Returns object with JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /entity and /property requests.
+Authenticates user by API key. API key must be sent in Bearer authorization header. Returns object with JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /entity and /property requests.
 
 #### Example request
 ```shell
@@ -74,7 +73,7 @@ Redirects user to given authentication provider (facebook, google, live or twitt
 - If query parameter *next* is set, user is redirected to given url. Query parameter *key* is added to url containing temporary API key. Use this key to get JWT tokens from [/auth](#get-auth).
 - If next is not set returns temporary API key.
 
-Use this temporary API key to get JWT tokens from [/auth](#get-auth)
+Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key can be used only once.
 
 #### Query parameters
 - **next** - Url where user is redirected after successful auth.
