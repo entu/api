@@ -10,7 +10,15 @@ router.get('/', (req, res) => {
 
 
 
-router.get('/test', () => {
+router.get('/timeout', (req, res) => {
+    setTimeout(() => {
+        res.respond(true)
+    }, 10000)
+})
+
+
+
+router.get('/error', () => {
     throw new Error('böö')
 })
 
