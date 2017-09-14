@@ -17,9 +17,9 @@ DROP TABLE IF EXISTS props;
 CREATE TABLE `props` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `entity` int(11) unsigned DEFAULT NULL,
-  `definition` varchar(32) DEFAULT NULL,
+  `type` varchar(32) DEFAULT NULL,
   `language` varchar(2) DEFAULT NULL,
-  `type` varchar(16) DEFAULT NULL,
+  `datatype` varchar(16) DEFAULT NULL,
   `public` int(1) DEFAULT NULL,
   `value_text` text DEFAULT NULL,
   `value_integer` int(11) DEFAULT NULL,
@@ -31,14 +31,14 @@ CREATE TABLE `props` (
   `deleted_by` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `entity` (`entity`),
-  KEY `definition` (`definition`),
+  KEY `type` (`type`),
   KEY `language` (`language`),
-  KEY `type` (`type`)
+  KEY `datatype` (`datatype`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
 /* entity id */
-INSERT INTO props (entity, definition, type, value_integer, created_at, created_by)
+INSERT INTO props (entity, type, datatype, value_integer, created_at, created_by)
 SELECT
     id,
     '_mid',
@@ -50,8 +50,8 @@ FROM entity
 WHERE entity_definition_keyname NOT LIKE 'conf-%';
 
 
-/* entity definition */
-INSERT INTO props (entity, definition, type, value_text, created_at, created_by)
+/* entity type */
+INSERT INTO props (entity, type, datatype, value_text, created_at, created_by)
 SELECT
     id,
     '_type',
@@ -64,7 +64,7 @@ WHERE entity_definition_keyname NOT LIKE 'conf-%';
 
 
 /* entity created at/by */
-INSERT INTO props (entity, definition, type, value_integer, created_at, created_by)
+INSERT INTO props (entity, type, datatype, value_integer, created_at, created_by)
 SELECT
     id,
     '_created',
@@ -78,7 +78,7 @@ AND (created IS NOT NULL OR IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(create
 
 
 /* entity deleted at/by */
-INSERT INTO props (entity, definition, type, value_integer, created_at, created_by)
+INSERT INTO props (entity, type, datatype, value_integer, created_at, created_by)
 SELECT
     id,
     '_deleted',
@@ -92,7 +92,7 @@ AND is_deleted = 1;
 
 
 /* parents */
-INSERT INTO props (entity, definition, type, value_integer, created_at, created_by, deleted_at, deleted_by)
+INSERT INTO props (entity, type, datatype, value_integer, created_at, created_by, deleted_at, deleted_by)
 SELECT
     r.related_entity_id,
     '_parent',
@@ -110,7 +110,7 @@ AND r.relationship_definition_keyname = 'child';
 
 
 /* rights */
-INSERT INTO props (entity, definition, type, value_integer, created_at, created_by, deleted_at, deleted_by)
+INSERT INTO props (entity, type, datatype, value_integer, created_at, created_by, deleted_at, deleted_by)
 SELECT
     r.entity_id,
     CONCAT('_', REPLACE(r.relationship_definition_keyname, '-', '_')),
@@ -128,7 +128,7 @@ AND r.relationship_definition_keyname IN ('editor', 'expander', 'owner', 'viewer
 
 
 /* entity sharing */
-INSERT INTO props (entity, definition, type, value_text, created_at, created_by)
+INSERT INTO props (entity, type, datatype, value_text, created_at, created_by)
 SELECT
     id,
     '_sharing',
@@ -142,7 +142,7 @@ AND sharing IS NOT NULL;
 
 
 /* properties */
-INSERT INTO props (entity, definition, type, language, public, value_text, value_integer, value_decimal, value_date, created_at, created_by, deleted_at, deleted_by)
+INSERT INTO props (entity, type, datatype, language, public, value_text, value_integer, value_decimal, value_date, created_at, created_by, deleted_at, deleted_by)
 SELECT
     p.entity_id,
     REPLACE(pd.dataproperty, '-', '_'),

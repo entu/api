@@ -1,8 +1,8 @@
 SELECT
     NULLIF(LOWER(TRIM(REPLACE(entity_id, '-', '_'))), '') AS entity,
-    NULLIF(LOWER(TRIM(REPLACE(property_definition, '-', '_'))), '') AS definition,
+    NULLIF(LOWER(TRIM(REPLACE(property_definition, '-', '_'))), '') AS type,
     NULLIF(LOWER(TRIM(property_language)), '') AS language,
-    NULLIF(LOWER(TRIM(property_type)), '') AS type,
+    NULLIF(LOWER(TRIM(property_type)), '') AS datatype,
     NULLIF(TRIM(value_text), '') AS value_text,
     NULLIF(TRIM(value_integer), '') AS value_integer
 FROM (
@@ -18,7 +18,7 @@ FROM (
     FROM entity_definition
     WHERE keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
 
-    /* entity definition */
+    /* entity type */
     UNION SELECT
         keyname AS entity_id,
         '_type' AS property_definition,
@@ -96,7 +96,7 @@ FROM (
     AND entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
     AND entity_definition_keyname IN (SELECT keyname FROM entity_definition)
 
-    /* property definition */
+    /* property type */
     UNION SELECT
         CONCAT(entity_definition_keyname, '_', dataproperty) AS entity_id,
         '_type' AS property_definition,

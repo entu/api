@@ -1,8 +1,8 @@
 SELECT
     entity,
-    definition,
-    language,
     type,
+    language,
+    datatype,
     value_text,
     value_integer,
     value_decimal,
