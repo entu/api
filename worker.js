@@ -181,9 +181,6 @@ app.use((req, res, next) => {
             }
             res.status(errorCode).json(message)
         } else {
-            if (body.constructor === Array) {
-                message.count = body.length
-            }
             message.result = body
             res.json(message)
         }

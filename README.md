@@ -42,12 +42,10 @@ curl \
     "auth": false,
     "result": {
         "entu": {
-            "title": null,
             "customer": "db1",
             "token": "hNGcQgaeKh7ptWF5FVPbfKgpR5ZHCzT5cbA4BQWtmWGkfdQHg5HLDMCB8GwKw8gG"
         },
         "roots": {
-            "title": null,
             "customer": "db2",
             "token": "7RnGfkM7fayzDx7F8E2f65aTuuE5P7PEmYHVYNngKbDVx92bk2FVZBkfFBAPgpsT"
         }
@@ -111,8 +109,10 @@ curl \
     "release": "c2bece3",
     "ms": 371,
     "auth": false,
-    "count": 100,
-    "result": []
+    "result": {
+        "count": 0,
+        "entities": []
+    }
 }
 ```
 
