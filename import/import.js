@@ -92,7 +92,7 @@ var importProps = (mysqlDb, callback) => {
             log('create mongodb indexes for import')
             mongoCon.collection('property').createIndexes([
                 { key: { entity: 1 } },
-                { key: { type: 1 } },
+                { key: { definition: 1 } },
                 { key: { value_integer: 1 } },
                 { key: { created_by: 1 } },
                 { key: { deleted_by: 1 } }
@@ -287,10 +287,13 @@ var importProps = (mysqlDb, callback) => {
             log('rename value_date to datetime')
             mongoCon.collection('property').updateMany({ type: 'datetime' }, { $unset: { type: '' }, $rename: { value_date: 'datetime' } }, callback)
         },
-
         (callback) => {
             log('rename property created/deleted fields')
             mongoCon.collection('property').updateMany({}, { $rename: { created_at: 'created.at', created_by: 'created.by', deleted_at: 'deleted.at', deleted_by: 'deleted.by' } }, callback)
+        },
+        (callback) => {
+            log('rename property definition to type')
+            mongoCon.collection('property').updateMany({}, { $rename: { definition: 'type' } }, callback)
         },
 
         (callback) => {
