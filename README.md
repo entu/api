@@ -8,7 +8,7 @@
 #### Entity
 - /entity
     - [GET](#get-entity)
-    - POST
+    - [POST](#post-entity)
 - /entity/{ \_id }
     - [GET](#get-entity-_id-)
     - POST
@@ -111,7 +111,7 @@ curl \
     "release": "2d93cc1",
     "dt": "2015-09-14T06:43:18.000Z",
     "ms": 371,
-    "auth": false,
+    "auth": true,
     "result": {
         "count": 0,
         "entities": []
@@ -144,7 +144,7 @@ curl \
     "release": "2d93cc1",
     "dt": "2015-09-14T06:43:18.000Z",
     "ms": 167,
-    "auth": false,
+    "auth": true,
     "result": "bsskJkDWwQXHB8ut7vQvmWZ4"
 }
 ```
@@ -172,7 +172,7 @@ curl \
     "release": "2d93cc1",
     "dt": "2015-09-14T06:43:18.000Z",
     "ms": 67,
-    "auth": false,
+    "auth": true,
     "result": {}
 }
 ```
@@ -197,7 +197,7 @@ curl \
     "release": "2d93cc1",
     "dt": "2015-09-14T06:43:18.000Z",
     "ms": 46,
-    "auth": false,
+    "auth": true,
     "result": true
 }
 ```
@@ -225,7 +225,7 @@ curl \
     "release": "2d93cc1",
     "dt": "2015-09-14T06:43:18.000Z",
     "ms": 137,
-    "auth": false,
+    "auth": true,
     "result": {}
 }
 ```
@@ -250,7 +250,7 @@ curl \
     "release": "2d93cc1",
     "dt": "2015-09-14T06:43:18.000Z",
     "ms": 37,
-    "auth": false,
+    "auth": true,
     "result": true
 }
 ```
