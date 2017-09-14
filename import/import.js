@@ -230,7 +230,7 @@ var importProps = (mysqlDb, callback) => {
                             mongoCon.collection('property').updateMany({ entity: entity._mid }, { $set: { entity: entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ type: 'reference', value_integer: entity._mid }, { $set: { value_integer: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ type: 'reference', value_integer: { $in: [entity._mid, '' + entity._mid] } }, { $set: { value_integer: entity._id } }, callback)
                         },
                         (callback) => {
                             mongoCon.collection('property').updateMany({ created_by: entity._mid }, { $set: { created_by: entity._id } }, callback)
@@ -496,7 +496,7 @@ connection.query(require('./sql/get_databases.sql'), (err, rows) => {
     }, (err) => {
         if(err) {
             console.error(err.toString())
-            process.exit(0)
+            process.exit(1)
         }
 
         process.exit(0)
