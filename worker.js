@@ -170,6 +170,7 @@ app.use((req, res, next) => {
     res.respond = (body, errorCode) => {
         var message = {
             release: APP_VERSION,
+            dt: new Date(),
             ms: Date.now() - req.startDt,
             auth: !!req.user
         }
