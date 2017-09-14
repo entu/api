@@ -34,6 +34,30 @@ curl \
     "https://api.entu.ee/auth"
 ```
 
+#### Example response
+```json
+{
+    "release": "c2bece3",
+    "startDt": "2017-09-14T09:50:58.564Z",
+    "ms": 1037,
+    "auth": false,
+    "result": {
+        "entu": {
+            "title": null,
+            "customer": "db1",
+            "token": "hNGcQgaeKh7ptWF5FVPbfKgpR5ZHCzT5cbA4BQWtmWGkfdQHg5HLDMCB8GwKw8gG"
+        },
+        "roots": {
+            "title": null,
+            "customer": "db2",
+            "token": "7RnGfkM7fayzDx7F8E2f65aTuuE5P7PEmYHVYNngKbDVx92bk2FVZBkfFBAPgpsT"
+        }
+    }
+}
+```
+
+
+
 
 ## GET /auth/[ facebook \| google \| live \| twitter ]
 Redirects user to given authentication provider (facebook, google, live or twitter). After successful authentication:
@@ -44,6 +68,17 @@ Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key c
 
 #### Query parameters
 - **next** - Url where user is redirected after successful auth.
+
+#### Example response
+```json
+{
+    "release": "c2bece3",
+    "startDt": "2017-09-14T09:50:58.564Z",
+    "ms": 1037,
+    "auth": false,
+    "result": "yp5xhSMf6uRnpJ5QKAeQ2RDT"
+}
+```
 
 
 
@@ -72,6 +107,18 @@ curl \
     "https://api.entu.ee/entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12"
 ```
 
+#### Example response
+```json
+{
+    "release": "c2bece3",
+    "startDt": "2017-09-14T09:50:58.564Z",
+    "ms": 371,
+    "auth": false,
+    "count": 100,
+    "result": []
+}
+```
+
 
 
 
@@ -89,6 +136,19 @@ curl \
     "https://api.entu.ee/entity/59abac1bb5684200016be61e"
 ```
 
+#### Example response
+```json
+{
+    "release": "c2bece3",
+    "startDt": "2017-09-14T09:50:58.564Z",
+    "ms": 67,
+    "auth": false,
+    "result": {}
+}
+```
+
+
+
 
 ## DELETE /entity/{ \_id }
 Delete entity with given id.
@@ -99,6 +159,17 @@ curl \
     -X DELETE \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     "https://api.entu.ee/entity/59abac1bb5684200016be61e"
+```
+
+#### Example response
+```json
+{
+    "release": "c2bece3",
+    "startDt": "2017-09-14T09:50:58.564Z",
+    "ms": 46,
+    "auth": false,
+    "result": true
+}
 ```
 
 
@@ -118,6 +189,19 @@ curl \
     "https://api.entu.ee/property/59abac1bb5684200016be445?download"
 ```
 
+#### Example response
+```json
+{
+    "release": "c2bece3",
+    "startDt": "2017-09-14T09:50:58.564Z",
+    "ms": 137,
+    "auth": false,
+    "result": {}
+}
+```
+
+
+
 
 ## DELETE /property/{ \_id }
 Delete property with given id.
@@ -128,4 +212,15 @@ curl \
     -X DELETE \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     "https://api.entu.ee/entity/59abac1bb5684200016be445"
+```
+
+#### Example response
+```json
+{
+    "release": "c2bece3",
+    "startDt": "2017-09-14T09:50:58.564Z",
+    "ms": 37,
+    "auth": false,
+    "result": true
+}
 ```
