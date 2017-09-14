@@ -1,11 +1,9 @@
 ## API
 #### Authentication
+- /auth
+    - [GET](#get-auth)
 - /auth/[ facebook \| google \| live \| twitter ]
     - [GET](#get-auth-facebook--google--live--twitter-)
-- /auth/key
-    - [GET](#get-authkey)
-- /session/{ \_id }
-    - [GET](#get-session-_id-)
 
 #### Entity
 - /entity
@@ -18,7 +16,7 @@
     - [DELETE](#delete-entity-_id-)
 
 #### Property
-- /property/{ \_id }
+- /property
     - [GET](#get-property-_id-)
     - [DELETE](#delete-property-_id-)
 
@@ -58,41 +56,28 @@ All API calls return JSON object (except [social auth](#get-authfacebookgoogleli
 
 
 
+## GET /auth
+Authenticates user by API key. API key must be sent in Bearer authorization header. After authentication:
+Returns object with JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /entity and /property requests.
+
+#### Example request
+```shell
+curl \
+    -X GET \
+    -H "Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF" \
+    "https://api.entu.ee/auth"
+```
+
+
 ## GET /auth/[ facebook \| google \| live \| twitter ]
 Redirects user to given authentication provider (facebook, google, live or twitter). After successful authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added to url. Use this parameter to get JWT tokens from [/session/{ \_id }](#get-session-_id-).
-- If next is not set user is redirected to [/session/{ \_id }](#get-session-_id-).
+- If query parameter *next* is set, user is redirected to given url. Query parameter *key* is added to url containing temporary API key. Use this key to get JWT tokens from [/auth](#get-auth).
+- If next is not set returns temporary API key.
+
+Use this temporary API key to get JWT tokens from [/auth](#get-auth)
 
 #### Query parameters
 - **next** - Url where user is redirected after successful auth.
-
-
-## GET /auth/key
-Authenticates user by API key. API key must be sent in Bearer authorization header. After authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *session* is added to url. Use this parameter to get JWT tokens from [/session/{ \_id }](#get-session-_id-).
-- If next is not set user is redirected to [/session/{ \_id }](#get-session-_id-).
-
-#### Query parameters
-- **next** - Url where user is redirected after successful auth.
-
-#### Example request
-```shell
-curl \
-    -X GET \
-    -H "Authorization: Bearer 2GKB5sASf8ApcjLYYR8JAufZsdGYZR4p" \
-    "https://api.entu.ee/auth/key"
-```
-
-
-## GET /session/{ \_id }
-Returns list of JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for all other requests.
-
-#### Example request
-```shell
-curl \
-    -X GET \
-    "https://api.entu.ee/session/59abac1bb5684200016be4b8"
-```
 
 
 

@@ -8,38 +8,43 @@ const router = require('express').Router()
 
 
 
-router.get('/:sessionId', (req, res, next) => {
-    var connection
-    var session
+router.get('/', (req, res, next) => {
+    let parts = _.get(req, 'headers.authorization', '').split(' ')
+
+    if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next([400, 'No key']) }
+
+    var key = parts[1]
+
+    if(key.length !== 24 && key.length !== 48) { return next([400, 'Invalid key']) }
+
+    var sessionAuth = key.length === 24
 
     async.waterfall([
         (callback) => {
             req.app.locals.db('entu', callback)
         },
-        (con, callback) => {
-            connection = con
-            connection.collection('session').findOneAndUpdate({ _id: new ObjectID(req.params.sessionId), deleted: { $exists: false } }, { '$set': { deleted: new Date() } }, callback)
-        },
-        (sess, callback) => {
-            if(!sess.value) { return callback([400, 'No session']) }
+        (connection, callback) => {
+            if (sessionAuth) {
+                connection.collection('session').findOneAndUpdate({ _id: new ObjectID(key), deleted: { $exists: false } }, { '$set': { deleted: new Date() } }, (err, sess) => {
+                    if(err) { return next(err) }
+                    if(!sess.value) { return callback([400, 'No session']) }
 
-            session = sess.value
-            return callback(null, process.env.CUSTOMERS.split(','))
+                    return callback(null, _.get(sess, 'value.user.email'))
+                })
+            } else {
+                return callback(null, key)
+            }
         },
-        (customers, callback) => {
-            async.map(customers, (customer, callback) => {
+        (authValue, callback) => {
+            async.map(process.env.CUSTOMERS.split(','), (customer, callback) => {
                 async.waterfall([
                     (callback) => {
                         req.app.locals.db(customer, callback)
                     },
                     (customerCon, callback) => {
-                        if (_.get(session, 'user.email')) {
-                            customerCon.collection('entity').findOne({ 'entu_user.string': session.user.email }, { _id: true }, callback)
-                        } else if (_.get(session, 'user.id')) {
-                            customerCon.collection('entity').findOne({ 'entu_api_key.string': session.user.id }, { _id: true }, callback)
-                        } else {
-                            callback(null, null)
-                        }
+                        let authFilter = {}
+                        authFilter[sessionAuth ? 'entu_user.string' : 'entu_api_key.string'] = authValue
+                        customerCon.collection('entity').findOne(authFilter, { _id: true }, callback)
                     },
                 ], (err, person) => {
                     if(err) { return callback(err) }
