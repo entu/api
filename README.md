@@ -11,7 +11,6 @@
     - [POST](#post-entity)
 - /entity/{ \_id }
     - [GET](#get-entity-_id-)
-    - POST
     - PUT
     - [DELETE](#delete-entity-_id-)
 
@@ -123,10 +122,10 @@ curl \
 
 
 ## POST /entity
-Create entity with given definition. Data must be sent as JSON. Returns new entity's \_id.
+Create new entity. Data must be sent as JSON. Returns created entity's \_id.
 
 #### Parameters
-- **definition** - Definition key.
+- **definition** - Entity definition key.
 
 #### Example request
 ```shell
