@@ -23,39 +23,6 @@
 
 
 
-## General
-All API calls return JSON object (except [social auth](#get-authfacebookgooglelivetwitter)).
-- Successful request contains *result* with corresponding response.
-- On error, *error* object is returned (instead of *result*) with *code* and *message* parameters.
-
-#### Example response
-```json
-{
-    "release": "7eae6de",
-    "startDt": "2017-09-12T07:02:21.343Z",
-    "ms": 28,
-    "auth": true,
-    "result": { }
-}
-```
-
-#### Example error
-```json
-{
-    "release": "c2bece3",
-    "startDt": "2017-09-12T15:01:22.376Z",
-    "ms": 1,
-    "auth": true,
-    "error": {
-        "code": 500,
-        "message": "Argument passed in must be a single String of 12 bytes or a string of 24 hex characters"
-    }
-}
-```
-
-
-
-
 ## GET /auth
 Authenticates user by API key. API key must be sent in Bearer authorization header. Returns object with JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /entity and /property requests.
 
