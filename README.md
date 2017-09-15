@@ -126,7 +126,7 @@ Create new entity. Data must be sent as JSON. Returns created entity's \_id.
 
 #### Parameters
 - **type** - Entity type. It's mandatory parameter.
-- **parent** - Parent entity's \_id. New entity is created "under" this entity.
+- **parent** - Parent entity's \_id. If set, new entity is created "under" this entity and all rights are copied from parent to new entity.
 
 #### Example request
 ```shell
