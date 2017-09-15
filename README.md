@@ -15,7 +15,7 @@
     - [DELETE](#delete-entity-_id-)
 
 #### Property
-- /property
+- /property/{ \_id }
     - [GET](#get-property-_id-)
     - [DELETE](#delete-property-_id-)
 
