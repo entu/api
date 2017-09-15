@@ -129,25 +129,42 @@ router.post('/', (req, res, next) => {
     if (!req.body.type) { return next([400, 'No type']) }
 
     var connection
+    var parent
+    var eId
     var defaultParents = []
     var defaultValues = []
     var createdDt = new Date()
-    var eId
 
     async.waterfall([
         (callback) => {
             req.app.locals.db(req.customer, callback)
         },
-        (con, callback) => {
+        (con, callback) => { // get entity type
             connection = con
             connection.collection('entity').findOne({ '_type.string': 'entity', 'key.string': req.body.type }, { default_parent: true }, callback)
         },
-        (type, callback) => {
+        (type, callback) => { // get parent entity
             if (!type) { return next([404, 'Entity type not found']) }
 
             defaultParents = type.default_parent
 
-            connection.collection('entity').find({ _parent: type._id, '_type.string': 'property', 'default': {$exists: true } }, { _id: false, default: true }, callback)
+            if (!req.body.parent) {
+                return callback(null, null)
+            }
+
+            connection.collection('entity').findOne({ '_id': new ObjectID(req.body.parent) }, { _id: true, _type: true, _viewer: true, _expander: true, _editor: true, _owner: true }, (p, callback) => {
+                parent = p
+
+                if (!parent) { return next([404, 'Parent entity not found']) }
+
+                let access = _.map(_.concat(_.get(parent, '_owner', []), _.get(parent, '_editor', []), _.get(parent, '_expander', [])), s => s.reference.toString())
+
+                if (access.indexOf(req.user) === -1) {
+                    return next([403, 'Forbidden'])
+                }
+
+                connection.collection('entity').find({ _parent: type._id, '_type.string': 'property', 'default': {$exists: true } }, { _id: false, default: true }, callback)
+            })
         },
         (defaults, callback) => {
             // defaultValues = _.map(defaults.default, 'reference')
@@ -157,12 +174,37 @@ router.post('/', (req, res, next) => {
         (entity, callback) => {
             eId = entity.insertedId
 
-            let properties = _.map(defaultParents, p => {
-                return { entity: eId, type: '_parent', reference: p.reference, created: { at: createdDt, by: new ObjectID(req.user) } }
+            let userId = new ObjectID(req.user)
+            let properties = []
+
+            _.forEach(defaultParents, p => {
+                properties.push({ entity: eId, type: '_parent', reference: p.reference, created: { at: createdDt, by: userId } })
             })
-            properties.push({ entity: eId, type: '_type', string: req.body.type, created: { at: createdDt, by: new ObjectID(req.user) } })
-            properties.push({ entity: eId, type: '_owner', reference: new ObjectID(req.user), created: { at: createdDt, by: new ObjectID(req.user) } })
-            properties.push({ entity: eId, type: '_created', boolean: true, created: { at: createdDt, by: new ObjectID(req.user) } })
+            _.forEach(parent._viewer, pViewer => {
+                if (pViewer.reference !== userId) {
+                    properties.push({ entity: eId, type: '_viewer', reference: pViewer.reference, created: { at: createdDt, by: userId } })
+                }
+            })
+            _.forEach(parent._expander, pExpander => {
+                if (pExpander.reference !== userId) {
+                    properties.push({ entity: eId, type: '_expander', reference: pExpander.reference, created: { at: createdDt, by: userId } })
+                }
+            })
+            _.forEach(parent._editor, pEditor => {
+                if (pEditor.reference !== userId) {
+                    properties.push({ entity: eId, type: '_editor', reference: pEditor.reference, created: { at: createdDt, by: userId } })
+                }
+            })
+            _.forEach(parent._owner, pOwner => {
+                if (pOwner.reference !== userId) {
+                    properties.push({ entity: eId, type: '_owner', reference: pOwner.reference, created: { at: createdDt, by: userId } })
+                }
+            })
+            properties.push({ entity: eId, type: '_owner', reference: userId, created: { at: createdDt, by: userId } })
+
+            properties.push({ entity: eId, type: '_parent', reference: parent._id, created: { at: createdDt, by: userId } })
+            properties.push({ entity: eId, type: '_type', string: req.body.type, created: { at: createdDt, by: userId } })
+            properties.push({ entity: eId, type: '_created', boolean: true, created: { at: createdDt, by: userId } })
 
             connection.collection('property').insertMany(properties, callback)
         },

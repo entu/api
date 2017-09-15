@@ -126,6 +126,7 @@ Create new entity. Data must be sent as JSON. Returns created entity's \_id.
 
 #### Parameters
 - **type** - Entity type. It's mandatory parameter.
+- **parent** - Parent entity's \_id. New entity is created "under" this entity.
 
 #### Example request
 ```shell
@@ -133,7 +134,7 @@ curl \
     -X GET \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     -H "Content-Type: application/json" \
-    -d '{ "type": "book" }'
+    -d '{ "type": "book", "parent": "FCfzcHh3ZF35UTaBcwkxVUSa" }'
     "https://api.entu.ee/entity"
 ```
 
