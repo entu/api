@@ -63,7 +63,7 @@ router.get('/', (req, res, next) => {
         }, (err, stats) => {
             if (err) { return next(err) }
 
-            res.respond({
+            res.json({
                 account: req.account,
                 stats: {
                     entities: stats.entities,

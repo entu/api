@@ -7,7 +7,7 @@ const startDt = new Date()
 
 
 router.get('/', (req, res) => {
-    res.respond({
+    res.json({
         release: process.env.VERSION || process.env.HEROKU_SLUG_COMMIT.substr(0, 7) || require('./package').version,
         startDt: startDt,
     })
@@ -17,7 +17,7 @@ router.get('/', (req, res) => {
 
 router.get('/timeout', (req, res) => {
     setTimeout(() => {
-        res.respond(true)
+        res.json(true)
     }, 10000)
 })
 

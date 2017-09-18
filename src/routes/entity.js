@@ -109,7 +109,7 @@ router.get('/', (req, res, next) => {
     ], (err, entities) => {
         if (err) { return next(err) }
 
-        res.respond({
+        res.json({
             count: count,
             entities: _.map(entities, (entity) => {
                 _.unset(entity, '_mid')
@@ -210,7 +210,7 @@ router.post('/', (req, res, next) => {
     ], (err, entity) => {
         if (err) { return next(err) }
 
-        res.respond({ _id: eId })
+        res.json({ _id: eId })
     })
 })
 
@@ -246,7 +246,7 @@ router.get('/:entityId', (req, res, next) => {
         if (access.indexOf(req.user) !== -1 || _.get(entity, '_sharing.0.string', '') === 'public access is disabled for now') {
             _.unset(entity, '_mid')
             _.unset(entity, '_access')
-            res.respond(entity)
+            res.json(entity)
         } else {
             return next([403, 'Forbidden'])
         }
@@ -303,7 +303,7 @@ router.delete('/:entityId', (req, res, next) => {
     ], (err, entity) => {
         if (err) { return next(err) }
 
-        res.respond({ deleted: true })
+        res.json({ deleted: true })
     })
 })
 

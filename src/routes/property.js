@@ -59,7 +59,7 @@ router.get('/:propertyId', (req, res, next) => {
         if (_.get(property, 'url') && _.has(req, 'query.download')) {
             res.redirect(_.get(property, 'url'))
         } else {
-            res.respond(property)
+            res.json(property)
         }
     })
 })
@@ -102,7 +102,7 @@ router.delete('/:propertyId', (req, res, next) => {
     ], (err, url) => {
         if (err) { return next(err) }
 
-        res.respond({ deleted: true })
+        res.json({ deleted: true })
     })
 })
 

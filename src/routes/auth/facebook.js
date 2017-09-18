@@ -71,7 +71,7 @@ router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/l
             res.clearCookie('redirect')
             res.redirect(redirectUrl + '?key=' + sessionId)
         } else {
-            res.respond({ key: sessionId})
+            res.json({ key: sessionId})
         }
     })
 })

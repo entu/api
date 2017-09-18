@@ -51,7 +51,7 @@ passport.deserializeUser((user, done) => {
 // initialize getsentry.com client
 if(process.env.SENTRY_DSN) {
     raven.config(process.env.SENTRY_DSN, {
-        release: process.env.VERSION || process.env.HEROKU_SLUG_COMMIT || require('./package').version,
+        release: process.env.VERSION || process.env.HEROKU_SLUG_COMMIT.substr(0, 7) || require('./package').version,
         dataCallback: (data) => {
             _.unset(data, 'request.env')
             return data
@@ -162,15 +162,6 @@ app.use((req, res, next) => {
     next(null)
 })
 
-//custom JSON output
-app.use((req, res, next) => {
-    res.respond = (body, errorCode) => {
-        res.status(errorCode || 200).json(body)
-    }
-
-    next(null)
-})
-
 // redirect HTTP to HTTPS
 app.use((req, res, next) => {
     if (req.hostname !== 'localhost' && req.protocol.toLowerCase() !== 'https') { next([418, 'I\'m a teapot']) } else { next() }
@@ -229,9 +220,9 @@ app.use((req, res, next) => {
 // show error
 app.use((err, req, res, next) => {
     if (err.constructor === Array) {
-        res.respond(err[1], err[0])
+        res.status(err[0]).json({ error: err[1] })
     } else {
-        res.respond(err.toString(), 500)
+        res.status(500).json({ error: err.toString() })
     }
 })
 
