@@ -159,9 +159,7 @@ router.post('/', (req, res, next) => {
 
                 let access = _.map(_.concat(_.get(parent, '_owner', []), _.get(parent, '_editor', []), _.get(parent, '_expander', [])), s => s.reference.toString())
 
-                if (access.indexOf(req.user) === -1) {
-                    return callback([403, 'Forbidden'])
-                }
+                if (access.indexOf(req.user) === -1) { return callback([403, 'Forbidden']) }
 
                 connection.collection('entity').find({ _parent: type._id, '_type.string': 'property', 'default': {$exists: true } }, { _id: false, default: true }, callback)
             })
@@ -180,25 +178,28 @@ router.post('/', (req, res, next) => {
             _.forEach(defaultParents, p => {
                 properties.push({ entity: eId, type: '_parent', reference: p.reference, created: { at: createdDt, by: userId } })
             })
-            _.forEach(parent._viewer, pViewer => {
-                if (pViewer.reference === userId) { return }
-                properties.push({ entity: eId, type: '_viewer', reference: pViewer.reference, created: { at: createdDt, by: userId } })
-            })
-            _.forEach(parent._expander, pExpander => {
-                if (pExpander.reference === userId) { return }
-                properties.push({ entity: eId, type: '_expander', reference: pExpander.reference, created: { at: createdDt, by: userId } })
-            })
-            _.forEach(parent._editor, pEditor => {
-                if (pEditor.reference === userId) { return }
-                properties.push({ entity: eId, type: '_editor', reference: pEditor.reference, created: { at: createdDt, by: userId } })
-            })
-            _.forEach(parent._owner, pOwner => {
-                if (pOwner.reference === userId) { return }
-                properties.push({ entity: eId, type: '_owner', reference: pOwner.reference, created: { at: createdDt, by: userId } })
-            })
+
+            if (parent) {
+                _.forEach(parent._viewer, pViewer => {
+                    if (pViewer.reference === userId) { return }
+                    properties.push({ entity: eId, type: '_viewer', reference: pViewer.reference, created: { at: createdDt, by: userId } })
+                })
+                _.forEach(parent._expander, pExpander => {
+                    if (pExpander.reference === userId) { return }
+                    properties.push({ entity: eId, type: '_expander', reference: pExpander.reference, created: { at: createdDt, by: userId } })
+                })
+                _.forEach(parent._editor, pEditor => {
+                    if (pEditor.reference === userId) { return }
+                    properties.push({ entity: eId, type: '_editor', reference: pEditor.reference, created: { at: createdDt, by: userId } })
+                })
+                _.forEach(parent._owner, pOwner => {
+                    if (pOwner.reference === userId) { return }
+                    properties.push({ entity: eId, type: '_owner', reference: pOwner.reference, created: { at: createdDt, by: userId } })
+                })
+                properties.push({ entity: eId, type: '_parent', reference: parent._id, created: { at: createdDt, by: userId } })
+            }
             properties.push({ entity: eId, type: '_owner', reference: userId, created: { at: createdDt, by: userId } })
 
-            properties.push({ entity: eId, type: '_parent', reference: parent._id, created: { at: createdDt, by: userId } })
             properties.push({ entity: eId, type: '_type', string: req.body.type, created: { at: createdDt, by: userId } })
             properties.push({ entity: eId, type: '_created', boolean: true, created: { at: createdDt, by: userId } })
 
@@ -268,16 +269,14 @@ router.delete('/:entityId', (req, res, next) => {
         },
         (con, callback) => { // Get entity
             connection = con
-            connection.collection('entity').findOne({ _id: eId }, { _owner: true }, callback)
+            connection.collection('entity').findOne({ _id: eId }, { _id: false, _owner: true }, callback)
         },
         (entity, callback) => { // Check rights and create _deleted property
             if (!entity) { return callback([404, 'Entity not found']) }
 
             let access = _.map(_.get(entity, '_owner', []), s => s.reference.toString())
 
-            if (access.indexOf(req.user) === -1) {
-                return callback([403, 'Forbidden'])
-            }
+            if (access.indexOf(req.user) === -1) { return callback([403, 'Forbidden']) }
 
             connection.collection('property').insertOne({ entity: eId, type: '_deleted', boolean: true, created: { at: new Date(), by: new ObjectID(req.user) } }, callback)
         },
