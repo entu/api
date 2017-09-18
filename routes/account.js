@@ -7,6 +7,8 @@ const router = require('express').Router()
 
 
 router.get('/', (req, res, next) => {
+    if (!req.customer) { return next([400, 'No customer parameter']) }
+
     req.app.locals.db(req.customer, (err, connection) => {
         if (err) { return next(err) }
 
