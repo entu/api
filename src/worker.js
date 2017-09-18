@@ -166,7 +166,6 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     res.respond = (body, errorCode) => {
         var message = {
-            dt: new Date(),
             ms: Date.now() - req.startDt,
             auth: !!req.user
         }

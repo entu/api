@@ -40,7 +40,6 @@ curl \
 #### Example response
 ```json
 {
-    "dt": "2015-09-14T06:43:18.000Z",
     "ms": 713,
     "auth": true,
     "result": {
@@ -76,7 +75,6 @@ curl \
 #### Example response
 ```json
 {
-    "dt": "2015-09-14T06:43:18.000Z",
     "ms": 1037,
     "auth": false,
     "result": {
@@ -106,7 +104,6 @@ Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key c
 #### Example response
 ```json
 {
-    "dt": "2015-09-14T06:43:18.000Z",
     "ms": 1037,
     "auth": false,
     "result": "yp5xhSMf6uRnpJ5QKAeQ2RDT"
@@ -143,7 +140,6 @@ curl \
 #### Example response
 ```json
 {
-    "dt": "2015-09-14T06:43:18.000Z",
     "ms": 371,
     "auth": true,
     "result": {
@@ -176,7 +172,6 @@ curl \
 #### Example response
 ```json
 {
-    "dt": "2015-09-14T06:43:18.000Z",
     "ms": 167,
     "auth": true,
     "result": "bsskJkDWwQXHB8ut7vQvmWZ4"
@@ -203,7 +198,6 @@ curl \
 #### Example response
 ```json
 {
-    "dt": "2015-09-14T06:43:18.000Z",
     "ms": 67,
     "auth": true,
     "result": {}
@@ -227,7 +221,6 @@ curl \
 #### Example response
 ```json
 {
-    "dt": "2015-09-14T06:43:18.000Z",
     "ms": 46,
     "auth": true,
     "result": true
@@ -254,7 +247,6 @@ curl \
 #### Example response
 ```json
 {
-    "dt": "2015-09-14T06:43:18.000Z",
     "ms": 137,
     "auth": true,
     "result": {}
@@ -278,7 +270,6 @@ curl \
 #### Example response
 ```json
 {
-    "dt": "2015-09-14T06:43:18.000Z",
     "ms": 37,
     "auth": true,
     "result": true
