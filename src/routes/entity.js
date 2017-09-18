@@ -300,7 +300,7 @@ router.delete('/:entityId', (req, res, next) => {
                 ], callback)
             }, callback)
         },
-    ], (err, entity) => {
+    ], (err) => {
         if (err) { return next(err) }
 
         res.json({ deleted: true })

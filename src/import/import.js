@@ -374,7 +374,7 @@ const importProps = (mysqlDb, callback) => {
 const importFiles = (mysqlDb, callback) => {
     log('start ' +  mysqlDb + ' files import')
 
-    var mongoCon = NaN
+    var mongoCon
     var sqlCon = mysql.createConnection({
         host: MYSQL_HOST,
         port: MYSQL_PORT,
