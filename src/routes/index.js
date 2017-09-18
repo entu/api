@@ -2,10 +2,15 @@
 
 const router = require('express').Router()
 
+const startDt = new Date()
+
 
 
 router.get('/', (req, res) => {
-    res.respond(true)
+    res.respond({
+        release: process.env.VERSION || process.env.HEROKU_SLUG_COMMIT.substr(0, 7) || require('./package').version,
+        startDt: startDt,
+    })
 })
 
 

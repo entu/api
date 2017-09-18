@@ -14,9 +14,6 @@ const raven = require('raven')
 
 
 
-// global variables (and list of all used environment variables)
-const APP_VERSION = process.env.VERSION || process.env.HEROKU_SLUG_COMMIT.substr(0, 7) || require('./package').version
-
 // MONGODB
 // ACCOUNTS
 // JWT_SECRET
@@ -169,7 +166,6 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     res.respond = (body, errorCode) => {
         var message = {
-            release: APP_VERSION,
             dt: new Date(),
             ms: Date.now() - req.startDt,
             auth: !!req.user
