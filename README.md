@@ -1,4 +1,8 @@
 ## API
+#### Account
+- /account
+    - [GET](#get-account)
+
 #### Authentication
 - /auth
     - [GET](#get-auth)
@@ -22,8 +26,45 @@
 
 
 
+## GET /account
+Returns customer info and usage statistics
+
+#### Example request
+```shell
+curl \
+    -X GET \
+    -H "Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb" \
+    "https://api.entu.ee/account"
+```
+
+#### Example response
+```json
+{
+    "release": "2d93cc1",
+    "dt": "2015-09-14T06:43:18.000Z",
+    "ms": 713,
+    "auth": true,
+    "result": {
+        "customer": "db1",
+        "stats": {
+            "entities": 531,
+            "deletedEntities": 85,
+            "properties": 7446,
+            "deletedProperties": 1547,
+            "files": 70,
+            "filesSize": 16240263,
+            "deletedFiles": 9,
+            "deletedFilesSize": 1392158
+        }
+    }
+}
+```
+
+
+
+
 ## GET /auth
-Authenticates user by API key. API key must be sent in Bearer authorization header. Returns object with JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /entity and /property requests.
+Authenticates user by API key. API key must be sent in Bearer authorization header. Returns object with JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /account,  /entity and /property requests.
 
 #### Example request
 ```shell

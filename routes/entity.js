@@ -143,7 +143,7 @@ router.post('/', (req, res, next) => {
             connection = con
             connection.collection('entity').findOne({ '_type.string': 'entity', 'key.string': req.body.type }, { default_parent: true }, callback)
         },
-        (type, callback) => { // get parent entity
+        (type, callback) => {
             if (!type) { return next([404, 'Entity type not found']) }
 
             defaultParents = type.default_parent
@@ -181,24 +181,20 @@ router.post('/', (req, res, next) => {
                 properties.push({ entity: eId, type: '_parent', reference: p.reference, created: { at: createdDt, by: userId } })
             })
             _.forEach(parent._viewer, pViewer => {
-                if (pViewer.reference !== userId) {
-                    properties.push({ entity: eId, type: '_viewer', reference: pViewer.reference, created: { at: createdDt, by: userId } })
-                }
+                if (pViewer.reference === userId) { return }
+                properties.push({ entity: eId, type: '_viewer', reference: pViewer.reference, created: { at: createdDt, by: userId } })
             })
             _.forEach(parent._expander, pExpander => {
-                if (pExpander.reference !== userId) {
-                    properties.push({ entity: eId, type: '_expander', reference: pExpander.reference, created: { at: createdDt, by: userId } })
-                }
+                if (pExpander.reference === userId) { return }
+                properties.push({ entity: eId, type: '_expander', reference: pExpander.reference, created: { at: createdDt, by: userId } })
             })
             _.forEach(parent._editor, pEditor => {
-                if (pEditor.reference !== userId) {
-                    properties.push({ entity: eId, type: '_editor', reference: pEditor.reference, created: { at: createdDt, by: userId } })
-                }
+                if (pEditor.reference === userId) { return }
+                properties.push({ entity: eId, type: '_editor', reference: pEditor.reference, created: { at: createdDt, by: userId } })
             })
             _.forEach(parent._owner, pOwner => {
-                if (pOwner.reference !== userId) {
-                    properties.push({ entity: eId, type: '_owner', reference: pOwner.reference, created: { at: createdDt, by: userId } })
-                }
+                if (pOwner.reference === userId) { return }
+                properties.push({ entity: eId, type: '_owner', reference: pOwner.reference, created: { at: createdDt, by: userId } })
             })
             properties.push({ entity: eId, type: '_owner', reference: userId, created: { at: createdDt, by: userId } })
 
@@ -288,7 +284,7 @@ router.delete('/:entityId', (req, res, next) => {
             entu.aggregateEntity(req, eId, '_deleted', callback)
         },
         (r, callback) => { // Get reference properties
-            connection.collection('property').find({ reference: eId, deleted: { '$exists': false } }, { entity: true, type: true }).toArray(callback)
+            connection.collection('property').find({ reference: eId, deleted: { $exists: false } }, { entity: true, type: true }).toArray(callback)
         },
         (properties, callback) => { // Delete reference properties
             if (properties.length === 0) { return callback(null) }

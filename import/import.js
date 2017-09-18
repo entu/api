@@ -315,7 +315,7 @@ var importProps = (mysqlDb, callback) => {
                 var l = entities.length
                 async.eachSeries(entities, (entity, callback) => {
 
-                    mongoCon.collection('property').find({ entity: entity._id, deleted: { '$exists': false } }).toArray((err, properties) => {
+                    mongoCon.collection('property').find({ entity: entity._id, deleted: { $exists: false } }).toArray((err, properties) => {
                         if(err) { return callback(err) }
 
                         let p = _.mapValues(_.groupBy(properties, 'type'), (o) => {
@@ -330,7 +330,7 @@ var importProps = (mysqlDb, callback) => {
                         }
 
                         if (!_.isEmpty(p)) {
-                            mongoCon.collection('entity').update({ _id: entity._id }, { '$set': p, }, (err) => {
+                            mongoCon.collection('entity').update({ _id: entity._id }, { $set: p, }, (err) => {
                                 if(err) { return callback(err) }
 
                                 l--

@@ -57,7 +57,7 @@ exports.aggregateEntity = (req, entityId, property, callback) => {
         },
         (con, callback) => {
             connection = con
-            connection.collection('property').find({ entity: entityId, deleted: { '$exists': false } }).toArray((err, properties) => {
+            connection.collection('property').find({ entity: entityId, deleted: { $exists: false } }).toArray((err, properties) => {
                 if(err) { return callback(err) }
 
                 let p = _.mapValues(_.groupBy(properties, 'type'), (o) => {
@@ -75,7 +75,7 @@ exports.aggregateEntity = (req, entityId, property, callback) => {
                     if (_.has(p, '_deleted')) {
                         connection.collection('entity').deleteOne({ _id: entityId }, callback)
                     } else {
-                        connection.collection('entity').update({ _id: entityId }, { '$set': p, }, callback)
+                        connection.collection('entity').update({ _id: entityId }, { $set: p, }, callback)
                     }
                 } else {
                     return callback(null)

@@ -25,7 +25,7 @@ router.get('/', (req, res, next) => {
         },
         (connection, callback) => {
             if (sessionAuth) {
-                connection.collection('session').findOneAndUpdate({ _id: new ObjectID(key), deleted: { $exists: false } }, { '$set': { deleted: new Date() } }, (err, sess) => {
+                connection.collection('session').findOneAndUpdate({ _id: new ObjectID(key), deleted: { $exists: false } }, { $set: { deleted: new Date() } }, (err, sess) => {
                     if(err) { return next(err) }
                     if(!sess.value) { return callback([400, 'No session']) }
 

@@ -82,7 +82,7 @@ app.locals.db = (customer, callback) => {
             },
             (connection, callback) => {
                 entuDb = connection
-                entuDb.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { '$exists': true } }, { _id: false, 'mongodb.string': true }, callback)
+                entuDb.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { $exists: true } }, { _id: false, 'mongodb.string': true }, callback)
             },
             (url, callback) => {
                 if (!_.has(url, 'mongodb.0.string')) { return callback('No MongoDb url')}
@@ -223,6 +223,8 @@ var jwtCheck = (req, res, next) => {
 app.use('/', require('./routes/index'))
 app.use('/auth', require('./routes/auth/index'))
 app.use('/auth/id-card', require('./routes/auth/id-card'))
+
+app.use('/account', jwtCheck, require('./routes/account'))
 app.use('/entity', jwtCheck, require('./routes/entity'))
 app.use('/property', jwtCheck, require('./routes/property'))
 
