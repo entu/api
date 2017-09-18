@@ -10,18 +10,16 @@ const entu = require('../../helpers')
 
 
 passport.use(new facebook({
-        clientID: process.env.FACEBOOK_ID,
-        clientSecret: process.env.FACEBOOK_SECRET,
-        callbackURL: '/auth/facebook/callback',
-        profileFields: ['id', 'name', 'email', 'picture'],
-        proxy: true
-    },
-    (accessToken, refreshToken, profile, done) => {
-        process.nextTick(() => {
-            return done(null, profile)
-        })
-  }
-))
+    clientID: process.env.FACEBOOK_ID,
+    clientSecret: process.env.FACEBOOK_SECRET,
+    callbackURL: '/auth/facebook/callback',
+    profileFields: ['id', 'name', 'email', 'picture'],
+    proxy: true
+}, (accessToken, refreshToken, profile, done) => {
+    process.nextTick(() => {
+        return done(null, profile)
+    })
+}))
 
 
 

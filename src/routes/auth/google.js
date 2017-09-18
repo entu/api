@@ -10,17 +10,15 @@ const entu = require('../../helpers')
 
 
 passport.use(new google({
-        clientID: process.env.GOOGLE_ID,
-        clientSecret: process.env.GOOGLE_SECRET,
-        callbackURL: '/auth/google/callback',
-        proxy: true
-    },
-    (accessToken, refreshToken, profile, done) => {
-        process.nextTick(() => {
-            return done(null, profile)
-        })
-    }
-))
+    clientID: process.env.GOOGLE_ID,
+    clientSecret: process.env.GOOGLE_SECRET,
+    callbackURL: '/auth/google/callback',
+    proxy: true
+}, (accessToken, refreshToken, profile, done) => {
+    process.nextTick(() => {
+        return done(null, profile)
+    })
+}))
 
 
 

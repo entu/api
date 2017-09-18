@@ -10,17 +10,15 @@ const entu = require('../../helpers')
 
 
 passport.use(new live({
-        clientID: process.env.LIVE_ID,
-        clientSecret: process.env.LIVE_SECRET,
-        callbackURL: '/auth/live/callback',
-        proxy: true
-    },
-    (accessToken, refreshToken, profile, done) => {
-        process.nextTick(() => {
-            return done(null, profile)
-        })
-  }
-))
+    clientID: process.env.LIVE_ID,
+    clientSecret: process.env.LIVE_SECRET,
+    callbackURL: '/auth/live/callback',
+    proxy: true
+}, (accessToken, refreshToken, profile, done) => {
+    process.nextTick(() => {
+        return done(null, profile)
+    })
+}))
 
 
 
