@@ -5,7 +5,7 @@ const async = require('async')
 const router = require('express').Router()
 const soap = require('soap')
 
-const entu = require('../../helpers/entu')
+const entu = require('../../helpers')
 
 
 

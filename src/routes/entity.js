@@ -5,7 +5,7 @@ const async = require('async')
 const ObjectID = require('mongodb').ObjectID
 const router = require('express').Router()
 
-const entu = require('../helpers/entu')
+const entu = require('../helpers')
 
 
 

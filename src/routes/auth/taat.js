@@ -6,7 +6,7 @@ const passport = require('passport')
 const router = require('express').Router()
 const saml = require('passport-saml').Strategy
 
-const entu = require('../../helpers/entu')
+const entu = require('../../helpers')
 
 
 

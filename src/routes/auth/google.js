@@ -1,26 +1,25 @@
 'use strict'
 
 const _ = require('lodash')
-const facebook = require('passport-facebook').Strategy
+const google = require('passport-google-oauth').OAuth2Strategy
 const passport = require('passport')
 const router = require('express').Router()
 
-const entu = require('../../helpers/entu')
+const entu = require('../../helpers')
 
 
 
-passport.use(new facebook({
-        clientID: process.env.FACEBOOK_ID,
-        clientSecret: process.env.FACEBOOK_SECRET,
-        callbackURL: '/auth/facebook/callback',
-        profileFields: ['id', 'name', 'email', 'picture'],
+passport.use(new google({
+        clientID: process.env.GOOGLE_ID,
+        clientSecret: process.env.GOOGLE_SECRET,
+        callbackURL: '/auth/google/callback',
         proxy: true
     },
     (accessToken, refreshToken, profile, done) => {
         process.nextTick(() => {
             return done(null, profile)
         })
-  }
+    }
 ))
 
 
@@ -35,18 +34,18 @@ router.get('/', (req, res) => {
         })
     }
 
-    res.redirect('/auth/facebook/auth')
+    res.redirect('/auth/google/auth')
 })
 
 
 
-router.get('/auth', passport.authenticate('facebook', { scope: ['public_profile', 'email'], session: false }), () => {
+router.get('/auth', passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'], session: false }), () => {
 
 })
 
 
 
-router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login', session: false }), (req, res, next) => {
+router.get('/callback', passport.authenticate('google', { failureRedirect: '/login', session: false }), (req, res, next) => {
     var user = {}
     var name = _.compact([
         _.get(req, ['user', 'name', 'givenName']),
@@ -54,11 +53,11 @@ router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/l
         _.get(req, ['user', 'name', 'familyName'])
     ]).join(' ')
 
-    _.set(user, 'provider', 'facebook')
+    _.set(user, 'provider', 'google')
     _.set(user, 'id', _.get(req, ['user', 'id']))
     _.set(user, 'name', name)
     _.set(user, 'email', _.get(req, ['user', 'emails', 0, 'value']))
-    _.set(user, 'picture', _.get(req, ['user', 'photos', 0, 'value']))
+    _.set(user, 'picture', _.get(req, ['user', 'photos', 0, 'value']).replace('?sz=50', ''))
 
     entu.addUserSession({
         request: req,

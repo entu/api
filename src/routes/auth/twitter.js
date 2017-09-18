@@ -5,7 +5,7 @@ const passport = require('passport')
 const router = require('express').Router()
 const twitter = require('passport-twitter').Strategy
 
-const entu = require('../../helpers/entu')
+const entu = require('../../helpers')
 
 
 

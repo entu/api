@@ -1,18 +1,19 @@
 'use strict'
 
 const _ = require('lodash')
-const live = require('passport-windowslive').Strategy
+const facebook = require('passport-facebook').Strategy
 const passport = require('passport')
 const router = require('express').Router()
 
-const entu = require('../../helpers/entu')
+const entu = require('../../helpers')
 
 
 
-passport.use(new live({
-        clientID: process.env.LIVE_ID,
-        clientSecret: process.env.LIVE_SECRET,
-        callbackURL: '/auth/live/callback',
+passport.use(new facebook({
+        clientID: process.env.FACEBOOK_ID,
+        clientSecret: process.env.FACEBOOK_SECRET,
+        callbackURL: '/auth/facebook/callback',
+        profileFields: ['id', 'name', 'email', 'picture'],
         proxy: true
     },
     (accessToken, refreshToken, profile, done) => {
@@ -34,18 +35,18 @@ router.get('/', (req, res) => {
         })
     }
 
-    res.redirect('/auth/live/auth')
+    res.redirect('/auth/facebook/auth')
 })
 
 
 
-router.get('/auth', passport.authenticate('windowslive', { scope: ['wl.basic', 'wl.emails'], session: false }), () => {
+router.get('/auth', passport.authenticate('facebook', { scope: ['public_profile', 'email'], session: false }), () => {
 
 })
 
 
 
-router.get('/callback', passport.authenticate('windowslive', { failureRedirect: '/login', session: false }), (req, res, next) => {
+router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login', session: false }), (req, res, next) => {
     var user = {}
     var name = _.compact([
         _.get(req, ['user', 'name', 'givenName']),
@@ -53,7 +54,7 @@ router.get('/callback', passport.authenticate('windowslive', { failureRedirect: 
         _.get(req, ['user', 'name', 'familyName'])
     ]).join(' ')
 
-    _.set(user, 'provider', 'live')
+    _.set(user, 'provider', 'facebook')
     _.set(user, 'id', _.get(req, ['user', 'id']))
     _.set(user, 'name', name)
     _.set(user, 'email', _.get(req, ['user', 'emails', 0, 'value']))

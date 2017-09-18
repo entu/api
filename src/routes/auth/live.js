@@ -1,25 +1,25 @@
 'use strict'
 
 const _ = require('lodash')
-const google = require('passport-google-oauth').OAuth2Strategy
+const live = require('passport-windowslive').Strategy
 const passport = require('passport')
 const router = require('express').Router()
 
-const entu = require('../../helpers/entu')
+const entu = require('../../helpers')
 
 
 
-passport.use(new google({
-        clientID: process.env.GOOGLE_ID,
-        clientSecret: process.env.GOOGLE_SECRET,
-        callbackURL: '/auth/google/callback',
+passport.use(new live({
+        clientID: process.env.LIVE_ID,
+        clientSecret: process.env.LIVE_SECRET,
+        callbackURL: '/auth/live/callback',
         proxy: true
     },
     (accessToken, refreshToken, profile, done) => {
         process.nextTick(() => {
             return done(null, profile)
         })
-    }
+  }
 ))
 
 
@@ -34,18 +34,18 @@ router.get('/', (req, res) => {
         })
     }
 
-    res.redirect('/auth/google/auth')
+    res.redirect('/auth/live/auth')
 })
 
 
 
-router.get('/auth', passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'], session: false }), () => {
+router.get('/auth', passport.authenticate('windowslive', { scope: ['wl.basic', 'wl.emails'], session: false }), () => {
 
 })
 
 
 
-router.get('/callback', passport.authenticate('google', { failureRedirect: '/login', session: false }), (req, res, next) => {
+router.get('/callback', passport.authenticate('windowslive', { failureRedirect: '/login', session: false }), (req, res, next) => {
     var user = {}
     var name = _.compact([
         _.get(req, ['user', 'name', 'givenName']),
@@ -53,11 +53,11 @@ router.get('/callback', passport.authenticate('google', { failureRedirect: '/log
         _.get(req, ['user', 'name', 'familyName'])
     ]).join(' ')
 
-    _.set(user, 'provider', 'google')
+    _.set(user, 'provider', 'live')
     _.set(user, 'id', _.get(req, ['user', 'id']))
     _.set(user, 'name', name)
     _.set(user, 'email', _.get(req, ['user', 'emails', 0, 'value']))
-    _.set(user, 'picture', _.get(req, ['user', 'photos', 0, 'value']).replace('?sz=50', ''))
+    _.set(user, 'picture', _.get(req, ['user', 'photos', 0, 'value']))
 
     entu.addUserSession({
         request: req,
