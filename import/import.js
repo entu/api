@@ -296,6 +296,7 @@ var importProps = (mysqlDb, callback) => {
             log('create property indexes')
             mongoCon.collection('property').createIndexes([
                 { key: { entity: 1 } },
+                { key: { type: 1 } },
                 { key: { deleted: 1 } }
             ], callback)
         },
