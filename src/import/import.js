@@ -21,7 +21,7 @@ const MYSQL_HOST = process.env.MYSQL_HOST || '127.0.0.1'
 const MYSQL_PORT = process.env.MYSQL_PORT || 3306
 const MYSQL_USER = process.env.MYSQL_USER
 const MYSQL_PASSWORD = process.env.MYSQL_PASSWORD
-const MYSQL_SSL_PATH = process.env.MYSQL_SSL_PATH
+// const MYSQL_SSL_PATH = process.env.MYSQL_SSL_PATH
 const MONGODB = process.env.MONGODB || 'mongodb://localhost:27017/'
 
 
@@ -35,7 +35,7 @@ const log = (s) => {
 const importProps = (mysqlDb, callback) => {
     log('start database ' + mysqlDb + ' import')
 
-    var mongoCon = NaN
+    var mongoCon
     var sqlCon = mysql.createConnection({
         host: MYSQL_HOST,
         port: MYSQL_PORT,
@@ -483,7 +483,6 @@ connection.query(require('./sql/get_databases.sql'), (err, rows) => {
         process.exit(1)
     }
 
-    let dbs = _.map(rows, 'db')
     connection.end()
 
     async.eachSeries(rows, (row, callback) => {

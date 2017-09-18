@@ -99,7 +99,7 @@ router.delete('/:propertyId', (req, res, next) => {
         (r, callback) => { // Aggregate entity
             entu.aggregateEntity(req, property.entity, property.type, callback)
         },
-    ], (err, url) => {
+    ], (err) => {
         if (err) { return next(err) }
 
         res.json({ deleted: true })

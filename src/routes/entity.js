@@ -207,7 +207,7 @@ router.post('/', (req, res, next) => {
         (r, callback) => { // Aggregate entity
             entu.aggregateEntity(req, eId, null, callback)
         },
-    ], (err, entity) => {
+    ], (err) => {
         if (err) { return next(err) }
 
         res.json({ _id: eId })
