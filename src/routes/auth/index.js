@@ -65,7 +65,11 @@ router.get('/', (req, res, next) => {
     ], (err, accounts) => {
         if(err) { return next(err) }
 
-        res.respond(_.mapValues(_.groupBy(accounts, 'account'), _.first))
+        res.respond(_.mapValues(_.groupBy(accounts, 'account'), (o) => {
+            return _.first(_.map(o, (p) => {
+                return _.omit(p, 'account')
+            }))
+        }))
     })
 })
 
