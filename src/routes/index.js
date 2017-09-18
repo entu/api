@@ -9,7 +9,7 @@ const startDt = new Date()
 router.get('/', (req, res) => {
     res.json({
         release: process.env.VERSION || process.env.HEROKU_SLUG_COMMIT.substr(0, 7) || require('./package').version,
-        startDt: startDt,
+        started: startDt,
     })
 })
 
