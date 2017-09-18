@@ -64,8 +64,6 @@ if(process.env.SENTRY_DSN) {
 // start express app
 var app = express()
 
-// set locals
-
 // returns db connection (creates if not set)
 app.locals.dbs = {}
 app.locals.db = (account, callback) => {
@@ -113,9 +111,7 @@ app.disable('x-powered-by')
 app.set('trust proxy', true)
 
 // logs to getsentry.com - start
-if(process.env.SENTRY_DSN) {
-    app.use(raven.requestHandler())
-}
+if(process.env.SENTRY_DSN) { app.use(raven.requestHandler()) }
 
 // Initialize Passport
 app.use(passport.initialize())
@@ -131,26 +127,28 @@ app.use((req, res, next) => {
     req.startDt = Date.now()
 
     res.on('finish', () => {
-        var request = {
-            date: new Date(),
-            ip: req.ip,
-            ms: Date.now() - req.startDt,
-            status: res.statusCode,
-            method: req.method,
-            host: req.hostname,
-            browser: req.headers['user-agent'],
-        }
-        if(req.path) { request.path = req.originalUrl.split('?')[0] }
-        if(!_.isEmpty(req.query)) { request.query = req.originalUrl.split('?')[1] }
-        if(!_.isEmpty(req.body)) { request.body = req.body }
-        if(req.browser) { request.browser = req.headers['user-agent'] }
+        var request = {}
+
+        _.set(request, 'date', new Date())
+        _.set(request, 'ip', _.get(req, 'ip'))
+        _.set(request, 'ms', Date.now() - _.get(req, 'startDt'))
+        _.set(request, 'status', res.statusCode)
+        _.set(request, 'method', _.get(req, 'method'))
+        _.set(request, 'path', _.get(req, 'originalUrl').split('?')[0])
+        _.set(request, 'query', _.get(req, 'originalUrl').split('?')[1])
+        _.set(request, 'body', _.get(req, 'body'))
+        _.set(request, 'account', _.get(req, 'account'))
+        _.set(request, 'user', _.get(req, 'user'))
+        _.set(request, 'browser', _.get(req, 'headers.user-agent'))
+
+        if (_.isEmpty(request.body)) _.unset(request, 'body')
 
         async.waterfall([
             (callback) => {
                 req.app.locals.db('entu', callback)
             },
             (connection, callback) => {
-                connection.collection('request').insertOne(request, callback)
+                connection.collection('request').insertOne(_.pickBy(request, _.identity), callback)
             },
         ], (err) => {
             if(err) {

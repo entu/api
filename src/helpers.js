@@ -18,25 +18,21 @@ exports.UUID = UUID
 exports.addUserSession = (params, callback) => {
     if(!params.user) { return callback('No user') }
 
-    var session = {
-        created: new Date()
-    }
+    var session = {}
 
-    if(_.get(params, 'user.id')) { _.set(session, 'user.id', _.get(params, 'user.id')) }
-    if(_.get(params, 'user.provider')) { _.set(session, 'user.provider', _.get(params, 'user.provider')) }
-    if(_.get(params, 'user.name')) { _.set(session, 'user.name', _.get(params, 'user.name')) }
-    if(_.get(params, 'user.email')) { _.set(session, 'user.email', _.get(params, 'user.email')) }
-    if(_.get(params, 'user.picture')) { _.set(session, 'user.picture', _.get(params, 'user.picture')) }
-    if(_.get(params, 'request.ip')) { _.set(session, 'ip', _.get(params, 'request.ip')) }
-    if(_.get(params, 'request.headers.user-agent')) { _.set(session, 'browser', _.get(params, 'request.headers.user-agent')) }
-    if(_.get(params, 'request.cookies.redirect')) { _.set(session, 'redirect', _.get(params, 'request.cookies.redirect')) }
+    _.set(session, 'created', new Date())
+    _.set(session, 'user.id', _.get(params, 'user.id'))
+    _.set(session, 'user.provider', _.get(params, 'user.provider'))
+    _.set(session, 'user.name', _.get(params, 'user.name'))
+    _.set(session, 'user.email', _.get(params, 'user.email'))
+    _.set(session, 'user.picture', _.get(params, 'user.picture'))
 
     async.waterfall([
         (callback) => {
             params.request.app.locals.db('entu', callback)
         },
         (connection, callback) => {
-            connection.collection('session').insertOne(session, callback)
+            connection.collection('session').insertOne(_.pickBy(session, _.identity), callback)
         },
     ], (err, r) => {
         if(err) { return callback(err) }
