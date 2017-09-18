@@ -45,8 +45,8 @@ router.get('/auth', passport.authenticate('facebook', { scope: ['public_profile'
 
 
 router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login', session: false }), (req, res, next) => {
-    var user = {}
-    var name = _.compact([
+    let user = {}
+    const name = _.compact([
         _.get(req, 'user.name.givenName'),
         _.get(req, 'user.name.middleName'),
         _.get(req, 'user.name.familyName')
@@ -64,7 +64,7 @@ router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/l
     }, (err, sessionId) => {
         if(err) { return next(err) }
 
-        var redirectUrl = req.cookies.redirect
+        const redirectUrl = req.cookies.redirect
         if(redirectUrl) {
             res.clearCookie('redirect')
             res.redirect(redirectUrl + '?key=' + sessionId)

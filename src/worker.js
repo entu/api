@@ -172,7 +172,7 @@ app.use((req, res, next) => {
 
 // check JWT
 const jwtCheck = (req, res, next) => {
-    var parts = _.get(req, 'headers.authorization', '').split(' ')
+    let parts = _.get(req, 'headers.authorization', '').split(' ')
     let jwtConf = {
         issuer: req.hostname
     }

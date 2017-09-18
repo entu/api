@@ -42,7 +42,7 @@ router.get('/:propertyId', (req, res, next) => {
                 aws.config.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
                 aws.config.region = process.env.AWS_REGION
 
-                var s3 = new aws.S3()
+                const s3 = new aws.S3()
                 s3.getSignedUrl('getObject', { Bucket: process.env.AWS_S3_BUCKET, Key: property.s3, Expires: 10 }, callback)
             } else {
                 callback(null, null)

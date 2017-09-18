@@ -42,8 +42,8 @@ router.get('/callback', (req, res, next) => {
             if(_.get(result, 'Status.$value') !== 'GOOD') { return callback('Not valid ID-Card') }
             if(!_.get(result, 'UserIDCode.$value')) { return callback('Not ID code') }
 
-            var user = {}
-            var name = _.compact([
+            let user = {}
+            const name = _.compact([
                 _.get(result, 'UserGivenname.$value'),
                 _.get(result, 'UserSurname.$value')
             ]).join(' ')
@@ -58,7 +58,7 @@ router.get('/callback', (req, res, next) => {
     ], (err, sessionId) => {
         if(err) { return next(err) }
 
-        var redirectUrl = req.cookies.redirect
+        const redirectUrl = req.cookies.redirect
         if(redirectUrl) {
             res.clearCookie('redirect')
             res.redirect(redirectUrl + '?key=' + sessionId)

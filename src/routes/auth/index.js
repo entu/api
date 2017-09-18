@@ -17,7 +17,7 @@ router.get('/', (req, res, next) => {
 
     if(key.length !== 24 && key.length !== 48) { return next([400, 'Invalid key']) }
 
-    var sessionAuth = key.length === 24
+    const sessionAuth = key.length === 24
 
     async.waterfall([
         (callback) => {

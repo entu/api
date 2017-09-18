@@ -44,8 +44,8 @@ router.get('/auth', passport.authenticate('twitter'), () => {
 
 
 router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/login' }), (req, res, next) => {
-    var user = {}
-    var name = _.compact([
+    let user = {}
+    const name = _.compact([
         _.get(req, 'user.name.givenName'),
         _.get(req, 'user.name.middleName'),
         _.get(req, 'user.name.familyName')
@@ -63,7 +63,7 @@ router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/lo
     }, (err, sessionId) => {
         if(err) { return next(err) }
 
-        var redirectUrl = req.cookies.redirect
+        const redirectUrl = req.cookies.redirect
         if(redirectUrl) {
             res.clearCookie('redirect')
             res.redirect(redirectUrl + '?key=' + sessionId)

@@ -397,7 +397,7 @@ const importFiles = (mysqlDb, callback) => {
     sqlCon.query(require('./sql/get_files.sql'), (err, files) => {
         if(err) { return callback(err) }
 
-        var s3 = new aws.S3()
+        const s3 = new aws.S3()
 
         if (!fs.existsSync(process.env.FILES_PATH)) {
             fs.mkdirSync(process.env.FILES_PATH)
