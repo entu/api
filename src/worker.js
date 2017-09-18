@@ -1,6 +1,6 @@
 'use strict'
 
-if(process.env.NEW_RELIC_LICENSE_KEY) require('newrelic')
+if(process.env.NEW_RELIC_LICENSE_KEY) { require('newrelic') }
 
 const _ = require('lodash')
 const async = require('async')
@@ -62,7 +62,7 @@ if(process.env.SENTRY_DSN) {
 
 
 // start express app
-var app = express()
+const app = express()
 
 // returns db connection (creates if not set)
 app.locals.dbs = {}
@@ -171,7 +171,7 @@ app.use((req, res, next) => {
 })
 
 // check JWT
-var jwtCheck = (req, res, next) => {
+const jwtCheck = (req, res, next) => {
     var parts = _.get(req, 'headers.authorization', '').split(' ')
     let jwtConf = {
         issuer: req.hostname

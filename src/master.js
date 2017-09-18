@@ -9,10 +9,10 @@ let cpuCount = 1
 
 if (process.env.WEB_CONCURRENCY) {
     cpuCount = process.env.WEB_CONCURRENCY
-    console.log('WEB_CONCURRENCY = ' + cpuCount);
+    console.log('WEB_CONCURRENCY = ' + cpuCount)
 } else {
     cpuCount = require('os').cpus().length
-    console.log('CPU count = ' + cpuCount);
+    console.log('CPU count = ' + cpuCount)
 }
 
 
@@ -24,7 +24,7 @@ cluster.setupMaster({
 
 
 // Create a worker for each CPU
-for (var i = 0; i < cpuCount; i += 1) {
+for (let i = 0; i < cpuCount; i += 1) {
     cluster.fork()
 }
 

@@ -47,7 +47,7 @@ router.get('/:propertyId', (req, res, next) => {
             } else {
                 callback(null, null)
             }
-        },
+        }
     ], (err, url) => {
         if (err) { return next(err) }
 

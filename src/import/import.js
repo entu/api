@@ -26,14 +26,14 @@ const MONGODB = process.env.MONGODB || 'mongodb://localhost:27017/'
 
 
 
-var log = (s) => {
+const log = (s) => {
     console.log((new Date()).toISOString().substr(11).replace('Z', ''), s)
 }
 
 
 
-var importProps = (mysqlDb, callback) => {
-    log('start database ' +  mysqlDb + ' import')
+const importProps = (mysqlDb, callback) => {
+    log('start database ' + mysqlDb + ' import')
 
     var mongoCon = NaN
     var sqlCon = mysql.createConnection({
@@ -371,7 +371,7 @@ var importProps = (mysqlDb, callback) => {
 
 
 
-var importFiles = (mysqlDb, callback) => {
+const importFiles = (mysqlDb, callback) => {
     log('start ' +  mysqlDb + ' files import')
 
     var mongoCon = NaN
@@ -466,7 +466,7 @@ var importFiles = (mysqlDb, callback) => {
 
 
 
-var connection = mysql.createConnection({
+const connection = mysql.createConnection({
     host: MYSQL_HOST,
     port: MYSQL_PORT,
     user: MYSQL_USER,

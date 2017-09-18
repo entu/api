@@ -33,25 +33,25 @@ router.get('/', (req, res, next) => {
             switch(type) {
                 case 'reference':
                     value = new ObjectID(v)
-                    break;
+                    break
                 case 'boolean':
                     value = v.toLowerCase() === 'true'
-                    break;
+                    break
                 case 'integer':
                     value = _.toNumber(v)
-                    break;
+                    break
                 case 'size':
                     value = _.toNumber(v)
-                    break;
+                    break
                 case 'decimal':
                     value = _.toNumber(v)
-                    break;
+                    break
                 case 'date':
                     value = new Date(v)
-                    break;
+                    break
                 case 'datetime':
                     value = new Date(v)
-                    break;
+                    break
                 default:
                     if (operator === 'regex' && v.indexOf('/') > -1) {
                         value = new RegExp(v.split('/')[1], v.split('/')[2])

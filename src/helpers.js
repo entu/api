@@ -2,15 +2,13 @@
 
 const _ = require('lodash')
 const async = require('async')
-const mongo = require('mongodb')
 
 
 
 // returns random v4 UUID
-var UUID = (a) => {
+exports.UUID = (a) => {
     return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, UUID)
 }
-exports.UUID = UUID
 
 
 
@@ -33,7 +31,7 @@ exports.addUserSession = (params, callback) => {
         },
         (connection, callback) => {
             connection.collection('session').insertOne(_.pickBy(session, _.identity), callback)
-        },
+        }
     ], (err, r) => {
         if(err) { return callback(err) }
 

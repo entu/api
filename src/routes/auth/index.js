@@ -13,7 +13,7 @@ router.get('/', (req, res, next) => {
 
     if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next([400, 'No key']) }
 
-    var key = parts[1]
+    const key = parts[1]
 
     if(key.length !== 24 && key.length !== 48) { return next([400, 'Invalid key']) }
 
@@ -45,7 +45,7 @@ router.get('/', (req, res, next) => {
                         let authFilter = {}
                         authFilter[sessionAuth ? 'entu_user.string' : 'entu_api_key.string'] = authValue
                         accountCon.collection('entity').findOne(authFilter, { _id: true }, callback)
-                    },
+                    }
                 ], (err, person) => {
                     if(err) { return callback(err) }
                     if(!person) { return callback(null) }
