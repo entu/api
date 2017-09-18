@@ -9,14 +9,14 @@ const router = require('express').Router()
 
 
 router.get('/:propertyId', (req, res, next) => {
-    if (!req.customer) { return next([400, 'No customer parameter']) }
+    if (!req.account) { return next([400, 'No account parameter']) }
 
     var connection
     var property
 
     async.waterfall([
         (callback) => {
-            req.app.locals.db(req.customer, callback)
+            req.app.locals.db(req.account, callback)
         },
         (con, callback) => {
             connection = con
@@ -67,14 +67,14 @@ router.get('/:propertyId', (req, res, next) => {
 
 
 router.delete('/:propertyId', (req, res, next) => {
-    if (!req.customer) { return next([400, 'No customer parameter']) }
+    if (!req.account) { return next([400, 'No account parameter']) }
 
     var connection
     var property
 
     async.waterfall([
         (callback) => {
-            req.app.locals.db(req.customer, callback)
+            req.app.locals.db(req.account, callback)
         },
         (con, callback) => {
             connection = con

@@ -53,7 +53,7 @@ exports.aggregateEntity = (req, entityId, property, callback) => {
 
     async.waterfall([
         (callback) => {
-            req.app.locals.db(req.customer, callback)
+            req.app.locals.db(req.account, callback)
         },
         (con, callback) => {
             connection = con

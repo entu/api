@@ -18,7 +18,7 @@ const raven = require('raven')
 const APP_VERSION = process.env.VERSION || process.env.HEROKU_SLUG_COMMIT.substr(0, 7) || require('./package').version
 
 // MONGODB
-// CUSTOMERS
+// ACCOUNTS
 // JWT_SECRET
 
 // GOOGLE_ID
@@ -71,9 +71,9 @@ var app = express()
 
 // returns db connection (creates if not set)
 app.locals.dbs = {}
-app.locals.db = (customer, callback) => {
-    if(_.has(app, ['locals', 'dbs', customer])) {
-        return callback(null, app.locals.dbs[customer].db(customer))
+app.locals.db = (account, callback) => {
+    if(_.has(app, ['locals', 'dbs', account])) {
+        return callback(null, app.locals.dbs[account].db(account))
     } else {
         var entuDb
         async.waterfall([
@@ -82,7 +82,7 @@ app.locals.db = (customer, callback) => {
             },
             (connection, callback) => {
                 entuDb = connection
-                entuDb.collection('entity').findOne({ 'database_name.string': customer, 'mongodb.string': { $exists: true } }, { _id: false, 'mongodb.string': true }, callback)
+                entuDb.collection('entity').findOne({ 'database_name.string': account, 'mongodb.string': { $exists: true } }, { _id: false, 'mongodb.string': true }, callback)
             },
             (url, callback) => {
                 if (!_.has(url, 'mongodb.0.string')) { return callback('No MongoDb url')}
@@ -90,21 +90,21 @@ app.locals.db = (customer, callback) => {
                 mongo.MongoClient.connect(_.get(url, 'mongodb.0.string'), { ssl: true, sslValidate: true }, callback)
             },
             (connection, callback) => {
-                console.log('Connected to ' + customer)
+                console.log('Connected to ' + account)
 
                 connection.on('close', () => {
-                    _.unset(app, ['locals', 'dbs', customer])
-                    console.log('Disconnected from ' + customer)
+                    _.unset(app, ['locals', 'dbs', account])
+                    console.log('Disconnected from ' + account)
                 })
 
-                app.locals.dbs[customer] = connection
+                app.locals.dbs[account] = connection
 
                 entuDb.close(callback)
             },
         ], (err) => {
             if(err) { return callback(err) }
 
-            return callback(null, app.locals.dbs[customer].db(customer))
+            return callback(null, app.locals.dbs[account].db(account))
         })
     }
 }
@@ -202,9 +202,9 @@ var jwtCheck = (req, res, next) => {
         issuer: req.hostname
     }
 
-    if (req.query.customer) {
-        req.customer = req.query.customer
-        jwtConf.audience = req.query.customer
+    if (req.query.account) {
+        req.account = req.query.account
+        jwtConf.audience = req.query.account
     }
 
     if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
@@ -213,7 +213,7 @@ var jwtCheck = (req, res, next) => {
         if(err) { return next([401, err]) }
 
         _.set(req, 'user', decoded.sub)
-        _.set(req, 'customer', decoded.aud)
+        _.set(req, 'account', decoded.aud)
 
         next(null)
     })

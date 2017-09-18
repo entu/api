@@ -10,7 +10,7 @@ const entu = require('../helpers')
 
 
 router.get('/', (req, res, next) => {
-    if (!req.customer) { return next([400, 'No customer parameter']) }
+    if (!req.account) { return next([400, 'No account parameter']) }
 
     let props = _.compact(_.get(req, 'query.props', '').split(','))
     let sort = _.compact(_.get(req, 'query.sort', '').split(','))
@@ -93,7 +93,7 @@ router.get('/', (req, res, next) => {
 
     async.waterfall([
         (callback) => {
-            req.app.locals.db(req.customer, callback)
+            req.app.locals.db(req.account, callback)
         },
         (connection, callback) => {
             connection.collection('entity').find(filter, fields, callback)
@@ -124,7 +124,7 @@ router.get('/', (req, res, next) => {
 
 
 router.post('/', (req, res, next) => {
-    if (!req.customer) { return next([400, 'No customer parameter']) }
+    if (!req.account) { return next([400, 'No account parameter']) }
     if (!req.user) { return next([403, 'Forbidden']) }
     if (!req.body.type) { return next([400, 'No type']) }
 
@@ -137,7 +137,7 @@ router.post('/', (req, res, next) => {
 
     async.waterfall([
         (callback) => {
-            req.app.locals.db(req.customer, callback)
+            req.app.locals.db(req.account, callback)
         },
         (con, callback) => { // get entity type
             connection = con
@@ -217,11 +217,11 @@ router.post('/', (req, res, next) => {
 
 
 router.get('/:entityId', (req, res, next) => {
-    if (!req.customer) { return next([400, 'No customer parameter']) }
+    if (!req.account) { return next([400, 'No account parameter']) }
 
     async.waterfall([
         (callback) => {
-            req.app.locals.db(req.customer, callback)
+            req.app.locals.db(req.account, callback)
         },
         (connection, callback) => {
             let props = _.compact(_.get(req, 'query.props', '').split(','))
@@ -256,14 +256,14 @@ router.get('/:entityId', (req, res, next) => {
 
 
 router.delete('/:entityId', (req, res, next) => {
-    if (!req.customer) { return next([400, 'No customer parameter']) }
+    if (!req.account) { return next([400, 'No account parameter']) }
 
     var eId = new ObjectID(req.params.entityId)
     var connection
 
     async.waterfall([
         (callback) => {
-            req.app.locals.db(req.customer, callback)
+            req.app.locals.db(req.account, callback)
         },
         (con, callback) => { // Get entity
             connection = con

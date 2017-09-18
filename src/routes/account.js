@@ -7,9 +7,9 @@ const router = require('express').Router()
 
 
 router.get('/', (req, res, next) => {
-    if (!req.customer) { return next([400, 'No customer parameter']) }
+    if (!req.account) { return next([400, 'No account parameter']) }
 
-    req.app.locals.db(req.customer, (err, connection) => {
+    req.app.locals.db(req.account, (err, connection) => {
         if (err) { return next(err) }
 
         async.parallel({
@@ -64,7 +64,7 @@ router.get('/', (req, res, next) => {
             if (err) { return next(err) }
 
             res.respond({
-                customer: req.customer,
+                account: req.account,
                 stats: {
                     entities: stats.entities,
                     deletedEntities: stats.deletedEntities,

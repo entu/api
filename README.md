@@ -27,7 +27,7 @@
 
 
 ## GET /account
-Returns customer info and usage statistics
+Returns account info and usage statistics
 
 #### Example request
 ```shell
@@ -45,7 +45,7 @@ curl \
     "ms": 713,
     "auth": true,
     "result": {
-        "customer": "db1",
+        "account": "account1",
         "stats": {
             "entities": 531,
             "deletedEntities": 85,
@@ -82,12 +82,10 @@ curl \
     "ms": 1037,
     "auth": false,
     "result": {
-        "entu": {
-            "customer": "db1",
+        "account1": {
             "token": "hNGcQgaeKh7ptWF5FVPbfKgpR5ZHCzT5cbA4BQWtmWGkfdQHg5HLDMCB8GwKw8gG"
         },
-        "roots": {
-            "customer": "db2",
+        "account2": {
             "token": "7RnGfkM7fayzDx7F8E2f65aTuuE5P7PEmYHVYNngKbDVx92bk2FVZBkfFBAPgpsT"
         }
     }

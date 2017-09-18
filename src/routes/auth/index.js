@@ -36,26 +36,25 @@ router.get('/', (req, res, next) => {
             }
         },
         (authValue, callback) => {
-            async.map(process.env.CUSTOMERS.split(','), (customer, callback) => {
+            async.map(process.env.ACCOUNTS.split(','), (account, callback) => {
                 async.waterfall([
                     (callback) => {
-                        req.app.locals.db(customer, callback)
+                        req.app.locals.db(account, callback)
                     },
-                    (customerCon, callback) => {
+                    (accountCon, callback) => {
                         let authFilter = {}
                         authFilter[sessionAuth ? 'entu_user.string' : 'entu_api_key.string'] = authValue
-                        customerCon.collection('entity').findOne(authFilter, { _id: true }, callback)
+                        accountCon.collection('entity').findOne(authFilter, { _id: true }, callback)
                     },
                 ], (err, person) => {
                     if(err) { return callback(err) }
                     if(!person) { return callback(null) }
 
                     return callback(null, {
-                        title: null,
-                        customer: customer,
+                        account: account,
                         token: jwt.sign({}, process.env.JWT_SECRET, {
                             issuer: req.hostname,
-                            audience: customer,
+                            audience: account,
                             subject: person._id.toString(),
                             expiresIn: '14d'
                         })
@@ -63,10 +62,10 @@ router.get('/', (req, res, next) => {
                 })
             }, callback)
         },
-    ], (err, customers) => {
+    ], (err, accounts) => {
         if(err) { return next(err) }
 
-        res.respond(_.mapValues(_.groupBy(customers, 'customer'), _.first))
+        res.respond(_.mapValues(_.groupBy(accounts, 'account'), _.first))
     })
 })
 
