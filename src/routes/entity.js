@@ -144,7 +144,7 @@ router.post('/', (req, res, next) => {
             connection.collection('entity').findOne({ '_type.string': 'entity', 'key.string': req.body.type }, { default_parent: true }, callback)
         },
         (type, callback) => {
-            if (!type) { return next([404, 'Entity type not found']) }
+            if (!type) { return callback([404, 'Entity type not found']) }
 
             defaultParents = type.default_parent
 
@@ -155,12 +155,12 @@ router.post('/', (req, res, next) => {
             connection.collection('entity').findOne({ '_id': new ObjectID(req.body.parent) }, { _id: true, _type: true, _viewer: true, _expander: true, _editor: true, _owner: true }, (p, callback) => {
                 parent = p
 
-                if (!parent) { return next([404, 'Parent entity not found']) }
+                if (!parent) { return callback([404, 'Parent entity not found']) }
 
                 let access = _.map(_.concat(_.get(parent, '_owner', []), _.get(parent, '_editor', []), _.get(parent, '_expander', [])), s => s.reference.toString())
 
                 if (access.indexOf(req.user) === -1) {
-                    return next([403, 'Forbidden'])
+                    return callback([403, 'Forbidden'])
                 }
 
                 connection.collection('entity').find({ _parent: type._id, '_type.string': 'property', 'default': {$exists: true } }, { _id: false, default: true }, callback)
@@ -257,6 +257,7 @@ router.get('/:entityId', (req, res, next) => {
 
 router.delete('/:entityId', (req, res, next) => {
     if (!req.account) { return next([400, 'No account parameter']) }
+    if (!req.user) { return next([403, 'Forbidden']) }
 
     var eId = new ObjectID(req.params.entityId)
     var connection
@@ -270,12 +271,12 @@ router.delete('/:entityId', (req, res, next) => {
             connection.collection('entity').findOne({ _id: eId }, { _owner: true }, callback)
         },
         (entity, callback) => { // Check rights and create _deleted property
-            if (!entity) { return next([404, 'Entity not found']) }
+            if (!entity) { return callback([404, 'Entity not found']) }
 
             let access = _.map(_.get(entity, '_owner', []), s => s.reference.toString())
 
             if (access.indexOf(req.user) === -1) {
-                return next([403, 'Forbidden'])
+                return callback([403, 'Forbidden'])
             }
 
             connection.collection('property').insertOne({ entity: eId, type: '_deleted', boolean: true, created: { at: new Date(), by: new ObjectID(req.user) } }, callback)

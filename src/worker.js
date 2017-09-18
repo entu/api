@@ -167,7 +167,7 @@ app.use((req, res, next) => {
 
 // redirect HTTP to HTTPS
 app.use((req, res, next) => {
-    if (req.hostname !== 'localhost' && req.protocol.toLowerCase() !== 'https') { next([418, 'I\'m a teapot']) } else { next() }
+    if (req.hostname !== 'localhost' && req.protocol.toLowerCase() !== 'https') { return next([418, 'I\'m a teapot']) } else { next() }
 })
 
 // check JWT

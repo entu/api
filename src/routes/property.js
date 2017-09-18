@@ -45,7 +45,7 @@ router.get('/:propertyId', (req, res, next) => {
                 const s3 = new aws.S3()
                 s3.getSignedUrl('getObject', { Bucket: process.env.AWS_S3_BUCKET, Key: property.s3, Expires: 10 }, callback)
             } else {
-                callback(null, null)
+                return callback(null, null)
             }
         }
     ], (err, url) => {
@@ -68,6 +68,7 @@ router.get('/:propertyId', (req, res, next) => {
 
 router.delete('/:propertyId', (req, res, next) => {
     if (!req.account) { return next([400, 'No account parameter']) }
+    if (!req.user) { return next([403, 'Forbidden']) }
 
     var connection
     var property
@@ -92,7 +93,7 @@ router.delete('/:propertyId', (req, res, next) => {
 
             let access = _.map(_.concat(_.get(entity, '_owner', []), _.get(entity, '_editor', [])), s => s.reference.toString())
 
-            if (access.indexOf(req.user) === -1) { return next([403, 'Forbidden']) }
+            if (access.indexOf(req.user) === -1) { return callback([403, 'Forbidden']) }
 
             connection.collection('property').updateOne({ _id: property._id }, { $set: { deleted: { at: new Date(), by: new ObjectID(req.user) } } }, callback)
         },
