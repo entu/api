@@ -210,7 +210,7 @@ router.post('/', (req, res, next) => {
     ], (err, entity) => {
         if (err) { return next(err) }
 
-        res.respond(eId)
+        res.respond({ _id: eId })
     })
 })
 
@@ -303,7 +303,7 @@ router.delete('/:entityId', (req, res, next) => {
     ], (err, entity) => {
         if (err) { return next(err) }
 
-        res.respond(true)
+        res.respond({ deleted: true })
     })
 })
 

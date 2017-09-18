@@ -70,7 +70,7 @@ router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/lo
             res.clearCookie('redirect')
             res.redirect(redirectUrl + '?key=' + sessionId)
         } else {
-            res.respond(sessionId)
+            res.respond({ key: sessionId})
         }
     })
 })

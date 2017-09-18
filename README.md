@@ -40,20 +40,16 @@ curl \
 #### Example response
 ```json
 {
-    "ms": 713,
-    "auth": true,
-    "result": {
-        "account": "account1",
-        "stats": {
-            "entities": 531,
-            "deletedEntities": 85,
-            "properties": 7446,
-            "deletedProperties": 1547,
-            "files": 70,
-            "filesSize": 16240263,
-            "deletedFiles": 9,
-            "deletedFilesSize": 1392158
-        }
+    "account": "account1",
+    "stats": {
+        "entities": 531,
+        "deletedEntities": 85,
+        "properties": 7446,
+        "deletedProperties": 1547,
+        "files": 70,
+        "filesSize": 16240263,
+        "deletedFiles": 9,
+        "deletedFilesSize": 1392158
     }
 }
 ```
@@ -75,15 +71,11 @@ curl \
 #### Example response
 ```json
 {
-    "ms": 1037,
-    "auth": false,
-    "result": {
-        "account1": {
-            "token": "hNGcQgaeKh7ptWF5FVPbfKgpR5ZHCzT5cbA4BQWtmWGkfdQHg5HLDMCB8GwKw8gG"
-        },
-        "account2": {
-            "token": "7RnGfkM7fayzDx7F8E2f65aTuuE5P7PEmYHVYNngKbDVx92bk2FVZBkfFBAPgpsT"
-        }
+    "account1": {
+        "token": "hNGcQgaeKh7ptWF5FVPbfKgpR5ZHCzT5cbA4BQWtmWGkfdQHg5HLDMCB8GwKw8gG"
+    },
+    "account2": {
+        "token": "7RnGfkM7fayzDx7F8E2f65aTuuE5P7PEmYHVYNngKbDVx92bk2FVZBkfFBAPgpsT"
     }
 }
 ```
@@ -104,9 +96,7 @@ Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key c
 #### Example response
 ```json
 {
-    "ms": 1037,
-    "auth": false,
-    "result": "yp5xhSMf6uRnpJ5QKAeQ2RDT"
+    "key": "yp5xhSMf6uRnpJ5QKAeQ2RDT"
 }
 ```
 
@@ -140,12 +130,8 @@ curl \
 #### Example response
 ```json
 {
-    "ms": 371,
-    "auth": true,
-    "result": {
-        "count": 0,
-        "entities": []
-    }
+    "count": 0,
+    "entities": []
 }
 ```
 
@@ -172,9 +158,7 @@ curl \
 #### Example response
 ```json
 {
-    "ms": 167,
-    "auth": true,
-    "result": "bsskJkDWwQXHB8ut7vQvmWZ4"
+    "_id": "bsskJkDWwQXHB8ut7vQvmWZ4"
 }
 ```
 
@@ -197,11 +181,7 @@ curl \
 
 #### Example response
 ```json
-{
-    "ms": 67,
-    "auth": true,
-    "result": {}
-}
+{}
 ```
 
 
@@ -221,9 +201,7 @@ curl \
 #### Example response
 ```json
 {
-    "ms": 46,
-    "auth": true,
-    "result": true
+    "deleted": true
 }
 ```
 
@@ -246,11 +224,7 @@ curl \
 
 #### Example response
 ```json
-{
-    "ms": 137,
-    "auth": true,
-    "result": {}
-}
+{}
 ```
 
 
@@ -270,8 +244,6 @@ curl \
 #### Example response
 ```json
 {
-    "ms": 37,
-    "auth": true,
-    "result": true
+    "deleted": true
 }
 ```

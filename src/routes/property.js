@@ -102,7 +102,7 @@ router.delete('/:propertyId', (req, res, next) => {
     ], (err, url) => {
         if (err) { return next(err) }
 
-        res.respond(true)
+        res.respond({ deleted: true })
     })
 })
 

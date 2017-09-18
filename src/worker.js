@@ -165,21 +165,7 @@ app.use((req, res, next) => {
 //custom JSON output
 app.use((req, res, next) => {
     res.respond = (body, errorCode) => {
-        var message = {
-            ms: Date.now() - req.startDt,
-            auth: !!req.user
-        }
-
-        if (errorCode) {
-            message.error = {
-                code: errorCode,
-                message: body
-            }
-            res.status(errorCode).json(message)
-        } else {
-            message.result = body
-            res.json(message)
-        }
+        res.status(errorCode || 200).json(body)
     }
 
     next(null)
