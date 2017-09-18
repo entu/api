@@ -130,18 +130,25 @@ app.use((req, res, next) => {
         var request = {}
 
         _.set(request, 'date', new Date())
-        _.set(request, 'ip', _.get(req, 'ip'))
         _.set(request, 'ms', Date.now() - _.get(req, 'startDt'))
         _.set(request, 'status', res.statusCode)
         _.set(request, 'method', _.get(req, 'method'))
         _.set(request, 'path', _.get(req, 'originalUrl').split('?')[0])
         _.set(request, 'query', _.get(req, 'originalUrl').split('?')[1])
         _.set(request, 'body', _.get(req, 'body'))
-        _.set(request, 'account', _.get(req, 'account'))
-        _.set(request, 'user', _.get(req, 'user'))
-        _.set(request, 'browser', _.get(req, 'headers.user-agent'))
+        _.set(request, 'user.ip', _.get(req, 'ip'))
+        _.set(request, 'user.account', _.get(req, 'account'))
+        _.set(request, 'user.user', _.get(req, 'user'))
+        _.set(request, 'user.browser', _.get(req, 'headers.user-agent'))
 
-        if (_.isEmpty(request.body)) _.unset(request, 'body')
+        if (_.isEmpty(request.body)) {
+            _.unset(request, 'body')
+        } else {
+            request.body = JSON.stringify(request.body)
+        }
+        request.user = _.pickBy(request.user, _.identity)
+
+        console.log(_.pickBy(request, _.identity));
 
         async.waterfall([
             (callback) => {
