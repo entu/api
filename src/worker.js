@@ -148,11 +148,9 @@ app.use((req, res, next) => {
         }
         request.user = _.pickBy(request.user, _.identity)
 
-        console.log(_.pickBy(request, _.identity));
-
         async.waterfall([
             (callback) => {
-                req.app.locals.db('entu', callback)
+                req.app.locals.db(req.account || 'entu', callback)
             },
             (connection, callback) => {
                 connection.collection('request').insertOne(_.pickBy(request, _.identity), callback)
