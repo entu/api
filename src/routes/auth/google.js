@@ -48,16 +48,16 @@ router.get('/auth', passport.authenticate('google', { scope: ['https://www.googl
 router.get('/callback', passport.authenticate('google', { failureRedirect: '/login', session: false }), (req, res, next) => {
     var user = {}
     var name = _.compact([
-        _.get(req, ['user', 'name', 'givenName']),
-        _.get(req, ['user', 'name', 'middleName']),
-        _.get(req, ['user', 'name', 'familyName'])
+        _.get(req, 'user.name.givenName'),
+        _.get(req, 'user.name.middleName'),
+        _.get(req, 'user.name.familyName')
     ]).join(' ')
 
     _.set(user, 'provider', 'google')
-    _.set(user, 'id', _.get(req, ['user', 'id']))
+    _.set(user, 'id', _.get(req, 'user.id'))
     _.set(user, 'name', name)
-    _.set(user, 'email', _.get(req, ['user', 'emails', 0, 'value']))
-    _.set(user, 'picture', _.get(req, ['user', 'photos', 0, 'value']).replace('?sz=50', ''))
+    _.set(user, 'email', _.get(req, 'user.emails.0.value'))
+    _.set(user, 'picture', _.get(req, 'user.photos.0.value').replace('?sz=50', ''))
 
     entu.addUserSession({
         request: req,

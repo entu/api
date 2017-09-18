@@ -47,14 +47,14 @@ router.get('/auth', passport.authenticate('saml', { scope: [], session: false })
 
 
 router.post('/', passport.authenticate('saml', { failureRedirect: '/login', session: false }), (req, res, next) => {
-    _.del(req, ['user', '_json'])
-    _.del(req, ['user', '_raw'])
+    _.del(req, 'user._json')
+    _.del(req, 'user._raw')
 
     var user = {}
-    _.set(user, 'provider', 'taat.' + _.get(req, ['user', 'schacHomeOrganization']))
-    _.set(user, 'id', _.get(req, ['user', 'urn:mace:dir:attribute-def:eduPersonTargetedID']))
-    _.set(user, 'name', _.get(req, ['user', 'urn:mace:dir:attribute-def:cn']))
-    _.set(user, 'email', _.get(req, ['user', 'urn:mace:dir:attribute-def:mail']))
+    _.set(user, 'provider', 'taat.' + _.get(req, 'user.schacHomeOrganization'))
+    _.set(user, 'id', _.get(req, 'user.urn:mace:dir:attribute-def:eduPersonTargetedID'))
+    _.set(user, 'name', _.get(req, 'user.urn:mace:dir:attribute-def:cn'))
+    _.set(user, 'email', _.get(req, 'user.urn:mace:dir:attribute-def:mail'))
 
     entu.addUserSession({
         request: req,

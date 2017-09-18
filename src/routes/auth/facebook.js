@@ -49,16 +49,16 @@ router.get('/auth', passport.authenticate('facebook', { scope: ['public_profile'
 router.get('/callback', passport.authenticate('facebook', { failureRedirect: '/login', session: false }), (req, res, next) => {
     var user = {}
     var name = _.compact([
-        _.get(req, ['user', 'name', 'givenName']),
-        _.get(req, ['user', 'name', 'middleName']),
-        _.get(req, ['user', 'name', 'familyName'])
+        _.get(req, 'user.name.givenName'),
+        _.get(req, 'user.name.middleName'),
+        _.get(req, 'user.name.familyName')
     ]).join(' ')
 
     _.set(user, 'provider', 'facebook')
-    _.set(user, 'id', _.get(req, ['user', 'id']))
+    _.set(user, 'id', _.get(req, 'user.id'))
     _.set(user, 'name', name)
-    _.set(user, 'email', _.get(req, ['user', 'emails', 0, 'value']))
-    _.set(user, 'picture', _.get(req, ['user', 'photos', 0, 'value']))
+    _.set(user, 'email', _.get(req, 'user.emails.0.value'))
+    _.set(user, 'picture', _.get(req, 'user.photos.0.value'))
 
     entu.addUserSession({
         request: req,

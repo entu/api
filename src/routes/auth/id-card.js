@@ -39,19 +39,19 @@ router.get('/callback', (req, res, next) => {
         (result, callback) => {
             console.log(JSON.stringify(result, null, '  '))
 
-            if(_.get(result, ['Status', '$value']) !== 'GOOD') { return callback('Not valid ID-Card') }
-            if(!_.get(result, ['UserIDCode', '$value'])) { return callback('Not ID code') }
+            if(_.get(result, 'Status.$value') !== 'GOOD') { return callback('Not valid ID-Card') }
+            if(!_.get(result, 'UserIDCode.$value')) { return callback('Not ID code') }
 
             var user = {}
             var name = _.compact([
-                _.get(result, ['UserGivenname', '$value']),
-                _.get(result, ['UserSurname', '$value'])
+                _.get(result, 'UserGivenname.$value'),
+                _.get(result, 'UserSurname.$value')
             ]).join(' ')
 
             _.set(user, 'provider', 'id-card')
-            _.set(user, 'id', _.get(result, ['UserIDCode', '$value']))
+            _.set(user, 'id', _.get(result, 'UserIDCode.$value'))
             _.set(user, 'name', name)
-            _.set(user, 'email', _.get(result, ['UserIDCode', '$value']) + '@eesti.ee')
+            _.set(user, 'email', _.get(result, 'UserIDCode.$value') + '@eesti.ee')
 
             entu.addUserSession({ request: req, user: user }, callback)
         }
