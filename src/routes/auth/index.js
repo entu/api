@@ -52,9 +52,9 @@ router.get('/', (req, res, next) => {
 
                     return callback(null, {
                         account: account,
-                        token: jwt.sign({}, process.env.JWT_SECRET + _.get(req, 'ip') + _.get(req, 'headers.user-agent'), {
-                            issuer: req.hostname,
-                            audience: account,
+                        token: jwt.sign({}, process.env.JWT_SECRET, {
+                            issuer: account,
+                            audience: _.get(req, 'ip'),
                             subject: person._id.toString(),
                             expiresIn: '48h'
                         })

@@ -184,11 +184,13 @@ const jwtCheck = (req, res, next) => {
 
     if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
 
-    jwt.verify(parts[1], process.env.JWT_SECRET + _.get(req, 'ip') + _.get(req, 'headers.user-agent'), jwtConf, (err, decoded) => {
+    jwt.verify(parts[1], process.env.JWT_SECRET, jwtConf, (err, decoded) => {
         if(err) { return next([401, err]) }
 
+        if(decoded.aud !== _.get(req, 'ip')) { return next([403, 'Invalid JWT audience']) }
+
         _.set(req, 'user', decoded.sub)
-        _.set(req, 'account', decoded.aud)
+        _.set(req, 'account', decoded.iss)
 
         next(null)
     })
