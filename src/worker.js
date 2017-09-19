@@ -184,7 +184,7 @@ const jwtCheck = (req, res, next) => {
 
     if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
 
-    jwt.verify(parts[1], process.env.JWT_SECRET, jwtConf, (err, decoded) => {
+    jwt.verify(parts[1], process.env.JWT_SECRET + _.get(req, 'ip') + _.get(req, 'headers.user-agent'), jwtConf, (err, decoded) => {
         if(err) { return next([401, err]) }
 
         _.set(req, 'user', decoded.sub)
