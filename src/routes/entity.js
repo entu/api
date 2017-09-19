@@ -2,6 +2,7 @@
 
 const _ = require('lodash')
 const async = require('async')
+const aws = require('aws-sdk')
 const ObjectID = require('mongodb').ObjectID
 const router = require('express').Router()
 
@@ -309,10 +310,40 @@ router.post('/:entityId', (req, res, next) => {
                         connection.collection('property').insertOne(property, callback)
                     },
                     (result, callback) => {
-                        pIds.push(result.insertedId)
+                        if (property.filename && property.size) {
+                            aws.config = new aws.Config()
+                            aws.config.accessKeyId = process.env.AWS_ACCESS_KEY_ID
+                            aws.config.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
+                            aws.config.region = process.env.AWS_REGION
 
-                        entu.aggregateEntity(req, property.entity, property.type, callback)
+                            const s3 = new aws.S3()
+                            const key = `${req.account}/${result.insertedId}`
+                            const s3Params = {
+                                Bucket: process.env.AWS_S3_BUCKET,
+                                Key: key,
+                                Expires: 60,
+                                ContentType: property.type,
+                                ACL: 'private',
+                                ContentDisposition: `inline;filename="${property.filename.replace('"', '\"')}"`,
+                                ServerSideEncryption: 'AES256'
+                            }
+
+                            s3.getSignedUrl('putObject', s3Params, (err, data) => {
+                                if (err) { return callback(err) }
+                                return callback(null, {
+                                    _id: result.insertedId,
+                                    url: `https://${process.env.AWS_S3_BUCKET}.s3.amazonaws.com/${key}`,
+                                    signedRequest: data
+                                })
+                            })
+                        } else {
+                            return callback(null, { _id: result.insertedId })
+                        }
                     },
+                    (id, callback) => {
+                        pIds.push(id)
+                        entu.aggregateEntity(req, property.entity, property.type, callback)
+                    }
                 ], callback)
             }, callback)
         },
