@@ -15,7 +15,7 @@
     - [POST](#post-entity)
 - /entity/{ \_id }
     - [GET](#get-entity-_id-)
-    - PUT
+    - [POST](#post-entity-_id-)
     - [DELETE](#delete-entity-_id-)
 
 #### Property
@@ -182,6 +182,34 @@ curl \
 #### Example response
 ```json
 {}
+```
+
+
+
+
+## POST /entity/{ \_id }
+Add new properties to entity. Data must be sent as JSON list containing property object(s). Returns created properties \_ids.
+
+#### Property object parameters
+- **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one.
+- [ **string** | **reference** | **boolean** | **integer** | **decimal** | **date** | **datetime** ] - Property value
+
+#### Example request
+```shell
+curl \
+    -X POST \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
+    -H "Content-Type: application/json" \
+    -d '[{ "type": "title", "string": "Hobbit" }, { "type": "published", "integer": 1937 }]'
+    "https://api.entu.ee/entity/hAazguCezHwDfLe2geyKKpqj"
+```
+
+#### Example response
+```json
+[
+    "3GwKZYTdVPGtYUvkPwaeAd7N",
+    "QS5L5RNaxKzc6XwBMzFEcHYx"
+]
 ```
 
 

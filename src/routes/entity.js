@@ -256,6 +256,78 @@ router.get('/:entityId', (req, res, next) => {
 
 
 
+router.post('/:entityId', (req, res, next) => {
+    if (!req.account) { return next([400, 'No account parameter']) }
+    if (!req.user) { return next([403, 'Forbidden']) }
+    if (!_.isArray(req.body)) { return next([400, 'Data must be array']) }
+    if (req.body.length === 0) { return next([400, 'At least one property must be set']) }
+
+    var eId = new ObjectID(req.params.entityId)
+    var connection
+    var pIds = []
+
+    async.waterfall([
+        (callback) => {
+            req.app.locals.db(req.account, callback)
+        },
+        (con, callback) => { // Get entity
+            connection = con
+            connection.collection('entity').findOne({ _id: eId }, { _id: false, _owner: true, _editor: true }, callback)
+        },
+        (entity, callback) => { // Check rights and create _deleted property
+            if (!entity) { return callback([404, 'Entity not found']) }
+
+            let access = _.map(_.concat(_.get(entity, '_owner', []), _.get(entity, '_editor', [])), s => s.reference.toString())
+
+            if (access.indexOf(req.user) === -1) { return callback([403, 'Forbidden']) }
+
+            const created = {
+                at: new Date(),
+                by: new ObjectID(req.user)
+            }
+            let properties = []
+
+            for (let i = 0; i < req.body.length; i++) {
+                let property = req.body[i]
+
+                if (!property.type) { return next([400, 'Property type not set']) }
+                if (!property.type.match(/^[A-Za-z0-9\_]+$/)) { return next([400, 'Property type must be alphanumeric']) }
+                if (property.type.substr(0, 1) === '_') { return next([400, 'Property type can\'t begin with _']) }
+
+                if (property.reference) { property.reference = new ObjectID(property.reference) }
+                if (property.date) { property.date = new Date(property.date) }
+                if (property.datetime) { property.datetime = new Date(property.datetime) }
+
+                property.entity = eId
+                property.created = created
+                properties.push(property)
+            }
+
+            async.each(properties, (property, callback) => {
+                async.waterfall([
+                    (callback) => {
+                        connection.collection('property').insertOne(property, callback)
+                    },
+                    (result, callback) => {
+                        pIds.push(result.insertedId)
+
+                        entu.aggregateEntity(req, property.entity, property.type, callback)
+                    },
+                ], callback)
+            }, callback)
+        },
+        (callback) => {
+            entu.aggregateEntity(req, eId, null, callback)
+        },
+    ], (err, properties) => {
+        if (err) { return next(err) }
+
+        res.json(pIds)
+    })
+})
+
+
+
 router.delete('/:entityId', (req, res, next) => {
     if (!req.account) { return next([400, 'No account parameter']) }
     if (!req.user) { return next([403, 'Forbidden']) }
