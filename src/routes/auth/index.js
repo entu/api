@@ -65,10 +65,8 @@ router.get('/', (req, res, next) => {
     ], (err, accounts) => {
         if(err) { return next(err) }
 
-        res.json(_.mapValues(_.groupBy(accounts, 'account'), (o) => {
-            return _.first(_.map(o, (p) => {
-                return _.omit(p, 'account')
-            }))
+        res.json(_.mapValues(_.groupBy(accounts, 'account'), o => {
+            return _.omit(_.first(o), 'account')
         }))
     })
 })
