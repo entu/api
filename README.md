@@ -148,7 +148,7 @@ Create new entity. Data must be sent as JSON. Returns created entity's \_id.
 #### Example request
 ```shell
 curl \
-    -X GET \
+    -X POST \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     -H "Content-Type: application/json" \
     -d '{ "type": "book", "parent": "FCfzcHh3ZF35UTaBcwkxVUSa" }'

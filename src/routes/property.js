@@ -6,6 +6,8 @@ const aws = require('aws-sdk')
 const ObjectID = require('mongodb').ObjectID
 const router = require('express').Router()
 
+const entu = require('../helpers')
+
 
 
 router.get('/:propertyId', (req, res, next) => {
@@ -70,6 +72,7 @@ router.delete('/:propertyId', (req, res, next) => {
     if (!req.account) { return next([400, 'No account parameter']) }
     if (!req.user) { return next([403, 'Forbidden']) }
 
+    const pId = new ObjectID(req.params.propertyId)
     var connection
     var property
 
@@ -79,10 +82,11 @@ router.delete('/:propertyId', (req, res, next) => {
         },
         (con, callback) => {
             connection = con
-            connection.collection('property').findOne({ _id: new ObjectID(req.params.propertyId), deleted: { $exists: false } }, {_id: false, entity: true, type: true }, callback)
+            connection.collection('property').findOne({ _id: pId, deleted: { $exists: false } }, {_id: false, entity: true, type: true }, callback)
         },
         (prop, callback) => {
             if (!prop) { return callback([404, 'Property not found']) }
+            if (prop.type.substr(0, 1) === '_') { return callback([403, 'Can\'t delete system property']) }
 
             property = prop
 
@@ -95,7 +99,7 @@ router.delete('/:propertyId', (req, res, next) => {
 
             if (access.indexOf(req.user) === -1) { return callback([403, 'Forbidden']) }
 
-            connection.collection('property').updateOne({ _id: property._id }, { $set: { deleted: { at: new Date(), by: new ObjectID(req.user) } } }, callback)
+            connection.collection('property').updateOne({ _id: pId }, { $set: { deleted: { at: new Date(), by: new ObjectID(req.user) } } }, callback)
         },
         (r, callback) => { // Aggregate entity
             entu.aggregateEntity(req, property.entity, property.type, callback)
