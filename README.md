@@ -192,7 +192,7 @@ Add new properties to entity. Data must be sent as JSON list containing property
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one.
-- [ **string** | **reference** | **boolean** | **integer** | **decimal** | **date** | **datetime** ] - Property value
+- [ **string** \| **reference** \| **boolean** \| **integer** \| **decimal** \| **date** \| **datetime** ] - Property value
 
 #### Example request
 ```shell
