@@ -56,7 +56,7 @@ router.get('/', (req, res, next) => {
                             issuer: req.hostname,
                             audience: account,
                             subject: person._id.toString(),
-                            expiresIn: '14d'
+                            expiresIn: '48h'
                         })
                     })
                 })
