@@ -3,7 +3,7 @@
 const _ = require('lodash')
 const async = require('async')
 const aws = require('aws-sdk')
-const objectId = require('mongodb').objectId
+const objectId = require('mongodb').ObjectID
 const router = require('express').Router()
 
 const entu = require('../helpers')

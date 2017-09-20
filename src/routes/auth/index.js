@@ -3,7 +3,7 @@
 const _ = require('lodash')
 const async = require('async')
 const jwt = require('jsonwebtoken')
-const objectId = require('mongodb').objectId
+const objectId = require('mongodb').ObjectID
 const router = require('express').Router()
 
 
