@@ -3,7 +3,7 @@
 const _ = require('lodash')
 const async = require('async')
 const aws = require('aws-sdk')
-const ObjectID = require('mongodb').ObjectID
+const objectId = require('mongodb').objectId
 const router = require('express').Router()
 
 const entu = require('../helpers')
@@ -13,8 +13,8 @@ const entu = require('../helpers')
 router.get('/', (req, res, next) => {
     if (!req.account) { return next([400, 'No account parameter']) }
 
-    let props = _.compact(_.get(req, 'query.props', '').split(','))
-    let sort = _.compact(_.get(req, 'query.sort', '').split(','))
+    const props = _.compact(_.get(req, 'query.props', '').split(','))
+    const sort = _.compact(_.get(req, 'query.sort', '').split(','))
     var findedEntities
     var count
     var filter = {}
@@ -25,7 +25,7 @@ router.get('/', (req, res, next) => {
 
     _.forIn(_.get(req, 'query'), (v, k) => {
         if (k.indexOf('.') !== -1) {
-            let fieldArray = k.split('.')
+            const fieldArray = k.split('.')
             let field = _.get(fieldArray, 0)
             let type = _.get(fieldArray, 1)
             let operator = _.get(fieldArray, 2)
@@ -33,7 +33,7 @@ router.get('/', (req, res, next) => {
 
             switch(type) {
                 case 'reference':
-                    value = new ObjectID(v)
+                    value = new objectId(v)
                     break
                 case 'boolean':
                     value = v.toLowerCase() === 'true'
@@ -71,7 +71,7 @@ router.get('/', (req, res, next) => {
         }
     })
 
-    filter._access = new ObjectID(req.user)
+    filter._access = new objectId(req.user)
 
     if (props.length > 0) {
         _.forEach(props, (f) => {
@@ -153,12 +153,12 @@ router.post('/', (req, res, next) => {
                 return callback(null, null)
             }
 
-            connection.collection('entity').findOne({ '_id': new ObjectID(req.body.parent) }, { _id: true, _type: true, _viewer: true, _expander: true, _editor: true, _owner: true }, (p, callback) => {
+            connection.collection('entity').findOne({ '_id': new objectId(req.body.parent) }, { _id: true, _type: true, _viewer: true, _expander: true, _editor: true, _owner: true }, (p, callback) => {
                 parent = p
 
                 if (!parent) { return callback([404, 'Parent entity not found']) }
 
-                let access = _.map(_.concat(_.get(parent, '_owner', []), _.get(parent, '_editor', []), _.get(parent, '_expander', [])), (s) => {
+                const access = _.map(_.concat(_.get(parent, '_owner', []), _.get(parent, '_editor', []), _.get(parent, '_expander', [])), (s) => {
                     return s.reference.toString()
                 })
 
@@ -175,7 +175,7 @@ router.post('/', (req, res, next) => {
         (entity, callback) => {
             eId = entity.insertedId
 
-            let userId = new ObjectID(req.user)
+            let userId = new objectId(req.user)
             let properties = []
 
             _.forEach(defaultParents, (p) => {
@@ -228,7 +228,7 @@ router.get('/:entityId', (req, res, next) => {
             req.app.locals.db(req.account, callback)
         },
         (connection, callback) => {
-            let props = _.compact(_.get(req, 'query.props', '').split(','))
+            const props = _.compact(_.get(req, 'query.props', '').split(','))
             let config = {}
 
             if (props.length > 0) {
@@ -238,14 +238,14 @@ router.get('/:entityId', (req, res, next) => {
                 _.set(config, 'fields._access', true)
             }
 
-            connection.collection('entity').findOne({ _id: new ObjectID(req.params.entityId) }, config, callback)
+            connection.collection('entity').findOne({ _id: new objectId(req.params.entityId) }, config, callback)
         },
     ], (err, entity) => {
         if (err) { return next(err) }
 
         if (!entity) { return next([404, 'Entity not found']) }
 
-        let access = _.map(_.get(entity, '_access', []), (s) => {
+        const access = _.map(_.get(entity, '_access', []), (s) => {
             return s.toString()
         })
 
@@ -267,7 +267,7 @@ router.post('/:entityId', (req, res, next) => {
     if (!_.isArray(req.body)) { return next([400, 'Data must be array']) }
     if (req.body.length === 0) { return next([400, 'At least one property must be set']) }
 
-    var eId = new ObjectID(req.params.entityId)
+    var eId = new objectId(req.params.entityId)
     var connection
     var pIds = []
 
@@ -282,7 +282,7 @@ router.post('/:entityId', (req, res, next) => {
         (entity, callback) => { // Check rights and create _deleted property
             if (!entity) { return callback([404, 'Entity not found']) }
 
-            let access = _.map(_.concat(_.get(entity, '_owner', []), _.get(entity, '_editor', [])), (s) => {
+            const access = _.map(_.concat(_.get(entity, '_owner', []), _.get(entity, '_editor', [])), (s) => {
                 return s.reference.toString()
             })
 
@@ -290,7 +290,7 @@ router.post('/:entityId', (req, res, next) => {
 
             const created = {
                 at: new Date(),
-                by: new ObjectID(req.user)
+                by: new objectId(req.user)
             }
             let properties = []
 
@@ -301,7 +301,7 @@ router.post('/:entityId', (req, res, next) => {
                 if (!property.type.match(/^[A-Za-z0-9\_]+$/)) { return next([400, 'Property type must be alphanumeric']) }
                 if (property.type.substr(0, 1) === '_') { return next([400, 'Property type can\'t begin with _']) }
 
-                if (property.reference) { property.reference = new ObjectID(property.reference) }
+                if (property.reference) { property.reference = new objectId(property.reference) }
                 if (property.date) { property.date = new Date(property.date) }
                 if (property.datetime) { property.datetime = new Date(property.datetime) }
 
@@ -369,7 +369,7 @@ router.delete('/:entityId', (req, res, next) => {
     if (!req.account) { return next([400, 'No account parameter']) }
     if (!req.user) { return next([403, 'Forbidden']) }
 
-    var eId = new ObjectID(req.params.entityId)
+    var eId = new objectId(req.params.entityId)
     var connection
 
     async.waterfall([
@@ -383,13 +383,13 @@ router.delete('/:entityId', (req, res, next) => {
         (entity, callback) => { // Check rights and create _deleted property
             if (!entity) { return callback([404, 'Entity not found']) }
 
-            let access = _.map(_.get(entity, '_owner', []), (s) => {
+            const access = _.map(_.get(entity, '_owner', []), (s) => {
                 return s.reference.toString()
             })
 
             if (access.indexOf(req.user) === -1) { return callback([403, 'Forbidden']) }
 
-            connection.collection('property').insertOne({ entity: eId, type: '_deleted', boolean: true, created: { at: new Date(), by: new ObjectID(req.user) } }, callback)
+            connection.collection('property').insertOne({ entity: eId, type: '_deleted', boolean: true, created: { at: new Date(), by: new objectId(req.user) } }, callback)
         },
         (r, callback) => { // Aggregate entity
             entu.aggregateEntity(req, eId, '_deleted', callback)
@@ -403,7 +403,7 @@ router.delete('/:entityId', (req, res, next) => {
             async.each(properties, (property, callback) => {
                 async.series([
                     (callback) => {
-                        connection.collection('property').updateOne({ _id: property._id }, { $set: { deleted: { at: new Date(), by: new ObjectID(req.user) } } }, callback)
+                        connection.collection('property').updateOne({ _id: property._id }, { $set: { deleted: { at: new Date(), by: new objectId(req.user) } } }, callback)
                     },
                     (callback) => {
                         entu.aggregateEntity(req, property.entity, property.type, callback)

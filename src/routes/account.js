@@ -17,7 +17,7 @@ router.get('/', (req, res, next) => {
                 connection.collection('entity').count(callback)
             },
             deletedEntities: (callback) => {
-                let aggregate = [
+                const aggregate = [
                     { $match: { type: '_deleted', deleted: { $exists: false } } },
                     { $group: { _id: '$entity', count: { $sum: 1 } } },
                     { $group: { _id: null, count: { $sum: 1 } } }
@@ -25,7 +25,7 @@ router.get('/', (req, res, next) => {
                 connection.collection('property').aggregate(aggregate, (err, count) => {
                     if (err) { return callback(err) }
 
-                    callback(null, _.get(count, '0.count', 0))
+                    return callback(null, _.get(count, '0.count', 0))
                 })
             },
 
@@ -37,7 +37,7 @@ router.get('/', (req, res, next) => {
             },
 
             files: (callback) => {
-                let aggregate = [
+                const aggregate = [
                     { $match: { size: { $exists: true }, deleted: { $exists: false } } },
                     { $group: {_id: null, count: { $sum: 1 }, size: { $sum: '$size' } } },
                     { $project: { _id: false } }
@@ -45,11 +45,11 @@ router.get('/', (req, res, next) => {
                 connection.collection('property').aggregate(aggregate, (err, count) => {
                     if (err) { return callback(err) }
 
-                    callback(null, _.get(count, '0', {}))
+                    return callback(null, _.get(count, '0', {}))
                 })
             },
             deletedFiles: (callback) => {
-                let aggregate = [
+                const aggregate = [
                     { $match: { size: { $exists: true }, deleted: { $exists: true } } },
                     { $group: {_id: null, count: { $sum: 1 }, size: { $sum: '$size' } } },
                     { $project: { _id: false } }
@@ -57,7 +57,7 @@ router.get('/', (req, res, next) => {
                 connection.collection('property').aggregate(aggregate, (err, count) => {
                     if (err) { return callback(err) }
 
-                    callback(null, _.get(count, '0', {}))
+                    return callback(null, _.get(count, '0', {}))
                 })
             },
         }, (err, stats) => {

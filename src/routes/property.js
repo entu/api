@@ -3,7 +3,7 @@
 const _ = require('lodash')
 const async = require('async')
 const aws = require('aws-sdk')
-const ObjectID = require('mongodb').ObjectID
+const objectId = require('mongodb').objectId
 const router = require('express').Router()
 
 const entu = require('../helpers')
@@ -22,7 +22,7 @@ router.get('/:propertyId', (req, res, next) => {
         },
         (con, callback) => {
             connection = con
-            connection.collection('property').findOne({ _id: new ObjectID(req.params.propertyId), deleted: { $exists: false } }, callback)
+            connection.collection('property').findOne({ _id: new objectId(req.params.propertyId), deleted: { $exists: false } }, callback)
         },
         (prop, callback) => {
             if (!prop) { return callback([404, 'Property not found']) }
@@ -34,7 +34,7 @@ router.get('/:propertyId', (req, res, next) => {
         (entity, callback) => {
             if (!entity) { return callback([404, 'Entity not found']) }
 
-            let access = _.map(_.get(entity, '_access', []), (s) => {
+            const access = _.map(_.get(entity, '_access', []), (s) => {
                 return s.toString()
             })
 
@@ -74,7 +74,7 @@ router.delete('/:propertyId', (req, res, next) => {
     if (!req.account) { return next([400, 'No account parameter']) }
     if (!req.user) { return next([403, 'Forbidden']) }
 
-    const pId = new ObjectID(req.params.propertyId)
+    const pId = new objectId(req.params.propertyId)
     var connection
     var property
 
@@ -97,13 +97,13 @@ router.delete('/:propertyId', (req, res, next) => {
         (entity, callback) => {
             if (!entity) { return callback([404, 'Entity not found']) }
 
-            let access = _.map(_.concat(_.get(entity, '_owner', []), _.get(entity, '_editor', [])), (s) => {
+            const access = _.map(_.concat(_.get(entity, '_owner', []), _.get(entity, '_editor', [])), (s) => {
                 return s.reference.toString()
             })
 
             if (access.indexOf(req.user) === -1) { return callback([403, 'Forbidden']) }
 
-            connection.collection('property').updateOne({ _id: pId }, { $set: { deleted: { at: new Date(), by: new ObjectID(req.user) } } }, callback)
+            connection.collection('property').updateOne({ _id: pId }, { $set: { deleted: { at: new Date(), by: new objectId(req.user) } } }, callback)
         },
         (r, callback) => { // Aggregate entity
             entu.aggregateEntity(req, property.entity, property.type, callback)

@@ -325,7 +325,7 @@ const importProps = (mysqlDb, callback) => {
                             })
                         })
 
-                        let access = _.map(_.union(p._viewer, p._expander, p._editor, p._owner), 'reference')
+                        const access = _.map(_.union(p._viewer, p._expander, p._editor, p._owner), 'reference')
                         if (access.length > 0) {
                             p._access = access
                         }

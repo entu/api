@@ -51,18 +51,18 @@ exports.aggregateEntity = (req, entityId, property, callback) => {
         },
         (con, callback) => {
             connection = con
-            connection.collection('property').find({ entity: entityId, deleted: { $exists: false } }).toArray((err, properties) => {
+            connection.collection('property').find({ entity: entityId, deleted: { $exists: false } }).toArray((err, props) => {
                 if(err) { return callback(err) }
 
-                let p = _.mapValues(_.groupBy(properties, 'type'), (o) => {
+                let properties = _.mapValues(_.groupBy(props, 'type'), (o) => {
                     return _.map(o, (p) => {
                         return _.omit(p, ['entity', 'type', 'created', 's3', 'url'])
                     })
                 })
 
-                let access = _.map(_.union(p._viewer, p._expander, p._editor, p._owner), 'reference')
+                const access = _.map(_.union(properties._viewer, properties._expander, properties._editor, properties._owner), 'reference')
                 if (access.length > 0) {
-                    p._access = access
+                    properties._access = access
                 }
 
                 if (!_.isEmpty(p)) {

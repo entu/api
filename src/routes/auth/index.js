@@ -3,13 +3,13 @@
 const _ = require('lodash')
 const async = require('async')
 const jwt = require('jsonwebtoken')
-const ObjectID = require('mongodb').ObjectID
+const objectId = require('mongodb').objectId
 const router = require('express').Router()
 
 
 
 router.get('/', (req, res, next) => {
-    let parts = _.get(req, 'headers.authorization', '').split(' ')
+    const parts = _.get(req, 'headers.authorization', '').split(' ')
 
     if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next([400, 'No key']) }
 
@@ -25,7 +25,7 @@ router.get('/', (req, res, next) => {
         },
         (connection, callback) => {
             if (sessionAuth) {
-                connection.collection('session').findOneAndUpdate({ _id: new ObjectID(key), deleted: { $exists: false } }, { $set: { deleted: new Date() } }, (err, sess) => {
+                connection.collection('session').findOneAndUpdate({ _id: new objectId(key), deleted: { $exists: false } }, { $set: { deleted: new Date() } }, (err, sess) => {
                     if(err) { return callback(err) }
                     if(!sess.value) { return callback([400, 'No session']) }
 
