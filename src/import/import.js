@@ -42,7 +42,7 @@ const importProps = (mysqlDb, callback) => {
         user: MYSQL_USER,
         password: MYSQL_PASSWORD,
         database: mysqlDb,
-        multipleStatements: true,
+        multipleStatements: true
         // ssl: {
         //     key: fs.readFileSync(`${MYSQL_SSL_PATH}/mysql-client-key.pem`),
         //     cert: fs.readFileSync(`${MYSQL_SSL_PATH}/mysql-client-cert.pem`),
@@ -374,7 +374,6 @@ const importProps = (mysqlDb, callback) => {
 const importFiles = (mysqlDb, callback) => {
     log(`start ${mysqlDb} files import`)
 
-    var mongoCon
     var sqlCon = mysql.createConnection({
         host: MYSQL_HOST,
         port: MYSQL_PORT,

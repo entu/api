@@ -75,6 +75,6 @@ exports.aggregateEntity = (req, entityId, property, callback) => {
                     return callback(null)
                 }
             })
-        },
+        }
     ], callback)
 }

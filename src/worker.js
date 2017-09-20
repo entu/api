@@ -80,7 +80,7 @@ app.locals.db = (account, callback) => {
                 entuDb.collection('entity').findOne({ 'database_name.string': account, 'mongodb.string': { $exists: true } }, { _id: false, 'mongodb.string': true }, callback)
             },
             (url, callback) => {
-                if (!_.has(url, 'mongodb.0.string')) { return callback('No MongoDb url')}
+                if (!_.has(url, 'mongodb.0.string')) { return callback('No MongoDb url') }
 
                 mongo.MongoClient.connect(_.get(url, 'mongodb.0.string'), { ssl: true, sslValidate: true }, callback)
             },
@@ -95,7 +95,7 @@ app.locals.db = (account, callback) => {
                 app.locals.dbs[account] = connection
 
                 entuDb.close(callback)
-            },
+            }
         ], (err) => {
             if(err) { return callback(err) }
 

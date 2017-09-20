@@ -356,7 +356,7 @@ router.post('/:entityId', (req, res, next) => {
         (callback) => {
             entu.aggregateEntity(req, eId, null, callback)
         },
-    ], (err, properties) => {
+    ], (err) => {
         if (err) { return next(err) }
 
         res.json(pIds)

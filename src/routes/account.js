@@ -59,7 +59,7 @@ router.get('/', (req, res, next) => {
 
                     return callback(null, _.get(count, '0', {}))
                 })
-            },
+            }
         }, (err, stats) => {
             if (err) { return next(err) }
 

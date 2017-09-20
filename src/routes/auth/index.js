@@ -61,7 +61,7 @@ router.get('/', (req, res, next) => {
                     })
                 })
             }, callback)
-        },
+        }
     ], (err, accounts) => {
         if(err) { return next(err) }
 
