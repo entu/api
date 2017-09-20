@@ -65,11 +65,11 @@ exports.aggregateEntity = (req, entityId, property, callback) => {
                     properties._access = access
                 }
 
-                if (!_.isEmpty(p)) {
-                    if (_.has(p, '_deleted')) {
+                if (!_.isEmpty(properties)) {
+                    if (_.has(properties, '_deleted')) {
                         connection.collection('entity').deleteOne({ _id: entityId }, callback)
                     } else {
-                        connection.collection('entity').update({ _id: entityId }, p, callback)
+                        connection.collection('entity').update({ _id: entityId }, properties, callback)
                     }
                 } else {
                     return callback(null)

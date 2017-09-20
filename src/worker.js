@@ -173,16 +173,15 @@ app.use((req, res, next) => {
 // check JWT
 const jwtCheck = (req, res, next) => {
     const parts = _.get(req, 'headers.authorization', '').split(' ')
-    let jwtConf = {
-        issuer: req.hostname
-    }
-
-    if (req.query.account) {
-        req.account = req.query.account
-        jwtConf.audience = req.query.account
-    }
 
     if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
+
+    req.account = _.get(req, 'query.account')
+
+    const jwtConf = {
+        issuer: req.account,
+        audience: _.get(req, 'ip')
+    }
 
     jwt.verify(parts[1], process.env.JWT_SECRET, jwtConf, (err, decoded) => {
         if(err) { return next([401, err]) }
@@ -228,6 +227,7 @@ app.use((err, req, res, next) => {
         res.status(err[0]).json({ error: err[1] })
     } else {
         res.status(500).json({ error: err.toString() })
+        console.error(err)
     }
 })
 
