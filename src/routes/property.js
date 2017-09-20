@@ -34,7 +34,9 @@ router.get('/:propertyId', (req, res, next) => {
         (entity, callback) => {
             if (!entity) { return callback([404, 'Entity not found']) }
 
-            let access = _.map(_.get(entity, '_access', []), s => s.toString())
+            let access = _.map(_.get(entity, '_access', []), (s) => {
+                return s.toString()
+            })
 
             if (access.indexOf(req.user) === -1) { return callback([403, 'Forbidden']) }
 
@@ -95,7 +97,9 @@ router.delete('/:propertyId', (req, res, next) => {
         (entity, callback) => {
             if (!entity) { return callback([404, 'Entity not found']) }
 
-            let access = _.map(_.concat(_.get(entity, '_owner', []), _.get(entity, '_editor', [])), s => s.reference.toString())
+            let access = _.map(_.concat(_.get(entity, '_owner', []), _.get(entity, '_editor', [])), (s) => {
+                return s.reference.toString()
+            })
 
             if (access.indexOf(req.user) === -1) { return callback([403, 'Forbidden']) }
 

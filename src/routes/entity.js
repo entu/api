@@ -158,7 +158,9 @@ router.post('/', (req, res, next) => {
 
                 if (!parent) { return callback([404, 'Parent entity not found']) }
 
-                let access = _.map(_.concat(_.get(parent, '_owner', []), _.get(parent, '_editor', []), _.get(parent, '_expander', [])), s => s.reference.toString())
+                let access = _.map(_.concat(_.get(parent, '_owner', []), _.get(parent, '_editor', []), _.get(parent, '_expander', [])), (s) => {
+                    return s.reference.toString()
+                })
 
                 if (access.indexOf(req.user) === -1) { return callback([403, 'Forbidden']) }
 
@@ -176,24 +178,24 @@ router.post('/', (req, res, next) => {
             let userId = new ObjectID(req.user)
             let properties = []
 
-            _.forEach(defaultParents, p => {
+            _.forEach(defaultParents, (p) => {
                 properties.push({ entity: eId, type: '_parent', reference: p.reference, created: { at: createdDt, by: userId } })
             })
 
             if (parent) {
-                _.forEach(parent._viewer, pViewer => {
+                _.forEach(parent._viewer, (pViewer) => {
                     if (pViewer.reference === userId) { return }
                     properties.push({ entity: eId, type: '_viewer', reference: pViewer.reference, created: { at: createdDt, by: userId } })
                 })
-                _.forEach(parent._expander, pExpander => {
+                _.forEach(parent._expander, (pExpander) => {
                     if (pExpander.reference === userId) { return }
                     properties.push({ entity: eId, type: '_expander', reference: pExpander.reference, created: { at: createdDt, by: userId } })
                 })
-                _.forEach(parent._editor, pEditor => {
+                _.forEach(parent._editor, (pEditor) => {
                     if (pEditor.reference === userId) { return }
                     properties.push({ entity: eId, type: '_editor', reference: pEditor.reference, created: { at: createdDt, by: userId } })
                 })
-                _.forEach(parent._owner, pOwner => {
+                _.forEach(parent._owner, (pOwner) => {
                     if (pOwner.reference === userId) { return }
                     properties.push({ entity: eId, type: '_owner', reference: pOwner.reference, created: { at: createdDt, by: userId } })
                 })
@@ -243,7 +245,9 @@ router.get('/:entityId', (req, res, next) => {
 
         if (!entity) { return next([404, 'Entity not found']) }
 
-        let access = _.map(_.get(entity, '_access', []), s =>  s.toString())
+        let access = _.map(_.get(entity, '_access', []), (s) => {
+            return s.toString()
+        })
 
         if (access.indexOf(req.user) !== -1 || _.get(entity, '_sharing.0.string', '') === 'public access is disabled for now') {
             _.unset(entity, '_mid')
@@ -278,7 +282,9 @@ router.post('/:entityId', (req, res, next) => {
         (entity, callback) => { // Check rights and create _deleted property
             if (!entity) { return callback([404, 'Entity not found']) }
 
-            let access = _.map(_.concat(_.get(entity, '_owner', []), _.get(entity, '_editor', [])), s => s.reference.toString())
+            let access = _.map(_.concat(_.get(entity, '_owner', []), _.get(entity, '_editor', [])), (s) => {
+                return s.reference.toString()
+            })
 
             if (access.indexOf(req.user) === -1) { return callback([403, 'Forbidden']) }
 
@@ -377,7 +383,9 @@ router.delete('/:entityId', (req, res, next) => {
         (entity, callback) => { // Check rights and create _deleted property
             if (!entity) { return callback([404, 'Entity not found']) }
 
-            let access = _.map(_.get(entity, '_owner', []), s => s.reference.toString())
+            let access = _.map(_.get(entity, '_owner', []), (s) => {
+                return s.reference.toString()
+            })
 
             if (access.indexOf(req.user) === -1) { return callback([403, 'Forbidden']) }
 
