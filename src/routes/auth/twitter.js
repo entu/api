@@ -66,7 +66,7 @@ router.get('/callback', passport.authenticate('twitter', { failureRedirect: '/lo
         const redirectUrl = req.cookies.redirect
         if(redirectUrl) {
             res.clearCookie('redirect')
-            res.redirect(redirectUrl + '?key=' + sessionId)
+            res.redirect(`${redirectUrl}?key=${sessionId}`)
         } else {
             res.json({ key: sessionId})
         }

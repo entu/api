@@ -64,9 +64,9 @@ router.get('/', (req, res, next) => {
             }
 
             if (['gt', 'gte', 'lt', 'lte', 'ne', 'regex', 'exists'].indexOf(operator) !== -1) {
-                _.set(filter, [field + '.' + type, '$' + operator], value)
+                _.set(filter, [`${field}.${type}`, `\${operator}`], value)
             } else {
-                filter[field + '.' + type] = value
+                filter[`${field}.${type}`] = value
             }
         }
     })

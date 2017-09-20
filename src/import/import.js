@@ -33,7 +33,7 @@ const log = (s) => {
 
 
 const importProps = (mysqlDb, callback) => {
-    log('start database ' + mysqlDb + ' import')
+    log(`start database ${mysqlDb} import`)
 
     var mongoCon
     var sqlCon = mysql.createConnection({
@@ -44,9 +44,9 @@ const importProps = (mysqlDb, callback) => {
         database: mysqlDb,
         multipleStatements: true,
         // ssl: {
-        //     key: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-key.pem'),
-        //     cert: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-cert.pem'),
-        //     ca: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-server-ca.pem')
+        //     key: fs.readFileSync(`${MYSQL_SSL_PATH}/mysql-client-key.pem`),
+        //     cert: fs.readFileSync(`${MYSQL_SSL_PATH}/mysql-client-cert.pem`),
+        //     ca: fs.readFileSync(`${MYSQL_SSL_PATH}/mysql-server-ca.pem`)
         // }
     })
 
@@ -209,7 +209,7 @@ const importProps = (mysqlDb, callback) => {
 
                         l--
                         if (l % 10000 === 0 && l > 0) {
-                            log(l + ' files to go')
+                            log(`${l} files to go`)
                         }
                         return callback(null)
                     })
@@ -230,7 +230,7 @@ const importProps = (mysqlDb, callback) => {
                             mongoCon.collection('property').updateMany({ entity: entity._mid }, { $set: { entity: entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ datatype: 'reference', value_integer: { $in: [entity._mid, '' + entity._mid] } }, { $set: { value_integer: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ datatype: 'reference', value_integer: { $in: [entity._mid, `${entity._mid}`] } }, { $set: { value_integer: entity._id } }, callback)
                         },
                         (callback) => {
                             mongoCon.collection('property').updateMany({ created_by: entity._mid }, { $set: { created_by: entity._id } }, callback)
@@ -243,7 +243,7 @@ const importProps = (mysqlDb, callback) => {
 
                         l--
                         if (l % 10000 === 0 && l > 0) {
-                            log(l + ' entities to go')
+                            log(`${l} entities to go`)
                         }
                         return callback(null)
                     })
@@ -336,7 +336,7 @@ const importProps = (mysqlDb, callback) => {
 
                                 l--
                                 if (l % 10000 === 0 && l > 0) {
-                                    log(l + ' entities to go')
+                                    log(`${l} entities to go`)
                                 }
                                 return callback(null)
                             })
@@ -364,7 +364,7 @@ const importProps = (mysqlDb, callback) => {
     ], (err) => {
         if(err) { return callback(err) }
 
-        log('end database ' +  mysqlDb + ' import\n')
+        log(`end database ${mysqlDb} import\n`)
         return callback(null)
     })
 }
@@ -372,7 +372,7 @@ const importProps = (mysqlDb, callback) => {
 
 
 const importFiles = (mysqlDb, callback) => {
-    log('start ' +  mysqlDb + ' files import')
+    log(`start ${mysqlDb} files import`)
 
     var mongoCon
     var sqlCon = mysql.createConnection({
@@ -383,9 +383,9 @@ const importFiles = (mysqlDb, callback) => {
         database: mysqlDb,
         multipleStatements: true,
         // ssl: {
-        //     key: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-key.pem'),
-        //     cert: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-cert.pem'),
-        //     ca: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-server-ca.pem')
+        //     key: fs.readFileSync(`${MYSQL_SSL_PATH}/mysql-client-key.pem`),
+        //     cert: fs.readFileSync(`${MYSQL_SSL_PATH}/mysql-client-cert.pem`),
+        //     ca: fs.readFileSync(`${MYSQL_SSL_PATH}/mysql-server-ca.pem`)
         // }
     })
 
@@ -443,8 +443,8 @@ const importFiles = (mysqlDb, callback) => {
                     let md5 = crypto.createHash('md5').update(data.Body).digest('hex')
                     let size = data.Body.length
 
-                    if(file.md5 && file.md5 !== md5) { log(file.id + ' - md5 not same ' + md5) }
-                    if(file.filesize !== size) { log(file.id + ' - size not same ' + size) }
+                    if(file.md5 && file.md5 !== md5) { log(`${file.id} - md5 not same ${md5}`) }
+                    if(file.filesize !== size) { log(`${file.id} - size not same ${size}`) }
 
                     if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))) {
                         fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))
@@ -458,7 +458,7 @@ const importFiles = (mysqlDb, callback) => {
         }, (err) => {
             if(err) { return callback(err) }
 
-            log('end ' +  mysqlDb + ' files import')
+            log(`end ${mysqlDb} files import`)
             return callback(null)
         })
     })
@@ -472,9 +472,9 @@ const connection = mysql.createConnection({
     user: MYSQL_USER,
     password: MYSQL_PASSWORD,
     // ssl: {
-    //     key: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-key.pem'),
-    //     cert: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-client-cert.pem'),
-    //     ca: fs.readFileSync(MYSQL_SSL_PATH + '/mysql-server-ca.pem')
+    //     key: fs.readFileSync(`${MYSQL_SSL_PATH}/mysql-client-key.pem`),
+    //     cert: fs.readFileSync(`${MYSQL_SSL_PATH}/mysql-client-cert.pem`),
+    //     ca: fs.readFileSync(`${MYSQL_SSL_PATH}/mysql-server-ca.pem`)
     // }
 })
 connection.query(require('./sql/get_databases.sql'), (err, rows) => {

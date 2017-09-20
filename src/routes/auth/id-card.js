@@ -51,7 +51,7 @@ router.get('/callback', (req, res, next) => {
             _.set(user, 'provider', 'id-card')
             _.set(user, 'id', _.get(result, 'UserIDCode.$value'))
             _.set(user, 'name', name)
-            _.set(user, 'email', _.get(result, 'UserIDCode.$value') + '@eesti.ee')
+            _.set(user, 'email', `${_.get(result, 'UserIDCode.$value')}@eesti.ee`)
 
             entu.addUserSession({ request: req, user: user }, callback)
         }
@@ -61,7 +61,7 @@ router.get('/callback', (req, res, next) => {
         const redirectUrl = req.cookies.redirect
         if(redirectUrl) {
             res.clearCookie('redirect')
-            res.redirect(redirectUrl + '?key=' + sessionId)
+            res.redirect(`${redirectUrl}?key=${sessionId}`)
         } else {
             res.json({ key: sessionId})
         }

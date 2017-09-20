@@ -49,7 +49,7 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
     _.del(req, 'user._raw')
 
     let user = {}
-    _.set(user, 'provider', 'taat.' + _.get(req, 'user.schacHomeOrganization'))
+    _.set(user, 'provider', `taat.${_.get(req, 'user.schacHomeOrganization')}`)
     _.set(user, 'id', _.get(req, 'user.urn:mace:dir:attribute-def:eduPersonTargetedID'))
     _.set(user, 'name', _.get(req, 'user.urn:mace:dir:attribute-def:cn'))
     _.set(user, 'email', _.get(req, 'user.urn:mace:dir:attribute-def:mail'))
@@ -63,7 +63,7 @@ router.post('/', passport.authenticate('saml', { failureRedirect: '/login', sess
         const redirectUrl = req.cookies.redirect
         if(redirectUrl) {
             res.clearCookie('redirect')
-            res.redirect(redirectUrl + '?key=' + sessionId)
+            res.redirect(`${redirectUrl}?key=${sessionId}`)
         } else {
             res.json({ key: sessionId})
         }

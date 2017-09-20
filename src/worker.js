@@ -85,11 +85,11 @@ app.locals.db = (account, callback) => {
                 mongo.MongoClient.connect(_.get(url, 'mongodb.0.string'), { ssl: true, sslValidate: true }, callback)
             },
             (connection, callback) => {
-                console.log('Connected to ' + account)
+                console.log(`Connected to ${account}`)
 
                 connection.on('close', () => {
                     _.unset(app, ['locals', 'dbs', account])
-                    console.log('Disconnected from ' + account)
+                    console.log(`Disconnected from ${account}`)
                 })
 
                 app.locals.dbs[account] = connection
@@ -157,7 +157,7 @@ app.use((req, res, next) => {
             },
         ], (err) => {
             if(err) {
-                console.error('Can\'t save request: ' + err.toString())
+                console.error(`Can't save request: ${err.toString()}`)
             }
         })
     })
@@ -233,5 +233,5 @@ app.use((err, req, res, next) => {
 
 // start server
 app.listen(process.env.PORT, () => {
-    console.log(new Date().toString() + ' started listening port ' + process.env.PORT)
+    console.log(`${new Date().toString()} started listening port ${process.env.PORT}`)
 })
