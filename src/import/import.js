@@ -66,36 +66,19 @@ const importProps = (mysqlDb, callback) => {
         },
 
         (callback) => {
-            mongoCon.listCollections({ name: 'entity' }).toArray((err, collections) => {
-                if(err) { return callback(err) }
-
-                if (collections.length > 0) {
-                    mongoCon.dropCollection('entity', callback)
-                } else {
-                    return callback(null)
-                }
-            })
-        },
-        (callback) => {
-            mongoCon.listCollections({ name: 'property' }).toArray((err, collections) => {
-                if(err) { return callback(err) }
-
-                if (collections.length > 0) {
-                    mongoCon.dropCollection('property', callback)
-                } else {
-                    return callback(null)
-                }
-            })
-        },
-
-        (callback) => {
-            log('create mongodb indexes for import')
+            log('create property indexes')
             mongoCon.collection('property').createIndexes([
                 { key: { entity: 1 } },
                 { key: { type: 1 } },
-                { key: { value_reference: 1 } },
-                { key: { created_by: 1 } },
-                { key: { deleted_by: 1 } }
+                { key: { deleted: 1 } },
+                { key: { _md5: 1 }, unique: true }
+            ], callback)
+        },
+        (callback) => {
+            log('create entity indexes')
+            mongoCon.collection('entity').createIndexes([
+                { key: { _mid: 1 }, unique: true },
+                { key: { _access: 1 } }
             ], callback)
         },
 
@@ -273,27 +256,6 @@ const importProps = (mysqlDb, callback) => {
         (callback) => {
             log('rename property created/deleted fields')
             mongoCon.collection('property').updateMany({}, { $rename: { created_at: 'created.at', created_by: 'created.by', deleted_at: 'deleted.at', deleted_by: 'deleted.by' } }, callback)
-        },
-
-        (callback) => {
-            log('drop mongodb indexes for import')
-            mongoCon.collection('property').dropAllIndexes(callback)
-        },
-        (callback) => {
-            log('create property indexes')
-            mongoCon.collection('property').createIndexes([
-                { key: { entity: 1 } },
-                { key: { type: 1 } },
-                { key: { deleted: 1 } },
-                { key: { _md5: 1 } }
-            ], callback)
-        },
-        (callback) => {
-            log('create entity indexes')
-            mongoCon.collection('entity').createIndexes([
-                { key: { _mid: 1 } },
-                { key: { _access: 1 } }
-            ], callback)
         },
 
         (callback) => {
