@@ -100,23 +100,6 @@ const importProps = (mysqlDb, callback) => {
         },
 
         (callback) => {
-            log('insert definition entities to mongodb')
-            sqlCon.query(require('./sql/get_definition_entities.sql'), (err, entities) => {
-                if(err) { return callback(err) }
-
-                mongoCon.collection('entity').insertMany(entities, callback)
-            })
-        },
-        (callback) => {
-            log('insert definition properties to mongodb')
-            sqlCon.query(require('./sql/get_definition_properties.sql'), (err, entities) => {
-                if(err) { return callback(err) }
-
-                mongoCon.collection('property').insertMany(entities, callback)
-            })
-        },
-
-        (callback) => {
             log('insert entities to mongodb')
             sqlCon.query(require('./sql/get_entities.sql'), (err, entities) => {
                 if(err) { return callback(err) }
@@ -166,6 +149,10 @@ const importProps = (mysqlDb, callback) => {
         (callback) => {
             log('delete empty value_decimal field')
             mongoCon.collection('property').updateMany({ value_decimal: null }, { $unset: { value_decimal: '' } }, callback)
+        },
+        (callback) => {
+            log('delete empty value_reference field')
+            mongoCon.collection('property').updateMany({ value_reference: null }, { $unset: { value_reference: '' } }, callback)
         },
         (callback) => {
             log('delete empty value_date field')
@@ -230,7 +217,7 @@ const importProps = (mysqlDb, callback) => {
                             mongoCon.collection('property').updateMany({ entity: entity._mid }, { $set: { entity: entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ datatype: 'reference', value_integer: { $in: [entity._mid, `${entity._mid}`] } }, { $set: { value_integer: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ value_reference: entity._mid }, { $set: { value_reference: entity._id } }, callback)
                         },
                         (callback) => {
                             mongoCon.collection('property').updateMany({ created_by: entity._mid }, { $set: { created_by: entity._id } }, callback)
@@ -260,8 +247,8 @@ const importProps = (mysqlDb, callback) => {
             mongoCon.collection('property').updateMany({ datatype: 'integer' }, { $unset: { datatype: '' }, $rename: { value_integer: 'integer' } }, callback)
         },
         (callback) => {
-            log('rename value_integer to reference')
-            mongoCon.collection('property').updateMany({ datatype: 'reference' }, { $unset: { datatype: '' }, $rename: { value_integer: 'reference' } }, callback)
+            log('rename value_reference to reference')
+            mongoCon.collection('property').updateMany({ datatype: 'reference' }, { $unset: { datatype: '' }, $rename: { value_reference: 'reference' } }, callback)
         },
         (callback) => {
             log('rename value_integer to boolean true')
