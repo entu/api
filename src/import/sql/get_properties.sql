@@ -1,4 +1,5 @@
 SELECT
+    md5 AS _md5,
     entity,
     type,
     language,
@@ -11,8 +12,7 @@ SELECT
     created_at,
     created_by,
     deleted_at,
-    deleted_by,
-    md5 AS _md5
+    deleted_by
 FROM props
 ORDER BY
     entity,
