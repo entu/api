@@ -87,7 +87,10 @@ const importProps = (mysqlDb, callback) => {
             sqlCon.query(require('./sql/get_entities.sql'), (err, entities) => {
                 if(err) { return callback(err) }
 
-                mongoCon.collection('entity').insertMany(entities, { ordered: false }, callback)
+                mongoCon.collection('entity').insertMany(entities, { ordered: false }, (err, r) => {
+                    if (err) { log(err) }
+                    callback(null)
+                })
             })
         },
 
@@ -107,7 +110,10 @@ const importProps = (mysqlDb, callback) => {
                         count = props.length
                         offset = offset + count
 
-                        mongoCon.collection('property').insertMany(props, { ordered: false }, callback)
+                        mongoCon.collection('property').insertMany(props, { ordered: false }, (err, r) => {
+                            if (err) { log(err) }
+                            callback(null)
+                        })
                     })
                 }, callback)
         },
