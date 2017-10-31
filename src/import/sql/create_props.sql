@@ -45,7 +45,7 @@ INSERT INTO props (entity, type, datatype, value_integer, created_at, created_by
 SELECT
     id,
     '_mid',
-    'integer',
+    'string',
     id,
     created,
     IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL)
