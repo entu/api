@@ -93,7 +93,7 @@ const importProps = (mysqlDb, callback) => {
             mongoCon.collection('property').createIndexes([
                 { key: { entity: 1 } },
                 { key: { type: 1 } },
-                { key: { value_integer: 1 } },
+                { key: { value_reference: 1 } },
                 { key: { created_by: 1 } },
                 { key: { deleted_by: 1 } }
             ], callback)
@@ -284,7 +284,8 @@ const importProps = (mysqlDb, callback) => {
             mongoCon.collection('property').createIndexes([
                 { key: { entity: 1 } },
                 { key: { type: 1 } },
-                { key: { deleted: 1 } }
+                { key: { deleted: 1 } },
+                { key: { _md5: 1 } }
             ], callback)
         },
         (callback) => {
