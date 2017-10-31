@@ -88,7 +88,6 @@ const importProps = (mysqlDb, callback) => {
                 if(err) { return callback(err) }
 
                 mongoCon.collection('entity').insertMany(entities, { ordered: false }, (err, r) => {
-                    if (err) { log(err) }
                     callback(null)
                 })
             })
@@ -111,7 +110,6 @@ const importProps = (mysqlDb, callback) => {
                         offset = offset + count
 
                         mongoCon.collection('property').insertMany(props, { ordered: false }, (err, r) => {
-                            if (err) { log(err) }
                             callback(null)
                         })
                     })
