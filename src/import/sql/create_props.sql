@@ -41,7 +41,7 @@ CREATE TABLE `props` (
 
 
 /* entity id */
-INSERT INTO props (entity, type, datatype, value_integer, created_at, created_by)
+INSERT INTO props (entity, type, datatype, value_text, created_at, created_by)
 SELECT
     id,
     '_mid',

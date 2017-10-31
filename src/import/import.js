@@ -205,7 +205,7 @@ const importProps = (mysqlDb, callback) => {
         },
 
         (callback) => {
-            log('replace mysql numeric ids with mongodb _ids')
+            log('replace mysql ids with mongodb _ids')
 
             mongoCon.collection('entity').find({}).sort({ _mid: 1 }).toArray((err, entities) => {
                 if(err) { return callback(err) }
