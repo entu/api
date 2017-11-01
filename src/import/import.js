@@ -68,7 +68,7 @@ const importProps = (mysqlDb, callback) => {
         (callback) => {
             log('create entity indexes')
             mongoCon.collection('entity').createIndexes([
-                { key: { _mid: 1 }, unique: true },
+                { key: { '_mid.string': 1 }, unique: true },
                 { key: { _access: 1 } }
             ], callback)
         },
