@@ -569,11 +569,7 @@ SET md5 = MD5(
         IFNULL(value_integer, ''), '#',
         IFNULL(value_decimal, ''), '#',
         IFNULL(value_reference, ''), '#',
-        IFNULL(value_date, ''), '#',
-        IFNULL(created_at, ''), '#',
-        IFNULL(created_by, ''), '#',
-        IFNULL(deleted_at, ''), '#',
-        IFNULL(deleted_by, '')
+        IFNULL(value_date, '')
     )
 );
 

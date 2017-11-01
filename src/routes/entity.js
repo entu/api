@@ -113,7 +113,6 @@ router.get('/', (req, res, next) => {
         res.json({
             count: count,
             entities: _.map(entities, (entity) => {
-                _.unset(entity, '_mid')
                 _.unset(entity, '_access')
                 return entity
             })
@@ -250,7 +249,6 @@ router.get('/:entityId', (req, res, next) => {
         })
 
         if (access.indexOf(req.user) !== -1 || _.get(entity, '_sharing.0.string', '') === 'public access is disabled for now') {
-            _.unset(entity, '_mid')
             _.unset(entity, '_access')
             res.json(entity)
         } else {
