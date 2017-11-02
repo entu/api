@@ -112,7 +112,9 @@ const importProps = (mysqlDb, callback) => {
                         count = props.length
                         offset = offset + count
 
-                        mongoCon.collection('property').insertMany(props, { ordered: false }, (err, r) => {
+                        let cleanProps = _.map(props, x => _.pickBy(x, (value, key) => { return value === 0 || value === false || !!value }))
+
+                        mongoCon.collection('property').insertMany(cleanProps, { ordered: false }, (err, r) => {
                             callback(null)
                         })
                     })
@@ -122,47 +124,6 @@ const importProps = (mysqlDb, callback) => {
         (callback) => {
             log('close mysql connection')
             sqlCon.end(callback)
-        },
-
-        (callback) => {
-            log('delete empty language field')
-            mongoCon.collection('property').updateMany({ language: null }, { $unset: { language: '' } }, callback)
-        },
-        (callback) => {
-            log('delete empty value_text field')
-            mongoCon.collection('property').updateMany({ value_text: null }, { $unset: { value_text: '' } }, callback)
-        },
-        (callback) => {
-            log('delete empty value_integer field')
-            mongoCon.collection('property').updateMany({ value_integer: null }, { $unset: { value_integer: '' } }, callback)
-        },
-        (callback) => {
-            log('delete empty value_decimal field')
-            mongoCon.collection('property').updateMany({ value_decimal: null }, { $unset: { value_decimal: '' } }, callback)
-        },
-        (callback) => {
-            log('delete empty value_reference field')
-            mongoCon.collection('property').updateMany({ value_reference: null }, { $unset: { value_reference: '' } }, callback)
-        },
-        (callback) => {
-            log('delete empty value_date field')
-            mongoCon.collection('property').updateMany({ value_date: null }, { $unset: { value_date: '' } }, callback)
-        },
-        (callback) => {
-            log('delete empty created_at field')
-            mongoCon.collection('property').updateMany({ created_at: null }, { $unset: { created_at: '' } }, callback)
-        },
-        (callback) => {
-            log('delete empty created_by field')
-            mongoCon.collection('property').updateMany({ created_by: null }, { $unset: { created_by: '' } }, callback)
-        },
-        (callback) => {
-            log('delete empty deleted_at field')
-            mongoCon.collection('property').updateMany({ deleted_at: null }, { $unset: { deleted_at: '' } }, callback)
-        },
-        (callback) => {
-            log('delete empty deleted_by field')
-            mongoCon.collection('property').updateMany({ deleted_by: null }, { $unset: { deleted_by: '' } }, callback)
         },
 
         (callback) => {
