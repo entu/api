@@ -140,11 +140,11 @@ const importProps = (mysqlDb, callback) => {
                             }
                             if (x.datatype === 'file') {
                                 let fileArray = x.string.split('\n')
-                                if (fileArray[0].substr(0, 2) === 'A:' && fileArray[0].substr(2)) { _.set(x, 'file.filename', fileArray[0].substr(2)) }
-                                if (fileArray[1].substr(0, 2) === 'B:' && fileArray[1].substr(2)) { _.set(x, 'file.md5', fileArray[1].substr(2)) }
-                                if (fileArray[2].substr(0, 2) === 'C:' && fileArray[2].substr(2)) { _.set(x, 'file.s3', fileArray[2].substr(2)) }
-                                if (fileArray[3].substr(0, 2) === 'D:' && fileArray[3].substr(2)) { _.set(x, 'file.url', fileArray[3].substr(2)) }
-                                if (fileArray[4].substr(0, 2) === 'E:' && fileArray[4].substr(2)) { _.set(x, 'file.size', parseInt(fileArray[4].substr(2), 10)) }
+                                if (fileArray[0].substr(0, 2) === 'A:' && fileArray[0].substr(2)) { _.set(x, 'filename', fileArray[0].substr(2)) }
+                                if (fileArray[1].substr(0, 2) === 'B:' && fileArray[1].substr(2)) { _.set(x, 'md5', fileArray[1].substr(2)) }
+                                if (fileArray[2].substr(0, 2) === 'C:' && fileArray[2].substr(2)) { _.set(x, 's3', fileArray[2].substr(2)) }
+                                if (fileArray[3].substr(0, 2) === 'D:' && fileArray[3].substr(2)) { _.set(x, 'url', fileArray[3].substr(2)) }
+                                if (fileArray[4].substr(0, 2) === 'E:' && fileArray[4].substr(2)) { _.set(x, 'size', parseInt(fileArray[4].substr(2), 10)) }
                                 _.unset(x, 'string')
                             }
                             _.unset(x, 'datatype')
