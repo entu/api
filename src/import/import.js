@@ -80,8 +80,8 @@ const importProps = (mysqlDb, callback) => {
                 { key: { type: 1 } },
                 { key: { deleted: 1 } },
                 { key: { value_reference: 1 } },
-                { key: { created.by: 1 } },
-                { key: { deleted.by: 1 } }
+                { key: { 'created.by': 1 } },
+                { key: { 'deleted.by': 1 } }
             ], callback)
         },
 
@@ -179,10 +179,10 @@ const importProps = (mysqlDb, callback) => {
                             mongoCon.collection('property').updateMany({ value_reference: entity._oid }, { $set: { value_reference: entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ created.by: entity._oid }, { $set: { created.by: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ 'created.by': entity._oid }, { $set: { 'created.by': entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ deleted.by: entity._oid }, { $set: { deleted.by: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ 'deleted.by': entity._oid }, { $set: { 'deleted.by': entity._id } }, callback)
                         },
                     ], (err) => {
                         if(err) { return callback(err) }
