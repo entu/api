@@ -114,6 +114,7 @@ router.get('/', (req, res, next) => {
             count: count,
             entities: _.map(entities, (entity) => {
                 _.unset(entity, '_access')
+                _.unset(entity, '_oid')
                 return entity
             })
         })
@@ -250,6 +251,7 @@ router.get('/:entityId', (req, res, next) => {
 
         if (access.indexOf(req.user) !== -1 || _.get(entity, '_sharing.0.string', '') === 'public access is disabled for now') {
             _.unset(entity, '_access')
+            _.unset(entity, '_oid')
             res.json(entity)
         } else {
             return next([403, 'Forbidden'])
