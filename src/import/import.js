@@ -79,7 +79,7 @@ const importProps = (mysqlDb, callback) => {
                 { key: { entity: 1 } },
                 { key: { type: 1 } },
                 { key: { deleted: 1 } },
-                { key: { value_reference: 1 } },
+                { key: { reference: 1 } },
                 { key: { 'created.by': 1 } },
                 { key: { 'deleted.by': 1 } }
             ], callback)
@@ -147,6 +147,7 @@ const importProps = (mysqlDb, callback) => {
                                 if (fileArray[4].substr(0, 2) === 'E:' && fileArray[4].substr(2)) { _.set(x, 'file.size', parseInt(fileArray[4].substr(2), 10)) }
                                 _.unset(x, 'string')
                             }
+                            _.unset(x, 'datatype')
 
                             return x
                         })
@@ -176,7 +177,7 @@ const importProps = (mysqlDb, callback) => {
                             mongoCon.collection('property').updateMany({ entity: entity._oid }, { $set: { entity: entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ value_reference: entity._oid }, { $set: { value_reference: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ reference: entity._oid }, { $set: { reference: entity._id } }, callback)
                         },
                         (callback) => {
                             mongoCon.collection('property').updateMany({ 'created.by': entity._oid }, { $set: { 'created.by': entity._id } }, callback)
@@ -198,15 +199,6 @@ const importProps = (mysqlDb, callback) => {
         },
 
         (callback) => {
-            log('rename value_reference to reference')
-            mongoCon.collection('property').updateMany({ datatype: 'reference' }, { $rename: { value_reference: 'reference' } }, callback)
-        },
-        // (callback) => {
-        //     log('delete datatype')
-        //     mongoCon.collection('property').updateMany({}, { $unset: { datatype: '' } }, callback)
-        // },
-
-        (callback) => {
             log('create entities')
 
             mongoCon.collection('entity').find({}, { _id: true }).sort({ _id: 1 }).toArray((err, entities) => {
@@ -220,7 +212,7 @@ const importProps = (mysqlDb, callback) => {
 
                         let p = _.mapValues(_.groupBy(properties, 'type'), (o) => {
                             return _.map(o, (p) => {
-                                return _.omit(p, ['_md5', 'entity', 'type', 'created', 's3', 'url'])
+                                return _.omit(p, ['_md5', 'entity', 'type', 'created', 's3', 'url', 'public'])
                             })
                         })
 
