@@ -80,8 +80,8 @@ const importProps = (mysqlDb, callback) => {
                 { key: { type: 1 } },
                 { key: { deleted: 1 } },
                 { key: { value_reference: 1 } },
-                { key: { created_by: 1 } },
-                { key: { deleted_by: 1 } }
+                { key: { created.by: 1 } },
+                { key: { deleted.by: 1 } }
             ], callback)
         },
 
@@ -113,6 +113,43 @@ const importProps = (mysqlDb, callback) => {
                         offset = offset + count
 
                         let cleanProps = _.map(props, x => _.pickBy(x, (value, key) => { return value === 0 || value === false || !!value }))
+                        let correctedProps = _.map(cleanProps, x => {
+                            if (x.created_by) {
+                                _.set(x, 'created.by', x.created_by)
+                                _.unset(x, 'created_by')
+                            }
+                            if (x.created_at) {
+                                _.set(x, 'created.at', x.created_at)
+                                _.unset(x, 'created_at')
+                            }
+                            if (x.deleted_by) {
+                                _.set(x, 'deleted.by', x.deleted_by)
+                                _.unset(x, 'deleted_by')
+                            }
+                            if (x.deleted_at) {
+                                _.set(x, 'deleted.at', x.deleted_at)
+                                _.unset(x, 'deleted_at')
+                            }
+                            if (x.datatype === 'datetime') {
+                                _.set(x, 'datetime', x.date)
+                                _.unset(x, 'date')
+                            }
+                            if (x.datatype === 'boolean') {
+                                _.set(x, 'boolean', x.integer === 1)
+                                _.unset(x, 'integer')
+                            }
+                            if (x.datatype === 'file') {
+                                let fileArray = x.string.split('\n')
+                                if (fileArray[0].substr(0, 2) === 'A:' && fileArray[0].substr(2)) { _.set(x, 'file.filename', fileArray[0].substr(2)) }
+                                if (fileArray[1].substr(0, 2) === 'B:' && fileArray[1].substr(2)) { _.set(x, 'file.md5', fileArray[1].substr(2)) }
+                                if (fileArray[2].substr(0, 2) === 'C:' && fileArray[2].substr(2)) { _.set(x, 'file.s3', fileArray[2].substr(2)) }
+                                if (fileArray[3].substr(0, 2) === 'D:' && fileArray[3].substr(2)) { _.set(x, 'file.url', fileArray[3].substr(2)) }
+                                if (fileArray[4].substr(0, 2) === 'E:' && fileArray[4].substr(2)) { _.set(x, 'file.size', parseInt(fileArray[4].substr(2), 10)) }
+                                _.unset(x, 'string')
+                            }
+
+                            return x
+                        })
 
                         mongoCon.collection('property').insertMany(cleanProps, { ordered: false }, (err, r) => {
                             callback(null)
@@ -124,35 +161,6 @@ const importProps = (mysqlDb, callback) => {
         (callback) => {
             log('close mysql connection')
             sqlCon.end(callback)
-        },
-
-        (callback) => {
-            log('parse file info to separate parameters')
-
-            mongoCon.collection('property').find({ datatype: 'file', value_text: { $exists: true } }).toArray((err, files) => {
-                if(err) { return callback(err) }
-
-                var l = files.length
-                async.eachSeries(files, (file, callback) => {
-                    var fileArray = file.value_text.split('\n')
-                    var fileInfo = {}
-                    if (fileArray[0].substr(0, 2) === 'A:' && fileArray[0].substr(2)) { fileInfo.filename = fileArray[0].substr(2) }
-                    if (fileArray[1].substr(0, 2) === 'B:' && fileArray[1].substr(2)) { fileInfo.md5 = fileArray[1].substr(2) }
-                    if (fileArray[2].substr(0, 2) === 'C:' && fileArray[2].substr(2)) { fileInfo.s3 = fileArray[2].substr(2) }
-                    if (fileArray[3].substr(0, 2) === 'D:' && fileArray[3].substr(2)) { fileInfo.url = fileArray[3].substr(2) }
-                    if (fileArray[4].substr(0, 2) === 'E:' && fileArray[4].substr(2)) { fileInfo.size = parseInt(fileArray[4].substr(2), 10) }
-
-                    mongoCon.collection('property').updateMany({ _id: file._id }, { $unset: { datatype: '', value_text: '' }, $set: fileInfo }, (err) => {
-                        if(err) { return callback(err) }
-
-                        l--
-                        if (l % 10000 === 0 && l > 0) {
-                            log(`${l} files to go`)
-                        }
-                        return callback(null)
-                    })
-                }, callback)
-            })
         },
 
         (callback) => {
@@ -171,10 +179,10 @@ const importProps = (mysqlDb, callback) => {
                             mongoCon.collection('property').updateMany({ value_reference: entity._oid }, { $set: { value_reference: entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ created_by: entity._oid }, { $set: { created_by: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ created.by: entity._oid }, { $set: { created.by: entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ deleted_by: entity._oid }, { $set: { deleted_by: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ deleted.by: entity._oid }, { $set: { deleted.by: entity._id } }, callback)
                         },
                     ], (err) => {
                         if(err) { return callback(err) }
@@ -190,41 +198,13 @@ const importProps = (mysqlDb, callback) => {
         },
 
         (callback) => {
-            log('rename value_text to string')
-            mongoCon.collection('property').updateMany({ datatype: { $in: ['string', 'text'] } }, { $unset: { datatype: '' }, $rename: { value_text: 'string' } }, callback)
-        },
-        (callback) => {
-            log('rename value_integer to integer')
-            mongoCon.collection('property').updateMany({ datatype: 'integer' }, { $unset: { datatype: '' }, $rename: { value_integer: 'integer' } }, callback)
-        },
-        (callback) => {
             log('rename value_reference to reference')
-            mongoCon.collection('property').updateMany({ datatype: 'reference' }, { $unset: { datatype: '' }, $rename: { value_reference: 'reference' } }, callback)
+            mongoCon.collection('property').updateMany({ datatype: 'reference' }, { $rename: { value_reference: 'reference' } }, callback)
         },
-        (callback) => {
-            log('rename value_integer to boolean true')
-            mongoCon.collection('property').updateMany({ datatype: 'boolean', value_integer: { $in: [1, '1'] } }, { $unset: { datatype: '', value_integer: '' }, $set: { boolean: true } }, callback)
-        },
-        (callback) => {
-            log('rename value_integer to boolean false')
-            mongoCon.collection('property').updateMany({ datatype: 'boolean', value_integer: { $in: [0, '0'] } }, { $unset: { datatype: '', value_integer: '' }, $set: { boolean: false } }, callback)
-        },
-        (callback) => {
-            log('rename value_decimal to decimal')
-            mongoCon.collection('property').updateMany({ datatype: 'decimal' }, { $unset: { datatype: '' }, $rename: { value_decimal: 'decimal' } }, callback)
-        },
-        (callback) => {
-            log('rename value_date to date')
-            mongoCon.collection('property').updateMany({ datatype: 'date' }, { $unset: { datatype: '' }, $rename: { value_date: 'date' } }, callback)
-        },
-        (callback) => {
-            log('rename value_date to datetime')
-            mongoCon.collection('property').updateMany({ datatype: 'datetime' }, { $unset: { datatype: '' }, $rename: { value_date: 'datetime' } }, callback)
-        },
-        (callback) => {
-            log('rename property created/deleted fields')
-            mongoCon.collection('property').updateMany({}, { $rename: { created_at: 'created.at', created_by: 'created.by', deleted_at: 'deleted.at', deleted_by: 'deleted.by' } }, callback)
-        },
+        // (callback) => {
+        //     log('delete datatype')
+        //     mongoCon.collection('property').updateMany({}, { $unset: { datatype: '' } }, callback)
+        // },
 
         (callback) => {
             log('create entities')
