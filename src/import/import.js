@@ -68,7 +68,7 @@ const importProps = (mysqlDb, callback) => {
         (callback) => {
             log('create entity indexes')
             mongoCon.collection('entity').createIndexes([
-                { key: { '_mid.string': 1 }, unique: true },
+                { key: { '_oid': 1 }, unique: true },
                 { key: { _access: 1 } }
             ], callback)
         },
@@ -197,23 +197,23 @@ const importProps = (mysqlDb, callback) => {
         (callback) => {
             log('replace mysql ids with mongodb _ids')
 
-            mongoCon.collection('entity').find({}).sort({ _mid: 1 }).toArray((err, entities) => {
+            mongoCon.collection('entity').find({}).sort({ _oid: 1 }).toArray((err, entities) => {
                 if(err) { return callback(err) }
 
                 var l = entities.length
                 async.eachSeries(entities, (entity, callback) => {
                     async.parallel([
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ entity: entity._mid }, { $set: { entity: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ entity: entity._oid }, { $set: { entity: entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ value_reference: entity._mid }, { $set: { value_reference: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ value_reference: entity._oid }, { $set: { value_reference: entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ created_by: entity._mid }, { $set: { created_by: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ created_by: entity._oid }, { $set: { created_by: entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ deleted_by: entity._mid }, { $set: { deleted_by: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ deleted_by: entity._oid }, { $set: { deleted_by: entity._id } }, callback)
                         },
                     ], (err) => {
                         if(err) { return callback(err) }
