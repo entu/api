@@ -75,7 +75,6 @@ const importProps = (mysqlDb, callback) => {
         (callback) => {
             log('create property indexes')
             mongoCon.collection('property').createIndexes([
-                { key: { _md5: 1 }, unique: true },
                 { key: { entity: 1 } },
                 { key: { type: 1 } },
                 { key: { deleted: 1 } },
