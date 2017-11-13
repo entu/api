@@ -66,9 +66,32 @@ const importProps = (mysqlDb, callback) => {
         },
 
         (callback) => {
+            mongoCon.listCollections({ name: 'entity' }).toArray((err, collections) => {
+                if(err) { return callback(err) }
+
+                if (collections.length > 0) {
+                    mongoCon.dropCollection('entity', callback)
+                } else {
+                    return callback(null)
+                }
+            })
+        },
+        (callback) => {
+            mongoCon.listCollections({ name: 'property' }).toArray((err, collections) => {
+                if(err) { return callback(err) }
+
+                if (collections.length > 0) {
+                    mongoCon.dropCollection('property', callback)
+                } else {
+                    return callback(null)
+                }
+            })
+        },
+
+        (callback) => {
             log('create entity indexes')
             mongoCon.collection('entity').createIndexes([
-                { key: { '_oid': 1 }, unique: true },
+                { key: { '_oid': 1 } },
                 { key: { _access: 1 } }
             ], callback)
         },
@@ -89,9 +112,7 @@ const importProps = (mysqlDb, callback) => {
             sqlCon.query(require('./sql/get_entities.sql'), (err, entities) => {
                 if(err) { return callback(err) }
 
-                mongoCon.collection('entity').insertMany(entities, { ordered: false }, (err, r) => {
-                    callback(null)
-                })
+                mongoCon.collection('entity').insertMany(entities, callback)
             })
         },
 
@@ -151,9 +172,7 @@ const importProps = (mysqlDb, callback) => {
                             return x
                         })
 
-                        mongoCon.collection('property').insertMany(cleanProps, { ordered: false }, (err, r) => {
-                            callback(null)
-                        })
+                        mongoCon.collection('property').insertMany(cleanProps, callback)
                     })
                 }, callback)
         },
