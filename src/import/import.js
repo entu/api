@@ -92,7 +92,8 @@ const importProps = (mysqlDb, callback) => {
             log('create entity indexes')
             mongoCon.collection('entity').createIndexes([
                 { key: { '_oid': 1 } },
-                { key: { _access: 1 } }
+                { key: { _access: 1 } },
+                { key: { '_type.string': 1 } }
             ], callback)
         },
         (callback) => {
