@@ -308,19 +308,18 @@ const importFiles = (mysqlDb, callback) => {
 
         const s3 = new aws.S3()
 
-        if (!fs.existsSync(process.env.FILES_PATH)) {
-            fs.mkdirSync(process.env.FILES_PATH)
-        }
-        if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb))) {
-            fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb))
-        }
-
         async.eachSeries(files, (file, callback) => {
             if (!file.s3_key) {
                 if (file.md5) {
                     if (fs.existsSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5))) {
                         let f = fs.readFileSync(path.join(process.env.OLD_FILES_PATH, mysqlDb, file.md5.substr(0, 1), file.md5))
 
+                        if (!fs.existsSync(process.env.FILES_PATH)) {
+                            fs.mkdirSync(process.env.FILES_PATH)
+                        }
+                        if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb))) {
+                            fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb))
+                        }
                         if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb, file.md5.substr(0, 1)))) {
                             fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb, file.md5.substr(0, 1)))
                         }
@@ -355,10 +354,15 @@ const importFiles = (mysqlDb, callback) => {
                     if(file.md5 && file.md5 !== md5) { log(`${file.id} - md5 not same ${md5}`) }
                     if(file.filesize !== size) { log(`${file.id} - size not same ${size}`) }
 
+                    if (!fs.existsSync(process.env.FILES_PATH)) {
+                        fs.mkdirSync(process.env.FILES_PATH)
+                    }
+                    if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb))) {
+                        fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb))
+                    }
                     if (!fs.existsSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))) {
                         fs.mkdirSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1)))
                     }
-
                     fs.writeFileSync(path.join(process.env.FILES_PATH, mysqlDb, md5.substr(0, 1), md5), data.Body)
 
                     sqlCon.query(require('./sql/update_files.sql'), [md5, size, 'S3', file.id], callback)
