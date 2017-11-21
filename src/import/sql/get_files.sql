@@ -7,5 +7,5 @@ SELECT
 FROM file
 WHERE url IS NULL
 AND changed IS NULL
-AND filesize < 600000000
+AND filesize <= 2147483647
 ORDER BY filesize;
