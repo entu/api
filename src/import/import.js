@@ -231,7 +231,7 @@ const importProps = (mysqlDb, callback) => {
 
                         let p = _.mapValues(_.groupBy(properties, 'type'), (o) => {
                             return _.map(o, (p) => {
-                                return _.omit(p, ['_md5', 'entity', 'type', 'created', 's3', 'url', 'public'])
+                                return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
                             })
                         })
 

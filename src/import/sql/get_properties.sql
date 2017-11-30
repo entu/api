@@ -1,5 +1,4 @@
 SELECT
-    md5 AS `_md5`,
     entity,
     type,
     language,

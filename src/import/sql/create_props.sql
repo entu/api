@@ -29,14 +29,12 @@ CREATE TABLE `props` (
   `created_at` datetime DEFAULT NULL,
   `created_by` varchar(64) DEFAULT NULL,
   `deleted_at` datetime DEFAULT NULL,
-  `deleted_by` varchar(64) DEFAULT NULL,
-  `md5` varchar(32) DEFAULT NULL,
+  `deleted_by` varchar(64) DEFAULT NULL
   PRIMARY KEY (`id`),
   KEY `entity` (`entity`),
   KEY `type` (`type`),
   KEY `language` (`language`),
-  KEY `datatype` (`datatype`),
-  KEY `md5` (`md5`)
+  KEY `datatype` (`datatype`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -554,24 +552,6 @@ ORDER BY
     property_definition,
     property_language,
     property_type;
-
-
-/* calculate property md5 */
-UPDATE props
-SET md5 = MD5(
-    CONCAT(
-        IFNULL(entity, ''), '#',
-        IFNULL(type, ''), '#',
-        IFNULL(language, ''), '#',
-        IFNULL(datatype, ''), '#',
-        IFNULL(public, ''), '#',
-        IFNULL(value_text, ''), '#',
-        IFNULL(value_integer, ''), '#',
-        IFNULL(value_decimal, ''), '#',
-        IFNULL(value_reference, ''), '#',
-        IFNULL(value_date, '')
-    )
-);
 
 
 OPTIMIZE TABLE props;
