@@ -29,7 +29,7 @@ CREATE TABLE `props` (
   `created_at` datetime DEFAULT NULL,
   `created_by` varchar(64) DEFAULT NULL,
   `deleted_at` datetime DEFAULT NULL,
-  `deleted_by` varchar(64) DEFAULT NULL
+  `deleted_by` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `entity` (`entity`),
   KEY `type` (`type`),
