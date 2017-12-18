@@ -1,5 +1,5 @@
 SELECT DISTINCT
-    entity AS _oid
+    entity AS oid
 FROM props
 ORDER BY
     entity;

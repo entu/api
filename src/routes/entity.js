@@ -71,13 +71,13 @@ router.get('/', (req, res, next) => {
         }
     })
 
-    filter._access = new objectId(req.user)
+    filter.access = new objectId(req.user)
 
     if (props.length > 0) {
         _.forEach(props, (f) => {
             fields[f] = true
         })
-        _.set(fields, '_access', true)
+        _.set(fields, 'access', true)
     }
 
     if (sort.length > 0) {
@@ -113,12 +113,11 @@ router.get('/', (req, res, next) => {
         res.json({
             count: count,
             entities: _.map(entities, (entity) => {
-                _.unset(entity, '_access')
-                _.unset(entity, '_oid')
+                _.unset(entity, 'access')
+                _.unset(entity, 'oid')
                 return entity
             })
         })
-
     })
 })
 
@@ -235,7 +234,7 @@ router.get('/:entityId', (req, res, next) => {
                 _.forEach(props, (f) => {
                     _.set(config, ['fields', f], true)
                 })
-                _.set(config, 'fields._access', true)
+                _.set(config, 'fields.access', true)
             }
 
             connection.collection('entity').findOne({ _id: new objectId(req.params.entityId) }, config, callback)
@@ -245,13 +244,13 @@ router.get('/:entityId', (req, res, next) => {
 
         if (!entity) { return next([404, 'Entity not found']) }
 
-        const access = _.map(_.get(entity, '_access', []), (s) => {
+        const access = _.map(_.get(entity, 'access', []), (s) => {
             return s.toString()
         })
 
         if (access.indexOf(req.user) !== -1 || _.get(entity, '_sharing.0.string', '') === 'public access is disabled for now') {
-            _.unset(entity, '_access')
-            _.unset(entity, '_oid')
+            _.unset(entity, 'access')
+            _.unset(entity, 'oid')
             res.json(entity)
         } else {
             return next([403, 'Forbidden'])

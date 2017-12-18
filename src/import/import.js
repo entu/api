@@ -91,8 +91,8 @@ const importProps = (mysqlDb, callback) => {
         (callback) => {
             log('create entity indexes')
             mongoCon.collection('entity').createIndexes([
-                { key: { '_oid': 1 } },
-                { key: { _access: 1 } },
+                { key: { oid: 1 } },
+                { key: { access: 1 } },
                 { key: { '_type.string': 1 } }
             ], callback)
         },
@@ -191,23 +191,23 @@ const importProps = (mysqlDb, callback) => {
         (callback) => {
             log('replace mysql ids with mongodb _ids')
 
-            mongoCon.collection('entity').find({}).sort({ _oid: 1 }).toArray((err, entities) => {
+            mongoCon.collection('entity').find({}).sort({ oid: 1 }).toArray((err, entities) => {
                 if(err) { return callback(err) }
 
                 var l = entities.length
                 async.eachSeries(entities, (entity, callback) => {
                     async.parallel([
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ entity: entity._oid }, { $set: { entity: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ entity: entity.oid }, { $set: { entity: entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ reference: entity._oid }, { $set: { reference: entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ reference: entity.oid }, { $set: { reference: entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ 'created.by': entity._oid }, { $set: { 'created.by': entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ 'created.by': entity.oid }, { $set: { 'created.by': entity._id } }, callback)
                         },
                         (callback) => {
-                            mongoCon.collection('property').updateMany({ 'deleted.by': entity._oid }, { $set: { 'deleted.by': entity._id } }, callback)
+                            mongoCon.collection('property').updateMany({ 'deleted.by': entity.oid }, { $set: { 'deleted.by': entity._id } }, callback)
                         },
                     ], (err) => {
                         if(err) { return callback(err) }
@@ -234,15 +234,26 @@ const importProps = (mysqlDb, callback) => {
                     mongoCon.collection('property').find({ entity: entity._id, deleted: { $exists: false } }).toArray((err, properties) => {
                         if(err) { return callback(err) }
 
-                        let p = _.mapValues(_.groupBy(properties, 'type'), (o) => {
-                            return _.map(o, (p) => {
-                                return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
-                            })
-                        })
+                        let p = _.groupBy(properties, v => { return v.x === true ? 'public' : 'private' })
 
-                        const access = _.map(_.union(p._viewer, p._expander, p._editor, p._owner), 'reference')
+                        if (p.public) {
+                            p.public = _.mapValues(p.public, (o) => {
+                                return _.map(o, (p) => {
+                                    return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
+                                })
+                            })
+                        }
+                        if (p.private) {
+                            p.private = _.mapValues(p.private, (o) => {
+                                return _.map(o, (p) => {
+                                    return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
+                                })
+                            })
+                        }
+
+                        const access = _.map(_.union(p.private._viewer, p.private._expander, p.private._editor, p.private._owner), 'reference')
                         if (access.length > 0) {
-                            p._access = access
+                            p.access = access
                         }
 
                         if (!_.isEmpty(p)) {

@@ -51,25 +51,36 @@ exports.aggregateEntity = (req, entityId, property, callback) => {
         },
         (con, callback) => {
             connection = con
-            connection.collection('property').find({ entity: entityId, deleted: { $exists: false } }).toArray((err, props) => {
+            connection.collection('property').find({ entity: entityId, deleted: { $exists: false } }).toArray((err, properties) => {
                 if(err) { return callback(err) }
 
-                let properties = _.mapValues(_.groupBy(props, 'type'), (o) => {
-                    return _.map(o, (p) => {
-                        return _.omit(p, ['entity', 'type', 'created', 's3', 'url'])
-                    })
-                })
+                let p = _.groupBy(properties, v => { return v.x === true ? 'public' : 'private' })
 
-                const access = _.map(_.union(properties._viewer, properties._expander, properties._editor, properties._owner), 'reference')
-                if (access.length > 0) {
-                    properties._access = access
+                if (p.public) {
+                    p.public = _.mapValues(p.public, (o) => {
+                        return _.map(o, (p) => {
+                            return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
+                        })
+                    })
+                }
+                if (p.private) {
+                    p.private = _.mapValues(p.private, (o) => {
+                        return _.map(o, (p) => {
+                            return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
+                        })
+                    })
                 }
 
-                if (!_.isEmpty(properties)) {
-                    if (_.has(properties, '_deleted')) {
+                const access = _.map(_.union(p.private._viewer, p.private._expander, p.private._editor, p.private._owner), 'reference')
+                if (access.length > 0) {
+                    p.access = access
+                }
+
+                if (!_.isEmpty(p)) {
+                    if (_.has(p, '_deleted')) {
                         connection.collection('entity').deleteOne({ _id: entityId }, callback)
                     } else {
-                        connection.collection('entity').update({ _id: entityId }, properties, callback)
+                        connection.collection('entity').update({ _id: entityId }, p, callback)
                     }
                 } else {
                     return callback(null)

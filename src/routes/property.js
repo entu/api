@@ -29,12 +29,12 @@ router.get('/:propertyId', (req, res, next) => {
 
             property = prop
 
-            connection.collection('entity').findOne({ _id: property.entity }, { _id: false, _access: true }, callback)
+            connection.collection('entity').findOne({ _id: property.entity }, { _id: false, access: true }, callback)
         },
         (entity, callback) => {
             if (!entity) { return callback([404, 'Entity not found']) }
 
-            const access = _.map(_.get(entity, '_access', []), (s) => {
+            const access = _.map(_.get(entity, 'access', []), (s) => {
                 return s.toString()
             })
 
