@@ -60,6 +60,10 @@ router.get('/:propertyId', (req, res, next) => {
             _.unset(property, 's3')
         }
 
+        if (property.type === 'entu_api_key') {
+            property.string = '***'
+        }
+
         if (_.get(property, 'url') && _.has(req, 'query.download')) {
             res.redirect(_.get(property, 'url'))
         } else {
