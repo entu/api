@@ -78,7 +78,7 @@ router.get('/', (req, res, next) => {
             fields[`private.${f}`] = true
             fields[`public.${f}`] = true
         })
-        fields['private.access'] = true
+        fields['access'] = true
     }
 
     if (sort.length > 0) {
@@ -92,10 +92,6 @@ router.get('/', (req, res, next) => {
     } else {
         sortFields = { _id: 1 }
     }
-
-    console.log(filter)
-    console.log(fields)
-    console.log(sortFields)
 
     async.waterfall([
         (callback) => {
