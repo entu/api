@@ -118,6 +118,17 @@ router.get('/', (req, res, next) => {
                     return s.toString()
                 })
 
+                if (_.has(entity, 'private.entu_api_key')) {
+                    _.get(entity, 'private.entu_api_key', []).forEach((k) => {
+                        k.string = '***'
+                    })
+                }
+                if (_.has(entity, 'public.entu_api_key')) {
+                    _.get(entity, 'public.entu_api_key', []).forEach((k) => {
+                        k.string = '***'
+                    })
+                }
+
                 if (access.indexOf(req.user) === -1) {
                     return Object.assign({ _id: entity._id }, _.get(entity, 'public', {}))
                 } else {
@@ -250,6 +261,17 @@ router.get('/:entityId', (req, res, next) => {
         if (err) { return next(err) }
 
         if (!entity) { return next([404, 'Entity not found']) }
+
+        if (_.has(entity, 'private.entu_api_key')) {
+            _.get(entity, 'private.entu_api_key', []).forEach((k) => {
+                k.string = '***'
+            })
+        }
+        if (_.has(entity, 'public.entu_api_key')) {
+            _.get(entity, 'public.entu_api_key', []).forEach((k) => {
+                k.string = '***'
+            })
+        }
 
         const access = _.map(_.get(entity, 'access', []), (s) => {
             return s.toString()
