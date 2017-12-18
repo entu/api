@@ -64,9 +64,9 @@ router.get('/', (req, res, next) => {
             }
 
             if (['gt', 'gte', 'lt', 'lte', 'ne', 'regex', 'exists'].indexOf(operator) !== -1) {
-                _.set(filter, [`${field}.${type}`, `\$${operator}`], value)
+                _.set(filter, [`private.${field}.${type}`, `\$${operator}`], value)
             } else {
-                filter[`${field}.${type}`] = value
+                filter[`private.${field}.${type}`] = value
             }
         }
     })
@@ -75,17 +75,18 @@ router.get('/', (req, res, next) => {
 
     if (props.length > 0) {
         _.forEach(props, (f) => {
-            fields[f] = true
+            fields[`private.${f}`] = true
+            fields[`public.${f}`] = true
         })
-        _.set(fields, 'access', true)
+        fields['private.access'] = true
     }
 
     if (sort.length > 0) {
         _.forEach(sort, (f) => {
             if (f.substr(0, 1) === '-') {
-                sortFields[f.substr(1)] = -1
+                sortFields[`private.${f.substr(1)}`] = -1
             } else {
-                sortFields[f] = 1
+                sortFields[`private.${f}`] = 1
             }
         })
     } else {
@@ -238,7 +239,7 @@ router.get('/:entityId', (req, res, next) => {
 
             if (props.length > 0) {
                 _.forEach(props, (f) => {
-                    _.set(config, ['fields', f], true)
+                    _.set(config, ['fields', `private.${f}`], true)
                 })
                 _.set(config, 'fields.access', true)
             }
