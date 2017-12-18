@@ -129,16 +129,17 @@ AND r.relationship_definition_keyname IN ('editor', 'expander', 'owner', 'viewer
 
 
 /* entity sharing */
-INSERT INTO props (entity, type, datatype, value_text, created_at, created_by)
+INSERT INTO props (entity, type, datatype, value_integer, created_at, created_by)
 SELECT
     id,
     '_sharing',
-    'string',
-    TRIM(LOWER(sharing)),
+    'boolean',
+    1,
     created,
     IF(TRIM(created_by) REGEXP '^-?[0-9]+$', TRIM(created_by), NULL)
 FROM entity
 WHERE entity_definition_keyname NOT LIKE 'conf-%'
+AND TRIM(LOWER(sharing)) = 'public'
 AND sharing IS NOT NULL;
 
 
