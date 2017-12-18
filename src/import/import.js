@@ -234,17 +234,17 @@ const importProps = (mysqlDb, callback) => {
                     mongoCon.collection('property').find({ entity: entity._id, deleted: { $exists: false } }).toArray((err, properties) => {
                         if(err) { return callback(err) }
 
-                        let p = _.groupBy(properties, v => { return v.x === true ? 'public' : 'private' })
+                        let p = _.groupBy(properties, v => { return v.public === true ? 'public' : 'private' })
 
                         if (p.public) {
-                            p.public = _.mapValues(p.public, (o) => {
+                            p.public = _.mapValues(_.groupBy(p.public, 'type'), (o) => {
                                 return _.map(o, (p) => {
                                     return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
                                 })
                             })
                         }
                         if (p.private) {
-                            p.private = _.mapValues(p.private, (o) => {
+                            p.private = _.mapValues(_.groupBy(p.private, 'type'), (o) => {
                                 return _.map(o, (p) => {
                                     return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
                                 })
