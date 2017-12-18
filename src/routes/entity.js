@@ -120,7 +120,7 @@ router.get('/', (req, res, next) => {
                 if (access.indexOf(req.user) === -1) {
                     return Object.assign({}, { _id: entity._id }, _.get(entity, 'public', {}))
                 } else {
-                    return Object.assign({}, { _id: entity._id }, _.get(entity, 'public', {}), _.get(entity, 'private', {}))
+                    return Object.assign({}, { _id: entity._id }, _.get(entity, 'private', {}))
                 }
             })
         })
@@ -261,7 +261,7 @@ router.get('/:entityId', (req, res, next) => {
                 return next([403, 'Forbidden'])
             }
         } else {
-            return res.json(Object.assign({}, { _id: entity._id }, _.get(entity, 'public', {}), _.get(entity, 'private', {})))
+            return res.json(Object.assign({}, { _id: entity._id }, _.get(entity, 'private', {})))
         }
     })
 })
