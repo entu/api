@@ -43,7 +43,7 @@ router.get('/', (req, res, next) => {
                     },
                     (accountCon, callback) => {
                         let authFilter = {}
-                        authFilter[sessionAuth ? 'entu_user.string' : 'entu_api_key.string'] = authValue
+                        authFilter[sessionAuth ? 'private.entu_user.string' : 'private.entu_api_key.string'] = authValue
                         accountCon.collection('entity').findOne(authFilter, { _id: true }, callback)
                     }
                 ], (err, person) => {
