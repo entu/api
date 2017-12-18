@@ -113,9 +113,15 @@ router.get('/', (req, res, next) => {
         res.json({
             count: count,
             entities: _.map(entities, (entity) => {
-                _.unset(entity, 'access')
-                _.unset(entity, 'oid')
-                return entity
+                const access = _.map(_.get(entity, 'access', []), (s) => {
+                    return s.toString()
+                })
+
+                if (access.indexOf(req.user) === -1) {
+                    return Object.assign({}, { _id: entity._id }, _.get(entity, 'public', {}))
+                } else {
+                    return Object.assign({}, { _id: entity._id }, _.get(entity, 'public', {}), _.get(entity, 'private', {}))
+                }
             })
         })
     })
@@ -248,12 +254,14 @@ router.get('/:entityId', (req, res, next) => {
             return s.toString()
         })
 
-        if (access.indexOf(req.user) !== -1 || _.get(entity, '_sharing.0.string', '') === 'public access is disabled for now') {
-            _.unset(entity, 'access')
-            _.unset(entity, 'oid')
-            res.json(entity)
+        if (access.indexOf(req.user) === -1) {
+            if (_.get(entity, '_sharing.0.string', '') === 'public') {
+                return res.json(Object.assign({}, { _id: entity._id }, _.get(entity, 'public', {})))
+            } else {
+                return next([403, 'Forbidden'])
+            }
         } else {
-            return next([403, 'Forbidden'])
+            return res.json(Object.assign({}, { _id: entity._id }, _.get(entity, 'public', {}), _.get(entity, 'private', {})))
         }
     })
 })

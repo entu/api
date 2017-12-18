@@ -1,0 +1,18 @@
+extends /layout
+
+
+block vars
+    -
+        const dt = date => {
+            let d = date.substr(0, 10).split('-')
+            return [d[2], d[1], d[0]].join('.')
+        }
+
+
+block content
+    each u in self.file.uudised
+        h2.row
+            a(href='/' + u.path + '/')
+                span.hidden-xs.col-sm-4.text-right= dt(u.date)
+                .col-xs-12.col-sm-8= u.title
+                span.visible-xs.col-xs-12= dt(u.date)
