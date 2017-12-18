@@ -153,7 +153,7 @@ SELECT
         WHEN 'english' THEN 'en'
         ELSE NULL
     END,
-    (SELECT 1 FROM property_definition WHERE public = 1 AND is_deleted = 0 AND keyname = pd.keyname LIMIT 1),
+    pd.public,
     CASE pd.datatype
         WHEN 'string' THEN TRIM(p.value_string)
         WHEN 'text' THEN TRIM(p.value_text)

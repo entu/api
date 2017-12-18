@@ -135,6 +135,11 @@ const importProps = (mysqlDb, callback) => {
 
                         let cleanProps = _.map(props, x => _.pickBy(x, (value, key) => { return value === 0 || value === false || !!value }))
                         let correctedProps = _.map(cleanProps, x => {
+                            if (x.public === 1) {
+                                _.set(x, 'public', true)
+                            } else {
+                                _.unset(x, 'public')
+                            }
                             if (x.created_by) {
                                 _.set(x, 'created.by', x.created_by)
                                 _.unset(x, 'created_by')
