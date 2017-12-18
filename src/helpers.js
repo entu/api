@@ -56,8 +56,6 @@ exports.aggregateEntity = (req, entityId, property, callback) => {
 
                 let p = _.groupBy(properties, v => { return v.public === true ? 'public' : 'private' })
 
-                p.private = Object.assign({}, p.public, p.private)
-
                 if (p.public) {
                     p.public = _.mapValues(_.groupBy(p.public, 'type'), (o) => {
                         return _.map(o, (p) => {
@@ -71,6 +69,9 @@ exports.aggregateEntity = (req, entityId, property, callback) => {
                             return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
                         })
                     })
+                    if (p.public) {
+                        p.private = Object.assign({}, p.public, p.private)
+                    }
                 }
 
                 const access = _.map(_.union(p.private._viewer, p.private._expander, p.private._editor, p.private._owner), 'reference')

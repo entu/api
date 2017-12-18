@@ -93,6 +93,10 @@ router.get('/', (req, res, next) => {
         sortFields = { _id: 1 }
     }
 
+    console.log(filter)
+    console.log(fields)
+    console.log(sortFields)
+
     async.waterfall([
         (callback) => {
             req.app.locals.db(req.account, callback)
