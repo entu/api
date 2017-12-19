@@ -133,10 +133,12 @@ router.get('/', (req, res, next) => {
                     })
                 }
 
-                if (access.indexOf(req.user) === -1) {
+                if (access.indexOf(req.user) !== -1) {
+                    return Object.assign({ _id: entity._id }, _.get(entity, 'private', {}))
+                } else if (access.indexOf('public') !== -1) {
                     return Object.assign({ _id: entity._id }, _.get(entity, 'public', {}))
                 } else {
-                    return Object.assign({ _id: entity._id }, _.get(entity, 'private', {}))
+                    return { _id: entity._id }
                 }
             })
         })
