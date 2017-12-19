@@ -29,6 +29,9 @@
 ## GET /account
 Returns account info and usage statistics
 
+#### Query parameters
+- **account** - Account key. Required to get public info without authorization. Optional if Bearer authorization header is set.
+
 #### Example request
 ```shell
 curl \
@@ -118,6 +121,8 @@ Get list of entities. To filter entities by property value. Use dot separated li
 - **sort** - Comma separated list of properties to use for sorting. Use - (minus) sign before property name for descending sort. If not set sorts by \_id.
 - **limit** - How many entities to return.
 - **skip** - How many entities to skip in result.
+- **account** - Account key. Required to get public info without authorization. Optional if Bearer authorization header is set.
+
 
 #### Example request
 ```shell
@@ -170,6 +175,7 @@ Get one entity with given id.
 
 #### Query parameters
 - **props** - Comma separated list of properties to get. If not set all properties are returned.
+- **account** - Account key. Required to get public info without authorization. Optional if Bearer authorization header is set.
 
 #### Example request
 ```shell
@@ -247,6 +253,7 @@ Get property with given id.
 
 #### Query parameters
 - **download** - If set and it's file property, redirects to file url.
+- **account** - Account key. Required to get public info without authorization. Optional if Bearer authorization header is set.
 
 #### Example request
 ```shell
