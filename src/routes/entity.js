@@ -133,7 +133,7 @@ router.get('/', (req, res, next) => {
                     })
                 }
 
-                if (access.indexOf(req.user) !== -1) {
+                if (req.user && access.indexOf(req.user) !== -1) {
                     return Object.assign({ _id: entity._id }, _.get(entity, 'private', {}))
                 } else if (access.indexOf('public') !== -1) {
                     return Object.assign({ _id: entity._id }, _.get(entity, 'public', {}))
@@ -283,7 +283,7 @@ router.get('/:entityId', (req, res, next) => {
             return s.toString()
         })
 
-        if (access.indexOf(req.user) !== -1) {
+        if (req.user && access.indexOf(req.user) !== -1) {
             return res.json(Object.assign({ _id: entity._id }, _.get(entity, 'private', {})))
         } else if (access.indexOf('public') !== -1) {
             return res.json(Object.assign({ _id: entity._id }, _.get(entity, 'public', {})))
