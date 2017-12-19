@@ -244,6 +244,18 @@ FROM (
     FROM entity_definition
     WHERE keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
 
+    /* entity _public */
+    UNION SELECT
+        keyname AS entity_id,
+        '_public' AS property_definition,
+        'boolean' AS property_type,
+        NULL AS property_language,
+        NULL AS value_text,
+        1 AS value_integer,
+        NULL AS value_reference
+    FROM entity_definition
+    WHERE keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
+
     /* entity open-after-add properties */
     UNION SELECT
         keyname AS entity_id,
@@ -324,6 +336,20 @@ FROM (
         NULL AS property_language,
         'property' AS value_text,
         NULL AS value_integer,
+        NULL AS value_reference
+    FROM property_definition
+    WHERE dataproperty NOT IN ('entu-changed-at', 'entu-changed-by', 'entu-created-at', 'entu-created-by')
+    AND entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
+    AND entity_definition_keyname IN (SELECT keyname FROM entity_definition)
+
+    /* property _public */
+    UNION SELECT
+        CONCAT(entity_definition_keyname, '_', dataproperty) AS entity_id,
+        '_public' AS property_definition,
+        'boolean' AS property_type,
+        NULL AS property_language,
+        NULL AS value_text,
+        1 AS value_integer,
         NULL AS value_reference
     FROM property_definition
     WHERE dataproperty NOT IN ('entu-changed-at', 'entu-changed-by', 'entu-created-at', 'entu-created-by')
