@@ -24,7 +24,7 @@
         "express": "4.*",
         "jsonwebtoken": "8.*",
         "lodash": "4.*",
-        "mongodb": "3.*",
+        "mongodb": "2.*",
         "newrelic": "2.*",
         "passport": "0.*",
         "passport-facebook": "2.*",
