@@ -172,11 +172,10 @@ app.use((req, res, next) => {
 
 // check JWT
 const jwtCheck = (req, res, next) => {
-    const parts = _.get(req, 'headers.authorization', '').split(' ')
-
-    if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
-
     req.account = _.get(req, 'query.account')
+
+    const parts = _.get(req, 'headers.authorization', '').split(' ')
+    if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next(null) }
 
     const jwtConf = {
         issuer: req.account,
