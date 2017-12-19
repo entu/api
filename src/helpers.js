@@ -69,10 +69,8 @@ exports.aggregateEntity = (req, entityId, property, callback) => {
                             return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
                         })
                     })
-                    if (p.public) {
-                        p.private = Object.assign({}, p.public, p.private)
-                    }
                 }
+                p.private = Object.assign({}, _.get(p, 'public', {}), _.get(p, 'private', {}))
 
                 const access = _.map(_.union(_.get(p, 'private._viewer', []), _.get(p, 'private._expander', []), _.get(p, 'private._editor', []), _.get(p, 'private._owner', [])), 'reference')
                 if (_.get(p, 'private._public.0.boolean', false) === true) {
