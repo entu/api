@@ -255,6 +255,9 @@ const importProps = (mysqlDb, callback) => {
                         }
 
                         const access = _.map(_.union(p.private._viewer, p.private._expander, p.private._editor, p.private._owner), 'reference')
+                        if (_.get(p, 'private._public.boolean', false) === true) {
+                            access.push('public')
+                        }
                         if (access.length > 0) {
                             p.access = access
                         }

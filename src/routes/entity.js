@@ -71,7 +71,11 @@ router.get('/', (req, res, next) => {
         }
     })
 
-    filter.access = new objectId(req.user)
+    if (req.user) {
+        filter.access = { '$in': [new objectId(req.user), 'public'] }
+    } else {
+        filter.access = 'public'
+    }
 
     if (props.length > 0) {
         _.forEach(props, (f) => {
@@ -277,14 +281,12 @@ router.get('/:entityId', (req, res, next) => {
             return s.toString()
         })
 
-        if (access.indexOf(req.user) === -1) {
-            if (_.get(entity, '_sharing.0.string', '') === 'public') {
-                return res.json(Object.assign({ _id: entity._id }, _.get(entity, 'public', {})))
-            } else {
-                return next([403, 'Forbidden'])
-            }
-        } else {
+        if (access.indexOf(req.user) !== -1) {
             return res.json(Object.assign({ _id: entity._id }, _.get(entity, 'private', {})))
+        } else if (access.indexOf('public') !== -1) {
+            return res.json(Object.assign({ _id: entity._id }, _.get(entity, 'public', {})))
+        } else {
+            return next([403, 'Forbidden'])
         }
     })
 })

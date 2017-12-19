@@ -132,7 +132,7 @@ AND r.relationship_definition_keyname IN ('editor', 'expander', 'owner', 'viewer
 INSERT INTO props (entity, type, datatype, value_integer, created_at, created_by)
 SELECT
     id,
-    '_sharing',
+    '_public',
     'boolean',
     1,
     created,
