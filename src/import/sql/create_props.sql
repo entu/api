@@ -209,12 +209,13 @@ AND e.entity_definition_keyname NOT LIKE 'conf-%';
 
 
 /* definitions */
-INSERT INTO props (entity, type, language, datatype, value_text, value_integer, value_reference)
+INSERT INTO props (entity, type, language, datatype, public, value_text, value_integer, value_reference)
 SELECT
     NULLIF(LOWER(TRIM(REPLACE(entity_id, '-', '_'))), '') AS entity,
     NULLIF(LOWER(TRIM(REPLACE(property_definition, '-', '_'))), '') AS type,
     NULLIF(LOWER(TRIM(property_language)), '') AS language,
     NULLIF(LOWER(TRIM(property_type)), '') AS datatype,
+    1 AS public,
     NULLIF(TRIM(value_text), '') AS value_text,
     NULLIF(TRIM(value_integer), '') AS value_integer,
     NULLIF(TRIM(value_reference), '') AS value_reference
