@@ -74,7 +74,7 @@ exports.aggregateEntity = (req, entityId, property, callback) => {
                     }
                 }
 
-                const access = _.map(_.union(p.private._viewer, p.private._expander, p.private._editor, p.private._owner), 'reference')
+                const access = _.map(_.union(_.get(p, 'private._viewer', []), _.get(p, 'private._expander', []), _.get(p, 'private._editor', []), _.get(p, 'private._owner', [])), 'reference')
                 if (_.get(p, 'private._public.0.boolean', false) === true) {
                     access.push('public')
                 }
