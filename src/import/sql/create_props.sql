@@ -633,9 +633,24 @@ FROM (
     FROM translation
     WHERE field IN ('label', 'label_plural')
     AND entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
-     GROUP BY
+    GROUP BY
         entity_definition_keyname,
         language
+
+    /* menu query */
+    UNION SELECT
+        CONCAT('menu_', entity_definition_keyname) AS entity_id,
+        'query' AS property_definition,
+        'string' AS property_type,
+        NULL property_language,
+        CONCAT('_type.string=', TRIM(LOWER(REPLACE(entity_definition_keyname, '-', '_')))) AS value_text,
+        NULL AS value_integer,
+        NULL AS value_reference
+    FROM translation
+    WHERE field = 'menu'
+    AND entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
+    GROUP BY
+        entity_definition_keyname
 ) AS x
 WHERE NULLIF(TRIM(entity_id), '') IS NOT NULL
 ORDER BY
