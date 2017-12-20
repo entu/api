@@ -298,7 +298,7 @@ FROM (
         NULL AS value_reference
     FROM translation
     WHERE entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
-    AND field NOT IN ('public')
+    AND field NOT IN ('public', 'menu')
     AND entity_definition_keyname IS NOT NULL
 
     /* entity allowed-child, default-parent, optional-parent */
@@ -573,6 +573,69 @@ FROM (
     AND pd.entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
     AND pd.entity_definition_keyname IN (SELECT keyname FROM entity_definition)
     AND t.property_definition_keyname IS NOT NULL
+
+    /* menu keynames */
+    UNION SELECT
+        CONCAT('menu_', entity_definition_keyname) AS entity_id,
+        '_type' AS property_definition,
+        'string' AS property_type,
+        NULL property_language,
+        'menu' AS value_text,
+        NULL AS value_integer,
+        NULL AS value_reference
+    FROM translation
+    WHERE field = 'menu'
+    AND entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
+
+    /* menu _public */
+    UNION SELECT
+        CONCAT('menu_', entity_definition_keyname) AS entity_id,
+        '_public' AS property_definition,
+        'boolean' AS property_type,
+        NULL AS property_language,
+        NULL AS value_text,
+        1 AS value_integer,
+        NULL AS value_reference
+    FROM translation
+    WHERE field = 'menu'
+    AND entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
+
+    /* menu group */
+    UNION SELECT
+        CONCAT('menu_', entity_definition_keyname) AS entity_id,
+        'group' AS property_definition,
+        'string' AS property_type,
+        CASE language
+            WHEN 'estonian' THEN 'et'
+            WHEN 'english' THEN 'en'
+            ELSE NULL
+        END AS property_language,
+        TRIM(value) AS value_text,
+        NULL AS value_integer,
+        NULL AS value_reference
+    FROM translation
+    WHERE field = 'menu'
+    AND entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
+
+    /* menu title */
+    UNION SELECT
+        CONCAT('menu_', entity_definition_keyname) AS entity_id,
+        'title' AS property_definition,
+        'string' AS property_type,
+        CASE language
+            WHEN 'estonian' THEN 'et'
+            WHEN 'english' THEN 'en'
+            ELSE NULL
+        END AS property_language,
+        LEFT(CONCAT(GROUP_CONCAT(TRIM(value) ORDER BY field DESC SEPARATOR '#@#'),'#@#'), LOCATE('#@#', CONCAT(GROUP_CONCAT(TRIM(value) ORDER BY field DESC SEPARATOR '#@#'),'#@#')) - 1) AS value_text,
+        NULL AS value_integer,
+        NULL AS value_reference
+    FROM translation
+    WHERE field IN ('label', 'label_plural')
+    AND entity_definition_keyname NOT IN ('conf-actions-add', 'conf-datatype', 'conf-entity', 'conf-menu-item', 'conf-property')
+     GROUP BY
+        entity_definition_keyname,
+        language
 ) AS x
 WHERE NULLIF(TRIM(entity_id), '') IS NOT NULL
 ORDER BY
