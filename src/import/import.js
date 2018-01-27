@@ -164,7 +164,7 @@ const importProps = (mysqlDb, callback) => {
                                 _.set(x, 'boolean', x.integer === 1)
                                 _.unset(x, 'integer')
                             }
-                            if (x.datatype === 'file') {
+                            if (x.datatype === 'file' && x.string) {
                                 let fileArray = x.string.split('\n')
                                 if (fileArray[0].substr(0, 2) === 'A:' && fileArray[0].substr(2)) { _.set(x, 'filename', fileArray[0].substr(2)) }
                                 if (fileArray[1].substr(0, 2) === 'B:' && fileArray[1].substr(2)) { _.set(x, 'md5', fileArray[1].substr(2)) }
