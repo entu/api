@@ -203,7 +203,26 @@ FROM
 WHERE pd.keyname = p.property_definition_keyname
 AND e.id = p.entity_id
 AND pd.formula = 0
-AND pd.dataproperty NOT IN ('entu-changed-at', 'entu-changed-by', 'entu-created-at', 'entu-created-by')
+AND pd.dataproperty NOT IN (
+    'entu-changed-at',
+    'entu-changed-by',
+    'entu-created-at',
+    'entu-created-by',
+    'analytics-code',
+    'auth-erply',
+    'auth-facebook',
+    'auth-google',
+    'auth-live',
+    'auth-mailgun',
+    'auth-mobileid',
+    'auth-s3',
+    'database-host',
+    'database-password',
+    'database-port',
+    'database-ssl-path',
+    'database-user',
+    'mongodb'
+)
 AND pd.keyname NOT LIKE 'conf-%'
 AND e.entity_definition_keyname NOT LIKE 'conf-%';
 
