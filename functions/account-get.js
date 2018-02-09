@@ -1,20 +1,22 @@
 'use strict'
 
+console.log('Loading function')
+
 const _ = require('lodash')
+const _h = require('./_helpers')
 const async = require('async')
-const router = require('express').Router()
 
 
 
-router.get('/', (req, res, next) => {
-    if (!req.account) { return next([400, 'No account parameter']) }
+exports.handler = (event, context, callback) => {
+    context.callbackWaitsForEmptyEventLoop = false
 
-    req.app.locals.db(req.account, (err, connection) => {
-        if (err) { return next(err) }
+    _h.user(event, (err, user) => {
+        if (err) { return callback(null, _h.error(err)) }
 
         async.parallel({
             entities: (callback) => {
-                connection.collection('entity').count(callback)
+                user.db.collection('entity').count(callback)
             },
             deletedEntities: (callback) => {
                 const aggregate = [
@@ -22,7 +24,7 @@ router.get('/', (req, res, next) => {
                     { $group: { _id: '$entity', count: { $sum: 1 } } },
                     { $group: { _id: null, count: { $sum: 1 } } }
                 ]
-                connection.collection('property').aggregate(aggregate, (err, count) => {
+                user.db.collection('property').aggregate(aggregate, (err, count) => {
                     if (err) { return callback(err) }
 
                     return callback(null, _.get(count, '0.count', 0))
@@ -30,10 +32,10 @@ router.get('/', (req, res, next) => {
             },
 
             properties: (callback) => {
-                connection.collection('property').find({ deleted: { $exists: false } }).count(callback)
+                user.db.collection('property').find({ deleted: { $exists: false } }).count(callback)
             },
             deletedProperties: (callback) => {
-                connection.collection('property').find({ deleted: { $exists: true } }).count(callback)
+                user.db.collection('property').find({ deleted: { $exists: true } }).count(callback)
             },
 
             files: (callback) => {
@@ -42,7 +44,7 @@ router.get('/', (req, res, next) => {
                     { $group: {_id: null, count: { $sum: 1 }, size: { $sum: '$size' } } },
                     { $project: { _id: false } }
                 ]
-                connection.collection('property').aggregate(aggregate, (err, count) => {
+                user.db.collection('property').aggregate(aggregate, (err, count) => {
                     if (err) { return callback(err) }
 
                     return callback(null, _.get(count, '0', {}))
@@ -54,33 +56,25 @@ router.get('/', (req, res, next) => {
                     { $group: {_id: null, count: { $sum: 1 }, size: { $sum: '$size' } } },
                     { $project: { _id: false } }
                 ]
-                connection.collection('property').aggregate(aggregate, (err, count) => {
+                user.db.collection('property').aggregate(aggregate, (err, count) => {
                     if (err) { return callback(err) }
 
                     return callback(null, _.get(count, '0', {}))
                 })
             }
         }, (err, stats) => {
-            if (err) { return next(err) }
+            if (err) { return callback(null, _h.error(err)) }
 
-            res.json({
-                account: req.account,
-                stats: {
-                    entities: stats.entities,
-                    deletedEntities: stats.deletedEntities,
-                    properties: stats.properties,
-                    deletedProperties: stats.deletedProperties,
-                    files: stats.files.count,
-                    filesSize: stats.files.size,
-                    deletedFiles: stats.deletedFiles.count,
-                    deletedFilesSize: stats.deletedFiles.size
-                }
-            })
-
+            callback(null, _h.json({
+                entities: stats.entities,
+                deletedEntities: stats.deletedEntities,
+                properties: stats.properties,
+                deletedProperties: stats.deletedProperties,
+                files: stats.files.count,
+                filesSize: stats.files.size,
+                deletedFiles: stats.deletedFiles.count,
+                deletedFilesSize: stats.deletedFiles.size
+            }))
         })
     })
-})
-
-
-
-module.exports = router
+}

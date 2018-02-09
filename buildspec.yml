@@ -1,0 +1,14 @@
+version: 0.2
+
+phases:
+    install:
+        commands:
+            - rm -rf ./functions/node_modules
+            - cd ./functions
+            - npm i --no-save --quiet lodash async jsonwebtoken mongodb@2
+
+artifacts:
+    files:
+        - '**/*'
+    discard-paths: no
+    base-directory: functions

@@ -1,7 +1,7 @@
 # EditorConfig is awesome: http://EditorConfig.org
 root=true
 
-[*.{jade,pug,yaml,md,js,styl,css,txt,html,php,sql}]
+[*]
 charset = utf-8
 indent_style = space
 indent_size = 4

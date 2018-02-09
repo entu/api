@@ -1,45 +1,63 @@
 'use strict'
 
+console.log('Loading function')
+
 const _ = require('lodash')
+const _h = require('./_helpers')
 const async = require('async')
 const jwt = require('jsonwebtoken')
 const objectId = require('mongodb').ObjectID
-const router = require('express').Router()
 
 
 
-router.get('/', (req, res, next) => {
-    const parts = _.get(req, 'headers.authorization', '').split(' ')
+exports.handler = (event, context, callback) => {
+    context.callbackWaitsForEmptyEventLoop = false
 
-    if(parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') { return next([400, 'No key']) }
+    const authHeaderParts = _.get(event, 'headers.Authorization', '').split(' ')
 
-    const key = parts[1]
+    if(authHeaderParts.length !== 2 || authHeaderParts[0].toLowerCase() !== 'bearer') { return callback(null, _h.error([400, 'No key'])) }
 
-    if(key.length !== 24 && key.length !== 48) { return next([400, 'Invalid key']) }
+    const key = authHeaderParts[1]
+
+    if(key.length !== 24 && key.length !== 48) { return callback(null, _h.error([400, 'Invalid key'])) }
 
     const sessionAuth = key.length === 24
 
+    var authValue
+    var connection
+
     async.waterfall([
         (callback) => {
-            req.app.locals.db('entu', callback)
+            _h.db('entu', callback)
         },
-        (connection, callback) => {
+        (con, callback) => {
+            connection = con
+
             if (sessionAuth) {
                 connection.collection('session').findOneAndUpdate({ _id: new objectId(key), deleted: { $exists: false } }, { $set: { deleted: new Date() } }, (err, sess) => {
                     if(err) { return callback(err) }
                     if(!sess.value) { return callback([400, 'No session']) }
 
-                    return callback(null, _.get(sess, 'value.user.email'))
+                    authValue = _.get(sess, 'value.user.email')
+
+                    return callback(null)
                 })
             } else {
-                return callback(null, key)
+                authValue = key
+
+                return callback(null)
             }
         },
-        (authValue, callback) => {
-            async.map(process.env.ACCOUNTS.split(','), (account, callback) => {
+        (callback) => {
+            connection.admin().listDatabases(callback)
+        },
+        (dbs, callback) => {
+            async.map(_.map(dbs.databases, 'name'), (account, callback) => {
+                if (['admin', 'config', 'local'].indexOf(account) !== -1) { return callback(null) }
+
                 async.waterfall([
                     (callback) => {
-                        req.app.locals.db(account, callback)
+                        _h.db(account, callback)
                     },
                     (accountCon, callback) => {
                         let authFilter = {}
@@ -51,10 +69,11 @@ router.get('/', (req, res, next) => {
                     if(!person) { return callback(null) }
 
                     return callback(null, {
+                        _id: person._id.toString(),
                         account: account,
                         token: jwt.sign({}, process.env.JWT_SECRET, {
                             issuer: account,
-                            audience: _.get(req, 'ip'),
+                            audience: _.get(event, 'requestContext.identity.sourceIp'),
                             subject: person._id.toString(),
                             expiresIn: '48h'
                         })
@@ -63,14 +82,10 @@ router.get('/', (req, res, next) => {
             }, callback)
         }
     ], (err, accounts) => {
-        if(err) { return next(err) }
+        if (err) { return callback(null, _h.error(err)) }
 
-        res.json(_.mapValues(_.groupBy(_.compact(accounts), 'account'), (o) => {
-            return _.omit(_.first(o), 'account')
-        }))
+        callback(null, _h.json(_.mapValues(_.groupBy(_.compact(accounts), 'account'), (o) => {
+            return _.first(o)
+        })))
     })
-})
-
-
-
-module.exports = router
+}

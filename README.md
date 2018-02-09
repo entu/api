@@ -6,8 +6,8 @@
 #### Authentication
 - /auth
     - [GET](#get-auth)
-- /auth/[ facebook \| google \| live \| twitter ]
-    - [GET](#get-auth-facebook--google--live--twitter-)
+- /auth/[ facebook \| google \| microsoft ]
+    - [GET](#get-auth-facebook--google--microsoft-)
 
 #### Entity
 - /entity
@@ -36,6 +36,7 @@ Returns account info and usage statistics
 ```shell
 curl \
     -X GET \
+    -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb" \
     "https://api.entu.ee/account"
 ```
@@ -67,6 +68,7 @@ Authenticates user by API key. API key must be sent in Bearer authorization head
 ```shell
 curl \
     -X GET \
+    -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF" \
     "https://api.entu.ee/auth"
 ```
@@ -86,9 +88,9 @@ curl \
 
 
 
-## GET /auth/[ facebook \| google \| live \| twitter ]
-Redirects user to given authentication provider (facebook, google, live or twitter). After successful authentication:
-- If query parameter *next* is set, user is redirected to given url. Query parameter *key* is added to url containing temporary API key. Use this key to get JWT tokens from [/auth](#get-auth).
+## GET /auth/[ facebook \| google \| microsoft ]
+Redirects user to given authentication provider (facebook, google, microsoft). After successful authentication:
+- If query parameter *next* is set, user is redirected to given url. Temporary API key is added to url end. Use this key to get JWT tokens from [/auth](#get-auth).
 - If next is not set returns temporary API key.
 
 Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key can be used only once.
@@ -128,6 +130,7 @@ Get list of entities. To filter entities by property value. Use dot separated li
 ```shell
 curl \
     -X GET \
+    -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     "https://api.entu.ee/entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12"
 ```
@@ -154,6 +157,7 @@ Create new entity. Data must be sent as JSON. Returns created entity's \_id.
 ```shell
 curl \
     -X POST \
+    -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     -H "Content-Type: application/json" \
     -d '{ "type": "book", "parent": "FCfzcHh3ZF35UTaBcwkxVUSa" }'
@@ -181,6 +185,7 @@ Get one entity with given id.
 ```shell
 curl \
     -X GET \
+    -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     "https://api.entu.ee/entity/59abac1bb5684200016be61e"
 ```
@@ -204,6 +209,7 @@ Add new properties to entity. Data must be sent as JSON list containing property
 ```shell
 curl \
     -X POST \
+    -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     -H "Content-Type: application/json" \
     -d '[{ "type": "title", "string": "Hobbit" }, { "type": "photo", "filename": "cover.jpg" "size": 1937 }]'
@@ -234,6 +240,7 @@ Delete entity with given id.
 ```shell
 curl \
     -X DELETE \
+    -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     "https://api.entu.ee/entity/59abac1bb5684200016be61e"
 ```
@@ -259,6 +266,7 @@ Get property with given id.
 ```shell
 curl \
     -X GET \
+    -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     "https://api.entu.ee/property/59abac1bb5684200016be445?download"
 ```
@@ -278,6 +286,7 @@ Delete property with given id.
 ```shell
 curl \
     -X DELETE \
+    -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     "https://api.entu.ee/entity/59abac1bb5684200016be445"
 ```
