@@ -9,6 +9,8 @@ const jwt = require('jsonwebtoken')
 const objectId = require('mongodb').ObjectID
 
 
+const mongoDbSystemDbs = ['admin', 'config', 'local']
+
 
 exports.handler = (event, context, callback) => {
     context.callbackWaitsForEmptyEventLoop = false
@@ -53,7 +55,7 @@ exports.handler = (event, context, callback) => {
         },
         (dbs, callback) => {
             async.map(_.map(dbs.databases, 'name'), (account, callback) => {
-                if (['admin', 'config', 'local'].indexOf(account) !== -1) { return callback(null) }
+                if (mongoDbSystemDbs.indexOf(account) !== -1) { return callback(null) }
 
                 async.waterfall([
                     (callback) => {
