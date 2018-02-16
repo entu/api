@@ -28,10 +28,10 @@ const loadParameters = (names, callback) => {
 
 
 
-let dbs = {}
+let dbConnection
 const db = (dbName, callback) => {
-    if (_.has(dbs, dbName)) {
-        return callback(null, dbs[dbName].db(dbName))
+    if (dbConnection) {
+        return callback(null, dbConnection.db(dbName))
     }
 
     mongo.connect(process.env.MONGODB, { ssl: true, sslValidate: true }, (err, connection) => {
@@ -40,13 +40,13 @@ const db = (dbName, callback) => {
         console.log(`Connected to ${dbName}`)
 
         connection.on('close', () => {
-            _.unset(dbs, dbName)
+            dbConnection = null
             console.log(`Disconnected from ${dbName}`)
         })
 
-        dbs[dbName] = connection
+        dbConnection = connection
 
-        callback(null, dbs[dbName].db(dbName))
+        callback(null, dbConnection.db(dbName))
     })
 }
 exports.db = db
