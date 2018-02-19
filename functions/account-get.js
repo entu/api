@@ -2,6 +2,8 @@
 
 console.log('Loading function')
 
+if(process.env.NEW_RELIC_LICENSE_KEY) { require('newrelic') }
+
 const _ = require('lodash')
 const _h = require('./_helpers')
 const async = require('async')
