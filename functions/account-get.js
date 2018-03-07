@@ -15,6 +15,10 @@ exports.handler = (event, context, callback) => {
         if (err) { return callback(null, _h.error(err)) }
 
         async.parallel({
+            stats: (callback) => {
+                user.db.stats(callback)
+            },
+
             entities: (callback) => {
                 user.db.collection('entity').count(callback)
             },
@@ -73,7 +77,14 @@ exports.handler = (event, context, callback) => {
                 files: stats.files.count,
                 filesSize: stats.files.size,
                 deletedFiles: stats.deletedFiles.count,
-                deletedFilesSize: stats.deletedFiles.size
+                deletedFilesSize: stats.deletedFiles.size,
+                db: {
+                    objects: stats.stats.objects,
+                    objectsSize: stats.stats.dataSize,
+                    indexes: stats.stats.indexes,
+                    indexesSize: stats.stats.indexSize,
+                    storage: stats.stats.storageSize
+                }
             }))
         })
     })

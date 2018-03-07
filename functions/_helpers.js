@@ -174,27 +174,6 @@ exports.aggregateEntity = (db, entityId, property, callback) => {
 
 
 
-exports.setCookie = (key, value) => {
-    return { 'Set-Cookie': `${key}=${value}` }
-}
-
-
-
-exports.deleteCookie = (key) => {
-    return { 'Set-Cookie': `${key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT;` }
-}
-
-
-
-exports.getCookie = (cookie, key) => {
-    // Get name followed by anything except a semicolon
-    var cookiestring=RegExp(""+key+"[^;]+").exec(cookie);
-    // Return everything after the equal sign, or an empty string if the cookie name not found
-    return decodeURIComponent(!!cookiestring ? cookiestring.toString().replace(/^[^=]+./,"") : "");
-}
-
-
-
 exports.json = (data, code, headers) => {
     if (headers) {
         headers['Access-Control-Allow-Origin'] = '*'
