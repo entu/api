@@ -78,13 +78,7 @@ exports.handler = (event, context, callback) => {
                 filesSize: stats.files.size,
                 deletedFiles: stats.deletedFiles.count,
                 deletedFilesSize: stats.deletedFiles.size,
-                db: {
-                    objects: stats.stats.objects,
-                    objectsSize: stats.stats.dataSize,
-                    indexes: stats.stats.indexes,
-                    indexesSize: stats.stats.indexSize,
-                    storage: stats.stats.storageSize
-                }
+                dbSize: stats.stats.dataSize + stats.stats.indexSize
             }))
         })
     })
