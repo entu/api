@@ -27,6 +27,10 @@ exports.handler = (event, context, callback) => {
         var limit = _.toSafeInteger(_.get(event, 'queryStringParameters.limit')) || 100
         var skip = _.toSafeInteger(_.get(event, 'queryStringParameters.skip')) || 0
 
+        if(limit > 1000) {
+            limit = 1000
+        }
+
         _.forIn(_.get(event, 'queryStringParameters'), (v, k) => {
             if (k.indexOf('.') !== -1) {
                 const fieldArray = k.split('.')
