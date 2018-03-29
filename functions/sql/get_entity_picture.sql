@@ -1,6 +1,6 @@
 SELECT
-    entity.entity_definition_keyname AS definition,
-    file.s3_key
+    entity.entity_definition_keyname AS type,
+    file.s3_key AS s3
 FROM
     entity
 LEFT JOIN (

@@ -5,9 +5,10 @@ console.log('Loading function')
 const _ = require('lodash')
 const _h = require('./_helpers')
 const async = require('async')
+const aws = require('aws-sdk')
+const crypto = require('crypto')
 const fs = require('fs')
 const path = require('path')
-
 
 
 const sql = fs.readFileSync(path.resolve(__dirname, 'sql', 'get_entity_picture.sql'), 'utf8')
@@ -50,15 +51,32 @@ exports.handler = (event, context, callback) => {
         },
         (email, callback) => {
             _h.mysqlDb(db).query(sql, [entityId, entityId, email], (err, data) => {
-                console.log(data)
-                console.log(err)
-
-                callback(null, data)
+                callback(null, data[0])
             })
         },
-    ], (err, accounts) => {
-        if (err) { return callback(null, _h.error(err)) }
+        (file, callback) => {
+            if(!file || !file.s3) {
+                const md5 = crypto.createHash('md5').update(entityId).digest('hex')
+                return callback(null, `https://secure.gravatar.com/avatar/${md5}?d=identicon&s=150`)
+            }
 
-        callback(null, _h.json({ x: accounts }))
+            let conf
+            if (process.env.S3_ENDPOINT) {
+                conf = { endpoint: process.env.S3_ENDPOINT, s3BucketEndpoint: true }
+            }
+
+            aws.config = new aws.Config()
+            const s3 = new aws.S3(conf)
+            s3.getSignedUrl('getObject', { Bucket: process.env.S3_BUCKET, Key: file.s3, Expires: 10 }, callback)
+        },
+    ], (err, url) => {
+        if (err) { return callback(null, _h.error(err)) }
+        if(!url) { return callback([404, 'Not found']) }
+
+        callback(null, {
+            statusCode: 301,
+            headers: { 'Location' : url },
+            body: null
+        })
     })
 }
