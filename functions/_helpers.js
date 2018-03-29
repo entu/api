@@ -5,6 +5,7 @@ const async = require('async')
 const aws = require('aws-sdk')
 const jwt = require('jsonwebtoken')
 const mongo = require('mongodb').MongoClient
+const mysql = require('mysql')
 
 
 
@@ -50,6 +51,37 @@ const db = (dbName, callback) => {
     })
 }
 exports.db = db
+
+
+
+let mysqlConnection
+const mysqlDb = (dbName) => {
+    if (mysqlConnection) {
+        return mysqlConnection
+    }
+
+    mysqlConnection = mysql.createConnection({
+        host: process.env.MYSQL_HOST,
+        user: process.env.MYSQL_USER,
+        password: process.env.MYSQL_PASSWORD,
+        database: dbName,
+        multipleStatements: false,
+        // ssl: {
+        //     ca: fs.readFileSync(MYSQL_SSL_CA)
+        // }
+    })
+
+    mysqlConnection.on('error', (err) => {
+        console.log(err)
+        mysqlConnection.end()
+        mysqlConnection = null
+    })
+
+    console.log(`Connected to ${dbName}`)
+
+    return mysqlConnection
+}
+exports.mysqlDb = mysqlDb
 
 
 
