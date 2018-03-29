@@ -66,7 +66,7 @@ exports.handler = (event, context, callback) => {
 
             if (_.get(property, 'url') && _.has(event, 'queryStringParameters.download')) {
                 callback(null, {
-                    statusCode: 301,
+                    statusCode: 302,
                     headers: {
                         'Location' : _.get(property, 'url')
                     },
