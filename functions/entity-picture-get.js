@@ -12,5 +12,8 @@ const mysql = require('mysql')
 exports.handler = (event, context, callback) => {
     context.callbackWaitsForEmptyEventLoop = false
 
-    callback(null, _h.json({ x: 1 }))
+    const cookies = _.get(event,'header.Cookie', '').split(';')
+    const session = cookies.filter(x => x.startsWith('session='))[0]
+
+    callback(null, _h.json({ x: session }))
 }
