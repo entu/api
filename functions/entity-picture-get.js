@@ -51,6 +51,7 @@ exports.handler = (event, context, callback) => {
         },
         (email, callback) => {
             _h.mysqlDb(db).query(sql, [entityId, entityId, email], (err, data) => {
+                if (err) { return callback(err) }
                 callback(null, data[0])
             })
         },
