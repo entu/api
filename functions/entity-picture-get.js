@@ -75,7 +75,7 @@ exports.handler = (event, context, callback) => {
         if(!url) { return callback([404, 'Not found']) }
 
         callback(null, {
-            statusCode: 301,
+            statusCode: 302,
             headers: { 'Location' : url },
             body: null
         })
