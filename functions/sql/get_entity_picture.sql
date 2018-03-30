@@ -35,7 +35,7 @@ LEFT JOIN (
     AND p.is_deleted = 0
     AND pd.dataproperty IN ('email', 'entu-user')
     AND p.entity_id = ?
-    ORDER BY property.id
+    ORDER BY p.id
     LIMIT 1
 ) AS email ON email.entity_id = entity.id
 WHERE entity.id = ?
