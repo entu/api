@@ -62,8 +62,8 @@ exports.handler = (event, context, callback) => {
             }
 
             if(!file.s3) {
-                const md5 = crypto.createHash('md5').update(file.id).digest('hex')
-                const d = file.type === 'person' ? 'robohash' : 'identicon'
+                let md5 = crypto.createHash('md5').update(file.id).digest('hex')
+                let d = file.type === 'person' ? 'robohash' : 'identicon'
                 return callback(null, `https://secure.gravatar.com/avatar/${md5}?d=${d}&s=150`)
             }
 
