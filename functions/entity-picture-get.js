@@ -50,15 +50,21 @@ exports.handler = (event, context, callback) => {
             }
         },
         (email, callback) => {
-            _h.mysqlDb(db).query(sql, [entityId, entityId, email], (err, data) => {
+            _h.mysqlDb(db).query(sql, [entityId, entityId, entityId, email], (err, data) => {
                 if (err) { return callback(err) }
                 callback(null, data[0])
             })
         },
         (file, callback) => {
-            if(!file || !file.s3) {
-                const md5 = crypto.createHash('md5').update(entityId).digest('hex')
+            if(!file) {
+                let md5 = crypto.createHash('md5').update(entityId).digest('hex')
                 return callback(null, `https://secure.gravatar.com/avatar/${md5}?d=identicon&s=150`)
+            }
+
+            if(!file.s3) {
+                const md5 = crypto.createHash('md5').update(file.id).digest('hex')
+                const d = file.type === 'person' ? 'robohash' : 'identicon'
+                return callback(null, `https://secure.gravatar.com/avatar/${md5}?d=${d}&s=150`)
             }
 
             let conf
