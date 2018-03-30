@@ -54,13 +54,13 @@ exports.db = db
 
 
 
-let mysqlConnection
+let mysqlConnection = {}
 const mysqlDb = (dbName) => {
-    if (mysqlConnection) {
-        return mysqlConnection
+    if (mysqlConnection[dbName]) {
+        return mysqlConnection[dbName]
     }
 
-    mysqlConnection = mysql.createConnection({
+    mysqlConnection[dbName] = mysql.createConnection({
         host: process.env.MYSQL_HOST,
         user: process.env.MYSQL_USER,
         password: process.env.MYSQL_PASSWORD,
@@ -71,15 +71,15 @@ const mysqlDb = (dbName) => {
         // }
     })
 
-    mysqlConnection.on('error', (err) => {
+    mysqlConnection[dbName].on('error', (err) => {
         console.log(err)
-        mysqlConnection.end()
-        mysqlConnection = null
+        mysqlConnection[dbName].end()
+        delete mysqlConnection[dbName]
     })
 
     console.log(`Connected to ${dbName}`)
 
-    return mysqlConnection
+    return mysqlConnection[dbName]
 }
 exports.mysqlDb = mysqlDb
 
