@@ -45,7 +45,7 @@ AND (
         SELECT entity_id
         FROM relationship
         WHERE related_entity_id IN (
-            SELECT entity.id
+            SELECT e.id
             FROM
                 entity AS e,
                 property AS p,
