@@ -8,6 +8,7 @@ const async = require('async')
 const aws = require('aws-sdk')
 const crypto = require('crypto')
 const fs = require('fs')
+const https = require('https')
 const path = require('path')
 
 
@@ -15,6 +16,22 @@ const sql = fs.readFileSync(path.resolve(__dirname, 'sql', 'get_entity_picture.s
 
 exports.handler = (event, context, callback) => {
     context.callbackWaitsForEmptyEventLoop = false
+
+    try {
+        https.get({ host: 'api.ipify.org' }, (response) => {
+            var ip = ''
+
+            response.on('data', (d) => {
+                ip += d
+            })
+
+            response.on('end', () => {
+                console.log('IP:', ip)
+            })
+        })
+    } catch (e) {
+        console.log('IP: error')
+    }
 
     const db = event.pathParameters.db
     const entityId = event.pathParameters.id
@@ -28,11 +45,7 @@ exports.handler = (event, context, callback) => {
         cookie = _.get(event,'headers.cookie') || _.get(event,'headers.Cookie')
         sessionKey = cookie.split(';').map(x => x.trim()).filter(x => x.startsWith('session='))[0].substr(8)
     } catch (e) {
-        return callback(null, _h.error([403, 'Forbidden']))
-    }
-
-    if (!sessionKey) {
-        return callback(null, _h.error([403, 'Forbidden']))
+        // No session cookie
     }
 
     async.waterfall([
@@ -40,17 +53,14 @@ exports.handler = (event, context, callback) => {
             _h.db('entu', callback)
         },
         (mongoConn, callback) => {
-            mongoConn.collection('session').findOne({ key: sessionKey }, { fields: { _id: false, 'user.email': true } }, callback)
-        },
-        (sess, callback) => {
-            if(_.get(sess, 'user.email')) {
-                callback(null, sess.user.email)
+            if (sessionKey) {
+                mongoConn.collection('session').findOne({ key: sessionKey }, { fields: { _id: false, 'user.email': true } }, callback)
             } else {
-                callback([403, 'Forbidden'])
+                callback(null, null)
             }
         },
-        (email, callback) => {
-            _h.mysqlDb(db).query(sql, [entityId, entityId, entityId, email], (err, data) => {
+        (sess, callback) => {
+            _h.mysqlDb(db).query(sql, [entityId, entityId, entityId, _.get(sess, 'user.email', '__PUBLIC__')], (err, data) => {
                 if (err) { return callback(err) }
                 callback(null, data[0])
             })
