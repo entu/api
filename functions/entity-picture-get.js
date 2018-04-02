@@ -18,7 +18,7 @@ exports.handler = (event, context, callback) => {
     context.callbackWaitsForEmptyEventLoop = false
 
     if(!_.get(event, 'pathParameters.db') || !_.get(event, 'pathParameters.id')) {
-        return callback(_h.error([400, 'Bad request']))
+        return callback(null, _h.error([400, 'Bad request']))
     }
 
     const db = event.pathParameters.db
