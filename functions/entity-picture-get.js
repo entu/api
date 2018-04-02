@@ -18,7 +18,7 @@ exports.handler = (event, context, callback) => {
     context.callbackWaitsForEmptyEventLoop = false
 
     if(!_.get(event, 'pathParameters.db') || !_.get(event, 'pathParameters.id')) {
-        return callback([400, 'Bad request'])
+        return callback(_h.error([400, 'Bad request']))
     }
 
     const db = event.pathParameters.db
@@ -76,7 +76,7 @@ exports.handler = (event, context, callback) => {
         },
     ], (err, url) => {
         if (err) { return callback(null, _h.error(err)) }
-        if(!url) { return callback([404, 'Not found']) }
+        if(!url) { return callback(null, _h.error([404, 'Not found'])) }
 
         callback(null, {
             statusCode: 302,
