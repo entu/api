@@ -17,20 +17,8 @@ const sql = fs.readFileSync(path.resolve(__dirname, 'sql', 'get_entity_picture.s
 exports.handler = (event, context, callback) => {
     context.callbackWaitsForEmptyEventLoop = false
 
-    try {
-        https.get({ host: 'api.ipify.org' }, (response) => {
-            var ip = ''
-
-            response.on('data', (d) => {
-                ip += d
-            })
-
-            response.on('end', () => {
-                console.log('IP:', ip)
-            })
-        })
-    } catch (e) {
-        console.log('IP: error')
+    if(!_.get(event, 'pathParameters.db') || !_.get(event, 'pathParameters.id')) {
+        return callback([400, 'Bad request'])
     }
 
     const db = event.pathParameters.db
