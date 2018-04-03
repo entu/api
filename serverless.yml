@@ -24,7 +24,7 @@ provider:
             Resource: '*'
 
     deploymentBucket:
-        name: entu-serverless
+        name: entu-api
         serverSideEncryption: AES256
 
     apiGateway:
