@@ -3,7 +3,6 @@ service: entu-api
 provider:
     name: aws
     runtime: nodejs8.10
-    profile: default
     stage: prod
     region: eu-central-1
     memorySize: 256
