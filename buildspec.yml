@@ -7,4 +7,4 @@ phases:
             - npm i --quiet
     build:
         commands:
-            - serverless deploy --verbose
+            - serverless deploy
