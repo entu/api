@@ -3,11 +3,8 @@ version: 0.2
 phases:
     install:
         commands:
+            - npm i --quiet -g serverless
             - npm i --quiet
-            - mv ./node_modules ./functions/node_modules
-
-artifacts:
-    files:
-        - '**/*'
-    discard-paths: no
-    base-directory: functions
+    build:
+        commands:
+            - serverless deploy --verbose
