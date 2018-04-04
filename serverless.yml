@@ -134,7 +134,7 @@ functions:
         description: Get one entity with given id
         events:
             - http:
-                path: /entity/{_id}
+                path: /entity/{id}
                 method: get
                 cors: true
 
@@ -144,7 +144,7 @@ functions:
         description: Add new properties to entity
         events:
             - http:
-                path: /entity/{_id}
+                path: /entity/{id}
                 method: post
                 cors: true
         environment:
@@ -156,7 +156,7 @@ functions:
         description: Delete entity with given id
         events:
             - http:
-                path: /entity/{_id}
+                path: /entity/{id}
                 method: delete
                 cors: true
 
@@ -166,7 +166,7 @@ functions:
         description: Get property with given id
         events:
             - http:
-                path: /property/{_id}
+                path: /property/{id}
                 method: get
                 cors: true
         environment:
@@ -179,7 +179,7 @@ functions:
         description: Delete property with given id
         events:
             - http:
-                path: /property/{_id}
+                path: /property/{id}
                 method: delete
                 cors: true
 
