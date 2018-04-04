@@ -54,7 +54,7 @@ package:
 functions:
     account-get:
         handler: functions/account-get.handler
-        name: entu-api-account-get
+        name: ${self:service}-${self:provider.stage}-account-get
         description: Returns account info and usage statistics
         events:
             - http:
@@ -64,7 +64,7 @@ functions:
 
     auth-get:
         handler: functions/auth-get.handler
-        name: entu-api-auth-get
+        name: ${self:service}-${self:provider.stage}-auth-get
         description: Authenticates user by API key
         events:
             - http:
@@ -74,7 +74,7 @@ functions:
 
     auth-google-get:
         handler: functions/auth-google-get.handler
-        name: entu-api-auth-google-get
+        name: ${self:service}-${self:provider.stage}-auth-google-get
         description: Redirects user to auth in Google
         events:
             - http:
@@ -86,7 +86,7 @@ functions:
 
     auth-facebook-get:
         handler: functions/auth-facebook-get.handler
-        name: entu-api-auth-facebook-get
+        name: ${self:service}-${self:provider.stage}-auth-facebook-get
         description: Redirects user to auth in Facebook
         events:
             - http:
@@ -98,7 +98,7 @@ functions:
 
     auth-microsoft-get:
         handler: functions/auth-microsoft-get.handler
-        name: entu-api-auth-microsoft-get
+        name: ${self:service}-${self:provider.stage}-auth-microsoft-get
         description: Redirects user to auth in Microsoft
         events:
             - http:
@@ -110,7 +110,7 @@ functions:
 
     entities-get:
         handler: functions/entities-get.handler
-        name: entu-api-entities-get
+        name: ${self:service}-${self:provider.stage}-entities-get
         description: Get list of entities
         events:
             - http:
@@ -120,7 +120,7 @@ functions:
 
     entities-post:
         handler: functions/entities-post.handler
-        name: entu-api-entities-post
+        name: ${self:service}-${self:provider.stage}-entities-post
         description: Create new entity
         events:
             - http:
@@ -130,7 +130,7 @@ functions:
 
     entity-get:
         handler: functions/entity-get.handler
-        name: entu-api-entity-get
+        name: ${self:service}-${self:provider.stage}-entity-get
         description: Get one entity with given id
         events:
             - http:
@@ -140,7 +140,7 @@ functions:
 
     entity-post:
         handler: functions/entity-post.handler
-        name: entu-api-entity-post
+        name: ${self:service}-${self:provider.stage}-entity-post
         description: Add new properties to entity
         events:
             - http:
@@ -152,7 +152,7 @@ functions:
 
     entity-delete:
         handler: functions/entity-delete.handler
-        name: entu-api-entity-delete
+        name: ${self:service}-${self:provider.stage}-entity-delete
         description: Delete entity with given id
         events:
             - http:
@@ -162,7 +162,7 @@ functions:
 
     property-get:
         handler: functions/property-get.handler
-        name: entu-api-property-get
+        name: ${self:service}-${self:provider.stage}-property-get
         description: Get property with given id
         events:
             - http:
@@ -175,7 +175,7 @@ functions:
 
     property-delete:
         handler: functions/property-delete.handler
-        name: entu-api-property-delete
+        name: ${self:service}-${self:provider.stage}-property-delete
         description: Delete property with given id
         events:
             - http:
@@ -185,7 +185,7 @@ functions:
 
     entity-picture-get:
         handler: functions/entity-picture-get.handler
-        name: entu-api-entity-picture-get
+        name: ${self:service}-${self:provider.stage}-entity-picture-get
         events:
             - http:
                 path: /2/{db}/picture/{id}
