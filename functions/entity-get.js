@@ -22,9 +22,9 @@ exports.handler = (event, context, callback) => {
 
                 if (props.length > 0) {
                     _.forEach(props, (f) => {
-                        _.set(config, ['fields', `private.${f}`], true)
+                        _.set(config, ['projection', `private.${f}`], true)
                     })
-                    _.set(config, 'fields.access', true)
+                    _.set(config, 'projection.access', true)
                 }
 
                 user.db.collection('entity').findOne({ _id: new objectId(event.pathParameters.id) }, config, callback)

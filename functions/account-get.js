@@ -25,7 +25,7 @@ exports.handler = (event, context, callback) => {
                         _id: { $gt: ['$private._deleted', null] },
                         count: { $sum: 1 }
                     }
-                }], callback)
+                }]).toArray(callback)
             },
 
             properties: (callback) => {
@@ -34,7 +34,7 @@ exports.handler = (event, context, callback) => {
                         _id: { $gt: ['$deleted', null] },
                         count: { $sum: 1 }
                     }
-                }], callback)
+                }]).toArray(callback)
             },
 
             files: (callback) => {
@@ -50,7 +50,7 @@ exports.handler = (event, context, callback) => {
                             size: { $sum: '$size' }
                         }
                     }
-                ], callback)
+                ]).toArray(callback)
             }
         }, (err, stats) => {
             if (err) { return callback(null, _h.error(err)) }

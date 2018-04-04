@@ -28,7 +28,7 @@ exports.handler = (event, context, callback) => {
 
                 property = prop
 
-                user.db.collection('entity').findOne({ _id: property.entity }, { _id: false, access: true }, callback)
+                user.db.collection('entity').findOne({ _id: property.entity }, { projection: { _id: false, access: true } }, callback)
             },
             (entity, callback) => {
                 if (!entity) { return callback([404, 'Entity not found']) }

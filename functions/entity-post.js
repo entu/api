@@ -28,7 +28,7 @@ exports.handler = (event, context, callback) => {
 
         async.waterfall([
             (callback) => { // Get entity
-                user.db.collection('entity').findOne({ _id: eId }, { _id: false, 'private._owner': true, 'private._editor': true }, callback)
+                user.db.collection('entity').findOne({ _id: eId }, { projection: { _id: false, 'private._owner': true, 'private._editor': true } }, callback)
             },
             (entity, callback) => { // Check rights and create _deleted property
                 if (!entity) { return callback([404, 'Entity not found']) }

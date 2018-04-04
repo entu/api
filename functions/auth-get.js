@@ -64,7 +64,7 @@ exports.handler = (event, context, callback) => {
                     (accountCon, callback) => {
                         let authFilter = {}
                         authFilter[sessionAuth ? 'private.entu_user.string' : 'private.entu_api_key.string'] = authValue
-                        accountCon.collection('entity').findOne(authFilter, { _id: true }, callback)
+                        accountCon.collection('entity').findOne(authFilter, { projection: { _id: true } }, callback)
                     }
                 ], (err, person) => {
                     if(err) { return callback(err) }

@@ -101,7 +101,7 @@ exports.handler = (event, context, callback) => {
 
         async.waterfall([
             (callback) => {
-                user.db.collection('entity').find(filter, fields, callback)
+                user.db.collection('entity').find(filter, { projection: fields }, callback)
             },
             (f, callback) => {
                 findedEntities = f

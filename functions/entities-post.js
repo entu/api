@@ -30,7 +30,7 @@ exports.handler = (event, context, callback) => {
 
         async.waterfall([
             (callback) => { // get entity type
-                user.db.collection('entity').findOne({ '_type.string': 'entity', 'key.string': body.type }, { default_parent: true }, callback)
+                user.db.collection('entity').findOne({ '_type.string': 'entity', 'key.string': body.type }, { projection: { default_parent: true } }, callback)
             },
             (type, callback) => {
                 if (type && type.default_parent) {
@@ -41,7 +41,7 @@ exports.handler = (event, context, callback) => {
                     return callback(null, null)
                 }
 
-                user.db.collection('entity').findOne({ '_id': new objectId(body.parent) }, { _id: true, 'private._type': true, 'private._viewer': true, 'private._expander': true, 'private._editor': true, 'private._owner': true }, (p, callback) => {
+                user.db.collection('entity').findOne({ '_id': new objectId(body.parent) }, { projection: { _id: true, 'private._type': true, 'private._viewer': true, 'private._expander': true, 'private._editor': true, 'private._owner': true } }, (p, callback) => {
                     parent = p
 
                     if (!parent) { return callback([404, 'Parent entity not found']) }
@@ -52,7 +52,7 @@ exports.handler = (event, context, callback) => {
 
                     if (access.indexOf(user.id) === -1) { return callback([403, 'Forbidden']) }
 
-                    user.db.collection('entity').find({ _parent: type._id, 'private._type.string': 'property', 'default': { $exists: true } }, { _id: false, default: true }, callback)
+                    user.db.collection('entity').find({ _parent: type._id, 'private._type.string': 'property', 'default': { $exists: true } }, { projection: { _id: false, default: true } }, callback)
                 })
             },
             (defaults, callback) => {

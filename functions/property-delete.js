@@ -21,7 +21,7 @@ exports.handler = (event, context, callback) => {
 
         async.waterfall([
             (callback) => {
-                user.db.collection('property').findOne({ _id: pId, deleted: { $exists: false } }, {_id: false, entity: true, type: true }, callback)
+                user.db.collection('property').findOne({ _id: pId, deleted: { $exists: false } }, { projection: {_id: false, entity: true, type: true }}, callback)
             },
             (prop, callback) => {
                 if (!prop) { return callback([404, 'Property not found']) }
@@ -29,7 +29,7 @@ exports.handler = (event, context, callback) => {
 
                 property = prop
 
-                user.db.collection('entity').findOne({ _id: property.entity }, { _id: false, 'private._owner': true, 'private._editor': true }, callback)
+                user.db.collection('entity').findOne({ _id: property.entity }, { projection: { _id: false, 'private._owner': true, 'private._editor': true } }, callback)
             },
             (entity, callback) => {
                 if (!entity) { return callback([404, 'Entity not found']) }

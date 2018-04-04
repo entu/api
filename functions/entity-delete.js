@@ -20,7 +20,7 @@ exports.handler = (event, context, callback) => {
 
         async.waterfall([
             (callback) => { // Get entity
-                user.db.collection('entity').findOne({ _id: eId }, { _id: false, 'private._owner': true }, callback)
+                user.db.collection('entity').findOne({ _id: eId }, { projection: { _id: false, 'private._owner': true } }, callback)
             },
             (entity, callback) => { // Check rights and create _deleted property
                 if (!entity) { return callback([404, 'Entity not found']) }
@@ -37,7 +37,7 @@ exports.handler = (event, context, callback) => {
                 _h.aggregateEntity(user.db, eId, '_deleted', callback)
             },
             (r, callback) => { // Get reference properties
-                user.db.collection('property').find({ reference: eId, deleted: { $exists: false } }, { entity: true, type: true }).toArray(callback)
+                user.db.collection('property').find({ reference: eId, deleted: { $exists: false } }, { projection: { entity: true, type: true }}).toArray(callback)
             },
             (properties, callback) => { // Delete reference properties
                 if (properties.length === 0) { return callback(null) }

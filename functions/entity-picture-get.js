@@ -42,7 +42,7 @@ exports.handler = (event, context, callback) => {
         },
         (mongoConn, callback) => {
             if (sessionKey) {
-                mongoConn.collection('session').findOne({ key: sessionKey }, { fields: { _id: false, 'user.email': true } }, callback)
+                mongoConn.collection('session').findOne({ key: sessionKey }, { projection: { _id: false, 'user.email': true } }, callback)
             } else {
                 callback(null, null)
             }
