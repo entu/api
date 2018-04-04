@@ -198,9 +198,9 @@ functions:
             MYSQL_USER: ${ssm:/entu-api-mysql-user~true}
             MYSQL_PASSWORD: ${ssm:/entu-api-mysql-password~true}
 
-resources:
-    Resources:
-        EntuFilesS3:
-            Type: AWS::S3::Bucket
-            Properties:
-                BucketName: ${ssm:/entu-api-files-s3-bucket~true}
+# resources:
+#     Resources:
+#         EntuFilesS3:
+#             Type: AWS::S3::Bucket
+#             Properties:
+#                 BucketName: ${ssm:/entu-api-files-s3-bucket~true}
