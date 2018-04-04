@@ -80,7 +80,6 @@ functions:
             - http:
                 path: /auth/google
                 method: get
-                cors: true
         environment:
             GOOGLE_ID: ${ssm:/entu-api-google-id~true}
             GOOGLE_SECRET: ${ssm:/entu-api-google-secret~true}
@@ -93,7 +92,6 @@ functions:
             - http:
                 path: /auth/facebook
                 method: get
-                cors: true
         environment:
             FACEBOOK_ID: ${ssm:/entu-api-facebook-id~true}
             FACEBOOK_SECRET: ${ssm:/entu-api-facebook-secret~true}
@@ -106,7 +104,6 @@ functions:
             - http:
                 path: /auth/microsoft
                 method: get
-                cors: true
         environment:
             MICROSOFT_ID: ${ssm:/entu-api-microsoft-id~true}
             MICROSOFT_SECRET: ${ssm:/entu-api-microsoft-secret~true}
@@ -200,3 +197,10 @@ functions:
             MYSQL_HOST: ${ssm:/entu-api-mysql-host~true}
             MYSQL_USER: ${ssm:/entu-api-mysql-user~true}
             MYSQL_PASSWORD: ${ssm:/entu-api-mysql-password~true}
+
+resources:
+    Resources:
+        EntuFilesS3:
+            Type: AWS::S3::Bucket
+            Properties:
+                BucketName: ${ssm:/entu-api-files-s3-bucket~true}
