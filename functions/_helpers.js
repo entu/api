@@ -214,6 +214,9 @@ exports.json = (data, code, headers) => {
             'Access-Control-Allow-Origin': '*'
         }
     }
+    if (process.env.GIT_SHA1) {
+        headers['X-Entu-Version'] = process.env.GIT_SHA1
+    }
 
     return {
         statusCode: code || 200,
@@ -235,6 +238,9 @@ exports.error = (err, headers) => {
         headers = {
             'Access-Control-Allow-Origin': '*'
         }
+    }
+    if (process.env.GIT_SHA1) {
+        headers['X-Entu-Version'] = process.env.GIT_SHA1
     }
 
     if (err.constructor === Array) {
