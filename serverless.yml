@@ -3,8 +3,9 @@ service: entu-api
 provider:
     name: aws
     runtime: nodejs8.10
-    stage: prod
+    stage: production
     region: eu-central-1
+    endpointType: regional
     memorySize: 256
     timeout: 30
     logRetentionInDays: 30
@@ -27,11 +28,9 @@ provider:
         name: entu-api
         serverSideEncryption: AES256
 
-    apiGateway:
-        restApiId: ${ssm:/entu-api-gateway-id~true}
-        restApiRootResourceId: ${ssm:/entu-api-gateway-root~true}
-
     environment:
+        GIT_BRANCH: ${git:branch}
+        GIT_SHA1: ${git:sha1}
         JWT_SECRET: ${ssm:/entu-api-jwt-secret~true}
         MONGODB: ${ssm:/entu-api-mongodb~true}
 
@@ -48,7 +47,6 @@ package:
     exclude:
         - '**/**'
     include:
-        - node_modules/**
         - functions/**
 
 functions:
@@ -204,3 +202,15 @@ functions:
 #             Type: AWS::S3::Bucket
 #             Properties:
 #                 BucketName: ${ssm:/entu-api-files-s3-bucket~true}
+
+plugins:
+    - serverless-domain-manager
+    - serverless-plugin-git-variables
+
+custom:
+    customDomain:
+        domainName: ${ssm:/entu-api-domain~true}
+        basePath: ''
+        stage: ${self:provider.stage}
+        createRoute53Record: false
+        endpointType: regional
