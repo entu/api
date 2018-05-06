@@ -1,216 +1,215 @@
 service: entu-api
 
 provider:
-    name: aws
-    runtime: nodejs8.10
-    stage: production
-    region: eu-central-1
-    endpointType: regional
-    memorySize: 256
-    timeout: 30
-    logRetentionInDays: 30
+  name: aws
+  runtime: nodejs8.10
+  stage: production
+  region: eu-central-1
+  endpointType: regional
+  memorySize: 256
+  timeout: 30
+  logRetentionInDays: 30
 
-    iamRoleStatements:
-        -
-            Effect: Allow
-            Action:
-                - s3:GetObject
-                - s3:GetObjectAcl
-            Resource: arn:aws:s3:::${ssm:/entu-api-files-s3-bucket~true}/*
-        -
-            Effect: Allow
-            Action:
-                - xray:PutTraceSegments
-                - xray:PutTelemetryRecords
-            Resource: '*'
+  iamRoleStatements:
+    -
+      Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:GetObjectAcl
+      Resource: arn:aws:s3:::${ssm:/entu-api-files-s3-bucket~true}/*
+    -
+      Effect: Allow
+      Action:
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+      Resource: '*'
 
-    deploymentBucket:
-        name: entu-api
-        serverSideEncryption: AES256
+  deploymentBucket:
+    name: entu-api
+    serverSideEncryption: AES256
 
-    environment:
-        GIT_BRANCH: ${git:branch}
-        GIT_SHA1: ${git:sha1}
-        JWT_SECRET: ${ssm:/entu-api-jwt-secret~true}
-        MONGODB: ${ssm:/entu-api-mongodb~true}
+  environment:
+    GIT_BRANCH: ${git:branch}
+    GIT_SHA1: ${git:sha1}
+    JWT_SECRET: ${ssm:/entu-api-jwt-secret~true}
+    MONGODB: ${ssm:/entu-api-mongodb~true}
 
-    vpc:
-      securityGroupIds:
-        - ${ssm:/entu-api-vpc-security-group-1~true}
-      subnetIds:
-        - ${ssm:/entu-api-vpc-subnet-1~true}
-        - ${ssm:/entu-api-vpc-subnet-2~true}
-        - ${ssm:/entu-api-vpc-subnet-3~true}
+  vpc:
+    securityGroupIds:
+    - ${ssm:/entu-api-vpc-security-group-1~true}
+    subnetIds:
+    - ${ssm:/entu-api-vpc-subnet-1~true}
+    - ${ssm:/entu-api-vpc-subnet-2~true}
+    - ${ssm:/entu-api-vpc-subnet-3~true}
 
 package:
-    excludeDevDependencies: true
-    exclude:
-        - '**/**'
-    include:
-        - functions/**
+  excludeDevDependencies: true
+  exclude:
+    - '**/**'
+  include:
+    - functions/**
 
 functions:
-    account-get:
-        handler: functions/account-get.handler
-        name: ${self:service}-${self:provider.stage}-account-get
-        description: Returns account info and usage statistics
-        events:
-            - http:
-                path: /account
-                method: get
-                cors: true
+  account-get:
+    handler: functions/account-get.handler
+    name: ${self:service}-${self:provider.stage}-account-get
+    description: Returns account info and usage statistics
+    events:
+      - http:
+        path: /account
+        method: get
+        cors: true
 
-    auth-get:
-        handler: functions/auth-get.handler
-        name: ${self:service}-${self:provider.stage}-auth-get
-        description: Authenticates user by API key
-        events:
-            - http:
-                path: /auth
-                method: get
-                cors: true
+  auth-get:
+    handler: functions/auth-get.handler
+    name: ${self:service}-${self:provider.stage}-auth-get
+    description: Authenticates user by API key
+    events:
+      - http:
+        path: /auth
+        method: get
+        cors: true
 
-    auth-google-get:
-        handler: functions/auth-google-get.handler
-        name: ${self:service}-${self:provider.stage}-auth-google-get
-        description: Redirects user to auth in Google
-        events:
-            - http:
-                path: /auth/google
-                method: get
-        environment:
-            GOOGLE_ID: ${ssm:/entu-api-google-id~true}
-            GOOGLE_SECRET: ${ssm:/entu-api-google-secret~true}
+  auth-google-get:
+    handler: functions/auth-google-get.handler
+    name: ${self:service}-${self:provider.stage}-auth-google-get
+    description: Redirects user to auth in Google
+    events:
+      - http:
+        path: /auth/google
+        method: get
+    environment:
+      GOOGLE_ID: ${ssm:/entu-api-google-id~true}
+      GOOGLE_SECRET: ${ssm:/entu-api-google-secret~true}
 
-    auth-facebook-get:
-        handler: functions/auth-facebook-get.handler
-        name: ${self:service}-${self:provider.stage}-auth-facebook-get
-        description: Redirects user to auth in Facebook
-        events:
-            - http:
-                path: /auth/facebook
-                method: get
-        environment:
-            FACEBOOK_ID: ${ssm:/entu-api-facebook-id~true}
-            FACEBOOK_SECRET: ${ssm:/entu-api-facebook-secret~true}
+  auth-facebook-get:
+    handler: functions/auth-facebook-get.handler
+    name: ${self:service}-${self:provider.stage}-auth-facebook-get
+    description: Redirects user to auth in Facebook
+    events:
+      - http:
+        path: /auth/facebook
+        method: get
+    environment:
+      FACEBOOK_ID: ${ssm:/entu-api-facebook-id~true}
+      FACEBOOK_SECRET: ${ssm:/entu-api-facebook-secret~true}
 
-    auth-microsoft-get:
-        handler: functions/auth-microsoft-get.handler
-        name: ${self:service}-${self:provider.stage}-auth-microsoft-get
-        description: Redirects user to auth in Microsoft
-        events:
-            - http:
-                path: /auth/microsoft
-                method: get
-        environment:
-            MICROSOFT_ID: ${ssm:/entu-api-microsoft-id~true}
-            MICROSOFT_SECRET: ${ssm:/entu-api-microsoft-secret~true}
+  auth-microsoft-get:
+    handler: functions/auth-microsoft-get.handler
+    name: ${self:service}-${self:provider.stage}-auth-microsoft-get
+    description: Redirects user to auth in Microsoft
+    events:
+      - http:
+        path: /auth/microsoft
+        method: get
+    environment:
+      MICROSOFT_ID: ${ssm:/entu-api-microsoft-id~true}
+      MICROSOFT_SECRET: ${ssm:/entu-api-microsoft-secret~true}
 
-    entities-get:
-        handler: functions/entities-get.handler
-        name: ${self:service}-${self:provider.stage}-entities-get
-        description: Get list of entities
-        events:
-            - http:
-                path: /entity
-                method: get
-                cors: true
+  entities-get:
+    handler: functions/entities-get.handler
+    name: ${self:service}-${self:provider.stage}-entities-get
+    description: Get list of entities
+    events:
+      - http:
+        path: /entity
+        method: get
+        cors: true
 
-    entities-post:
-        handler: functions/entities-post.handler
-        name: ${self:service}-${self:provider.stage}-entities-post
-        description: Create new entity
-        events:
-            - http:
-                path: /entity
-                method: post
-                cors: true
+  entities-post:
+    handler: functions/entities-post.handler
+    name: ${self:service}-${self:provider.stage}-entities-post
+    description: Create new entity
+    events:
+      - http:
+        path: /entity
+        method: post
+        cors: true
 
-    entity-get:
-        handler: functions/entity-get.handler
-        name: ${self:service}-${self:provider.stage}-entity-get
-        description: Get one entity with given id
-        events:
-            - http:
-                path: /entity/{id}
-                method: get
-                cors: true
+  entity-get:
+    handler: functions/entity-get.handler
+    name: ${self:service}-${self:provider.stage}-entity-get
+    description: Get one entity with given id
+    events:
+      - http:
+        path: /entity/{id}
+        method: get
+        cors: true
 
-    entity-post:
-        handler: functions/entity-post.handler
-        name: ${self:service}-${self:provider.stage}-entity-post
-        description: Add new properties to entity
-        events:
-            - http:
-                path: /entity/{id}
-                method: post
-                cors: true
-        environment:
-            S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
+  entity-post:
+    handler: functions/entity-post.handler
+    name: ${self:service}-${self:provider.stage}-entity-post
+    description: Add new properties to entity
+    events:
+      - http:
+        path: /entity/{id}
+        method: post
+        cors: true
+    environment:
+      S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
 
-    entity-delete:
-        handler: functions/entity-delete.handler
-        name: ${self:service}-${self:provider.stage}-entity-delete
-        description: Delete entity with given id
-        events:
-            - http:
-                path: /entity/{id}
-                method: delete
-                cors: true
+  entity-delete:
+    handler: functions/entity-delete.handler
+    name: ${self:service}-${self:provider.stage}-entity-delete
+    description: Delete entity with given id
+    events:
+      - http:
+        path: /entity/{id}
+        method: delete
+        cors: true
 
-    property-get:
-        handler: functions/property-get.handler
-        name: ${self:service}-${self:provider.stage}-property-get
-        description: Get property with given id
-        events:
-            - http:
-                path: /property/{id}
-                method: get
-                cors: true
-        environment:
-            S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
-            S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
+  property-get:
+    handler: functions/property-get.handler
+    name: ${self:service}-${self:provider.stage}-property-get
+    description: Get property with given id
+    events:
+      - http:
+        path: /property/{id}
+        method: get
+        cors: true
+    environment:
+      S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
+      S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
 
-    property-delete:
-        handler: functions/property-delete.handler
-        name: ${self:service}-${self:provider.stage}-property-delete
-        description: Delete property with given id
-        events:
-            - http:
-                path: /property/{id}
-                method: delete
-                cors: true
+  property-delete:
+    handler: functions/property-delete.handler
+    name: ${self:service}-${self:provider.stage}-property-delete
+    description: Delete property with given id
+    events:
+      - http:
+        path: /property/{id}
+        method: delete
+        cors: true
 
-    entity-picture-get:
-        handler: functions/entity-picture-get.handler
-        name: ${self:service}-${self:provider.stage}-entity-picture-get
-        events:
-            - http:
-                path: /2/{db}/picture/{id}
-                method: get
-                cors: true
-        environment:
-            S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
-            S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
-            MYSQL_HOST: ${ssm:/entu-api-mysql-host~true}
-            MYSQL_USER: ${ssm:/entu-api-mysql-user~true}
-            MYSQL_PASSWORD: ${ssm:/entu-api-mysql-password~true}
+  entity-picture-get:
+    handler: functions/entity-picture-get.handler
+    name: ${self:service}-${self:provider.stage}-entity-picture-get
+    events:
+      - http:
+        path: /2/{db}/picture/{id}
+        method: get
+    environment:
+      S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
+      S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
+      MYSQL_HOST: ${ssm:/entu-api-mysql-host~true}
+      MYSQL_USER: ${ssm:/entu-api-mysql-user~true}
+      MYSQL_PASSWORD: ${ssm:/entu-api-mysql-password~true}
 
 # resources:
-#     Resources:
-#         EntuFilesS3:
-#             Type: AWS::S3::Bucket
-#             Properties:
-#                 BucketName: ${ssm:/entu-api-files-s3-bucket~true}
+#   Resources:
+#     EntuFilesS3:
+#       Type: AWS::S3::Bucket
+#       Properties:
+#         BucketName: ${ssm:/entu-api-files-s3-bucket~true}
 
 plugins:
-    - serverless-domain-manager
-    - serverless-plugin-git-variables
+  - serverless-domain-manager
+  - serverless-plugin-git-variables
 
 custom:
-    customDomain:
-        domainName: ${ssm:/entu-api-domain~true}
-        basePath: ''
-        stage: ${self:provider.stage}
-        createRoute53Record: false
-        endpointType: regional
+  customDomain:
+    domainName: ${ssm:/entu-api-domain~true}
+    basePath: ''
+    stage: ${self:provider.stage}
+    createRoute53Record: false
+    endpointType: regional
