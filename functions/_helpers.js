@@ -2,30 +2,9 @@
 
 const _ = require('lodash')
 const async = require('async')
-const aws = require('aws-sdk')
 const jwt = require('jsonwebtoken')
 const mongo = require('mongodb').MongoClient
 const mysql = require('mysql')
-
-
-
-let parameters = {}
-const loadParameters = (names, callback) => {
-  const ssm = new aws.SSM()
-
-  var params = {
-    Names: names,
-    WithDecryption: true
-  }
-
-  ssm.getParameters(params, function(err, data) {
-    if (err) { return callback(err) }
-
-    _.get(data, 'Parameters', []).forEach(function(element) {
-      parameters[element.Name] = element.Value
-    })
-  })
-}
 
 
 
@@ -65,7 +44,7 @@ const mysqlDb = (dbName) => {
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
     database: dbName,
-    multipleStatements: false,
+    multipleStatements: false
     // ssl: {
     //   ca: fs.readFileSync(MYSQL_SSL_CA)
     // }
@@ -118,7 +97,7 @@ exports.user = (event, callback) => {
 
       result = u
       db(result.account, callback)
-    },
+    }
   ], (err, db) => {
     if (err) { return callback(err) }
 
@@ -132,7 +111,7 @@ exports.user = (event, callback) => {
 
 // Create user session
 exports.addUserSession = (user, callback) => {
-  if(!user) { return callback('No user') }
+  if (!user) { return callback('No user') }
 
   const session = {
     created: new Date(),
@@ -147,7 +126,7 @@ exports.addUserSession = (user, callback) => {
       connection.collection('session').insertOne(_.pickBy(session, _.identity), callback)
     }
   ], (err, r) => {
-    if(err) { return callback(err) }
+    if (err) { return callback(err) }
 
     return callback(null, r.insertedId)
   })
@@ -157,12 +136,10 @@ exports.addUserSession = (user, callback) => {
 
 // Aggregate entity from property collection
 exports.aggregateEntity = (db, entityId, property, callback) => {
-  var connection
-
   async.waterfall([
     (callback) => {
       db.collection('property').find({ entity: entityId, deleted: { $exists: false } }).toArray((err, properties) => {
-        if(err) { return callback(err) }
+        if (err) { return callback(err) }
 
         let p = _.groupBy(properties, v => { return v.public === true ? 'public' : 'private' })
 
@@ -265,7 +242,7 @@ exports.redirect = (url, code, headers) => {
     headers['Location'] = url
   } else {
     headers = {
-      'Location' : url
+      Location: url
     }
   }
   headers['Access-Control-Allow-Origin'] = '*'

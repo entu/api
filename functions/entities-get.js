@@ -5,7 +5,7 @@ console.log('Loading function')
 const _ = require('lodash')
 const _h = require('./_helpers')
 const async = require('async')
-const objectId = require('mongodb').ObjectID
+const ObjectId = require('mongodb').ObjectID
 
 
 
@@ -35,7 +35,7 @@ exports.handler = (event, context, callback) => {
 
         switch(type) {
           case 'reference':
-            value = new objectId(v)
+            value = new ObjectId(v)
             break
           case 'boolean':
             value = v.toLowerCase() === 'true'
@@ -74,7 +74,7 @@ exports.handler = (event, context, callback) => {
     })
 
     if (user.id) {
-      filter.access = { '$in': [new objectId(user.id), 'public'] }
+      filter.access = { '$in': [new ObjectId(user.id), 'public'] }
     } else {
       filter.access = 'public'
     }
@@ -110,7 +110,7 @@ exports.handler = (event, context, callback) => {
       (c, callback) => {
         count = c
         findedEntities.sort(sortFields).skip(skip).limit(limit).toArray(callback)
-      },
+      }
     ], (err, entities) => {
       if (err) { return callback(null, _h.error(err)) }
 

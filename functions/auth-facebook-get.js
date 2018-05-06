@@ -44,7 +44,7 @@ exports.handler = (event, context, callback) => {
         _h.addUserSession(user, callback)
       }
     ], (err, sessionId) => {
-      if(err) { return callback(null, _h.error(err)) }
+      if (err) { return callback(null, _h.error(err)) }
 
       if (_.has(event, 'queryStringParameters.state')) {
         callback(null, _h.redirect(`${event.queryStringParameters.state}${sessionId}`, 302))

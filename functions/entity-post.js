@@ -6,7 +6,7 @@ const _ = require('lodash')
 const _h = require('./_helpers')
 const async = require('async')
 const aws = require('aws-sdk')
-const objectId = require('mongodb').ObjectID
+const ObjectId = require('mongodb').ObjectID
 
 
 
@@ -23,7 +23,7 @@ exports.handler = (event, context, callback) => {
     if (!_.isArray(body)) { return callback(null, _h.error([400, 'Data must be array'])) }
     if (body.length === 0) { return callback(null, _h.error([400, 'At least one property must be set'])) }
 
-    var eId = new objectId(event.pathParameters.id)
+    var eId = new ObjectId(event.pathParameters.id)
     var pIds = []
 
     async.waterfall([
@@ -41,7 +41,7 @@ exports.handler = (event, context, callback) => {
 
         const created = {
           at: new Date(),
-          by: new objectId(user.id)
+          by: new ObjectId(user.id)
         }
         let properties = []
 
@@ -52,7 +52,7 @@ exports.handler = (event, context, callback) => {
           if (!property.type.match(/^[A-Za-z0-9\_]+$/)) { return callback(null, _h.error([400, 'Property type must be alphanumeric'])) }
           if (property.type.substr(0, 1) === '_') { return callback(null, _h.error([400, 'Property type can\'t begin with _'])) }
 
-          if (property.reference) { property.reference = new objectId(property.reference) }
+          if (property.reference) { property.reference = new ObjectId(property.reference) }
           if (property.date) { property.date = new Date(property.date) }
           if (property.datetime) { property.datetime = new Date(property.datetime) }
 
@@ -103,7 +103,7 @@ exports.handler = (event, context, callback) => {
       },
       (callback) => {
         _h.aggregateEntity(user.db, eId, null, callback)
-      },
+      }
     ], (err) => {
       if (err) { return callback(null, _h.error(err)) }
 

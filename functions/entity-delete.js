@@ -5,7 +5,7 @@ console.log('Loading function')
 const _ = require('lodash')
 const _h = require('./_helpers')
 const async = require('async')
-const objectId = require('mongodb').ObjectID
+const ObjectId = require('mongodb').ObjectID
 
 
 
@@ -16,7 +16,7 @@ exports.handler = (event, context, callback) => {
     if (err) { return callback(null, _h.error(err)) }
     if (!user.id) { return callback(null, _h.error([403, 'Forbidden'])) }
 
-    var eId = new objectId(event.pathParameters.id)
+    var eId = new ObjectId(event.pathParameters.id)
 
     async.waterfall([
       (callback) => { // Get entity
@@ -31,13 +31,13 @@ exports.handler = (event, context, callback) => {
 
         if (access.indexOf(user.id) === -1) { return callback([403, 'Forbidden']) }
 
-        user.db.collection('property').insertOne({ entity: eId, type: '_deleted', boolean: true, created: { at: new Date(), by: new objectId(user.id) } }, callback)
+        user.db.collection('property').insertOne({ entity: eId, type: '_deleted', boolean: true, created: { at: new Date(), by: new ObjectId(user.id) } }, callback)
       },
       (r, callback) => { // Aggregate entity
         _h.aggregateEntity(user.db, eId, '_deleted', callback)
       },
       (r, callback) => { // Get reference properties
-        user.db.collection('property').find({ reference: eId, deleted: { $exists: false } }, { projection: { entity: true, type: true }}).toArray(callback)
+        user.db.collection('property').find({ reference: eId, deleted: { $exists: false } }, { projection: { entity: true, type: true } }).toArray(callback)
       },
       (properties, callback) => { // Delete reference properties
         if (properties.length === 0) { return callback(null) }
@@ -45,14 +45,14 @@ exports.handler = (event, context, callback) => {
         async.each(properties, (property, callback) => {
           async.series([
             (callback) => {
-              user.db.collection('property').updateOne({ _id: property._id }, { $set: { deleted: { at: new Date(), by: new objectId(user.id) } } }, callback)
+              user.db.collection('property').updateOne({ _id: property._id }, { $set: { deleted: { at: new Date(), by: new ObjectId(user.id) } } }, callback)
             },
             (callback) => {
               _h.aggregateEntity(user.db, property.entity, property.type, callback)
-            },
+            }
           ], callback)
         }, callback)
-      },
+      }
     ], (err) => {
       if (err) { return callback(null, _h.error(err)) }
 

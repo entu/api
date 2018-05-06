@@ -5,7 +5,7 @@ console.log('Loading function')
 const _ = require('lodash')
 const _h = require('./_helpers')
 const async = require('async')
-const objectId = require('mongodb').ObjectID
+const ObjectId = require('mongodb').ObjectID
 
 
 
@@ -16,12 +16,12 @@ exports.handler = (event, context, callback) => {
     if (err) { return callback(null, _h.error(err)) }
     if (!user.id) { return callback(null, _h.error([403, 'Forbidden'])) }
 
-    const pId = new objectId(event.pathParameters.id)
+    const pId = new ObjectId(event.pathParameters.id)
     var property
 
     async.waterfall([
       (callback) => {
-        user.db.collection('property').findOne({ _id: pId, deleted: { $exists: false } }, { projection: {_id: false, entity: true, type: true }}, callback)
+        user.db.collection('property').findOne({ _id: pId, deleted: { $exists: false } }, { projection: { _id: false, entity: true, type: true } }, callback)
       },
       (prop, callback) => {
         if (!prop) { return callback([404, 'Property not found']) }
@@ -40,7 +40,7 @@ exports.handler = (event, context, callback) => {
 
         if (access.indexOf(user.id) === -1) { return callback([403, 'Forbidden']) }
 
-        user.db.collection('property').updateOne({ _id: pId }, { $set: { deleted: { at: new Date(), by: new objectId(user.id) } } }, callback)
+        user.db.collection('property').updateOne({ _id: pId }, { $set: { deleted: { at: new Date(), by: new ObjectId(user.id) } } }, callback)
       },
       (r, callback) => { // Aggregate entity
         _h.aggregateEntity(user.db, property.entity, property.type, callback)

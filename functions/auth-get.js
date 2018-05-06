@@ -6,7 +6,7 @@ const _ = require('lodash')
 const _h = require('./_helpers')
 const async = require('async')
 const jwt = require('jsonwebtoken')
-const objectId = require('mongodb').ObjectID
+const ObjectID = require('mongodb').ObjectID
 
 
 const mongoDbSystemDbs = ['admin', 'config', 'local']
@@ -17,11 +17,11 @@ exports.handler = (event, context, callback) => {
 
   const authHeaderParts = _.get(event, 'headers.Authorization', '').split(' ')
 
-  if(authHeaderParts.length !== 2 || authHeaderParts[0].toLowerCase() !== 'bearer') { return callback(null, _h.error([400, 'No key'])) }
+  if (authHeaderParts.length !== 2 || authHeaderParts[0].toLowerCase() !== 'bearer') { return callback(null, _h.error([400, 'No key'])) }
 
   const key = authHeaderParts[1]
 
-  if(key.length !== 24 && key.length !== 48) { return callback(null, _h.error([400, 'Invalid key'])) }
+  if (key.length !== 24 && key.length !== 48) { return callback(null, _h.error([400, 'Invalid key'])) }
 
   const sessionAuth = key.length === 24
 
@@ -36,9 +36,9 @@ exports.handler = (event, context, callback) => {
       connection = con
 
       if (sessionAuth) {
-        connection.collection('session').findOneAndUpdate({ _id: new objectId(key), deleted: { $exists: false } }, { $set: { deleted: new Date() } }, (err, sess) => {
-          if(err) { return callback(err) }
-          if(!sess.value) { return callback([400, 'No session']) }
+        connection.collection('session').findOneAndUpdate({ _id: new ObjectID(key), deleted: { $exists: false } }, { $set: { deleted: new Date() } }, (err, sess) => {
+          if (err) { return callback(err) }
+          if (!sess.value) { return callback([400, 'No session']) }
 
           authValue = _.get(sess, 'value.user.email')
 
@@ -67,8 +67,8 @@ exports.handler = (event, context, callback) => {
             accountCon.collection('entity').findOne(authFilter, { projection: { _id: true } }, callback)
           }
         ], (err, person) => {
-          if(err) { return callback(err) }
-          if(!person) { return callback(null) }
+          if (err) { return callback(err) }
+          if (!person) { return callback(null) }
 
           return callback(null, {
             _id: person._id.toString(),

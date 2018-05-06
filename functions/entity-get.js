@@ -5,7 +5,7 @@ console.log('Loading function')
 const _ = require('lodash')
 const _h = require('./_helpers')
 const async = require('async')
-const objectId = require('mongodb').ObjectID
+const ObjectId = require('mongodb').ObjectID
 
 
 
@@ -27,8 +27,8 @@ exports.handler = (event, context, callback) => {
           _.set(config, 'projection.access', true)
         }
 
-        user.db.collection('entity').findOne({ _id: new objectId(event.pathParameters.id) }, config, callback)
-      },
+        user.db.collection('entity').findOne({ _id: new ObjectId(event.pathParameters.id) }, config, callback)
+      }
     ], (err, entity) => {
       if (err) { return callback(null, _h.error(err)) }
 
@@ -54,7 +54,7 @@ exports.handler = (event, context, callback) => {
       } else if (access.indexOf('public') !== -1) {
         return callback(null, _h.json(Object.assign({ _id: entity._id }, _.get(entity, 'public', {}))))
       } else {
-        return  callback(null, _h.error([403, 'Forbidden']))
+        return callback(null, _h.error([403, 'Forbidden']))
       }
     })
   })

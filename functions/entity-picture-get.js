@@ -8,7 +8,6 @@ const async = require('async')
 const aws = require('aws-sdk')
 const crypto = require('crypto')
 const fs = require('fs')
-const https = require('https')
 const path = require('path')
 
 
@@ -17,7 +16,7 @@ const sql = fs.readFileSync(path.resolve(__dirname, 'sql', 'get_entity_picture.s
 exports.handler = (event, context, callback) => {
   context.callbackWaitsForEmptyEventLoop = false
 
-  if(!_.get(event, 'pathParameters.db') || !_.get(event, 'pathParameters.id')) {
+  if (!_.get(event, 'pathParameters.db') || !_.get(event, 'pathParameters.id')) {
     return callback(null, _h.error([400, 'Bad request']))
   }
 
@@ -26,11 +25,9 @@ exports.handler = (event, context, callback) => {
 
   var cookie
   var sessionKey
-  var connection
-  var userEmail
 
   try {
-    cookie = _.get(event,'headers.cookie') || _.get(event,'headers.Cookie')
+    cookie = _.get(event, 'headers.cookie') || _.get(event, 'headers.Cookie')
     sessionKey = cookie.split(';').map(x => x.trim()).filter(x => x.startsWith('session='))[0].substr(8)
   } catch (e) {
     // No session cookie
@@ -54,12 +51,12 @@ exports.handler = (event, context, callback) => {
       })
     },
     (file, callback) => {
-      if(!file) {
+      if (!file) {
         let md5 = crypto.createHash('md5').update(entityId).digest('hex')
         return callback(null, `https://secure.gravatar.com/avatar/${md5}?d=identicon&s=150`)
       }
 
-      if(!file.s3) {
+      if (!file.s3) {
         let md5 = crypto.createHash('md5').update(file.id).digest('hex')
         let d = file.type === 'person' ? 'robohash' : 'identicon'
         return callback(null, `https://secure.gravatar.com/avatar/${md5}?d=${d}&s=150`)
@@ -73,14 +70,14 @@ exports.handler = (event, context, callback) => {
       aws.config = new aws.Config()
       const s3 = new aws.S3(conf)
       s3.getSignedUrl('getObject', { Bucket: process.env.S3_BUCKET, Key: file.s3, Expires: 10 }, callback)
-    },
+    }
   ], (err, url) => {
     if (err) { return callback(null, _h.error(err)) }
-    if(!url) { return callback(null, _h.error([404, 'Not found'])) }
+    if (!url) { return callback(null, _h.error([404, 'Not found'])) }
 
     callback(null, {
       statusCode: 302,
-      headers: { 'Location' : url },
+      headers: { Location: url },
       body: null
     })
   })

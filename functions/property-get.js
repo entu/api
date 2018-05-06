@@ -6,7 +6,7 @@ const _ = require('lodash')
 const _h = require('./_helpers')
 const async = require('async')
 const aws = require('aws-sdk')
-const objectId = require('mongodb').ObjectID
+const ObjectId = require('mongodb').ObjectID
 
 
 
@@ -16,12 +16,11 @@ exports.handler = (event, context, callback) => {
   _h.user(event, (err, user) => {
     if (err) { return callback(null, _h.error(err)) }
 
-    var connection
     var property
 
     async.waterfall([
       (callback) => {
-        user.db.collection('property').findOne({ _id: new objectId(event.pathParameters.id), deleted: { $exists: false } }, callback)
+        user.db.collection('property').findOne({ _id: new ObjectId(event.pathParameters.id), deleted: { $exists: false } }, callback)
       },
       (prop, callback) => {
         if (!prop) { return callback([404, 'Property not found']) }
@@ -68,7 +67,7 @@ exports.handler = (event, context, callback) => {
         callback(null, {
           statusCode: 302,
           headers: {
-            'Location' : _.get(property, 'url')
+            Location: _.get(property, 'url')
           },
           body: null
         })

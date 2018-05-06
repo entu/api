@@ -5,8 +5,7 @@ console.log('Loading function')
 const _ = require('lodash')
 const _h = require('./_helpers')
 const async = require('async')
-const aws = require('aws-sdk')
-const objectId = require('mongodb').ObjectID
+const ObjectId = require('mongodb').ObjectID
 
 
 
@@ -41,7 +40,7 @@ exports.handler = (event, context, callback) => {
           return callback(null, null)
         }
 
-        user.db.collection('entity').findOne({ '_id': new objectId(body.parent) }, { projection: { _id: true, 'private._type': true, 'private._viewer': true, 'private._expander': true, 'private._editor': true, 'private._owner': true } }, (p, callback) => {
+        user.db.collection('entity').findOne({ '_id': new ObjectId(body.parent) }, { projection: { _id: true, 'private._type': true, 'private._viewer': true, 'private._expander': true, 'private._editor': true, 'private._owner': true } }, (p, callback) => {
           parent = p
 
           if (!parent) { return callback([404, 'Parent entity not found']) }
@@ -63,7 +62,7 @@ exports.handler = (event, context, callback) => {
       (entity, callback) => {
         eId = entity.insertedId
 
-        let userId = new objectId(user.id)
+        let userId = new ObjectId(user.id)
         let properties = []
 
         _.forEach(defaultParents, (p) => {
@@ -98,7 +97,7 @@ exports.handler = (event, context, callback) => {
       },
       (r, callback) => { // Aggregate entity
         _h.aggregateEntity(user.db, eId, null, callback)
-      },
+      }
     ], (err) => {
       if (err) { return callback(null, _h.error(err)) }
 
