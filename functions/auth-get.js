@@ -5,6 +5,7 @@ console.log('Loading function')
 const _ = require('lodash')
 const _h = require('./_helpers')
 const async = require('async')
+const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
 const ObjectID = require('mongodb').ObjectID
 
@@ -45,7 +46,7 @@ exports.handler = (event, context, callback) => {
           return callback(null)
         })
       } else {
-        authValue = key
+        authValue = crypto.createHash('sha256').update(key).digest('hex')
 
         return callback(null)
       }
