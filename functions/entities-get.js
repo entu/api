@@ -66,7 +66,7 @@ exports.handler = (event, context, callback) => {
         }
 
         if (['gt', 'gte', 'lt', 'lte', 'ne', 'regex', 'exists'].indexOf(operator) !== -1) {
-          _.set(filter, [`private.${field}.${type}`, `\$${operator}`], value)
+          _.set(filter, [`private.${field}.${type}`, `$${operator}`], value)
         } else {
           filter[`private.${field}.${type}`] = value
         }
