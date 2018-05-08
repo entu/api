@@ -1,94 +1,54 @@
 'use strict'
 
-console.log('Loading function')
-
 const _ = require('lodash')
 const _h = require('./_helpers')
-const async = require('async')
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
 const ObjectID = require('mongodb').ObjectID
 
-
 const mongoDbSystemDbs = ['admin', 'config', 'local']
 
-
-exports.handler = (event, context, callback) => {
-  context.callbackWaitsForEmptyEventLoop = false
-
+exports.handler = async (event, context) => {
   const authHeaderParts = _.get(event, 'headers.Authorization', '').split(' ')
-
-  if (authHeaderParts.length !== 2 || authHeaderParts[0].toLowerCase() !== 'bearer') { return callback(null, _h.error([400, 'No key'])) }
+  if (authHeaderParts.length !== 2 || authHeaderParts[0].toLowerCase() !== 'bearer') { return _h.error([400, 'No key']) }
 
   const key = authHeaderParts[1]
+  if (key.length !== 24 && key.length !== 48) { return _h.error([400, 'Invalid key']) }
 
-  if (key.length !== 24 && key.length !== 48) { return callback(null, _h.error([400, 'Invalid key'])) }
+  var authFilter = {}
+  const connection = await _h.db('entu')
 
-  const sessionAuth = key.length === 24
+  if (key.length === 24) {
+    const session = await connection.collection('session').findOneAndUpdate({ _id: new ObjectID(key), deleted: { $exists: false } }, { $set: { deleted: new Date() } })
 
-  var authValue
-  var connection
+    if (!session.value) { return _h.error([400, 'No session']) }
 
-  async.waterfall([
-    (callback) => {
-      _h.db('entu', callback)
-    },
-    (con, callback) => {
-      connection = con
+    authFilter['private.entu_user.string'] = _.get(session, 'value.user.email')
+  } else {
+    authFilter['private.entu_api_key.string'] = crypto.createHash('sha256').update(key).digest('hex')
+  }
 
-      if (sessionAuth) {
-        connection.collection('session').findOneAndUpdate({ _id: new ObjectID(key), deleted: { $exists: false } }, { $set: { deleted: new Date() } }, (err, sess) => {
-          if (err) { return callback(err) }
-          if (!sess.value) { return callback([400, 'No session']) }
+  const dbs = await connection.admin().listDatabases()
+  let accounts = []
 
-          authValue = _.get(sess, 'value.user.email')
+  for (var i = 0; i < dbs.databases.length; i++) {
+    const account = _.get(dbs, ['databases', i, 'name'])
+    if (mongoDbSystemDbs.indexOf(account) !== -1) { continue }
 
-          return callback(null)
-        })
-      } else {
-        authValue = crypto.createHash('sha256').update(key).digest('hex')
+    const accountCon = await _h.db(account)
+    const person = await accountCon.collection('entity').findOne(authFilter, { projection: { _id: true } })
 
-        return callback(null)
-      }
-    },
-    (callback) => {
-      connection.admin().listDatabases(callback)
-    },
-    (dbs, callback) => {
-      async.map(_.map(dbs.databases, 'name'), (account, callback) => {
-        if (mongoDbSystemDbs.indexOf(account) !== -1) { return callback(null) }
+    accounts.push({
+      _id: person._id.toString(),
+      account: account,
+      token: jwt.sign({}, process.env.JWT_SECRET, {
+        issuer: account,
+        audience: _.get(event, 'requestContext.identity.sourceIp'),
+        subject: person._id.toString(),
+        expiresIn: '48h'
+      })
+    })
+  }
 
-        async.waterfall([
-          (callback) => {
-            _h.db(account, callback)
-          },
-          (accountCon, callback) => {
-            let authFilter = {}
-            authFilter[sessionAuth ? 'private.entu_user.string' : 'private.entu_api_key.string'] = authValue
-            accountCon.collection('entity').findOne(authFilter, { projection: { _id: true } }, callback)
-          }
-        ], (err, person) => {
-          if (err) { return callback(err) }
-          if (!person) { return callback(null) }
-
-          return callback(null, {
-            _id: person._id.toString(),
-            account: account,
-            token: jwt.sign({}, process.env.JWT_SECRET, {
-              issuer: account,
-              audience: _.get(event, 'requestContext.identity.sourceIp'),
-              subject: person._id.toString(),
-              expiresIn: '48h'
-            })
-          })
-        })
-      }, callback)
-    }
-  ], (err, accounts) => {
-    if (err) { return callback(null, _h.error(err)) }
-
-    callback(null, _h.json(_.mapValues(_.groupBy(_.compact(accounts), 'account'), (o) => {
-      return _.first(o)
-    })))
-  })
+  _h.json(_.mapValues(_.groupBy(_.compact(accounts), 'account'), (o) => _.first(o)))
 }

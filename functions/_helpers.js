@@ -1,187 +1,140 @@
 'use strict'
 
 const _ = require('lodash')
-const async = require('async')
 const jwt = require('jsonwebtoken')
 const mongo = require('mongodb').MongoClient
-const mysql = require('mysql')
-
-
 
 let dbConnection
-const db = (dbName, callback) => {
-  if (dbConnection) {
-    return callback(null, dbConnection.db(dbName))
-  }
+const db = async (dbName) => {
+  return new Promise((resolve, reject) => {
+    if (dbConnection) {
+      return resolve(dbConnection.db(dbName))
+    }
 
-  mongo.connect(process.env.MONGODB, { ssl: true, sslValidate: true }, (err, connection) => {
-    if (err) { return callback(err) }
+    dbConnection = mongo.connect(process.env.MONGODB, { ssl: true, sslValidate: true }).then((connection) => {
+      dbConnection = connection
 
-    console.log(`Connected to ${dbName}`)
+      dbConnection.on('close', () => {
+        dbConnection = null
+        console.log(`Disconnected from ${dbName}`)
+      })
 
-    connection.on('close', () => {
-      dbConnection = null
-      console.log(`Disconnected from ${dbName}`)
+      console.log(`Connected to ${dbName}`)
+
+      resolve(dbConnection.db(dbName))
+    }).catch((err) => {
+      reject(err)
     })
-
-    dbConnection = connection
-
-    callback(null, dbConnection.db(dbName))
   })
 }
 exports.db = db
 
-
-
-let mysqlConnection = {}
-const mysqlDb = (dbName) => {
-  if (mysqlConnection[dbName]) {
-    return mysqlConnection[dbName]
-  }
-
-  mysqlConnection[dbName] = mysql.createConnection({
-    host: process.env.MYSQL_HOST,
-    user: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASSWORD,
-    database: dbName,
-    multipleStatements: false
-    // ssl: {
-    //   ca: fs.readFileSync(MYSQL_SSL_CA)
-    // }
-  })
-
-  mysqlConnection[dbName].on('error', (err) => {
-    console.log(err)
-    mysqlConnection[dbName].end()
-    delete mysqlConnection[dbName]
-  })
-
-  console.log(`Connected to ${dbName}`)
-
-  return mysqlConnection[dbName]
-}
-exports.mysqlDb = mysqlDb
-
-
-
-exports.user = (event, callback) => {
-  var result
-
-  const authHeaderParts = _.get(event, 'headers.Authorization', '').split(' ')
-  const jwtConf = {
-    issuer: _.get(event, 'queryStringParameters.account'),
-    audience: _.get(event, 'requestContext.identity.sourceIp')
-  }
-
-  async.waterfall([
-    (callback) => {
-      if (authHeaderParts.length === 2 && authHeaderParts[0].toLowerCase() === 'bearer') {
-        jwt.verify(authHeaderParts[1], process.env.JWT_SECRET, jwtConf, (err, decoded) => {
-          if (err) { return callback([401, err]) }
-
-          if (decoded.aud !== jwtConf.audience) { return callback([403, 'Invalid JWT audience']) }
-
-          callback(null, {
-            id: decoded.sub,
-            account: decoded.iss
-          })
-        })
-      } else {
-        callback(null, {
-          account: jwtConf.issuer
-        })
-      }
-    },
-    (u, callback) => {
-      if (!u.account) { return callback([400, 'No account parameter']) }
-
-      result = u
-      db(result.account, callback)
+exports.user = async (event) => {
+  return new Promise((resolve, reject) => {
+    const authHeaderParts = _.get(event, 'headers.Authorization', '').split(' ')
+    const jwtConf = {
+      issuer: _.get(event, 'queryStringParameters.account'),
+      audience: _.get(event, 'requestContext.identity.sourceIp')
     }
-  ], (err, db) => {
-    if (err) { return callback(err) }
 
-    result.db = db
+    let result = {
+      account: jwtConf.issuer
+    }
 
-    callback(null, result)
+    if (authHeaderParts.length === 2 && authHeaderParts[0].toLowerCase() === 'bearer') {
+      const decoded = jwt.verify(authHeaderParts[1], process.env.JWT_SECRET, jwtConf)
+
+      if (decoded.aud !== jwtConf.audience) {
+        return reject([403, 'Invalid JWT audience'])
+      }
+
+      result = {
+        id: decoded.sub,
+        account: decoded.iss
+      }
+    }
+
+    if (!result.account) {
+      return reject([400, 'No account parameter'])
+    }
+
+    db(result.account).then((x) => {
+      result.db = x
+      resolve(result)
+    })
   })
 }
-
-
 
 // Create user session
-exports.addUserSession = (user, callback) => {
-  if (!user) { return callback('No user') }
+exports.addUserSession = async (user) => {
+  return new Promise((resolve, reject) => {
+    if (!user) { return reject('No user') }
 
-  const session = {
-    created: new Date(),
-    user: user
-  }
-
-  async.waterfall([
-    (callback) => {
-      db('entu', callback)
-    },
-    (connection, callback) => {
-      connection.collection('session').insertOne(_.pickBy(session, _.identity), callback)
+    const session = {
+      created: new Date(),
+      user: user
     }
-  ], (err, r) => {
-    if (err) { return callback(err) }
 
-    return callback(null, r.insertedId)
+    db('entu').then((connection) => {
+      connection.collection('session').insertOne(_.pickBy(session, _.identity)).then((result) => {
+        resolve(result.insertedId)
+      }).catch((err) => {
+        reject(err)
+      })
+    }).catch((err) => {
+      reject(err)
+    })
   })
 }
 
-
-
 // Aggregate entity from property collection
-exports.aggregateEntity = (db, entityId, property, callback) => {
-  async.waterfall([
-    (callback) => {
-      db.collection('property').find({ entity: entityId, deleted: { $exists: false } }).toArray((err, properties) => {
-        if (err) { return callback(err) }
+exports.aggregateEntity = async (db, entityId, property) => {
+  return new Promise((resolve, reject) => {
+    db.collection('property').find({ entity: entityId, deleted: { $exists: false } }).toArray().then((properties) => {
+      let p = _.groupBy(properties, v => { return v.public === true ? 'public' : 'private' })
 
-        let p = _.groupBy(properties, v => { return v.public === true ? 'public' : 'private' })
-
-        if (p.public) {
-          p.public = _.mapValues(_.groupBy(p.public, 'type'), (o) => {
-            return _.map(o, (p) => {
-              return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
-            })
+      if (p.public) {
+        p.public = _.mapValues(_.groupBy(p.public, 'type'), (o) => {
+          return _.map(o, (p) => {
+            return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
           })
-        }
-        if (p.private) {
-          p.private = _.mapValues(_.groupBy(p.private, 'type'), (o) => {
-            return _.map(o, (p) => {
-              return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
-            })
+        })
+      }
+      if (p.private) {
+        p.private = _.mapValues(_.groupBy(p.private, 'type'), (o) => {
+          return _.map(o, (p) => {
+            return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
           })
-        }
-        p.private = Object.assign({}, _.get(p, 'public', {}), _.get(p, 'private', {}))
+        })
+      }
+      p.private = Object.assign({}, _.get(p, 'public', {}), _.get(p, 'private', {}))
 
-        const access = _.map(_.union(_.get(p, 'private._viewer', []), _.get(p, 'private._expander', []), _.get(p, 'private._editor', []), _.get(p, 'private._owner', [])), 'reference')
-        if (_.get(p, 'private._public.0.boolean', false) === true) {
-          access.push('public')
-        }
-        if (access.length > 0) {
-          p.access = access
-        }
+      const access = _.map(_.union(_.get(p, 'private._viewer', []), _.get(p, 'private._expander', []), _.get(p, 'private._editor', []), _.get(p, 'private._owner', [])), 'reference')
+      if (_.get(p, 'private._public.0.boolean', false) === true) {
+        access.push('public')
+      }
+      if (access.length > 0) {
+        p.access = access
+      }
 
-        if (!_.isEmpty(p)) {
-          if (_.has(p, '_deleted')) {
-            db.collection('entity').deleteOne({ _id: entityId }, callback)
-          } else {
-            db.collection('entity').update({ _id: entityId }, p, callback)
-          }
-        } else {
-          return callback(null)
-        }
-      })
-    }
-  ], callback)
+      if (_.has(p, 'private._deleted')) {
+        db.collection('entity').deleteOne({ _id: entityId }).then(r => {
+          resolve(r)
+        }).catch((err) => {
+          reject(err)
+        })
+      } else {
+        db.collection('entity').update({ _id: entityId }, p).then(r => {
+          resolve(r)
+        }).catch((err) => {
+          reject(err)
+        })
+      }
+    }).catch((err) => {
+      reject(err)
+    })
+  })
 }
-
-
 
 exports.json = (data, code, headers) => {
   if (headers) {
@@ -202,8 +155,6 @@ exports.json = (data, code, headers) => {
     isBase64Encoded: false
   }
 }
-
-
 
 exports.error = (err, headers) => {
   let code
@@ -234,8 +185,6 @@ exports.error = (err, headers) => {
     isBase64Encoded: false
   }
 }
-
-
 
 exports.redirect = (url, code, headers) => {
   if (headers) {

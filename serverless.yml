@@ -181,20 +181,6 @@ functions:
                 method: delete
                 cors: true
 
-    entity-picture-get:
-        handler: functions/entity-picture-get.handler
-        name: ${self:service}-${self:provider.stage}-entity-picture-get
-        events:
-            - http:
-                path: /2/{db}/picture/{id}
-                method: get
-        environment:
-            S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
-            S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
-            MYSQL_HOST: ${ssm:/entu-api-mysql-host~true}
-            MYSQL_USER: ${ssm:/entu-api-mysql-user~true}
-            MYSQL_PASSWORD: ${ssm:/entu-api-mysql-password~true}
-
 # resources:
 #     Resources:
 #         EntuFilesS3:

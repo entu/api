@@ -14,10 +14,8 @@
     "url": "https://github.com/argoroots/entu-api/issues"
   },
   "dependencies": {
-    "async": "2.6.0",
-    "jsonwebtoken": "8.2.0",
-    "lodash": "4.17.5",
-    "mongodb": "3.0.5",
-    "mysql": "2.15.0"
+    "jsonwebtoken": "8.2.1",
+    "lodash": "4.17.10",
+    "mongodb": "3.0.7"
   }
 }
