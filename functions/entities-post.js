@@ -76,7 +76,6 @@ exports.handler = async (event, context) => {
 
     return _h.json({ _id: eId })
   } catch (e) {
-    console.error(e)
-    return _h.json(e)
+    return _h.error(e)
   }
 }

@@ -38,8 +38,7 @@ exports.handler = async (event, context, callback) => {
       }
     }
   } catch (e) {
-    console.error(e)
-    return _h.json(e)
+    return _h.error(e)
   }
 }
 

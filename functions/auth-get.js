@@ -53,7 +53,6 @@ exports.handler = async (event, context) => {
 
     return _h.json(_.mapValues(_.groupBy(_.compact(accounts), 'account'), (o) => _.first(o)))
   } catch (e) {
-    console.error(e)
-    return _h.json(e)
+    return _h.error(e)
   }
 }

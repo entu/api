@@ -42,7 +42,6 @@ exports.handler = async (event, context) => {
       return _h.error([403, 'Forbidden'])
     }
   } catch (e) {
-    console.error(e)
-    return _h.json(e)
+    return _h.error(e)
   }
 }

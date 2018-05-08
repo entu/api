@@ -82,8 +82,7 @@ exports.handler = async (event, context) => {
     await _h.aggregateEntity(user.db, eId, null)
 
     return _h.json(pIds)
-    } catch (e) {
-    console.error(e)
-    return _h.json(e)
+  } catch (e) {
+    return _h.error(e)
   }
 }

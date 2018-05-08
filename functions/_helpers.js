@@ -156,17 +156,15 @@ exports.json = (data, code, headers) => {
   }
 }
 
-exports.error = (err, headers) => {
+exports.error = (err) => {
   let code
   let message
-
-  if (headers) {
-    headers['Access-Control-Allow-Origin'] = '*'
-  } else {
-    headers = {
-      'Access-Control-Allow-Origin': '*'
-    }
+  let headers = {
+    'Access-Control-Allow-Origin': '*'
   }
+
+  console.error(err)
+
   if (process.env.GIT_SHA1) {
     headers['X-Entu-Version'] = process.env.GIT_SHA1
   }

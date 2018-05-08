@@ -31,7 +31,6 @@ exports.handler = async (event, context) => {
 
     _h.json({ deleted: true })
   } catch (e) {
-    console.error(e)
-    return _h.json(e)
+    return _h.error(e)
   }
 }

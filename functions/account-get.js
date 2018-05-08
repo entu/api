@@ -49,7 +49,6 @@ exports.handler = async (event, context) => {
       dbSize: stats.dataSize + stats.indexSize
     })
   } catch (e) {
-    console.error(e)
-    return _h.json(e)
+    return _h.error(e)
   }
 }
