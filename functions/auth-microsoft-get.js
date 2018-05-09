@@ -5,7 +5,7 @@ const _h = require('./_helpers')
 const https = require('https')
 const querystring = require('querystring')
 
-exports.handler = async (event, context, callback) => {
+exports.handler = async (event, context) => {
   try {
     if (!_.has(event, 'queryStringParameters.code') && !_.has(event, 'queryStringParameters.error')) {
       const query = querystring.stringify({
