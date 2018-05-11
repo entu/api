@@ -42,15 +42,19 @@ exports.user = async (event) => {
     }
 
     if (authHeaderParts.length === 2 && authHeaderParts[0].toLowerCase() === 'bearer') {
-      const decoded = jwt.verify(authHeaderParts[1], process.env.JWT_SECRET, jwtConf)
+      try {
+        const decoded = jwt.verify(authHeaderParts[1], process.env.JWT_SECRET, jwtConf)
 
-      if (decoded.aud !== jwtConf.audience) {
-        return reject([403, 'Invalid JWT audience'])
-      }
+        if (decoded.aud !== jwtConf.audience) {
+          return reject([401, 'Invalid JWT audience'])
+        }
 
-      result = {
-        id: decoded.sub,
-        account: decoded.iss
+        result = {
+          id: decoded.sub,
+          account: decoded.iss
+        }
+      } catch (e) {
+        return reject([401, e.message || e])
       }
     }
 
