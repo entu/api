@@ -59,7 +59,7 @@ exports.user = async (event) => {
     }
 
     if (!result.account) {
-      return reject([400, 'No account parameter'])
+      return reject([401, 'No account parameter'])
     }
 
     db(result.account).then((x) => {
