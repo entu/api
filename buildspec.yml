@@ -6,8 +6,7 @@ phases:
             - npm install
             - cp -r node_modules functions
             - npm install -g serverless
-            - npm install serverless-domain-manager --no-save
-            - npm install serverless-plugin-git-variables --no-save
+            - npm install serverless-domain-manager serverless-plugin-git-variables --no-save
     build:
         commands:
             - serverless deploy
