@@ -119,6 +119,7 @@ Get list of entities. To filter entities by property value. Use dot separated li
 - **exists** - Value must be true or false. When value is true, returns entities that contain the property, including entities where the property value is *null*. If value is false, the query returns only the entities that do not contain the property.
 
 #### Query (other) parameters
+- **q** - Search string. Will search only from searchable fields.
 - **props** - Comma separated list of properties to get. If not set all properties are returned.
 - **sort** - Comma separated list of properties to use for sorting. Use - (minus) sign before property name for descending sort. If not set sorts by \_id.
 - **limit** - How many entities to return.

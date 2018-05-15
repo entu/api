@@ -14,6 +14,7 @@ exports.handler = async (event, context) => {
     var sortFields = {}
     var limit = _.toSafeInteger(_.get(event, 'queryStringParameters.limit')) || 100
     var skip = _.toSafeInteger(_.get(event, 'queryStringParameters.skip')) || 0
+    var query = _.compact(_.get(event, 'queryStringParameters.q', '').split(' '))
 
     _.forIn(_.get(event, 'queryStringParameters'), (v, k) => {
       if (k.indexOf('.') !== -1) {
@@ -69,6 +70,13 @@ exports.handler = async (event, context) => {
       filter.access = 'public'
     }
 
+    if (query.length > 0) {
+      let queries = query.map((q) => {
+        return { 'private._search': new RegExp(q.toLowerCase()) }
+      })
+      filter['$and'] = queries
+    }
+
     if (props.length > 0) {
       _.forEach(props, (f) => {
         fields[`private.${f}`] = true
@@ -112,8 +120,10 @@ exports.handler = async (event, context) => {
         }
 
         if (user.id && access.indexOf(user.id) !== -1) {
+          // _.unset(entity, 'private._search')
           return Object.assign({ _id: entity._id }, _.get(entity, 'private', {}))
         } else if (access.indexOf('public') !== -1) {
+          // _.unset(entity, 'public._search')
           return Object.assign({ _id: entity._id }, _.get(entity, 'public', {}))
         } else {
           return { _id: entity._id }
