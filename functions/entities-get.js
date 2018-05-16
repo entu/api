@@ -72,7 +72,7 @@ exports.handler = async (event, context) => {
 
     if (query.length > 0) {
       let queries = query.map((q) => {
-        return { 'private._search': new RegExp(q.toLowerCase()) }
+        return { 'search.private': new RegExp(q.toLowerCase()) }
       })
       filter['$and'] = queries
     }

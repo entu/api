@@ -39,16 +39,18 @@ exports.handler = async (event, context) => {
       const accountCon = await _h.db(account)
       const person = await accountCon.collection('entity').findOne(authFilter, { projection: { _id: true } })
 
-      accounts.push({
-        _id: person._id.toString(),
-        account: account,
-        token: jwt.sign({}, process.env.JWT_SECRET, {
-          issuer: account,
-          audience: _.get(event, 'requestContext.identity.sourceIp'),
-          subject: person._id.toString(),
-          expiresIn: '48h'
+      if (person) {
+        accounts.push({
+          _id: person._id.toString(),
+          account: account,
+          token: jwt.sign({}, process.env.JWT_SECRET, {
+            issuer: account,
+            audience: _.get(event, 'requestContext.identity.sourceIp'),
+            subject: person._id.toString(),
+            expiresIn: '48h'
+          })
         })
-      })
+      }
     }
 
     return _h.json(_.mapValues(_.groupBy(_.compact(accounts), 'account'), (o) => _.first(o)))
