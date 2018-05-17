@@ -6,6 +6,8 @@ const aws = require('aws-sdk')
 const { ObjectId } = require('mongodb')
 
 exports.handler = async (event, context) => {
+  if (event.source === 'aws.events') { return }
+
   try {
     const user = await _h.user(event)
     if (!user.id) { return _h.error([403, 'Forbidden']) }

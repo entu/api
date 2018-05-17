@@ -4,6 +4,8 @@ const _ = require('lodash')
 const _h = require('./_helpers')
 
 exports.handler = async (event, context) => {
+  if (event.source === 'aws.events') { return }
+
   try {
     const user = await _h.user(event)
 

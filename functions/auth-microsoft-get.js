@@ -6,6 +6,8 @@ const https = require('https')
 const querystring = require('querystring')
 
 exports.handler = async (event, context) => {
+  if (event.source === 'aws.events') { return }
+
   try {
     if (!_.has(event, 'queryStringParameters.code') && !_.has(event, 'queryStringParameters.error')) {
       const query = querystring.stringify({

@@ -5,6 +5,8 @@ const _h = require('./_helpers')
 const { ObjectId } = require('mongodb')
 
 exports.handler = async (event, context) => {
+  if (event.source === 'aws.events') { return }
+
   try {
     const user = await _h.user(event)
     const props = _.compact(_.get(event, 'queryStringParameters.props', '').split(','))
@@ -120,10 +122,8 @@ exports.handler = async (event, context) => {
         }
 
         if (user.id && access.indexOf(user.id) !== -1) {
-          // _.unset(entity, 'private._search')
           return Object.assign({ _id: entity._id }, _.get(entity, 'private', {}))
         } else if (access.indexOf('public') !== -1) {
-          // _.unset(entity, 'public._search')
           return Object.assign({ _id: entity._id }, _.get(entity, 'public', {}))
         } else {
           return { _id: entity._id }

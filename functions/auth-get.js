@@ -9,6 +9,8 @@ const ObjectID = require('mongodb').ObjectID
 const mongoDbSystemDbs = ['admin', 'config', 'local']
 
 exports.handler = async (event, context) => {
+  if (event.source === 'aws.events') { return }
+
   try {
     const authHeaderParts = _.get(event, 'headers.Authorization', '').split(' ')
     if (authHeaderParts.length !== 2 || authHeaderParts[0].toLowerCase() !== 'bearer') { return _h.error([400, 'No key']) }
