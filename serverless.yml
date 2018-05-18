@@ -115,6 +115,9 @@ functions:
                 path: /entity
                 method: get
                 cors: true
+        environment:
+            S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
+            S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
 
     entities-post:
         handler: functions/entities-post.handler
@@ -135,6 +138,9 @@ functions:
                 path: /entity/{id}
                 method: get
                 cors: true
+        environment:
+            S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
+            S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
 
     entity-post:
         handler: functions/entity-post.handler

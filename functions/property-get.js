@@ -2,7 +2,6 @@
 
 const _ = require('lodash')
 const _h = require('./_helpers')
-const aws = require('aws-sdk')
 const { ObjectId } = require('mongodb')
 
 exports.handler = async (event, context) => {
@@ -27,7 +26,7 @@ exports.handler = async (event, context) => {
     }
 
     if (property.s3) {
-      property.url = await getSignedUrl(property.s3)
+      property.url = await _h.getSignedUrl(property.s3)
 
       _.unset(property, 's3')
     }
@@ -44,21 +43,4 @@ exports.handler = async (event, context) => {
   } catch (e) {
     return _h.error(e)
   }
-}
-
-const getSignedUrl = (key) => {
-  return new Promise((resolve, reject) => {
-    let conf
-    if (process.env.S3_ENDPOINT) {
-      conf = { endpoint: process.env.S3_ENDPOINT, s3BucketEndpoint: true }
-    }
-
-    aws.config = new aws.Config()
-    const s3 = new aws.S3(conf)
-    s3.getSignedUrl('getObject', { Bucket: process.env.S3_BUCKET, Key: key, Expires: 10 }, (err, url) => {
-      if (err) { return reject(err) }
-
-      resolve(url)
-    })
-  })
 }

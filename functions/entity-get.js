@@ -36,10 +36,19 @@ exports.handler = async (event, context) => {
 
     const access = _.map(_.get(entity, 'access', []), (s) => s.toString())
 
+    let thumbnail = null
     if (user.id && access.indexOf(user.id) !== -1) {
-      return _h.json(Object.assign({ _id: entity._id }, _.get(entity, 'private', {})))
+      if (_.has(entity, 'private.photo.0.s3')) {
+        thumbnail = await _h.getSignedUrl(_.get(entity, 'private.photo.0.s3'))
+      }
+
+      return _h.json(Object.assign({ _id: entity._id, _thumbnail: thumbnail }, _.get(entity, 'private', {})))
     } else if (access.indexOf('public') !== -1) {
-      return _h.json(Object.assign({ _id: entity._id }, _.get(entity, 'public', {})))
+      if (_.has(entity, 'public.photo.0.s3')) {
+        thumbnail = await _h.getSignedUrl(_.get(entity, 'public.photo.0.s3'))
+      }
+
+      return _h.json(Object.assign({ _id: entity._id, _thumbnail: thumbnail }, _.get(entity, 'public', {})))
     } else {
       return _h.error([403, 'Forbidden'])
     }
