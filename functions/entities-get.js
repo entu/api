@@ -81,8 +81,13 @@ exports.handler = async (event, context) => {
 
     if (props.length > 0) {
       _.forEach(props, (f) => {
-        fields[`private.${f}`] = true
-        fields[`public.${f}`] = true
+        if (f === '_thumbnail') {
+          fields[`private.photo.s3`] = true
+          fields[`public.photo.s3`] = true
+        } else {
+          fields[`private.${f}`] = true
+          fields[`public.${f}`] = true
+        }
       })
       fields['access'] = true
     }
