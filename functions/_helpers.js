@@ -39,7 +39,7 @@ exports.getSignedUrl = async (key) => {
 
     aws.config = new aws.Config()
     const s3 = new aws.S3(conf)
-    s3.getSignedUrl('getObject', { Bucket: process.env.S3_BUCKET, Key: key, Expires: 10 }, (err, url) => {
+    s3.getSignedUrl('getObject', { Bucket: process.env.S3_BUCKET, Key: key, Expires: 60 }, (err, url) => {
       if (err) { return reject(err) }
 
       resolve(url)
