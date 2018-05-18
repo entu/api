@@ -16,8 +16,8 @@ exports.handler = async (event, context) => {
     if (props.length > 0) {
       _.forEach(props, (f) => {
         if (f === '_thumbnail') {
-          _.set(config, ['projection', `private.photo.s3`, true)
-          _.set(config, ['projection', `public.photo.s3`, true)
+          _.set(config, ['projection', `private.photo.s3`], true)
+          _.set(config, ['projection', `public.photo.s3`], true)
         } else {
           _.set(config, ['projection', `private.${f}`], true)
           _.set(config, ['projection', `public.${f}`], true)
