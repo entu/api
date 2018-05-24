@@ -7,26 +7,17 @@ const mongo = require('mongodb').MongoClient
 
 let dbConnection
 const db = async (dbName) => {
-  return new Promise((resolve, reject) => {
-    if (dbConnection) {
-      return resolve(dbConnection.db(dbName))
-    }
+  if (dbConnection) { return dbConnection.db(dbName) }
 
-    dbConnection = mongo.connect(process.env.MONGODB, { ssl: true, sslValidate: true }).then((connection) => {
-      dbConnection = connection
-
-      dbConnection.on('close', () => {
-        dbConnection = null
-        console.log(`Disconnected from ${dbName}`)
-      })
-
-      console.log(`Connected to ${dbName}`)
-
-      resolve(dbConnection.db(dbName))
-    }).catch((err) => {
-      reject(err)
-    })
+  dbConnection = await mongo.connect(process.env.MONGODB, { ssl: true, sslValidate: true })
+  dbConnection.on('close', () => {
+    dbConnection = null
+    console.log(`Disconnected from ${dbName}`)
   })
+
+  console.log(`Connected to ${dbName}`)
+
+  return dbConnection.db(dbName)
 }
 exports.db = db
 
@@ -118,14 +109,14 @@ exports.aggregateEntity = async (db, entityId, property) => {
       if (p.public) {
         p.public = _.mapValues(_.groupBy(p.public, 'type'), (o) => {
           return _.map(o, (p) => {
-            return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
+            return _.omit(p, ['entity', 'type', 'created', 'search', 'public'])
           })
         })
       }
       if (p.private) {
         p.private = _.mapValues(_.groupBy(p.private, 'type'), (o) => {
           return _.map(o, (p) => {
-            return _.omit(p, ['entity', 'type', 'created', 's3', 'url', 'public'])
+            return _.omit(p, ['entity', 'type', 'created', 'search', 'public'])
           })
         })
       }
