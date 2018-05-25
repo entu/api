@@ -29,35 +29,13 @@ exports.handler = async (event, context) => {
     const entity = await user.db.collection('entity').findOne({ _id: new ObjectId(event.pathParameters.id) }, config)
     if (!entity) { return _h.error([404, 'Entity not found']) }
 
-    if (_.has(entity, 'private.entu_api_key')) {
-      _.get(entity, 'private.entu_api_key', []).forEach((k) => {
-        k.string = '***'
-      })
-    }
-    if (_.has(entity, 'public.entu_api_key')) {
-      _.get(entity, 'public.entu_api_key', []).forEach((k) => {
-        k.string = '***'
-      })
-    }
+    const result = await _h.claenupEntity(entity, user)
 
-    const access = _.map(_.get(entity, 'access', []), (s) => s.toString())
-
-    let thumbnail = null
-    if (user.id && access.indexOf(user.id) !== -1) {
-      if (_.has(entity, 'private.photo.0.s3')) {
-        thumbnail = await _h.getSignedUrl(_.get(entity, 'private.photo.0.s3'))
-      }
-
-      return _h.json(Object.assign({ _id: entity._id, _thumbnail: thumbnail }, _.get(entity, 'private', {})))
-    } else if (access.indexOf('public') !== -1) {
-      if (_.has(entity, 'public.photo.0.s3')) {
-        thumbnail = await _h.getSignedUrl(_.get(entity, 'public.photo.0.s3'))
-      }
-
-      return _h.json(Object.assign({ _id: entity._id, _thumbnail: thumbnail }, _.get(entity, 'public', {})))
-    } else {
+    if (!result) {
       return _h.error([403, 'Forbidden'])
     }
+
+    return _h.json(await _h.claenupEntity(entity, user))
   } catch (e) {
     return _h.error(e)
   }

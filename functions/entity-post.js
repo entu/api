@@ -50,7 +50,7 @@ exports.handler = async (event, context) => {
     }
 
     var pIds = []
-    for (var i = 0; i < properties.length; i++) {
+    for (let i = 0; i < properties.length; i++) {
       const property = properties[i]
       const newProperty = await user.db.collection('property').insertOne(property)
 

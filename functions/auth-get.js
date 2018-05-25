@@ -34,7 +34,7 @@ exports.handler = async (event, context) => {
     const dbs = await connection.admin().listDatabases()
     let accounts = []
 
-    for (var i = 0; i < dbs.databases.length; i++) {
+    for (let i = 0; i < dbs.databases.length; i++) {
       const account = _.get(dbs, ['databases', i, 'name'])
       if (mongoDbSystemDbs.indexOf(account) !== -1) { continue }
 

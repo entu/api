@@ -21,7 +21,7 @@ const db = async (dbName) => {
 }
 exports.db = db
 
-exports.getSignedUrl = async (key) => {
+const getSignedUrl = async (key) => {
   return new Promise((resolve, reject) => {
     let conf
     if (process.env.S3_ENDPOINT) {
@@ -37,6 +37,7 @@ exports.getSignedUrl = async (key) => {
     })
   })
 }
+exports.getSignedUrl = getSignedUrl
 
 exports.user = async (event) => {
   return new Promise((resolve, reject) => {
@@ -98,6 +99,48 @@ exports.addUserSession = async (user) => {
       reject(err)
     })
   })
+}
+
+// Return public or private properties (based user rights)
+exports.claenupEntity = async (entity, user) => {
+  const access = _.map(_.get(entity, 'access', []), (s) => {
+    return s.toString()
+  })
+
+  if (_.has(entity, 'private.entu_api_key')) {
+    _.get(entity, 'private.entu_api_key', []).forEach((k) => {
+      k.string = '***'
+    })
+  }
+  if (_.has(entity, 'public.entu_api_key')) {
+    _.get(entity, 'public.entu_api_key', []).forEach((k) => {
+      k.string = '***'
+    })
+  }
+
+  let result = { _id: entity._id }
+
+  if (user.id && access.indexOf(user.id) !== -1) {
+    if (_.has(entity, 'private.photo.0.s3')) {
+      result._thumbnail = await getSignedUrl(_.get(entity, 'private.photo.0.s3'))
+    }
+
+    result = Object.assign({}, result, _.get(entity, 'private', {}))
+  } else if (access.indexOf('public') !== -1) {
+    if (_.has(entity, 'public.photo.0.s3')) {
+      result._thumbnail = await getSignedUrl(_.get(entity, 'public.photo.0.s3'))
+    }
+
+    result = Object.assign({}, result, _.get(entity, 'public', {}))
+  } else {
+    return
+  }
+
+  if (!result._thumbnail) {
+    delete result._thumbnail
+  }
+
+  return result
 }
 
 // Aggregate entity from property collection

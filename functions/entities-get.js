@@ -109,39 +109,10 @@ exports.handler = async (event, context) => {
     const entities = await findedEntities.sort(sortFields).skip(skip).limit(limit).toArray()
 
     let cleanedEntities = []
-    for (var i = 0; i < entities.length; i++) {
-      let entity = entities[i]
-
-      const access = _.map(_.get(entity, 'access', []), (s) => {
-        return s.toString()
-      })
-
-      if (_.has(entity, 'private.entu_api_key')) {
-        _.get(entity, 'private.entu_api_key', []).forEach((k) => {
-          k.string = '***'
-        })
-      }
-      if (_.has(entity, 'public.entu_api_key')) {
-        _.get(entity, 'public.entu_api_key', []).forEach((k) => {
-          k.string = '***'
-        })
-      }
-
-      let thumbnail = null
-      if (user.id && access.indexOf(user.id) !== -1) {
-        if (_.has(entity, 'private.photo.0.s3')) {
-          thumbnail = await _h.getSignedUrl(_.get(entity, 'private.photo.0.s3'))
-        }
-
-        cleanedEntities.push(Object.assign({ _id: entity._id, _thumbnail: thumbnail }, _.get(entity, 'private', {})))
-      } else if (access.indexOf('public') !== -1) {
-        if (_.has(entity, 'public.photo.0.s3')) {
-          thumbnail = await _h.getSignedUrl(_.get(entity, 'public.photo.0.s3'))
-        }
-
-        cleanedEntities.push(Object.assign({ _id: entity._id, _thumbnail: thumbnail }, _.get(entity, 'public', {})))
-      } else {
-        cleanedEntities.push({ _id: entity._id })
+    for (let i = 0; i < entities.length; i++) {
+      let result = await _h.claenupEntity(entities[i], user)
+      if (result) {
+        cleanedEntities.push()
       }
     }
 

@@ -24,7 +24,7 @@ exports.handler = async (event, context) => {
 
     const properties = await user.db.collection('property').find({ reference: eId, deleted: { $exists: false } }, { projection: { entity: true, type: true } }).toArray()
 
-    for (var i = 0; i < properties.length; i++) {
+    for (let i = 0; i < properties.length; i++) {
       const property = properties[i]
 
       await user.db.collection('property').updateOne({ _id: property._id }, { $set: { deleted: { at: new Date(), by: new ObjectId(user.id) } } })
