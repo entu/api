@@ -3,13 +3,13 @@
 const _ = require('lodash')
 const aws = require('aws-sdk')
 const jwt = require('jsonwebtoken')
-const mongo = require('mongodb').MongoClient
+const { MongoClient, ObjectId } = require('mongodb')
 
 let dbConnection
 const db = async (dbName) => {
   if (dbConnection) { return dbConnection.db(dbName) }
 
-  dbConnection = await mongo.connect(process.env.MONGODB, { ssl: true, sslValidate: true })
+  dbConnection = await MongoClient.connect(process.env.MONGODB, { ssl: true, sslValidate: true })
   dbConnection.on('close', () => {
     dbConnection = null
     console.log(`Disconnected from ${dbName}`)
@@ -107,6 +107,16 @@ exports.claenupEntity = async (entity, user) => {
     return s.toString()
   })
 
+  for (var property in entity.private) {
+    if (!entity.private.hasOwnProperty(property)) { continue }
+
+    for (let i = 0; i < entity.private[property].length; i++) {
+      if (entity.private[property][i].formula) {
+        entity.private[property][i].string = await formula(entity.private[property][i].formula, entity._id, user.db)
+      }
+    }
+  }
+
   if (_.has(entity, 'private.entu_api_key')) {
     _.get(entity, 'private.entu_api_key', []).forEach((k) => {
       k.string = '***'
@@ -190,6 +200,74 @@ exports.aggregateEntity = async (db, entityId, property) => {
       reject(err)
     })
   })
+}
+
+const formula = async (str, entityId, db) => {
+  let result = ''
+  let data = formulaContent(str)
+
+  if (data.indexOf('(') !== -1 || data.indexOf(')') !== -1) {
+    data = await formula(data)
+  }
+
+  const dataArray = data.split(',')
+
+  switch (formulaFunction(str)) {
+    case 'CONCAT':
+      for (let i = 0; i < dataArray.length; i++) {
+        result += await formulaField(dataArray[i], entityId, db)
+      }
+      break
+    case null:
+      result = data
+      break
+    default:
+      result = str
+  }
+
+  return result
+}
+
+const formulaFunction = (str) => {
+  str = str.trim()
+
+  if (str.indexOf('(') === -1 || str.indexOf(')') === -1) {
+    return null
+  } else {
+    return str.substring(0, str.indexOf('(')).toUpperCase()
+  }
+}
+
+const formulaContent = (str) => {
+  str = str.trim()
+
+  if (str.indexOf('(') === -1 || str.indexOf(')') === -1) {
+    return str
+  } else {
+    return str.substring(str.indexOf('(') + 1, str.lastIndexOf(')'))
+  }
+}
+
+const formulaField = async (str, entityId, db) => {
+  str = str.trim()
+
+  if ((str.startsWith("'") || str.startsWith('"')) && (str.endsWith("'") || str.endsWith('"'))) {
+    return str.substring(1, str.length - 1)
+  }
+
+  let result
+
+  switch (str.split('.').length) {
+    case 1:
+      const config = _.set({}, ['projection', `private.${str}.string`], true)
+      const e = await db.collection('entity').findOne({ _id: new ObjectId(entityId) }, config)
+      result = _.get(e, ['private', str, 0, 'string'], '')
+      break
+    default:
+      result = ''
+  }
+
+  return result
 }
 
 exports.json = (data, code, headers) => {
