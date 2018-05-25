@@ -112,7 +112,7 @@ exports.handler = async (event, context) => {
     for (let i = 0; i < entities.length; i++) {
       let result = await _h.claenupEntity(entities[i], user)
       if (result) {
-        cleanedEntities.push()
+        cleanedEntities.push(result)
       }
     }
 
