@@ -102,48 +102,41 @@ exports.addUserSession = async (user) => {
 }
 
 // Return public or private properties (based user rights)
-exports.claenupEntity = async (entity, user) => {
-  const access = _.map(_.get(entity, 'access', []), (s) => {
-    return s.toString()
-  })
+const claenupEntity = async (entity, user) => {
+  let result = { _id: entity._id }
 
-  for (var property in entity.private) {
-    if (!entity.private.hasOwnProperty(property)) { continue }
+  const access = _.map(_.get(entity, 'access', []), (s) => s.toString())
 
-    for (let i = 0; i < entity.private[property].length; i++) {
-      if (entity.private[property][i].formula) {
-        entity.private[property][i].string = await formula(entity.private[property][i].formula, entity._id, user.db)
+  if (user.id && access.indexOf(user.id) !== -1) {
+    result = Object.assign({}, result, _.get(entity, 'private', {}))
+  } else if (access.indexOf('public') !== -1) {
+    result = Object.assign({}, result, _.get(entity, 'public', {}))
+  } else {
+    return
+  }
+
+  if (_.has(result, 'photo.0.s3')) {
+    result._thumbnail = await getSignedUrl(_.get(result, 'photo.0.s3'))
+  }
+
+  for (let property in result) {
+    if (!result.hasOwnProperty(property)) { continue }
+    if (property === '_id') { continue }
+
+    for (let i = 0; i < result[property].length; i++) {
+      if (result[property][i].formula) {
+        result[property][i].string = await formula(result[property][i].formula, entity._id, user)
+      }
+      if (result[property][i].reference) {
+        result[property][i].string = await reference(result[property][i].reference, user)
       }
     }
   }
 
-  if (_.has(entity, 'private.entu_api_key')) {
-    _.get(entity, 'private.entu_api_key', []).forEach((k) => {
+  if (_.has(result, 'entu_api_key')) {
+    _.get(result, 'entu_api_key', []).forEach((k) => {
       k.string = '***'
     })
-  }
-  if (_.has(entity, 'public.entu_api_key')) {
-    _.get(entity, 'public.entu_api_key', []).forEach((k) => {
-      k.string = '***'
-    })
-  }
-
-  let result = { _id: entity._id }
-
-  if (user.id && access.indexOf(user.id) !== -1) {
-    if (_.has(entity, 'private.photo.0.s3')) {
-      result._thumbnail = await getSignedUrl(_.get(entity, 'private.photo.0.s3'))
-    }
-
-    result = Object.assign({}, result, _.get(entity, 'private', {}))
-  } else if (access.indexOf('public') !== -1) {
-    if (_.has(entity, 'public.photo.0.s3')) {
-      result._thumbnail = await getSignedUrl(_.get(entity, 'public.photo.0.s3'))
-    }
-
-    result = Object.assign({}, result, _.get(entity, 'public', {}))
-  } else {
-    return
   }
 
   if (!result._thumbnail) {
@@ -152,6 +145,7 @@ exports.claenupEntity = async (entity, user) => {
 
   return result
 }
+exports.claenupEntity = claenupEntity
 
 // Aggregate entity from property collection
 exports.aggregateEntity = async (db, entityId, property) => {
@@ -202,7 +196,21 @@ exports.aggregateEntity = async (db, entityId, property) => {
   })
 }
 
-const formula = async (str, entityId, db) => {
+const reference = async (entityId, user) => {
+  const config = {
+    projection: {
+      access: true,
+      'private.name': true,
+      'public.name': true
+    }
+  }
+  const e = await user.db.collection('entity').findOne({ _id: new ObjectId(entityId) }, config)
+  const entity = await claenupEntity(e, user)
+
+  return _.get(entity, 'name', []).map((v) => v.string).join('; ')
+}
+
+const formula = async (str, entityId, user) => {
   let result = ''
   let data = formulaContent(str)
 
@@ -215,7 +223,7 @@ const formula = async (str, entityId, db) => {
   switch (formulaFunction(str)) {
     case 'CONCAT':
       for (let i = 0; i < dataArray.length; i++) {
-        result += await formulaField(dataArray[i], entityId, db)
+        result += await formulaField(dataArray[i], entityId, user)
       }
       break
     case null:
@@ -248,7 +256,7 @@ const formulaContent = (str) => {
   }
 }
 
-const formulaField = async (str, entityId, db) => {
+const formulaField = async (str, entityId, user) => {
   str = str.trim()
 
   if ((str.startsWith("'") || str.startsWith('"')) && (str.endsWith("'") || str.endsWith('"'))) {
@@ -260,7 +268,7 @@ const formulaField = async (str, entityId, db) => {
   switch (str.split('.').length) {
     case 1:
       const config = _.set({}, ['projection', `private.${str}.string`], true)
-      const e = await db.collection('entity').findOne({ _id: new ObjectId(entityId) }, config)
+      const e = await user.db.collection('entity').findOne({ _id: new ObjectId(entityId) }, config)
       result = _.get(e, ['private', str, 0, 'string'], '')
       break
     default:
