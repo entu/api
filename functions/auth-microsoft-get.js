@@ -81,7 +81,7 @@ const getToken = async (event) => {
           reject(_.get(data, 'error_description', data))
         }
       })
-    }).on('error', (err) => {
+    }).on('error', err => {
       reject(err)
     }).write(query)
   })
@@ -109,7 +109,7 @@ const getProfile = (accessToken) => {
           reject(_.get(data, 'error_description', data))
         }
       })
-    }).on('error', (err) => {
+    }).on('error', err => {
       reject(err)
     })
   })

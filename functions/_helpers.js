@@ -72,7 +72,7 @@ exports.user = async (event) => {
       return reject([401, 'No account parameter'])
     }
 
-    db(result.account).then((x) => {
+    db(result.account).then(x => {
       result.db = x
       resolve(result)
     })
@@ -89,13 +89,13 @@ exports.addUserSession = async (user) => {
       user: user
     }
 
-    db('entu').then((connection) => {
-      connection.collection('session').insertOne(_.pickBy(session, _.identity)).then((result) => {
+    db('entu').then(connection => {
+      connection.collection('session').insertOne(_.pickBy(session, _.identity)).then(result => {
         resolve(result.insertedId)
-      }).catch((err) => {
+      }).catch(err => {
         reject(err)
       })
-    }).catch((err) => {
+    }).catch(err => {
       reject(err)
     })
   })
@@ -137,7 +137,7 @@ const claenupEntity = async (entity, user) => {
   }
 
   if (_.has(result, 'entu_api_key')) {
-    _.get(result, 'entu_api_key', []).forEach((k) => {
+    _.get(result, 'entu_api_key', []).forEach(k => {
       k.string = '***'
     })
   }
@@ -153,7 +153,7 @@ exports.claenupEntity = claenupEntity
 // Aggregate entity from property collection
 exports.aggregateEntity = async (db, entityId, property) => {
   return new Promise((resolve, reject) => {
-    db.collection('property').find({ entity: entityId, deleted: { $exists: false } }).toArray().then((properties) => {
+    db.collection('property').find({ entity: entityId, deleted: { $exists: false } }).toArray().then(properties => {
       let p = _.groupBy(properties, v => { return v.public === true ? 'public' : 'private' })
 
       if (p.public) {
@@ -183,17 +183,17 @@ exports.aggregateEntity = async (db, entityId, property) => {
       if (_.has(p, 'private._deleted')) {
         db.collection('entity').deleteOne({ _id: entityId }).then(r => {
           resolve(r)
-        }).catch((err) => {
+        }).catch(err => {
           reject(err)
         })
       } else {
         db.collection('entity').update({ _id: entityId }, p).then(r => {
           resolve(r)
-        }).catch((err) => {
+        }).catch(err => {
           reject(err)
         })
       }
-    }).catch((err) => {
+    }).catch(err => {
       reject(err)
     })
   })
@@ -210,7 +210,7 @@ const reference = async (entityId, user) => {
   const e = await user.db.collection('entity').findOne({ _id: new ObjectId(entityId) }, config)
   const entity = await claenupEntity(e, user)
 
-  return _.get(entity, 'name', []).map((v) => v.string).join('; ')
+  return _.get(entity, 'name', []).map(v => v.string).join('; ')
 }
 
 const formula = async (str, entityId, user) => {
@@ -301,7 +301,7 @@ exports.json = (data, code, headers) => {
   }
 }
 
-exports.error = (err) => {
+exports.error = err => {
   let code
   let message
   let headers = {

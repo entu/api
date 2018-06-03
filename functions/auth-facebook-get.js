@@ -69,7 +69,7 @@ const getToken = async (event) => {
           reject(_.get(data, 'error.message', data))
         }
       })
-    }).on('error', (err) => {
+    }).on('error', err => {
       reject(err)
     })
   })
@@ -98,7 +98,7 @@ const getProfile = async (accessToken) => {
           reject(_.get(data, 'error.message', data))
         }
       })
-    }).on('error', (err) => {
+    }).on('error', err => {
       reject(err)
     })
   })
