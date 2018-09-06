@@ -1,4 +1,3 @@
-## Entu API Documentation
 #### Account
 - /account
     - [GET](#get-account)
