@@ -1,4 +1,4 @@
-## API
+## Entu API Documentation
 #### Account
 - /account
     - [GET](#get-account)
@@ -38,7 +38,7 @@ curl \
     -X GET \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb" \
-    "https://api.entu.ee/account"
+    "https://api.entu.app/account"
 ```
 
 #### Example response
@@ -70,7 +70,7 @@ curl \
     -X GET \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF" \
-    "https://api.entu.ee/auth"
+    "https://api.entu.app/auth"
 ```
 
 #### Example response
@@ -133,7 +133,7 @@ curl \
     -X GET \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
-    "https://api.entu.ee/entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12"
+    "https://api.entu.app/entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12"
 ```
 
 #### Example response
@@ -162,7 +162,7 @@ curl \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     -H "Content-Type: application/json" \
     -d '{ "type": "book", "parent": "FCfzcHh3ZF35UTaBcwkxVUSa" }'
-    "https://api.entu.ee/entity"
+    "https://api.entu.app/entity"
 ```
 
 #### Example response
@@ -188,7 +188,7 @@ curl \
     -X GET \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
-    "https://api.entu.ee/entity/59abac1bb5684200016be61e"
+    "https://api.entu.app/entity/59abac1bb5684200016be61e"
 ```
 
 #### Example response
@@ -214,7 +214,7 @@ curl \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     -H "Content-Type: application/json" \
     -d '[{ "type": "title", "string": "Hobbit" }, { "type": "photo", "filename": "cover.jpg" "size": 1937 }]'
-    "https://api.entu.ee/entity/hAazguCezHwDfLe2geyKKpqj"
+    "https://api.entu.app/entity/hAazguCezHwDfLe2geyKKpqj"
 ```
 
 #### Example response
@@ -243,7 +243,7 @@ curl \
     -X DELETE \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
-    "https://api.entu.ee/entity/59abac1bb5684200016be61e"
+    "https://api.entu.app/entity/59abac1bb5684200016be61e"
 ```
 
 #### Example response
@@ -269,7 +269,7 @@ curl \
     -X GET \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
-    "https://api.entu.ee/property/59abac1bb5684200016be445?download"
+    "https://api.entu.app/property/59abac1bb5684200016be445?download"
 ```
 
 #### Example response
@@ -289,7 +289,7 @@ curl \
     -X DELETE \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
-    "https://api.entu.ee/entity/59abac1bb5684200016be445"
+    "https://api.entu.app/entity/59abac1bb5684200016be445"
 ```
 
 #### Example response
