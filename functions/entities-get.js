@@ -94,8 +94,8 @@ exports.handler = async (event, context) => {
 
     if (sort.length > 0) {
       _.forEach(sort, (f) => {
-        if (f.substr(0, 1) === '-') {
-          sortFields[`private.${f.substr(1)}`] = -1
+        if (f.startsWith('-')) {
+          sortFields[`private.${f.substring(1)}`] = -1
         } else {
           sortFields[`private.${f}`] = 1
         }

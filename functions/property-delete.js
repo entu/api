@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
     const property = await user.db.collection('property').findOne({ _id: pId, deleted: { $exists: false } }, { projection: { _id: false, entity: true, type: true } })
 
     if (!property) { return _h.error([404, 'Property not found']) }
-    if (property.type.substr(0, 1) === '_') { return _h.error([403, 'Can\'t delete system property']) }
+    if (property.type.startsWith('_')) { return _h.error([403, 'Can\'t delete system property']) }
 
     const entity = await user.db.collection('entity').findOne({ _id: property.entity }, { projection: { _id: false, 'private._owner': true, 'private._editor': true } })
 

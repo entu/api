@@ -131,7 +131,7 @@ const claenupEntity = async (entity, user) => {
         result[property][i].string = await reference(result[property][i].reference, user)
       }
       if (result[property][i].date) {
-        result[property][i].date = (new Date(result[property][i].date)).toISOString().substr(0, 10)
+        result[property][i].date = (new Date(result[property][i].date)).toISOString().substring(0, 9)
       }
     }
   }
