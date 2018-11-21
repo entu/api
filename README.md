@@ -14,7 +14,7 @@
     - [POST](#post-entity)
 - /entity/{ \_id }
     - [GET](#get-entity-_id-)
-    - [PUT](#post-entity-_id-)
+    - [POST](#post-entity-_id-)
     - [DELETE](#delete-entity-_id-)
 
 #### Property
@@ -198,7 +198,7 @@ curl \
 
 
 
-## PUT /entity/{ \_id }
+## POST /entity/{ \_id }
 Add new properties to entity. Data must be sent as JSON list containing property object(s). Returns created properties \_ids. If *filename* and *size* is set returns upload *url* and *signedRequest* for file upload.
 
 #### Property object parameters
@@ -208,7 +208,7 @@ Add new properties to entity. Data must be sent as JSON list containing property
 #### Example request
 ```shell
 curl \
-    -X PUT \
+    -X POST \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     -H "Content-Type: application/json" \

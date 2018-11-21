@@ -142,14 +142,14 @@ functions:
             S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
             S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
 
-    entity-put:
-        handler: functions/entity-put.handler
-        name: ${self:service}-${self:provider.stage}-entity-put
+    entity-post:
+        handler: functions/entity-post.handler
+        name: ${self:service}-${self:provider.stage}-entity-post
         description: Add new properties to entity
         events:
             - http:
                 path: /entity/{id}
-                method: put
+                method: post
                 cors: true
         environment:
             S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
