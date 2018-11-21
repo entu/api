@@ -71,7 +71,7 @@ exports.handler = async (event, context) => {
     properties.push({ entity: eId, type: '_owner', reference: userId, created: { at: createdDt, by: userId } })
 
     properties.push({ entity: eId, type: '_type', string: body.type, created: { at: createdDt, by: userId } })
-    properties.push({ entity: eId, type: '_created', boolean: true, created: { at: createdDt, by: userId } })
+    properties.push({ entity: eId, type: '_created', reference: userId, datetime: createdDt, created: { at: createdDt, by: userId } })
 
     await user.db.collection('property').insertMany(properties)
     await _h.aggregateEntity(user.db, eId, null)

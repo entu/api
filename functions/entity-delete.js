@@ -19,7 +19,7 @@ exports.handler = async (event, context) => {
 
     if (access.indexOf(user.id) === -1) { return _h.error([403, 'Forbidden']) }
 
-    await user.db.collection('property').insertOne({ entity: eId, type: '_deleted', boolean: true, created: { at: new Date(), by: new ObjectId(user.id) } })
+    await user.db.collection('property').insertOne({ entity: eId, type: '_deleted', reference: new ObjectId(user.id), datetime: new Date(), created: { at: new Date(), by: new ObjectId(user.id) } })
     await _h.aggregateEntity(user.db, eId, '_deleted')
 
     const properties = await user.db.collection('property').find({ reference: eId, deleted: { $exists: false } }, { projection: { entity: true, type: true } }).toArray()
