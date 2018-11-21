@@ -31,7 +31,7 @@ exports.handler = async (event, context) => {
       await _h.aggregateEntity(user.db, property.entity, property.type)
     }
 
-    _h.json({ deleted: true })
+    return _h.json({ deleted: true })
   } catch (e) {
     return _h.error(e)
   }
