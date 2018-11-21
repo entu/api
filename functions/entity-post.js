@@ -35,7 +35,7 @@ exports.handler = async (event, context) => {
 
       if (!property.type) { return _h.error([400, 'Property type not set']) }
       if (!property.type.match(/^[A-Za-z0-9\_]+$/)) { return _h.error([400, 'Property type must be alphanumeric']) }
-      if (property.type.startsWith('_')) { return _h.error([400, 'Property type can\'t begin with _']) }
+      // if (property.type.startsWith('_')) { return _h.error([400, 'Property type can\'t begin with _']) }
 
       if (property.reference) { property.reference = new ObjectId(property.reference) }
       if (property.date) { property.date = new Date(property.date) }
