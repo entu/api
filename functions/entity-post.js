@@ -5,6 +5,22 @@ const _h = require('./_helpers')
 const aws = require('aws-sdk')
 const { ObjectId } = require('mongodb')
 
+const allowedTypes = [
+  '_viewer',
+  '_expander',
+  '_editor',
+  '_owner',
+  '_public',
+  '_parent'
+]
+const rightTypes = [
+  '_viewer',
+  '_expander',
+  '_editor',
+  '_owner',
+  '_public'
+]
+
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
 
@@ -17,17 +33,22 @@ exports.handler = async (event, context) => {
     if (!_.isArray(body)) { return _h.error([400, 'Data must be array']) }
     if (body.length === 0) { return _h.error([400, 'At least one property must be set']) }
 
-    var eId = new ObjectId(event.pathParameters.id)
+    let eId = event.pathParameters.id ? new ObjectId(event.pathParameters.id) : null
 
-    const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: { _id: false, 'private._owner': true, 'private._editor': true } })
+    if (eId) {
+      const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: { _id: false, 'private._owner': true, 'private._editor': true } })
 
-    if (!entity) { return _h.error([404, 'Entity not found']) }
+      if (!entity) { return _h.error([404, 'Entity not found']) }
 
-    const access = _.map(_.concat(_.get(entity, 'private._owner', []), _.get(entity, 'private._editor', [])), (s) => {
-      return s.reference.toString()
-    })
+      const access = _.map(_.concat(_.get(entity, 'private._owner', []), _.get(entity, 'private._editor', [])), (s) => s.reference.toString())
 
-    if (access.indexOf(user.id) === -1) { return _h.error([403, 'Forbidden']) }
+      if (!access.includes(user.id)) { return _h.error([403, 'Forbidden']) }
+
+      const rigtsProperties = body[i].filter((property) => rightTypes.includes(property.type))
+      const owners = _.map(_.get(entity, 'private._owner', []), (s) => s.reference.toString())
+
+      if (rigtsProperties.length > 0 && !owners.includes(user.id)) { return _h.error([403, 'Forbidden']) }
+    }
 
     let properties = []
     for (let i = 0; i < body.length; i++) {
@@ -35,7 +56,7 @@ exports.handler = async (event, context) => {
 
       if (!property.type) { return _h.error([400, 'Property type not set']) }
       if (!property.type.match(/^[A-Za-z0-9\_]+$/)) { return _h.error([400, 'Property type must be alphanumeric']) }
-      // if (property.type.startsWith('_')) { return _h.error([400, 'Property type can\'t begin with _']) }
+      if (property.type.startsWith('_') && !allowedTypes.includes(property.type)) { return _h.error([400, 'Property type can\'t begin with _']) }
 
       if (property.reference) { property.reference = new ObjectId(property.reference) }
       if (property.date) { property.date = new Date(property.date) }
@@ -47,6 +68,11 @@ exports.handler = async (event, context) => {
         by: new ObjectId(user.id)
       }
       properties.push(property)
+    }
+
+    if (!eId) {
+      const entity = await user.db.collection('entity').insertOne({})
+      eId = entity.insertedId
     }
 
     var pIds = []
@@ -83,7 +109,7 @@ exports.handler = async (event, context) => {
 
     await _h.aggregateEntity(user.db, eId, null)
 
-    return _h.json(pIds)
+    return _h.json({ _id: eId, properties: pIds })
   } catch (e) {
     return _h.error(e)
   }

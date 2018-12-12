@@ -160,14 +160,24 @@ curl \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
     -H "Content-Type: application/json" \
-    -d '{ "type": "book", "parent": "FCfzcHh3ZF35UTaBcwkxVUSa" }'
+    -d '[{ "type": "_type", "string": "book" }, { "type": "title", "string": "Hobbit" }, { "type": "photo", "filename": "cover.jpg" "size": 1937 }]'
     "https://api.entu.app/entity"
 ```
 
 #### Example response
 ```json
 {
-    "_id": "bsskJkDWwQXHB8ut7vQvmWZ4"
+    "_id": "bsskJkDWwQXHB8ut7vQvmWZ4",
+    "properties": [
+        {
+            "_id": "92eVbRk2xxFun2gXsxXaxWFk"
+        },
+        {
+            "_id": "qXNdbysby2NHcgVDK3rrXUZk",
+            "url": "https://entu-files.s3.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk",
+            "signedRequest": "https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?"
+        }
+    ]
 }
 ```
 
@@ -218,16 +228,19 @@ curl \
 
 #### Example response
 ```json
-[
-    {
-        "_id": "92eVbRk2xxFun2gXsxXaxWFk"
-    },
-    {
-        "_id": "qXNdbysby2NHcgVDK3rrXUZk",
-        "url": "https://entu-files.s3.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk",
-        "signedRequest": "https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?"
-    }
-]
+{
+    "_id": "bsskJkDWwQXHB8ut7vQvmWZ4",
+    "properties": [
+        {
+            "_id": "92eVbRk2xxFun2gXsxXaxWFk"
+        },
+        {
+            "_id": "qXNdbysby2NHcgVDK3rrXUZk",
+            "url": "https://entu-files.s3.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk",
+            "signedRequest": "https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?"
+        }
+    ]
+}
 ```
 
 
