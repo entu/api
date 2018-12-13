@@ -33,7 +33,7 @@ exports.handler = async (event, context) => {
     if (!_.isArray(body)) { return _h.error([400, 'Data must be array']) }
     if (body.length === 0) { return _h.error([400, 'At least one property must be set']) }
 
-    let eId = event.pathParameters.id ? new ObjectId(event.pathParameters.id) : null
+    let eId = event.pathParameters && event.pathParameters.id ? new ObjectId(event.pathParameters.id) : null
 
     if (eId) {
       const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: { _id: false, 'private._owner': true, 'private._editor': true } })
