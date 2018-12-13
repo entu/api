@@ -54,13 +54,25 @@ exports.handler = async (event, context) => {
       if (rigtsProperties.length > 0 && !owners.includes(user.id)) { return _h.error([403, 'Forbidden']) }
     }
 
-    let properties = []
     for (let i = 0; i < body.length; i++) {
       let property = body[i]
 
       if (!property.type) { return _h.error([400, 'Property type not set']) }
       if (!property.type.match(/^[A-Za-z0-9\_]+$/)) { return _h.error([400, 'Property type must be alphanumeric']) }
       if (property.type.startsWith('_') && !allowedTypes.includes(property.type)) { return _h.error([400, 'Property type can\'t begin with _']) }
+    }
+
+    if (!eId) {
+      const entity = await user.db.collection('entity').insertOne({})
+      eId = entity.insertedId
+
+      body.push({ entity: eId, type: '_owner', reference: userId, created: { at: createdDt, by: userId } })
+      body.push({ entity: eId, type: '_created', reference: userId, datetime: createdDt, created: { at: createdDt, by: userId } })
+    }
+
+    var pIds = []
+    for (let i = 0; i < body.length; i++) {
+      let property = body[i]
 
       if (property.reference) { property.reference = new ObjectId(property.reference) }
       if (property.date) { property.date = new Date(property.date) }
@@ -71,20 +83,7 @@ exports.handler = async (event, context) => {
         at: createdDt,
         by: userId
       }
-      properties.push(property)
-    }
 
-    if (!eId) {
-      const entity = await user.db.collection('entity').insertOne({})
-      eId = entity.insertedId
-
-      properties.push({ entity: eId, type: '_owner', reference: userId, created: { at: createdDt, by: userId } })
-      properties.push({ entity: eId, type: '_created', reference: userId, datetime: createdDt, created: { at: createdDt, by: userId } })
-    }
-
-    var pIds = []
-    for (let i = 0; i < properties.length; i++) {
-      const property = properties[i]
       const newProperty = await user.db.collection('property').insertOne(property)
 
       if (property.filename && property.size) {
