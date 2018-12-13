@@ -103,6 +103,8 @@ exports.addUserSession = async (user) => {
 
 // Return public or private properties (based user rights)
 const claenupEntity = async (entity, user) => {
+  if (!entity) { return }
+
   let result = { _id: entity._id }
 
   const access = _.map(_.get(entity, 'access', []), (s) => s.toString())
