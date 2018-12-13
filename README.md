@@ -147,7 +147,13 @@ curl \
 
 
 ## POST /entity
-Create new entity. Data must be sent as JSON. Returns created entity's \_id.
+Create new entity. Data must be sent as JSON list containing property object(s). Returns created entity \_id and it's properties \_ids. If *filename* and *size* is set in property, returns upload *url* and *signedRequest* for file upload.
+
+#### Property object parameters
+- **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except \_type, \_parent, \_public).
+- [ **string** \| **reference** \| **boolean** \| **integer** \| **decimal** \| **date** \| **datetime** \| **filename** \| **size** ] - Property value
+
+
 
 #### Parameters
 - **type** - Entity type. It's mandatory parameter.
