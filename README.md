@@ -147,7 +147,9 @@ curl \
 
 
 ## POST /entity
-Create new entity. Data must be sent as JSON list containing property object(s). Returns created entity \_id and it's properties \_ids. If *filename* and *size* is set in property, returns upload *url* and *signedRequest* for file upload.
+Create new entity. Data must be sent as JSON list containing property object(s).
+
+Returns created entity \_id and it's properties \_ids. If *filename* and *size* is set in property, returns upload *url* and *signedRequest* for file upload.
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except \_type, \_parent, \_public, \_viewer, \_expander, \_editor, \_owner).
@@ -215,7 +217,9 @@ curl \
 
 
 ## POST /entity/{ \_id }
-Add new properties to entity. Data must be sent as JSON list containing property object(s). Returns created properties \_ids. If *filename* and *size* is set returns upload *url* and *signedRequest* for file upload.
+Add new properties to entity. Data must be sent as JSON list containing property object(s).
+
+Returns created properties \_ids. If *filename* and *size* is set returns upload *url* and *signedRequest* for file upload.
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except \_type, \_parent, \_public, \_viewer, \_expander, \_editor, \_owner).
