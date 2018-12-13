@@ -179,7 +179,7 @@ exports.aggregateEntity = async (db, entityId, property) => {
         access.push('public')
       }
       if (access.length > 0) {
-        p.access = access
+        p.access = _.uniq(access)
       }
 
       if (_.has(p, 'private._deleted')) {
