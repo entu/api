@@ -6,12 +6,13 @@ const aws = require('aws-sdk')
 const { ObjectId } = require('mongodb')
 
 const allowedTypes = [
+  '_type',
+  '_parent',
+  '_public',
   '_viewer',
   '_expander',
   '_editor',
-  '_owner',
-  '_public',
-  '_parent'
+  '_owner'
 ]
 const rightTypes = [
   '_viewer',
