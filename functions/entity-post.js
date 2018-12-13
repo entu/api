@@ -29,6 +29,9 @@ exports.handler = async (event, context) => {
     const user = await _h.user(event)
     if (!user.id) { return _h.error([403, 'Forbidden']) }
 
+    const createdDt = new Date()
+    const userId = new ObjectId(user.id)
+
     const body = JSON.parse(event.body)
     if (!body) { return _h.error([400, 'No data']) }
     if (!_.isArray(body)) { return _h.error([400, 'Data must be array']) }
@@ -45,7 +48,7 @@ exports.handler = async (event, context) => {
 
       if (!access.includes(user.id)) { return _h.error([403, 'Forbidden']) }
 
-      const rigtsProperties = body[i].filter((property) => rightTypes.includes(property.type))
+      const rigtsProperties = body.filter((property) => rightTypes.includes(property.type))
       const owners = _.map(_.get(entity, 'private._owner', []), (s) => s.reference.toString())
 
       if (rigtsProperties.length > 0 && !owners.includes(user.id)) { return _h.error([403, 'Forbidden']) }
@@ -65,8 +68,8 @@ exports.handler = async (event, context) => {
 
       property.entity = eId
       property.created = {
-        at: new Date(),
-        by: new ObjectId(user.id)
+        at: createdDt,
+        by: userId
       }
       properties.push(property)
     }
@@ -74,6 +77,9 @@ exports.handler = async (event, context) => {
     if (!eId) {
       const entity = await user.db.collection('entity').insertOne({})
       eId = entity.insertedId
+
+      properties.push({ entity: eId, type: '_owner', reference: userId, created: { at: createdDt, by: userId } })
+      properties.push({ entity: eId, type: '_created', reference: userId, datetime: createdDt, created: { at: createdDt, by: userId } })
     }
 
     var pIds = []
