@@ -23,6 +23,17 @@ provider:
                 - xray:PutTraceSegments
                 - xray:PutTelemetryRecords
             Resource: '*'
+        -
+            Effect: Allow
+            Action:
+                - sqs:SendMessage
+                - sqs:GetQueueUrl
+            Resource: arn:aws:sqs:${self:provider.region}:*:${self:service}-${self:provider.stage}-entity-aggregate-queue
+        -
+            Effect: Allow
+            Action:
+                - sqs:ListQueues
+            Resource: arn:aws:sqs:${self:provider.region}:*:*
 
     deploymentBucket:
         name: entu-api
@@ -158,6 +169,17 @@ functions:
                 method: delete
                 cors: true
 
+    entity-aggregate:
+        handler: functions/entity-aggregate.handler
+        name: ${self:service}-${self:provider.stage}-entity-aggregate
+        description: Aggregate entity with given id
+        events:
+            - sqs:
+                arn:
+                    Fn::GetAtt:
+                        - ${self:service}-${self:provider.stage}-entity-aggregate-queue
+                        - Arn
+
     property-get:
         handler: functions/property-get.handler
         name: ${self:service}-${self:provider.stage}-property-get
@@ -181,12 +203,16 @@ functions:
                 method: delete
                 cors: true
 
-# resources:
-#     Resources:
-#         EntuFilesS3:
-#             Type: AWS::S3::Bucket
-#             Properties:
-#                 BucketName: ${ssm:/entu-api-files-s3-bucket~true}
+resources:
+    Resources:
+        entity-aggregate-queue:
+            Type: AWS::SQS::Queue
+            Properties:
+                QueueName: ${self:service}-${self:provider.stage}-entity-aggregate-queue
+        # EntuFilesS3:
+        #     Type: AWS::S3::Bucket
+        #     Properties:
+        #         BucketName: ${ssm:/entu-api-files-s3-bucket~true}
 
 plugins:
     - serverless-domain-manager
