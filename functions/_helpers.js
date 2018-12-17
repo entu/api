@@ -109,9 +109,9 @@ const claenupEntity = async (entity, user) => {
 
   const access = _.map(_.get(entity, 'access', []), (s) => s.toString())
 
-  if (user.id && access.indexOf(user.id) !== -1) {
+  if (user.id && access.includes(user.id)) {
     result = Object.assign({}, result, _.get(entity, 'private', {}))
-  } else if (access.indexOf('public') !== -1) {
+  } else if (access.includes('public')) {
     result = Object.assign({}, result, _.get(entity, 'public', {}))
   } else {
     return
@@ -219,7 +219,7 @@ const formula = async (str, entityId, user) => {
   let result = ''
   let data = formulaContent(str)
 
-  if (data.indexOf('(') !== -1 || data.indexOf(')') !== -1) {
+  if (data.includes('(') || data.includes(')')) {
     data = await formula(data)
   }
 
@@ -244,7 +244,7 @@ const formula = async (str, entityId, user) => {
 const formulaFunction = (str) => {
   str = str.trim()
 
-  if (str.indexOf('(') === -1 || str.indexOf(')') === -1) {
+  if (!str.includes('(') || !str.includes(')')) {
     return null
   } else {
     return str.substring(0, str.indexOf('(')).toUpperCase()
@@ -254,7 +254,7 @@ const formulaFunction = (str) => {
 const formulaContent = (str) => {
   str = str.trim()
 
-  if (str.indexOf('(') === -1 || str.indexOf(')') === -1) {
+  if (!str.includes('(') || !str.includes(')')) {
     return str
   } else {
     return str.substring(str.indexOf('(') + 1, str.lastIndexOf(')'))

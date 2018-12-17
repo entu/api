@@ -23,7 +23,7 @@ exports.handler = async (event, context) => {
 
     const access = _.map(_.concat(_.get(entity, 'private._owner', []), _.get(entity, 'private._editor', [])), (s) => s.reference.toString())
 
-    if (access.indexOf(user.id) === -1) { return _h.error([403, 'Forbidden. User not in _owner nor _editor property.']) }
+    if (!access.includes(user.id)) { return _h.error([403, 'Forbidden. User not in _owner nor _editor property.']) }
 
     await user.db.collection('property').updateOne({ _id: pId }, { $set: { deleted: { at: new Date(), by: new ObjectId(user.id) } } })
 

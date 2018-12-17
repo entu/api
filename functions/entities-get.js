@@ -19,7 +19,7 @@ exports.handler = async (event, context) => {
     var query = _.compact(_.get(event, 'queryStringParameters.q', '').split(' '))
 
     _.forIn(_.get(event, 'queryStringParameters'), (v, k) => {
-      if (k.indexOf('.') !== -1) {
+      if (k.includes('.')) {
         const fieldArray = k.split('.')
         let field = _.get(fieldArray, 0)
         let type = _.get(fieldArray, 1)
@@ -49,7 +49,7 @@ exports.handler = async (event, context) => {
             value = new Date(v)
             break
           default:
-            if (operator === 'regex' && v.indexOf('/') > -1) {
+            if (operator === 'regex' && v.includes('/')) {
               value = new RegExp(v.split('/')[1], v.split('/')[2])
             } else if (operator === 'exists') {
               value = v.toLowerCase() === 'true'
@@ -58,7 +58,7 @@ exports.handler = async (event, context) => {
             }
         }
 
-        if (['gt', 'gte', 'lt', 'lte', 'ne', 'regex', 'exists'].indexOf(operator) !== -1) {
+        if (['gt', 'gte', 'lt', 'lte', 'ne', 'regex', 'exists'].includes(operator)) {
           _.set(filter, [`private.${field}.${type}`, `$${operator}`], value)
         } else {
           filter[`private.${field}.${type}`] = value

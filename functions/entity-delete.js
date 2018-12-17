@@ -17,7 +17,7 @@ exports.handler = async (event, context) => {
 
     const access = _.map(_.get(entity, 'private._owner', []), (s) => s.reference.toString())
 
-    if (access.indexOf(user.id) === -1) { return _h.error([403, 'Forbidden. User not in _owner property.']) }
+    if (!access.includes(user.id)) { return _h.error([403, 'Forbidden. User not in _owner property.']) }
 
     await user.db.collection('property').insertOne({ entity: eId, type: '_deleted', reference: new ObjectId(user.id), datetime: new Date(), created: { at: new Date(), by: new ObjectId(user.id) } })
     await _h.aggregateEntity(user.db, eId, '_deleted')

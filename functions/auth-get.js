@@ -36,7 +36,7 @@ exports.handler = async (event, context) => {
 
     for (let i = 0; i < dbs.databases.length; i++) {
       const account = _.get(dbs, ['databases', i, 'name'])
-      if (mongoDbSystemDbs.indexOf(account) !== -1) { continue }
+      if (mongoDbSystemDbs.includes(account)) { continue }
 
       const accountCon = await _h.db(account)
       const person = await accountCon.collection('entity').findOne(authFilter, { projection: { _id: true } })

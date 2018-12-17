@@ -20,9 +20,9 @@ exports.handler = async (event, context) => {
     const access = _.map(_.get(entity, 'access', []), (s) => s.toString())
 
     if (property.public) {
-      if (access.indexOf('public') === -1) { return _h.error([403, 'Forbidden. Not a public property.']) }
+      if (!access.includes('public')) { return _h.error([403, 'Forbidden. Not a public property.']) }
     } else {
-      if (access.indexOf(user.id) === -1) { return _h.error([403, 'Forbidden. User not in any rights property.']) }
+      if (!access.includes(user.id)) { return _h.error([403, 'Forbidden. User not in any rights property.']) }
     }
 
     if (property.s3) {
