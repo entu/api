@@ -28,7 +28,7 @@ provider:
             Action:
                 - sqs:SendMessage
                 - sqs:GetQueueUrl
-            Resource: arn:aws:sqs:${self:provider.region}:*:${self:service}-${self:provider.stage}-entity-aggregate-queue
+            Resource: arn:aws:sqs:${self:provider.region}:*:entityAggregateQueue
         -
             Effect: Allow
             Action:
@@ -177,7 +177,7 @@ functions:
             - sqs:
                 arn:
                     Fn::GetAtt:
-                        - ${self:service}-${self:provider.stage}-entity-aggregate-queue
+                        - entityAggregateQueue
                         - Arn
 
     property-get:
@@ -208,7 +208,7 @@ resources:
         entityAggregateQueue:
             Type: AWS::SQS::Queue
             Properties:
-                QueueName: ${self:service}-${self:provider.stage}-entity-aggregate-queue
+                QueueName: entityAggregateQueue
         # EntuFilesS3:
         #     Type: AWS::S3::Bucket
         #     Properties:
