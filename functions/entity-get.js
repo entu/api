@@ -32,7 +32,7 @@ exports.handler = async (event, context) => {
     const result = await _h.claenupEntity(entity, user)
 
     if (!result) {
-      return _h.error([403, 'Forbidden'])
+      return _h.error([403, 'Forbidden. No accessible properties.'])
     }
 
     return _h.json(await _h.claenupEntity(entity, user))
