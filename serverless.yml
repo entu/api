@@ -205,7 +205,7 @@ functions:
 
 resources:
     Resources:
-        entity-aggregate-queue:
+        entityAggregateQueue:
             Type: AWS::SQS::Queue
             Properties:
                 QueueName: ${self:service}-${self:provider.stage}-entity-aggregate-queue
