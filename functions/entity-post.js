@@ -113,7 +113,7 @@ exports.handler = async (event, context) => {
       }
     }
 
-    await _h.aggregateEntity(user.db, eId, null)
+    await _h.addEntityAggregateSqs(context, user.account, eId)
 
     return _h.json({ _id: eId, properties: pIds })
   } catch (e) {

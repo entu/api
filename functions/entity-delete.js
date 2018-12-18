@@ -20,7 +20,7 @@ exports.handler = async (event, context) => {
     if (!access.includes(user.id)) { return _h.error([403, 'Forbidden. User not in _owner property.']) }
 
     await user.db.collection('property').insertOne({ entity: eId, type: '_deleted', reference: new ObjectId(user.id), datetime: new Date(), created: { at: new Date(), by: new ObjectId(user.id) } })
-    await _h.aggregateEntity(user.db, eId, '_deleted')
+    await _h.addEntityAggregateSqs(context, user.account, eId)
 
     const properties = await user.db.collection('property').find({ reference: eId, deleted: { $exists: false } }, { projection: { entity: true, type: true } }).toArray()
 
@@ -28,7 +28,7 @@ exports.handler = async (event, context) => {
       const property = properties[i]
 
       await user.db.collection('property').updateOne({ _id: property._id }, { $set: { deleted: { at: new Date(), by: new ObjectId(user.id) } } })
-      await _h.aggregateEntity(user.db, property.entity, property.type)
+      await _h.addEntityAggregateSqs(context, user.account, property.entity)
     }
 
     return _h.json({ deleted: true })

@@ -27,7 +27,7 @@ exports.handler = async (event, context) => {
 
     await user.db.collection('property').updateOne({ _id: pId }, { $set: { deleted: { at: new Date(), by: new ObjectId(user.id) } } })
 
-    await _h.aggregateEntity(user.db, property.entity, property.type)
+    await _h.addEntityAggregateSqs(context, user.account, property.entity)
 
     return _h.json({ deleted: true })
   } catch (e) {
