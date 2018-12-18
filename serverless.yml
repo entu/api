@@ -28,7 +28,7 @@ provider:
             Action:
                 - sqs:SendMessage
                 - sqs:GetQueueUrl
-            Resource: arn:aws:sqs:${self:provider.region}:*:entityAggregateQueue
+            Resource: arn:aws:sqs:${self:provider.region}:*:entu-api-entity-aggregate-queue
         -
             Effect: Allow
             Action:
@@ -177,8 +177,9 @@ functions:
             - sqs:
                 arn:
                     Fn::GetAtt:
-                        - entityAggregateQueue
+                        - entu-api-entity-aggregate-queue
                         - Arn
+                batchSize: 1
 
     property-get:
         handler: functions/property-get.handler
@@ -203,16 +204,16 @@ functions:
                 method: delete
                 cors: true
 
-resources:
-    Resources:
-        entityAggregateQueue:
-            Type: AWS::SQS::Queue
-            Properties:
-                QueueName: entityAggregateQueue
-        # EntuFilesS3:
-        #     Type: AWS::S3::Bucket
-        #     Properties:
-        #         BucketName: ${ssm:/entu-api-files-s3-bucket~true}
+# resources:
+#     Resources:
+#         entityAggregateQueue:
+#             Type: AWS::SQS::Queue
+#             Properties:
+#                 QueueName: entu-api-entity-aggregate-queue
+#         EntuFilesS3:
+#             Type: AWS::S3::Bucket
+#             Properties:
+#                 BucketName: ${ssm:/entu-api-files-s3-bucket~true}
 
 plugins:
     - serverless-domain-manager
