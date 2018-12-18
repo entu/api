@@ -28,7 +28,7 @@ provider:
             Action:
                 - sqs:SendMessage
                 - sqs:GetQueueUrl
-            Resource: arn:aws:sqs:${self:provider.region}:*:entu-api-entity-aggregate-queue
+            Resource: ${ssm:/entu-api-entity-aggregate-queue~true}
         -
             Effect: Allow
             Action:
@@ -175,10 +175,7 @@ functions:
         description: Aggregate entity with given id
         events:
             - sqs:
-                arn:
-                    Fn::GetAtt:
-                        - entu-api-entity-aggregate-queue
-                        - Arn
+                arn: ${ssm:/entu-api-entity-aggregate-queue~true}
                 batchSize: 1
 
     property-get:
