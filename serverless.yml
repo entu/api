@@ -173,6 +173,7 @@ functions:
         handler: functions/entity-aggregate.handler
         name: ${self:service}-${self:provider.stage}-entity-aggregate
         description: Aggregate entity with given id
+        reservedConcurrency: 10
         events:
             - sqs:
                 arn: ${ssm:/entu-api-entity-aggregate-queue~true}
