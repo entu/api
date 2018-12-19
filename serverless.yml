@@ -3,7 +3,7 @@ service: entu-api
 provider:
     name: aws
     runtime: nodejs8.10
-    stage: production
+    stage: prod
     region: eu-central-1
     endpointType: regional
     memorySize: 256
