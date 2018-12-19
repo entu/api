@@ -2,6 +2,7 @@
 
 const _ = require('lodash')
 const _h = require('./_helpers')
+const { ObjectId } = require('mongodb')
 
 const aggregateEntity = async (db, entityId) => {
   return new Promise((resolve, reject) => {
@@ -57,8 +58,9 @@ exports.handler = async (event, context) => {
   for (var i = 0; i < event.Records.length; i++) {
     const data = JSON.parse(event.Records[i].body)
     const db = await _h.db(data.account)
+    const eId = new ObjectId(data.entity)
 
-    const e = await aggregateEntity(db, data.entity)
+    const e = await aggregateEntity(db, eId)
 
     console.log(e)
   }
