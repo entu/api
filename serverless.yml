@@ -63,7 +63,7 @@ package:
 functions:
     account-get:
         handler: functions/account-get.handler
-        name: ${self:service}-account-get
+        name: ${self:service}-${self:provider.stage}-account-get
         description: Returns account info and usage statistics
         events:
             - http:
@@ -73,7 +73,7 @@ functions:
 
     auth-get:
         handler: functions/auth-get.handler
-        name: ${self:service}-auth-get
+        name: ${self:service}-${self:provider.stage}-auth-get
         description: Authenticates user by API key
         events:
             - http:
@@ -83,7 +83,7 @@ functions:
 
     auth-google-get:
         handler: functions/auth-google-get.handler
-        name: ${self:service}-auth-google-get
+        name: ${self:service}-${self:provider.stage}-auth-google-get
         description: Redirects user to auth in Google
         events:
             - http:
@@ -95,7 +95,7 @@ functions:
 
     auth-facebook-get:
         handler: functions/auth-facebook-get.handler
-        name: ${self:service}-auth-facebook-get
+        name: ${self:service}-${self:provider.stage}-auth-facebook-get
         description: Redirects user to auth in Facebook
         events:
             - http:
@@ -107,7 +107,7 @@ functions:
 
     auth-microsoft-get:
         handler: functions/auth-microsoft-get.handler
-        name: ${self:service}-auth-microsoft-get
+        name: ${self:service}-${self:provider.stage}-auth-microsoft-get
         description: Redirects user to auth in Microsoft
         events:
             - http:
@@ -119,7 +119,7 @@ functions:
 
     entities-get:
         handler: functions/entities-get.handler
-        name: ${self:service}-entities-get
+        name: ${self:service}-${self:provider.stage}-entities-get
         description: Get list of entities
         events:
             - http:
@@ -132,7 +132,7 @@ functions:
 
     entity-get:
         handler: functions/entity-get.handler
-        name: ${self:service}-entity-get
+        name: ${self:service}-${self:provider.stage}-entity-get
         description: Get one entity with given id
         events:
             - http:
@@ -145,7 +145,7 @@ functions:
 
     entity-post:
         handler: functions/entity-post.handler
-        name: ${self:service}-entity-post
+        name: ${self:service}-${self:provider.stage}-entity-post
         description: Add new properties to entity
         events:
             - http:
@@ -161,7 +161,7 @@ functions:
 
     entity-delete:
         handler: functions/entity-delete.handler
-        name: ${self:service}-entity-delete
+        name: ${self:service}-${self:provider.stage}-entity-delete
         description: Delete entity with given id
         events:
             - http:
@@ -171,7 +171,7 @@ functions:
 
     entity-aggregate:
         handler: functions/entity-aggregate.handler
-        name: ${self:service}-entity-aggregate
+        name: ${self:service}-${self:provider.stage}-entity-aggregate
         description: Aggregate entity with given id
         reservedConcurrency: 10
         events:
@@ -181,7 +181,7 @@ functions:
 
     property-get:
         handler: functions/property-get.handler
-        name: ${self:service}-property-get
+        name: ${self:service}-${self:provider.stage}-property-get
         description: Get property with given id
         events:
             - http:
@@ -194,7 +194,7 @@ functions:
 
     property-delete:
         handler: functions/property-delete.handler
-        name: ${self:service}-property-delete
+        name: ${self:service}-${self:provider.stage}-property-delete
         description: Delete property with given id
         events:
             - http:
