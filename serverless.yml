@@ -57,7 +57,9 @@ provider:
 package:
     excludeDevDependencies: true
     exclude:
-        - '**/**'
+        - node_modules/**
+        - layer/**
+        - *
     include:
         - functions/**
 
