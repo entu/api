@@ -62,6 +62,6 @@ exports.handler = async (event, context) => {
 
     const e = await aggregateEntity(db, eId)
 
-    console.log(e)
+    console.log(JSON.stringify(e.result, null, 3))
   }
 }
