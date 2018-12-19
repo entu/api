@@ -44,6 +44,7 @@ provider:
         GIT_SHA1: ${git:sha1}
         JWT_SECRET: ${ssm:/entu-api-jwt-secret~true}
         MONGODB: ${ssm:/entu-api-mongodb~true}
+        NODE_PATH: ./:/opt/node_modules
 
     vpc:
         securityGroupIds:
@@ -65,6 +66,8 @@ functions:
         handler: functions/account-get.handler
         name: ${self:service}-${self:provider.stage}-account-get
         description: Returns account info and usage statistics
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
         events:
             - http:
                 path: /account
@@ -75,6 +78,8 @@ functions:
         handler: functions/auth-get.handler
         name: ${self:service}-${self:provider.stage}-auth-get
         description: Authenticates user by API key
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
         events:
             - http:
                 path: /auth
@@ -85,6 +90,8 @@ functions:
         handler: functions/auth-google-get.handler
         name: ${self:service}-${self:provider.stage}-auth-google-get
         description: Redirects user to auth in Google
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
         events:
             - http:
                 path: /auth/google
@@ -97,6 +104,8 @@ functions:
         handler: functions/auth-facebook-get.handler
         name: ${self:service}-${self:provider.stage}-auth-facebook-get
         description: Redirects user to auth in Facebook
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
         events:
             - http:
                 path: /auth/facebook
@@ -109,6 +118,8 @@ functions:
         handler: functions/auth-microsoft-get.handler
         name: ${self:service}-${self:provider.stage}-auth-microsoft-get
         description: Redirects user to auth in Microsoft
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
         events:
             - http:
                 path: /auth/microsoft
@@ -121,6 +132,8 @@ functions:
         handler: functions/entities-get.handler
         name: ${self:service}-${self:provider.stage}-entities-get
         description: Get list of entities
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
         events:
             - http:
                 path: /entity
@@ -134,6 +147,8 @@ functions:
         handler: functions/entity-get.handler
         name: ${self:service}-${self:provider.stage}-entity-get
         description: Get one entity with given id
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
         events:
             - http:
                 path: /entity/{id}
@@ -147,6 +162,8 @@ functions:
         handler: functions/entity-post.handler
         name: ${self:service}-${self:provider.stage}-entity-post
         description: Add new properties to entity
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
         events:
             - http:
                 path: /entity
@@ -163,6 +180,8 @@ functions:
         handler: functions/entity-delete.handler
         name: ${self:service}-${self:provider.stage}-entity-delete
         description: Delete entity with given id
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
         events:
             - http:
                 path: /entity/{id}
@@ -173,6 +192,8 @@ functions:
         handler: functions/entity-aggregate.handler
         name: ${self:service}-${self:provider.stage}-entity-aggregate
         description: Aggregate entity with given id
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
         reservedConcurrency: 10
         events:
             - sqs:
@@ -183,6 +204,8 @@ functions:
         handler: functions/property-get.handler
         name: ${self:service}-${self:provider.stage}-property-get
         description: Get property with given id
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
         events:
             - http:
                 path: /property/{id}
@@ -196,11 +219,19 @@ functions:
         handler: functions/property-delete.handler
         name: ${self:service}-${self:provider.stage}-property-delete
         description: Delete property with given id
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
         events:
             - http:
                 path: /property/{id}
                 method: delete
                 cors: true
+
+layers:
+    commonNodeLibs:
+        path: layer
+        compatibleRuntimes:
+            - nodejs8.10
 
 # resources:
 #     Resources:
