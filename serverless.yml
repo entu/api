@@ -4,11 +4,16 @@ provider:
     name: aws
     runtime: nodejs8.10
     stage: prod
+    stackName: ${self:service}
+    apiName: ${self:service}
     region: eu-central-1
     endpointType: regional
     memorySize: 256
     timeout: 30
     logRetentionInDays: 30
+    deploymentBucket:
+        name: ${self:service}
+        serverSideEncryption: AES256
 
     iamRoleStatements:
         -
@@ -66,7 +71,7 @@ package:
 functions:
     account-get:
         handler: account-get.handler
-        name: ${self:provider.stage}-${self:service}-account-get
+        name: ${self:service}-account-get
         description: Returns account info and usage statistics
         package:
             include:
@@ -81,7 +86,7 @@ functions:
 
     auth-get:
         handler: auth-get.handler
-        name: ${self:provider.stage}-${self:service}-auth-get
+        name: ${self:service}-auth-get
         description: Authenticates user by API key
         package:
             include:
@@ -96,7 +101,7 @@ functions:
 
     auth-google-get:
         handler: auth-google-get.handler
-        name: ${self:provider.stage}-${self:service}-auth-google-get
+        name: ${self:service}-auth-google-get
         description: Redirects user to auth in Google
         package:
             include:
@@ -113,7 +118,7 @@ functions:
 
     auth-facebook-get:
         handler: auth-facebook-get.handler
-        name: ${self:provider.stage}-${self:service}-auth-facebook-get
+        name: ${self:service}-auth-facebook-get
         description: Redirects user to auth in Facebook
         package:
             include:
@@ -130,7 +135,7 @@ functions:
 
     auth-microsoft-get:
         handler: auth-microsoft-get.handler
-        name: ${self:provider.stage}-${self:service}-auth-microsoft-get
+        name: ${self:service}-auth-microsoft-get
         description: Redirects user to auth in Microsoft
         package:
             include:
@@ -147,7 +152,7 @@ functions:
 
     entities-get:
         handler: entities-get.handler
-        name: ${self:provider.stage}-${self:service}-entities-get
+        name: ${self:service}-entities-get
         description: Get list of entities
         package:
             include:
@@ -165,7 +170,7 @@ functions:
 
     entity-get:
         handler: entity-get.handler
-        name: ${self:provider.stage}-${self:service}-entity-get
+        name: ${self:service}-entity-get
         description: Get one entity with given id
         package:
             include:
@@ -183,7 +188,7 @@ functions:
 
     entity-post:
         handler: entity-post.handler
-        name: ${self:provider.stage}-${self:service}-entity-post
+        name: ${self:service}-entity-post
         description: Add new properties to entity
         package:
             include:
@@ -204,7 +209,7 @@ functions:
 
     entity-delete:
         handler: entity-delete.handler
-        name: ${self:provider.stage}-${self:service}-entity-delete
+        name: ${self:service}-entity-delete
         description: Delete entity with given id
         package:
             include:
@@ -219,7 +224,7 @@ functions:
 
     entity-aggregate:
         handler: entity-aggregate.handler
-        name: ${self:provider.stage}-${self:service}-entity-aggregate
+        name: ${self:service}-entity-aggregate
         description: Aggregate entity with given id
         package:
             include:
@@ -234,7 +239,7 @@ functions:
 
     property-get:
         handler: property-get.handler
-        name: ${self:provider.stage}-${self:service}-property-get
+        name: ${self:service}-property-get
         description: Get property with given id
         package:
             include:
@@ -252,7 +257,7 @@ functions:
 
     property-delete:
         handler: property-delete.handler
-        name: ${self:provider.stage}-${self:service}-property-delete
+        name: ${self:service}-property-delete
         description: Delete property with given id
         package:
             include:
