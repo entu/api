@@ -62,16 +62,16 @@ package:
         - node_modules/**
         - '*'
     include:
-        - functions/_helpers.js
+        - _helpers.js
 
 functions:
     account-get:
-        handler: functions/account-get.handler
+        handler: account-get.handler
         name: ${self:service}-${self:provider.stage}-account-get
         description: Returns account info and usage statistics
         package:
             include:
-                - functions/account-get.js
+                - account-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -81,12 +81,12 @@ functions:
                 cors: true
 
     auth-get:
-        handler: functions/auth-get.handler
+        handler: auth-get.handler
         name: ${self:service}-${self:provider.stage}-auth-get
         description: Authenticates user by API key
         package:
             include:
-                - functions/auth-get.js
+                - auth-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -96,12 +96,12 @@ functions:
                 cors: true
 
     auth-google-get:
-        handler: functions/auth-google-get.handler
+        handler: auth-google-get.handler
         name: ${self:service}-${self:provider.stage}-auth-google-get
         description: Redirects user to auth in Google
         package:
             include:
-                - functions/auth-google-get.js
+                - auth-google-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -113,12 +113,12 @@ functions:
             GOOGLE_SECRET: ${ssm:/entu-api-google-secret~true}
 
     auth-facebook-get:
-        handler: functions/auth-facebook-get.handler
+        handler: auth-facebook-get.handler
         name: ${self:service}-${self:provider.stage}-auth-facebook-get
         description: Redirects user to auth in Facebook
         package:
             include:
-                - functions/auth-facebook-get.js
+                - auth-facebook-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -130,12 +130,12 @@ functions:
             FACEBOOK_SECRET: ${ssm:/entu-api-facebook-secret~true}
 
     auth-microsoft-get:
-        handler: functions/auth-microsoft-get.handler
+        handler: auth-microsoft-get.handler
         name: ${self:service}-${self:provider.stage}-auth-microsoft-get
         description: Redirects user to auth in Microsoft
         package:
             include:
-                - functions/auth-microsoft-get.js
+                - auth-microsoft-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -147,12 +147,12 @@ functions:
             MICROSOFT_SECRET: ${ssm:/entu-api-microsoft-secret~true}
 
     entities-get:
-        handler: functions/entities-get.handler
+        handler: entities-get.handler
         name: ${self:service}-${self:provider.stage}-entities-get
         description: Get list of entities
         package:
             include:
-                - functions/entities-get.js
+                - entities-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -165,12 +165,12 @@ functions:
             S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
 
     entity-get:
-        handler: functions/entity-get.handler
+        handler: entity-get.handler
         name: ${self:service}-${self:provider.stage}-entity-get
         description: Get one entity with given id
         package:
             include:
-                - functions/entity-get.js
+                - entity-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -183,12 +183,12 @@ functions:
             S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
 
     entity-post:
-        handler: functions/entity-post.handler
+        handler: entity-post.handler
         name: ${self:service}-${self:provider.stage}-entity-post
         description: Add new properties to entity
         package:
             include:
-                - functions/entity-post.js
+                - entity-post.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -204,12 +204,12 @@ functions:
             S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
 
     entity-delete:
-        handler: functions/entity-delete.handler
+        handler: entity-delete.handler
         name: ${self:service}-${self:provider.stage}-entity-delete
         description: Delete entity with given id
         package:
             include:
-                - functions/entity-delete.js
+                - entity-delete.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -219,12 +219,12 @@ functions:
                 cors: true
 
     entity-aggregate:
-        handler: functions/entity-aggregate.handler
+        handler: entity-aggregate.handler
         name: ${self:service}-${self:provider.stage}-entity-aggregate
         description: Aggregate entity with given id
         package:
             include:
-                - functions/entity-aggregate.js
+                - entity-aggregate.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         reservedConcurrency: 10
@@ -234,12 +234,12 @@ functions:
                 batchSize: 1
 
     property-get:
-        handler: functions/property-get.handler
+        handler: property-get.handler
         name: ${self:service}-${self:provider.stage}-property-get
         description: Get property with given id
         package:
             include:
-                - functions/property-get.js
+                - property-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -252,12 +252,12 @@ functions:
             S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
 
     property-delete:
-        handler: functions/property-delete.handler
+        handler: property-delete.handler
         name: ${self:service}-${self:provider.stage}-property-delete
         description: Delete property with given id
         package:
             include:
-                - functions/property-delete.js
+                - property-delete.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:

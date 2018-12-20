@@ -8,6 +8,9 @@ phases:
             - mkdir -p layer/nodejs
             - cp package*.json layer/nodejs
             - npm install --prefix layer/nodejs
+    pre_build:
+        commands:
+            - cp functions/* ./
     build:
         commands:
             - serverless deploy
