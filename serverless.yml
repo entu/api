@@ -33,14 +33,12 @@ provider:
             Resource: ${ssm:/entu-api-entity-aggregate-queue~true}
         -
             Effect: Allow
-            Action:
-                - sqs:ListQueues
+            Action: sqs:ListQueues
             Resource: arn:aws:sqs:${self:provider.region}:*:*
         -
             Effect: Allow
-            Action:
-                - ssm:GetParameter
-            Resource: arn:aws:ssm:${self:provider.region}:*:parameter/entu-api-*
+            Action: ssm:GetParameter
+            Resource: arn:aws:ssm:${self:provider.region}:*:*
 
     deploymentBucket:
         name: ${self:service}
