@@ -57,7 +57,8 @@ provider:
 package:
     individually: true
     exclude:
-        - '.*/**'
+        - ./*
+        - ./*/**
     include:
         - ./functions/_helpers.js
 
