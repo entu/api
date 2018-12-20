@@ -53,6 +53,8 @@ const aggregateEntity = async (db, entityId) => {
 }
 
 exports.handler = async (event, context) => {
+  if (event.source === 'aws.events') { return }
+
   if (!event.Records && event.Records.length < 1) { return }
 
   for (var i = 0; i < event.Records.length; i++) {
