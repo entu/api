@@ -43,6 +43,9 @@ const getSignedUrl = async (key) => {
 exports.getSignedUrl = getSignedUrl
 
 exports.user = async (event) => {
+  const ssm = new aws.SSM()
+  const jwtSecret = await ssm.getParameter({ Name: 'entu-api-jwt-secret', WithDecryption: true }).promise()
+
   return new Promise((resolve, reject) => {
     const authHeaderParts = _.get(event, 'headers.Authorization', '').split(' ')
     const jwtConf = {
@@ -56,7 +59,7 @@ exports.user = async (event) => {
 
     if (authHeaderParts.length === 2 && authHeaderParts[0].toLowerCase() === 'bearer') {
       try {
-        const decoded = jwt.verify(authHeaderParts[1], process.env.JWT_SECRET, jwtConf)
+        const decoded = jwt.verify(authHeaderParts[1], jwtSecret.Value, jwtConf)
 
         if (decoded.aud !== jwtConf.audience) {
           return reject([401, 'Invalid JWT audience'])

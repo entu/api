@@ -47,7 +47,6 @@ provider:
     environment:
         GIT_BRANCH: ${git:branch}
         GIT_SHA1: ${git:sha1}
-        JWT_SECRET: ${ssm:/entu-api-jwt-secret~true}
 
     vpc:
         securityGroupIds:

@@ -2,6 +2,7 @@
 
 const _ = require('lodash')
 const _h = require('./_helpers')
+const aws = require('aws-sdk')
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
 const ObjectID = require('mongodb').ObjectID
@@ -31,6 +32,9 @@ exports.handler = async (event, context) => {
       authFilter['private.entu_api_key.string'] = crypto.createHash('sha256').update(key).digest('hex')
     }
 
+    const ssm = new aws.SSM()
+    const jwtSecret = await ssm.getParameter({ Name: 'entu-api-jwt-secret', WithDecryption: true }).promise()
+
     const dbs = await connection.admin().listDatabases()
     let accounts = []
 
@@ -45,7 +49,7 @@ exports.handler = async (event, context) => {
         accounts.push({
           _id: person._id.toString(),
           account: account,
-          token: jwt.sign({}, process.env.JWT_SECRET, {
+          token: jwt.sign({}, jwtSecret.Value, {
             issuer: account,
             audience: _.get(event, 'requestContext.identity.sourceIp'),
             subject: person._id.toString(),
