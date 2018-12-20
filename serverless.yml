@@ -57,7 +57,7 @@ provider:
 package:
     individually: true
     exclude:
-        - functions/**
+        - src/**
         - layer/**
         - node_modules/**
         - '*'
