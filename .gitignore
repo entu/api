@@ -1,4 +1,4 @@
 .serverless
 jspm_packages
-layer
+layers
 node_modules

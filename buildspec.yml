@@ -5,9 +5,9 @@ phases:
         commands:
             - npm install -g serverless
             - npm install serverless-domain-manager serverless-plugin-git-variables --no-save
-            - mkdir -p layer/nodejs
-            - cp package*.json layer/nodejs
-            - npm install --prefix layer/nodejs
+            - mkdir -p layers/nodejs
+            - cp package*.json layers/nodejs
+            - npm install --prefix layers/nodejs
     pre_build:
         commands:
             - cp src/* ./

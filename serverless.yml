@@ -3,7 +3,7 @@ service: entu-api
 provider:
     name: aws
     runtime: nodejs8.10
-    stage: prod
+    stage: production
     region: eu-central-1
     endpointType: regional
     memorySize: 256
@@ -44,7 +44,6 @@ provider:
         GIT_SHA1: ${git:sha1}
         JWT_SECRET: ${ssm:/entu-api-jwt-secret~true}
         MONGODB: ${ssm:/entu-api-mongodb~true}
-        # NODE_PATH: ./:/opt/node_modules
 
     vpc:
         securityGroupIds:
@@ -58,7 +57,7 @@ package:
     individually: true
     exclude:
         - src/**
-        - layer/**
+        - layers/**
         - node_modules/**
         - '*'
     include:
@@ -268,7 +267,7 @@ functions:
 
 layers:
     commonNodeLibs:
-        path: layer
+        path: layers
         compatibleRuntimes:
             - nodejs8.10
 
@@ -278,7 +277,7 @@ layers:
 #             Type: AWS::SQS::Queue
 #             Properties:
 #                 QueueName: entu-api-entity-aggregate-queue
-#         EntuFilesS3:
+#         entuFilesS3:
 #             Type: AWS::S3::Bucket
 #             Properties:
 #                 BucketName: ${ssm:/entu-api-files-s3-bucket~true}
