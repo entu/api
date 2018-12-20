@@ -45,7 +45,6 @@ provider:
         GIT_BRANCH: ${git:branch}
         GIT_SHA1: ${git:sha1}
         JWT_SECRET: ${ssm:/entu-api-jwt-secret~true}
-        MONGODB: ${ssm:/entu-api-mongodb~true}
 
     vpc:
         securityGroupIds:

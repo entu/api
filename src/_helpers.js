@@ -9,7 +9,10 @@ let dbConnection
 const db = async (dbName) => {
   if (dbConnection) { return dbConnection.db(dbName) }
 
-  dbConnection = await MongoClient.connect(process.env.MONGODB, { ssl: true, sslValidate: true })
+  const ssm = new aws.SSM()
+  const mongoUrl = await ssm.getParameter({ Name: 'entu-api-mongodb', WithDecryption: true }).promise()
+
+  dbConnection = await MongoClient.connect(mongoUrl, { ssl: true, sslValidate: true })
   dbConnection.on('close', () => {
     dbConnection = null
     console.log(`Disconnected from ${dbName}`)
