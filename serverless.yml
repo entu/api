@@ -66,7 +66,7 @@ package:
 functions:
     account-get:
         handler: account-get.handler
-        name: ${self:service}-${self:provider.stage}-account-get
+        name: ${self:provider.stage}-${self:service}-account-get
         description: Returns account info and usage statistics
         package:
             include:
@@ -81,7 +81,7 @@ functions:
 
     auth-get:
         handler: auth-get.handler
-        name: ${self:service}-${self:provider.stage}-auth-get
+        name: ${self:provider.stage}-${self:service}-auth-get
         description: Authenticates user by API key
         package:
             include:
@@ -96,7 +96,7 @@ functions:
 
     auth-google-get:
         handler: auth-google-get.handler
-        name: ${self:service}-${self:provider.stage}-auth-google-get
+        name: ${self:provider.stage}-${self:service}-auth-google-get
         description: Redirects user to auth in Google
         package:
             include:
@@ -113,7 +113,7 @@ functions:
 
     auth-facebook-get:
         handler: auth-facebook-get.handler
-        name: ${self:service}-${self:provider.stage}-auth-facebook-get
+        name: ${self:provider.stage}-${self:service}-auth-facebook-get
         description: Redirects user to auth in Facebook
         package:
             include:
@@ -130,7 +130,7 @@ functions:
 
     auth-microsoft-get:
         handler: auth-microsoft-get.handler
-        name: ${self:service}-${self:provider.stage}-auth-microsoft-get
+        name: ${self:provider.stage}-${self:service}-auth-microsoft-get
         description: Redirects user to auth in Microsoft
         package:
             include:
@@ -147,7 +147,7 @@ functions:
 
     entities-get:
         handler: entities-get.handler
-        name: ${self:service}-${self:provider.stage}-entities-get
+        name: ${self:provider.stage}-${self:service}-entities-get
         description: Get list of entities
         package:
             include:
@@ -165,7 +165,7 @@ functions:
 
     entity-get:
         handler: entity-get.handler
-        name: ${self:service}-${self:provider.stage}-entity-get
+        name: ${self:provider.stage}-${self:service}-entity-get
         description: Get one entity with given id
         package:
             include:
@@ -183,7 +183,7 @@ functions:
 
     entity-post:
         handler: entity-post.handler
-        name: ${self:service}-${self:provider.stage}-entity-post
+        name: ${self:provider.stage}-${self:service}-entity-post
         description: Add new properties to entity
         package:
             include:
@@ -204,7 +204,7 @@ functions:
 
     entity-delete:
         handler: entity-delete.handler
-        name: ${self:service}-${self:provider.stage}-entity-delete
+        name: ${self:provider.stage}-${self:service}-entity-delete
         description: Delete entity with given id
         package:
             include:
@@ -219,7 +219,7 @@ functions:
 
     entity-aggregate:
         handler: entity-aggregate.handler
-        name: ${self:service}-${self:provider.stage}-entity-aggregate
+        name: ${self:provider.stage}-${self:service}-entity-aggregate
         description: Aggregate entity with given id
         package:
             include:
@@ -234,7 +234,7 @@ functions:
 
     property-get:
         handler: property-get.handler
-        name: ${self:service}-${self:provider.stage}-property-get
+        name: ${self:provider.stage}-${self:service}-property-get
         description: Get property with given id
         package:
             include:
@@ -252,7 +252,7 @@ functions:
 
     property-delete:
         handler: property-delete.handler
-        name: ${self:service}-${self:provider.stage}-property-delete
+        name: ${self:provider.stage}-${self:service}-property-delete
         description: Delete property with given id
         package:
             include:
