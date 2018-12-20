@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
   try {
     if (!_.has(event, 'queryStringParameters.code') && !_.has(event, 'queryStringParameters.error')) {
       const query = querystring.stringify({
-        client_id: googleId,
+        client_id: googleId.Value,
         redirect_uri: `https://${event.headers.Host}${event.path}`,
         response_type: 'code',
         scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
@@ -55,8 +55,8 @@ const getToken = async (event) => {
 
   return new Promise((resolve, reject) => {
     const query = querystring.stringify({
-      client_id: googleId,
-      client_secret: googleSecret,
+      client_id: googleId.Value,
+      client_secret: googleSecret.Value,
       redirect_uri: `https://${event.headers.Host}${event.path}`,
       code: event.queryStringParameters.code,
       grant_type: 'authorization_code'
