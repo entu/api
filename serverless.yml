@@ -11,9 +11,6 @@ provider:
     memorySize: 256
     timeout: 30
     logRetentionInDays: 30
-    deploymentBucket:
-        name: ${self:service}
-        serverSideEncryption: AES256
 
     iamRoleStatements:
         -
@@ -41,7 +38,7 @@ provider:
             Resource: arn:aws:sqs:${self:provider.region}:*:*
 
     deploymentBucket:
-        name: entu-api
+        name: ${self:service}
         serverSideEncryption: AES256
 
     environment:
