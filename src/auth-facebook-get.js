@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
   try {
     if (!_.has(event, 'queryStringParameters.code') && !_.has(event, 'queryStringParameters.error')) {
       const query = querystring.stringify({
-        client_id: facebookId.Value,
+        client_id: facebookId.Parameter.Value,
         redirect_uri: `https://${event.headers.Host}${event.path}`,
         response_type: 'code',
         scope: 'public_profile,email',
@@ -55,8 +55,8 @@ const getToken = async (event) => {
 
   return new Promise((resolve, reject) => {
     const query = querystring.stringify({
-      client_id: facebookId.Value,
-      client_secret: facebookSecret.Value,
+      client_id: facebookId.Parameter.Value,
+      client_secret: facebookSecret.Parameter.Value,
       redirect_uri: `https://${event.headers.Host}${event.path}`,
       code: event.queryStringParameters.code
     })

@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
   try {
     if (!_.has(event, 'queryStringParameters.code') && !_.has(event, 'queryStringParameters.error')) {
       const query = querystring.stringify({
-        client_id: microsoftId.Value,
+        client_id: microsoftId.Parameter.Value,
         redirect_uri: `https://${event.headers.Host}${event.path}`,
         response_type: 'code',
         scope: 'wl.basic wl.emails',
@@ -55,8 +55,8 @@ const getToken = async (event) => {
 
   return new Promise((resolve, reject) => {
     const query = querystring.stringify({
-      client_id: microsoftId.Value,
-      client_secret: microsoftSecret.Value,
+      client_id: microsoftId.Parameter.Value,
+      client_secret: microsoftSecret.Parameter.Value,
       redirect_uri: `https://${event.headers.Host}${event.path}`,
       code: event.queryStringParameters.code,
       grant_type: 'authorization_code'
