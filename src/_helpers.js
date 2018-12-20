@@ -24,7 +24,7 @@ const db = async (dbName) => {
 
   const mongoUrl = await ssmParameter('entu-api-mongodb')
 
-  dbConnection = await MongoClient.connect(mongoUrl.Parameter.Value, { ssl: true, sslValidate: true })
+  dbConnection = await MongoClient.connect(mongoUrl, { ssl: true, sslValidate: true })
   dbConnection.on('close', () => {
     dbConnection = null
     console.log(`Disconnected from ${dbName}`)
@@ -70,7 +70,7 @@ exports.user = async (event) => {
 
     if (authHeaderParts.length === 2 && authHeaderParts[0].toLowerCase() === 'bearer') {
       try {
-        const decoded = jwt.verify(authHeaderParts[1], jwtSecret.Parameter.Value, jwtConf)
+        const decoded = jwt.verify(authHeaderParts[1], jwtSecret, jwtConf)
 
         if (decoded.aud !== jwtConf.audience) {
           return reject([401, 'Invalid JWT audience'])

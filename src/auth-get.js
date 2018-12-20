@@ -47,7 +47,7 @@ exports.handler = async (event, context) => {
         accounts.push({
           _id: person._id.toString(),
           account: account,
-          token: jwt.sign({}, jwtSecret.Parameter.Value, {
+          token: jwt.sign({}, jwtSecret, {
             issuer: account,
             audience: _.get(event, 'requestContext.identity.sourceIp'),
             subject: person._id.toString(),
