@@ -49,11 +49,11 @@ provider:
 
     vpc:
         securityGroupIds:
-        - ${ssm:/entu-api-vpc-security-group-1~true}
+            - ${ssm:/entu-api-vpc-security-group-1~true}
         subnetIds:
-        - ${ssm:/entu-api-vpc-subnet-1~true}
-        - ${ssm:/entu-api-vpc-subnet-2~true}
-        - ${ssm:/entu-api-vpc-subnet-3~true}
+            - ${ssm:/entu-api-vpc-subnet-1~true}
+            - ${ssm:/entu-api-vpc-subnet-2~true}
+            - ${ssm:/entu-api-vpc-subnet-3~true}
 
 package:
     individually: true
@@ -76,10 +76,11 @@ functions:
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
-            - http:
-                path: /account
-                method: get
-                cors: true
+            -
+                http:
+                    path: /account
+                    method: get
+                    cors: true
 
     auth-get:
         handler: auth-get.handler
@@ -91,10 +92,11 @@ functions:
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
-            - http:
-                path: /auth
-                method: get
-                cors: true
+            -
+                http:
+                    path: /auth
+                    method: get
+                    cors: true
 
     auth-google-get:
         handler: auth-google-get.handler
@@ -106,9 +108,10 @@ functions:
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
-            - http:
-                path: /auth/google
-                method: get
+            -
+                http:
+                    path: /auth/google
+                    method: get
         environment:
             GOOGLE_ID: ${ssm:/entu-api-google-id~true}
             GOOGLE_SECRET: ${ssm:/entu-api-google-secret~true}
@@ -123,9 +126,10 @@ functions:
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
-            - http:
-                path: /auth/facebook
-                method: get
+            -
+                http:
+                    path: /auth/facebook
+                    method: get
         environment:
             FACEBOOK_ID: ${ssm:/entu-api-facebook-id~true}
             FACEBOOK_SECRET: ${ssm:/entu-api-facebook-secret~true}
@@ -140,9 +144,10 @@ functions:
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
-            - http:
-                path: /auth/microsoft
-                method: get
+            -
+                http:
+                    path: /auth/microsoft
+                    method: get
         environment:
             MICROSOFT_ID: ${ssm:/entu-api-microsoft-id~true}
             MICROSOFT_SECRET: ${ssm:/entu-api-microsoft-secret~true}
@@ -157,10 +162,11 @@ functions:
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
-            - http:
-                path: /entity
-                method: get
-                cors: true
+            -
+                http:
+                    path: /entity
+                    method: get
+                    cors: true
         environment:
             S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
             S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
@@ -175,10 +181,11 @@ functions:
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
-            - http:
-                path: /entity/{id}
-                method: get
-                cors: true
+            -
+                http:
+                    path: /entity/{id}
+                    method: get
+                    cors: true
         environment:
             S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
             S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
@@ -193,14 +200,16 @@ functions:
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
-            - http:
-                path: /entity
-                method: post
-                cors: true
-            - http:
-                path: /entity/{id}
-                method: post
-                cors: true
+            -
+                http:
+                    path: /entity
+                    method: post
+                    cors: true
+            -
+                http:
+                    path: /entity/{id}
+                    method: post
+                    cors: true
         environment:
             S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
 
@@ -214,10 +223,11 @@ functions:
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
-            - http:
-                path: /entity/{id}
-                method: delete
-                cors: true
+            -
+                http:
+                    path: /entity/{id}
+                    method: delete
+                    cors: true
 
     entity-aggregate:
         handler: entity-aggregate.handler
@@ -230,9 +240,10 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         reservedConcurrency: 10
         events:
-            - sqs:
-                arn: ${ssm:/entu-api-entity-aggregate-queue~true}
-                batchSize: 1
+            -
+                sqs:
+                    arn: ${ssm:/entu-api-entity-aggregate-queue~true}
+                    batchSize: 1
 
     property-get:
         handler: property-get.handler
@@ -244,10 +255,11 @@ functions:
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
-            - http:
-                path: /property/{id}
-                method: get
-                cors: true
+            -
+                http:
+                    path: /property/{id}
+                    method: get
+                    cors: true
         environment:
             S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
             S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
@@ -262,10 +274,11 @@ functions:
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
-            - http:
-                path: /property/{id}
-                method: delete
-                cors: true
+            -
+                http:
+                    path: /property/{id}
+                    method: delete
+                    cors: true
 
 layers:
     commonNodeLibs:
