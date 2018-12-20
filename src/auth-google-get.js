@@ -2,15 +2,13 @@
 
 const _ = require('lodash')
 const _h = require('./_helpers')
-const aws = require('aws-sdk')
 const https = require('https')
 const querystring = require('querystring')
 
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
 
-  const ssm = new aws.SSM()
-  const googleId = await ssm.getParameter({ Name: 'entu-api-google-id', WithDecryption: true }).promise()
+  const googleId = await _h.ssmParameter('entu-api-google-id')
 
   try {
     if (!_.has(event, 'queryStringParameters.code') && !_.has(event, 'queryStringParameters.error')) {
@@ -49,9 +47,8 @@ exports.handler = async (event, context) => {
 }
 
 const getToken = async (event) => {
-  const ssm = new aws.SSM()
-  const googleId = await ssm.getParameter({ Name: 'entu-api-google-id', WithDecryption: true }).promise()
-  const googleSecret = await ssm.getParameter({ Name: 'entu-api-google-secret', WithDecryption: true }).promise()
+  const googleId = await _h.ssmParameter('entu-api-google-id')
+  const googleSecret = await _h.ssmParameter('entu-api-google-secret')
 
   return new Promise((resolve, reject) => {
     const query = querystring.stringify({

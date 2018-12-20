@@ -5,12 +5,24 @@ const aws = require('aws-sdk')
 const jwt = require('jsonwebtoken')
 const { MongoClient, ObjectId } = require('mongodb')
 
+let ssmParameters = {}
+const ssmParameter = async (name) => {
+  if (ssmParameters[name]) { return ssmParameters[name] }
+
+  const ssm = new aws.SSM()
+  const ssmValue = await ssm.getParameter({ Name: name, WithDecryption: true }).promise()
+
+  ssmParameters[name] = ssmValue.Parameter.Value
+
+  return ssmValue.Parameter.Value
+}
+exports.ssmParameter = ssmParameter
+
 let dbConnection
 const db = async (dbName) => {
   if (dbConnection) { return dbConnection.db(dbName) }
 
-  const ssm = new aws.SSM()
-  const mongoUrl = await ssm.getParameter({ Name: 'entu-api-mongodb', WithDecryption: true }).promise()
+  const mongoUrl = await ssmParameter('entu-api-mongodb')
 
   dbConnection = await MongoClient.connect(mongoUrl.Parameter.Value, { ssl: true, sslValidate: true })
   dbConnection.on('close', () => {
@@ -43,8 +55,7 @@ const getSignedUrl = async (key) => {
 exports.getSignedUrl = getSignedUrl
 
 exports.user = async (event) => {
-  const ssm = new aws.SSM()
-  const jwtSecret = await ssm.getParameter({ Name: 'entu-api-jwt-secret', WithDecryption: true }).promise()
+  const jwtSecret = await ssmParameter('entu-api-jwt-secret')
 
   return new Promise((resolve, reject) => {
     const authHeaderParts = _.get(event, 'headers.Authorization', '').split(' ')
