@@ -56,18 +56,20 @@ provider:
 
 package:
     excludeDevDependencies: true
+    individually: true
     exclude:
-        - node_modules/**
-        - layer/**
-        - '*'
+        - **/**
     include:
-        - functions/**
+        - functions/_helpers.js
 
 functions:
     account-get:
         handler: functions/account-get.handler
         name: ${self:service}-${self:provider.stage}-account-get
         description: Returns account info and usage statistics
+        package:
+            include:
+                - functions/account-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -80,6 +82,9 @@ functions:
         handler: functions/auth-get.handler
         name: ${self:service}-${self:provider.stage}-auth-get
         description: Authenticates user by API key
+        package:
+            include:
+                - functions/auth-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -92,6 +97,9 @@ functions:
         handler: functions/auth-google-get.handler
         name: ${self:service}-${self:provider.stage}-auth-google-get
         description: Redirects user to auth in Google
+        package:
+            include:
+                - functions/auth-google-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -106,6 +114,9 @@ functions:
         handler: functions/auth-facebook-get.handler
         name: ${self:service}-${self:provider.stage}-auth-facebook-get
         description: Redirects user to auth in Facebook
+        package:
+            include:
+                - functions/auth-facebook-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -120,6 +131,9 @@ functions:
         handler: functions/auth-microsoft-get.handler
         name: ${self:service}-${self:provider.stage}-auth-microsoft-get
         description: Redirects user to auth in Microsoft
+        package:
+            include:
+                - functions/auth-microsoft-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -134,6 +148,9 @@ functions:
         handler: functions/entities-get.handler
         name: ${self:service}-${self:provider.stage}-entities-get
         description: Get list of entities
+        package:
+            include:
+                - functions/entities-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -149,6 +166,9 @@ functions:
         handler: functions/entity-get.handler
         name: ${self:service}-${self:provider.stage}-entity-get
         description: Get one entity with given id
+        package:
+            include:
+                - functions/entity-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -164,6 +184,9 @@ functions:
         handler: functions/entity-post.handler
         name: ${self:service}-${self:provider.stage}-entity-post
         description: Add new properties to entity
+        package:
+            include:
+                - functions/entity-post.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -182,6 +205,9 @@ functions:
         handler: functions/entity-delete.handler
         name: ${self:service}-${self:provider.stage}-entity-delete
         description: Delete entity with given id
+        package:
+            include:
+                - functions/entity-delete.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -194,6 +220,9 @@ functions:
         handler: functions/entity-aggregate.handler
         name: ${self:service}-${self:provider.stage}-entity-aggregate
         description: Aggregate entity with given id
+        package:
+            include:
+                - functions/entity-aggregate.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         reservedConcurrency: 10
@@ -206,6 +235,9 @@ functions:
         handler: functions/property-get.handler
         name: ${self:service}-${self:provider.stage}-property-get
         description: Get property with given id
+        package:
+            include:
+                - functions/property-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -221,6 +253,9 @@ functions:
         handler: functions/property-delete.handler
         name: ${self:service}-${self:provider.stage}-property-delete
         description: Delete property with given id
+        package:
+            include:
+                - functions/property-delete.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
