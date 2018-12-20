@@ -2,16 +2,20 @@
 
 const _ = require('lodash')
 const _h = require('./_helpers')
+const aws = require('aws-sdk')
 const https = require('https')
 const querystring = require('querystring')
 
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
 
+  const ssm = new aws.SSM()
+  const facebookId = await ssm.getParameter({ Name: 'entu-api-facebook-id', WithDecryption: true }).promise()
+
   try {
     if (!_.has(event, 'queryStringParameters.code') && !_.has(event, 'queryStringParameters.error')) {
       const query = querystring.stringify({
-        client_id: process.env.FACEBOOK_ID,
+        client_id: facebookId,
         redirect_uri: `https://${event.headers.Host}${event.path}`,
         response_type: 'code',
         scope: 'public_profile,email',
@@ -45,10 +49,14 @@ exports.handler = async (event, context) => {
 }
 
 const getToken = async (event) => {
+  const ssm = new aws.SSM()
+  const facebookId = await ssm.getParameter({ Name: 'entu-api-facebook-id', WithDecryption: true }).promise()
+  const facebookSecret = await ssm.getParameter({ Name: 'entu-api-facebook-secret', WithDecryption: true }).promise()
+
   return new Promise((resolve, reject) => {
     const query = querystring.stringify({
-      client_id: process.env.FACEBOOK_ID,
-      client_secret: process.env.FACEBOOK_SECRET,
+      client_id: facebookId,
+      client_secret: facebookSecret,
       redirect_uri: `https://${event.headers.Host}${event.path}`,
       code: event.queryStringParameters.code
     })

@@ -111,9 +111,6 @@ functions:
                 http:
                     path: /auth/google
                     method: get
-        environment:
-            GOOGLE_ID: ${ssm:/entu-api-google-id~true}
-            GOOGLE_SECRET: ${ssm:/entu-api-google-secret~true}
 
     auth-facebook-get:
         handler: auth-facebook-get.handler
@@ -129,9 +126,6 @@ functions:
                 http:
                     path: /auth/facebook
                     method: get
-        environment:
-            FACEBOOK_ID: ${ssm:/entu-api-facebook-id~true}
-            FACEBOOK_SECRET: ${ssm:/entu-api-facebook-secret~true}
 
     auth-microsoft-get:
         handler: auth-microsoft-get.handler
@@ -147,9 +141,6 @@ functions:
                 http:
                     path: /auth/microsoft
                     method: get
-        environment:
-            MICROSOFT_ID: ${ssm:/entu-api-microsoft-id~true}
-            MICROSOFT_SECRET: ${ssm:/entu-api-microsoft-secret~true}
 
     entities-get:
         handler: entities-get.handler
