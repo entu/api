@@ -55,12 +55,11 @@ provider:
         - ${ssm:/entu-api-vpc-subnet-3~true}
 
 package:
-    excludeDevDependencies: true
     individually: true
     exclude:
-        - '*/**'
+        - '.*/**'
     include:
-        - functions/_helpers.js
+        - ./functions/_helpers.js
 
 functions:
     account-get:
@@ -69,7 +68,7 @@ functions:
         description: Returns account info and usage statistics
         package:
             include:
-                - functions/account-get.js
+                - ./functions/account-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -84,7 +83,7 @@ functions:
         description: Authenticates user by API key
         package:
             include:
-                - functions/auth-get.js
+                - ./functions/auth-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -99,7 +98,7 @@ functions:
         description: Redirects user to auth in Google
         package:
             include:
-                - functions/auth-google-get.js
+                - ./functions/auth-google-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -116,7 +115,7 @@ functions:
         description: Redirects user to auth in Facebook
         package:
             include:
-                - functions/auth-facebook-get.js
+                - ./functions/auth-facebook-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -133,7 +132,7 @@ functions:
         description: Redirects user to auth in Microsoft
         package:
             include:
-                - functions/auth-microsoft-get.js
+                - ./functions/auth-microsoft-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -150,7 +149,7 @@ functions:
         description: Get list of entities
         package:
             include:
-                - functions/entities-get.js
+                - ./functions/entities-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -168,7 +167,7 @@ functions:
         description: Get one entity with given id
         package:
             include:
-                - functions/entity-get.js
+                - ./functions/entity-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -186,7 +185,7 @@ functions:
         description: Add new properties to entity
         package:
             include:
-                - functions/entity-post.js
+                - ./functions/entity-post.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -207,7 +206,7 @@ functions:
         description: Delete entity with given id
         package:
             include:
-                - functions/entity-delete.js
+                - ./functions/entity-delete.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -222,7 +221,7 @@ functions:
         description: Aggregate entity with given id
         package:
             include:
-                - functions/entity-aggregate.js
+                - ./functions/entity-aggregate.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         reservedConcurrency: 10
@@ -237,7 +236,7 @@ functions:
         description: Get property with given id
         package:
             include:
-                - functions/property-get.js
+                - ./functions/property-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -255,7 +254,7 @@ functions:
         description: Delete property with given id
         package:
             include:
-                - functions/property-delete.js
+                - ./functions/property-delete.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
