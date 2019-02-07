@@ -48,13 +48,13 @@ provider:
         GIT_BRANCH: ${git:branch}
         GIT_SHA1: ${git:sha1}
 
-    vpc:
-        securityGroupIds:
-            - ${ssm:/entu-api-vpc-security-group-1~true}
-        subnetIds:
-            - ${ssm:/entu-api-vpc-subnet-1~true}
-            - ${ssm:/entu-api-vpc-subnet-2~true}
-            - ${ssm:/entu-api-vpc-subnet-3~true}
+    # vpc:
+    #     securityGroupIds:
+    #         - ${ssm:/entu-api-vpc-security-group-1~true}
+    #     subnetIds:
+    #         - ${ssm:/entu-api-vpc-subnet-1~true}
+    #         - ${ssm:/entu-api-vpc-subnet-2~true}
+    #         - ${ssm:/entu-api-vpc-subnet-3~true}
 
 package:
     individually: true
