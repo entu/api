@@ -19,17 +19,17 @@ Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
 #### Example response
 ```json
 {
-    "account": "account1",
-    "stats": {
-        "entities": 531,
-        "deletedEntities": 85,
-        "properties": 7446,
-        "deletedProperties": 1547,
-        "files": 70,
-        "filesSize": 16240263,
-        "deletedFiles": 9,
-        "deletedFilesSize": 1392158
-    }
+  "account": "account1",
+  "stats": {
+    "entities": 531,
+    "deletedEntities": 85,
+    "properties": 7446,
+    "deletedProperties": 1547,
+    "files": 70,
+    "filesSize": 16240263,
+    "deletedFiles": 9,
+    "deletedFilesSize": 1392158
+  }
 }
 ```
 
@@ -52,12 +52,12 @@ Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF
 #### Example response
 ```json
 {
-    "account1": {
-        "token": "hNGcQgaeKh7ptWF5FVPbfKgpR5ZHCzT5cbA4BQWtmWGkfdQHg5HLDMCB8GwKw8gG"
-    },
-    "account2": {
-        "token": "7RnGfkM7fayzDx7F8E2f65aTuuE5P7PEmYHVYNngKbDVx92bk2FVZBkfFBAPgpsT"
-    }
+  "account1": {
+    "token": "hNGcQgaeKh7ptWF5FVPbfKgpR5ZHCzT5cbA4BQWtmWGkfdQHg5HLDMCB8GwKw8gG"
+  },
+  "account2": {
+    "token": "7RnGfkM7fayzDx7F8E2f65aTuuE5P7PEmYHVYNngKbDVx92bk2FVZBkfFBAPgpsT"
+  }
 }
 ```
 
@@ -77,7 +77,7 @@ Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key c
 #### Example response
 ```json
 {
-    "key": "yp5xhSMf6uRnpJ5QKAeQ2RDT"
+  "key": "yp5xhSMf6uRnpJ5QKAeQ2RDT"
 }
 ```
 
@@ -115,8 +115,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 #### Example response
 ```json
 {
-    "count": 0,
-    "entities": []
+  "count": 0,
+  "entities": []
 }
 ```
 
@@ -155,17 +155,17 @@ Content-Length: 151
 #### Example response
 ```json
 {
-    "_id": "bsskJkDWwQXHB8ut7vQvmWZ4",
-    "properties": [
-        {
-            "_id": "92eVbRk2xxFun2gXsxXaxWFk"
-        },
-        {
-            "_id": "qXNdbysby2NHcgVDK3rrXUZk",
-            "url": "https://entu-files.s3.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk",
-            "signedRequest": "https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?"
-        }
-    ]
+  "_id": "bsskJkDWwQXHB8ut7vQvmWZ4",
+  "properties": [
+    {
+      "_id": "92eVbRk2xxFun2gXsxXaxWFk"
+    },
+    {
+      "_id": "qXNdbysby2NHcgVDK3rrXUZk",
+      "url": "https://entu-files.s3.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk",
+      "signedRequest": "https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?"
+    }
+  ]
 }
 ```
 
@@ -222,17 +222,17 @@ Content-Length: 109
 #### Example response
 ```json
 {
-    "_id": "bsskJkDWwQXHB8ut7vQvmWZ4",
-    "properties": [
-        {
-            "_id": "92eVbRk2xxFun2gXsxXaxWFk"
-        },
-        {
-            "_id": "qXNdbysby2NHcgVDK3rrXUZk",
-            "url": "https://entu-files.s3.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk",
-            "signedRequest": "https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?"
-        }
-    ]
+  "_id": "bsskJkDWwQXHB8ut7vQvmWZ4",
+  "properties": [
+    {
+      "_id": "92eVbRk2xxFun2gXsxXaxWFk"
+    },
+    {
+      "_id": "qXNdbysby2NHcgVDK3rrXUZk",
+      "url": "https://entu-files.s3.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk",
+      "signedRequest": "https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?"
+    }
+  ]
 }
 ```
 
@@ -253,7 +253,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 #### Example response
 ```json
 {
-    "deleted": true
+  "deleted": true
 }
 ```
 
@@ -299,6 +299,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 #### Example response
 ```json
 {
-    "deleted": true
+  "deleted": true
 }
 ```
