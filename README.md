@@ -9,12 +9,11 @@ Returns account info and usage statistics
 - **account** - Account key. Required to get public info without authorization. Optional if Bearer authorization header is set.
 
 #### Example request
-```shell
-$ curl \
-    -X GET \
-    -H "Accept-Encoding: deflate" \
-    -H "Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb" \
-    "https://api.entu.app/account"
+```http
+GET /account HTTP/1.1
+Host: api.entu.app
+Accept-Encoding: deflate
+Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
 ```
 
 #### Example response
@@ -43,12 +42,11 @@ $ curl \
 Authenticates user by API key. API key must be sent in Bearer authorization header. Returns object with JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /account,  /entity and /property requests.
 
 #### Example request
-```shell
-$ curl \
-    -X GET \
-    -H "Accept-Encoding: deflate" \
-    -H "Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF" \
-    "https://api.entu.app/auth"
+```http
+GET /auth HTTP/1.1
+Host: api.entu.app
+Accept-Encoding: deflate
+Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF
 ```
 
 #### Example response
@@ -107,12 +105,11 @@ Get list of entities. To filter entities by property value. Use dot separated li
 - **account** - Account key. Required to get public info without authorization. Optional if Bearer authorization header is set.
 
 #### Example request
-```shell
-$ curl \
-    -X GET \
-    -H "Accept-Encoding: deflate" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
-    "https://api.entu.app/entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12"
+```http
+GET /entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12 HTTP/1.1
+Host: api.entu.app
+Accept-Encoding: deflate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ```
 
 #### Example response
@@ -140,14 +137,19 @@ Returns created entity \_id and it's properties \_ids. If *filename* and *size* 
 - **parent** - Parent entity's \_id. If set, new entity is created "under" this entity and all rights are copied from parent to new entity.
 
 #### Example request
-```shell
-$ curl \
-    -X POST \
-    -H "Accept-Encoding: deflate" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
-    -H "Content-Type: application/json" \
-    -d '[{ "type": "_type", "string": "book" }, { "type": "title", "string": "Hobbit" }, { "type": "photo", "filename": "cover.jpg" "size": 1937 }]'
-    "https://api.entu.app/entity"
+```http
+POST /entity HTTP/1.1
+Host: api.entu.app
+Accept-Encoding: deflate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+Content-Type: application/json; charset=utf-8
+Content-Length: 151
+
+[
+  { "type": "_type", "string": "book" },
+  { "type": "title", "string": "Hobbit" },
+  { "type": "photo", "filename": "cover.jpg" "size": 1937 }
+]
 ```
 
 #### Example response
@@ -178,12 +180,11 @@ Get one entity with given id.
 - **account** - Account key. Required to get public info without authorization. Optional if Bearer authorization header is set.
 
 #### Example request
-```shell
-$ curl \
-    -X GET \
-    -H "Accept-Encoding: deflate" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
-    "https://api.entu.app/entity/59abac1bb5684200016be61e"
+```http
+GET /entity/59abac1bb5684200016be61e HTTP/1.1
+Host: api.entu.app
+Accept-Encoding: deflate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ```
 
 #### Example response
@@ -204,14 +205,18 @@ Returns created properties \_ids. If *filename* and *size* is set returns upload
 - [ **string** \| **reference** \| **boolean** \| **integer** \| **decimal** \| **date** \| **datetime** \| **filename** \| **size** ] - Property value
 
 #### Example request
-```shell
-$ curl \
-    -X POST \
-    -H "Accept-Encoding: deflate" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
-    -H "Content-Type: application/json" \
-    -d '[{ "type": "title", "string": "Hobbit" }, { "type": "photo", "filename": "cover.jpg" "size": 1937 }]'
-    "https://api.entu.app/entity/hAazguCezHwDfLe2geyKKpqj"
+```http
+POST /entity/hAazguCezHwDfLe2geyKKpqj HTTP/1.1
+Host: api.entu.app
+Accept-Encoding: deflate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+Content-Type: application/json; charset=utf-8
+Content-Length: 109
+
+[
+  { "type": "title", "string": "Hobbit" },
+  { "type": "photo", "filename": "cover.jpg" "size": 1937 }
+]
 ```
 
 #### Example response
@@ -238,12 +243,11 @@ $ curl \
 Delete entity with given id.
 
 #### Example request
-```shell
-$ curl \
-    -X DELETE \
-    -H "Accept-Encoding: deflate" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
-    "https://api.entu.app/entity/59abac1bb5684200016be61e"
+```http
+DELETE /entity/59abac1bb5684200016be61e HTTP/1.1
+Host: api.entu.app
+Accept-Encoding: deflate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ```
 
 #### Example response
@@ -266,12 +270,11 @@ Get property with given id.
 - **account** - Account key. Required to get public info without authorization. Optional if Bearer authorization header is set.
 
 #### Example request
-```shell
-$ curl \
-    -X GET \
-    -H "Accept-Encoding: deflate" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
-    "https://api.entu.app/property/59abac1bb5684200016be445?download"
+```http
+GET /property/5b9648dd2e5c91011f9a42b5 HTTP/1.1
+Host: api.entu.app
+Accept-Encoding: deflate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ```
 
 #### Example response
@@ -286,12 +289,11 @@ $ curl \
 Delete property with given id.
 
 #### Example request
-```shell
-$ curl \
-    -X DELETE \
-    -H "Accept-Encoding: deflate" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
-    "https://api.entu.app/entity/59abac1bb5684200016be445"
+```http
+DELETE /property/5b9648dd2e5c9100459a4157 HTTP/1.1
+Host: api.entu.app
+Accept-Encoding: deflate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ```
 
 #### Example response
