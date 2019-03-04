@@ -1,31 +1,8 @@
-#### Account
-- /account
-    - [GET](#get-account)
+# Entu API Documentation
 
-#### Authentication
-- /auth
-    - [GET](#get-auth)
-- /auth/[ facebook \| google \| microsoft ]
-    - [GET](#get-auth-facebook--google--microsoft-)
+## Account
 
-#### Entity
-- /entity
-    - [GET](#get-entity)
-    - [POST](#post-entity)
-- /entity/{ \_id }
-    - [GET](#get-entity-_id-)
-    - [POST](#post-entity-_id-)
-    - [DELETE](#delete-entity-_id-)
-
-#### Property
-- /property/{ \_id }
-    - [GET](#get-property-_id-)
-    - [DELETE](#delete-property-_id-)
-
-
-
-
-## GET /account
+### GET /account
 Returns account info and usage statistics
 
 #### Query parameters
@@ -60,7 +37,9 @@ curl \
 
 
 
-## GET /auth
+## Authentication
+
+### GET /auth
 Authenticates user by API key. API key must be sent in Bearer authorization header. Returns object with JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /account,  /entity and /property requests.
 
 #### Example request
@@ -87,7 +66,7 @@ curl \
 
 
 
-## GET /auth/[ facebook \| google \| microsoft ]
+### GET /auth/[ facebook \| google \| microsoft ]
 Redirects user to given authentication provider (facebook, google, microsoft). After successful authentication:
 - If query parameter *next* is set, user is redirected to given url. Temporary API key is added to url end. Use this key to get JWT tokens from [/auth](#get-auth).
 - If next is not set returns temporary API key.
@@ -107,7 +86,9 @@ Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key c
 
 
 
-## GET /entity
+## Entity
+
+### GET /entity
 Get list of entities. To filter entities by property value. Use dot separated list of *property key*, *data type* and *operator* as query parameter(s). Operator is optional, but must be one of following:
 - **gt** - Matches values that are greater than a specified value.
 - **gte** - Matches values that are greater than or equal to a specified value.
@@ -124,7 +105,6 @@ Get list of entities. To filter entities by property value. Use dot separated li
 - **limit** - How many entities to return.
 - **skip** - How many entities to skip in result.
 - **account** - Account key. Required to get public info without authorization. Optional if Bearer authorization header is set.
-
 
 #### Example request
 ```shell
@@ -146,7 +126,7 @@ curl \
 
 
 
-## POST /entity
+### POST /entity
 Create new entity. Data must be sent as JSON list containing property object(s).
 
 Returns created entity \_id and it's properties \_ids. If *filename* and *size* is set in property, returns upload *url* and *signedRequest* for file upload.
@@ -154,8 +134,6 @@ Returns created entity \_id and it's properties \_ids. If *filename* and *size* 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except \_type, \_parent, \_public, \_viewer, \_expander, \_editor, \_owner).
 - [ **string** \| **reference** \| **boolean** \| **integer** \| **decimal** \| **date** \| **datetime** \| **filename** \| **size** ] - Property value
-
-
 
 #### Parameters
 - **type** - Entity type. It's mandatory parameter.
@@ -192,7 +170,7 @@ curl \
 
 
 
-## GET /entity/{ \_id }
+### GET /entity/{ \_id }
 Get one entity with given id.
 
 #### Query parameters
@@ -216,7 +194,7 @@ curl \
 
 
 
-## POST /entity/{ \_id }
+### POST /entity/{ \_id }
 Add new properties to entity. Data must be sent as JSON list containing property object(s).
 
 Returns created properties \_ids. If *filename* and *size* is set returns upload *url* and *signedRequest* for file upload.
@@ -256,7 +234,7 @@ curl \
 
 
 
-## DELETE /entity/{ \_id }
+### DELETE /entity/{ \_id }
 Delete entity with given id.
 
 #### Example request
@@ -278,7 +256,9 @@ curl \
 
 
 
-## GET /property/{ \_id }
+## Property
+
+### GET /property/{ \_id }
 Get property with given id.
 
 #### Query parameters
@@ -302,7 +282,7 @@ curl \
 
 
 
-## DELETE /property/{ \_id }
+### DELETE /property/{ \_id }
 Delete property with given id.
 
 #### Example request

@@ -1,0 +1,1 @@
+{"css":[{"build":"/style.css.map","dependencies":["/style.styl"],"alias":true},{"build":"/style.css","dependencies":["/style.styl"]}],"html":[{"source":"/index.pug","build":"/index.html","dependencies":["/Users/argo/Git/entu/api/README.md","/data.yaml","/global.yaml"]}],"date":"2019-03-04T10:31:59.115Z","commit":"7fd63900b251449829999f1e3ed180a0c951c59f"}
