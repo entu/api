@@ -10,7 +10,7 @@ Returns account info and usage statistics
 
 #### Example request
 ```shell
-curl \
+$ curl \
     -X GET \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb" \
@@ -44,7 +44,7 @@ Authenticates user by API key. API key must be sent in Bearer authorization head
 
 #### Example request
 ```shell
-curl \
+$ curl \
     -X GET \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF" \
@@ -108,7 +108,7 @@ Get list of entities. To filter entities by property value. Use dot separated li
 
 #### Example request
 ```shell
-curl \
+$ curl \
     -X GET \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
@@ -141,7 +141,7 @@ Returns created entity \_id and it's properties \_ids. If *filename* and *size* 
 
 #### Example request
 ```shell
-curl \
+$ curl \
     -X POST \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
@@ -179,7 +179,7 @@ Get one entity with given id.
 
 #### Example request
 ```shell
-curl \
+$ curl \
     -X GET \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
@@ -205,7 +205,7 @@ Returns created properties \_ids. If *filename* and *size* is set returns upload
 
 #### Example request
 ```shell
-curl \
+$ curl \
     -X POST \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
@@ -239,7 +239,7 @@ Delete entity with given id.
 
 #### Example request
 ```shell
-curl \
+$ curl \
     -X DELETE \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
@@ -267,7 +267,7 @@ Get property with given id.
 
 #### Example request
 ```shell
-curl \
+$ curl \
     -X GET \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
@@ -287,7 +287,7 @@ Delete property with given id.
 
 #### Example request
 ```shell
-curl \
+$ curl \
     -X DELETE \
     -H "Accept-Encoding: deflate" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" \
