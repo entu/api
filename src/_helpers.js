@@ -37,15 +37,19 @@ const db = async (dbName) => {
 exports.db = db
 
 const getSignedUrl = async (key) => {
+  const s3Endpoint = await ssmParameter('entu-api-files-s3-endpoint')
+  const s3Bucket = await ssmParameter('entu-api-files-s3-bucket')
+
   return new Promise((resolve, reject) => {
     let conf
-    if (process.env.S3_ENDPOINT) {
-      conf = { endpoint: process.env.S3_ENDPOINT, s3BucketEndpoint: true }
+
+    if (s3Endpoint) {
+      conf = { endpoint: s3Endpoint, s3BucketEndpoint: true }
     }
 
     aws.config = new aws.Config()
     const s3 = new aws.S3(conf)
-    s3.getSignedUrl('getObject', { Bucket: process.env.S3_BUCKET, Key: key, Expires: 60 }, (err, url) => {
+    s3.getSignedUrl('getObject', { Bucket: s3Bucket, Key: key, Expires: 60 }, (err, url) => {
       if (err) { return reject(err) }
 
       resolve(url)

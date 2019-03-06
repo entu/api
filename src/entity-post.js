@@ -26,6 +26,7 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
 
   try {
+    const s3Bucket = await _h.ssmParameter('entu-api-files-s3-bucket')
     const user = await _h.user(event)
     if (!user.id) { return _h.error([403, 'Forbidden. No user.']) }
 
@@ -92,7 +93,7 @@ exports.handler = async (event, context) => {
         const s3 = new aws.S3()
         const key = `${user.account}/${newProperty.insertedId}`
         const s3Params = {
-          Bucket: process.env.S3_BUCKET,
+          Bucket: s3Bucket,
           Key: key,
           Expires: 60,
           ContentType: property.type,
@@ -105,7 +106,7 @@ exports.handler = async (event, context) => {
 
         pIds.push({
           _id: newProperty.insertedId,
-          url: `https://${process.env.S3_BUCKET}.s3.amazonaws.com/${key}`,
+          url: `https://${s3Bucket}.s3.amazonaws.com/${key}`,
           signedRequest: signedRequest
         })
       } else {

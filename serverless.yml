@@ -159,9 +159,6 @@ functions:
                     path: /entity
                     method: get
                     cors: true
-        environment:
-            S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
-            S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
 
     entity-get:
         handler: entity-get.handler
@@ -178,9 +175,6 @@ functions:
                     path: /entity/{id}
                     method: get
                     cors: true
-        environment:
-            S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
-            S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
 
     entity-post:
         handler: entity-post.handler
@@ -202,8 +196,6 @@ functions:
                     path: /entity/{id}
                     method: post
                     cors: true
-        environment:
-            S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
 
     entity-delete:
         handler: entity-delete.handler
@@ -252,9 +244,6 @@ functions:
                     path: /property/{id}
                     method: get
                     cors: true
-        environment:
-            S3_BUCKET: ${ssm:/entu-api-files-s3-bucket~true}
-            S3_ENDPOINT: ${ssm:/entu-api-files-s3-endpoint~true}
 
     property-delete:
         handler: property-delete.handler
