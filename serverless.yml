@@ -265,7 +265,7 @@ layers:
     commonNodeLibs:
         path: layers
         compatibleRuntimes:
-            - nodejs8.10
+            - nodejs10.x
 
 # resources:
 #     Resources:
