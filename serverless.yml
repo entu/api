@@ -59,6 +59,8 @@ provider:
 package:
     individually: true
     exclude:
+        - docs/**
+        - docs_src/**
         - src/**
         - layers/**
         - node_modules/**
