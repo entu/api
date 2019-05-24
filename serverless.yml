@@ -283,6 +283,7 @@ plugins:
     - serverless-plugin-git-variables
 
 custom:
+    exportGitVariables: false
     customDomain:
         domainName: ${ssm:/entu-api-domain~true}
         basePath: ''
