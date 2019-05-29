@@ -13,9 +13,15 @@
   "bugs": {
     "url": "https://github.com/entu/api/issues"
   },
+  "scripts": {
+    "docs": "entu-ssg docs/source/config.yaml full"
+  },
   "dependencies": {
     "jsonwebtoken": "8.5.1",
     "lodash": "4.17.11",
     "mongodb": "3.2.6"
+  },
+  "devDependencies": {
+    "entu-ssg": "5.0.2"
   }
 }
