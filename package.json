@@ -8,10 +8,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/argoroots/entu-api.git"
+    "url": "git+https://github.com/entu/api.git"
   },
   "bugs": {
-    "url": "https://github.com/argoroots/entu-api/issues"
+    "url": "https://github.com/entu/api/issues"
   },
   "dependencies": {
     "jsonwebtoken": "8.5.1",
