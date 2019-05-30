@@ -129,7 +129,7 @@ Create new entity. Data must be sent as JSON list containing property object(s).
 Returns created entity \_id and it's properties \_ids. If *filename* and *size* is set in property, returns upload *url* and *signedRequest* for file upload.
 
 #### Property object parameters
-- **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except \_type, \_parent, \_public, \_viewer, \_expander, \_editor, \_owner).
+- **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
 - [ **string** \| **reference** \| **boolean** \| **integer** \| **decimal** \| **date** \| **datetime** \| **filename** \| **size** ] - Property value
 
 #### Example request
@@ -192,12 +192,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 
 ### POST /entity/{ \_id }
-Add new properties to entity. Data must be sent as JSON list containing property object(s).
+Add new properties to existing entity. Data must be sent as JSON list containing property object(s).
 
 Returns created properties \_ids. If *filename* and *size* is set returns upload *url* and *signedRequest* for file upload.
 
 #### Property object parameters
-- **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except \_type, \_parent, \_public, \_viewer, \_expander, \_editor, \_owner).
+- **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
 - [ **string** \| **reference** \| **boolean** \| **integer** \| **decimal** \| **date** \| **datetime** \| **filename** \| **size** ] - Property value
 
 #### Example request
@@ -298,3 +298,19 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
   "deleted": true
 }
 ```
+
+
+
+
+## System properties
+
+Entu system properties begin with \_. Those properties are:
+- **_type** - String containing object's type.
+- **_parent** - Reference property to parent object.
+- **_public** - If set to *true*, object (only it's public properties) is visible without authentication.
+
+For rights management Entu uses following reference properties:
+- **_viewer** - Who can view this object.
+- **_expander** - Who can add new objects under this object.
+- **_editor** - Who can change this object's properties (except rights!).
+- **_owner** - Who can do anything with this object (view, change, delete and manage rights).
