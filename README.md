@@ -132,10 +132,6 @@ Returns created entity \_id and it's properties \_ids. If *filename* and *size* 
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except \_type, \_parent, \_public, \_viewer, \_expander, \_editor, \_owner).
 - [ **string** \| **reference** \| **boolean** \| **integer** \| **decimal** \| **date** \| **datetime** \| **filename** \| **size** ] - Property value
 
-#### Parameters
-- **type** - Entity type. It's mandatory parameter.
-- **parent** - Parent entity's \_id. If set, new entity is created "under" this entity and all rights are copied from parent to new entity.
-
 #### Example request
 ```http
 POST /entity HTTP/1.1
