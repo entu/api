@@ -64,8 +64,8 @@ Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF
 
 
 
-### GET /auth/[ facebook \| google \| microsoft ]
-Redirects user to given authentication provider (facebook, google, microsoft). After successful authentication:
+### GET /auth/[ google \| apple \| lhv \| mid \| idc ]
+Redirects user to given authentication provider (Google, Apple, LHV Bank, etc). After successful authentication:
 - If query parameter *next* is set, user is redirected to given url. Temporary API key is added to url end. Use this key to get JWT tokens from [/auth](#get-auth).
 - If next is not set returns temporary API key.
 

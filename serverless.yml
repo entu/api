@@ -116,36 +116,6 @@ functions:
                     path: /auth/google
                     method: get
 
-    auth-facebook-get:
-        handler: auth-facebook-get.handler
-        name: ${self:service}-auth-facebook-get
-        description: Redirects user to auth in Facebook
-        package:
-            include:
-                - auth-facebook-get.js
-        layers:
-            - {Ref: CommonNodeLibsLambdaLayer}
-        events:
-            -
-                http:
-                    path: /auth/facebook
-                    method: get
-
-    auth-microsoft-get:
-        handler: auth-microsoft-get.handler
-        name: ${self:service}-auth-microsoft-get
-        description: Redirects user to auth in Microsoft
-        package:
-            include:
-                - auth-microsoft-get.js
-        layers:
-            - {Ref: CommonNodeLibsLambdaLayer}
-        events:
-            -
-                http:
-                    path: /auth/microsoft
-                    method: get
-
     entities-get:
         handler: entities-get.handler
         name: ${self:service}-entities-get
