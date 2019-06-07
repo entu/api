@@ -34,7 +34,7 @@ exports.handler = async (event, context) => {
     const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
 
     const dbs = await connection.admin().listDatabases()
-    let accounts = []
+    let accounts = {}
 
     for (let i = 0; i < dbs.databases.length; i++) {
       const account = _.get(dbs, ['databases', i, 'name'])
@@ -43,21 +43,23 @@ exports.handler = async (event, context) => {
       const accountCon = await _h.db(account)
       const person = await accountCon.collection('entity').findOne(authFilter, { projection: { _id: true } })
 
-      if (person) {
-        accounts.push({
+      if (person && ! accounts[account]) {
+        const token = jwt.sign({}, jwtSecret, {
+          issuer: account,
+          audience: _.get(event, 'requestContext.identity.sourceIp'),
+          subject: person._id.toString(),
+          expiresIn: '48h'
+        })
+
+        accounts[account] = {
           _id: person._id.toString(),
           account: account,
-          token: jwt.sign({}, jwtSecret, {
-            issuer: account,
-            audience: _.get(event, 'requestContext.identity.sourceIp'),
-            subject: person._id.toString(),
-            expiresIn: '48h'
-          })
-        })
+          token: token
+        }
       }
     }
 
-    return _h.json(_.mapValues(_.groupBy(_.compact(accounts), 'account'), (o) => _.first(o)))
+    return _h.json(Object.values(accounts))
   } catch (e) {
     return _h.error(e)
   }
