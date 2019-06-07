@@ -12,6 +12,9 @@ provider:
     timeout: 30
     logRetentionInDays: 30
 
+    apiGateway:
+        minimumCompressionSize: 32
+
     iamRoleStatements:
         -
             Effect: Allow
