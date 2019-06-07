@@ -32,12 +32,14 @@ exports.handler = async (event, context) => {
     }
 
     const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
+    const onlyForAccount = _.get(event, 'queryStringParameters.account')
 
     const dbs = await connection.admin().listDatabases()
     let accounts = {}
 
     for (let i = 0; i < dbs.databases.length; i++) {
       const account = _.get(dbs, ['databases', i, 'name'])
+      if (onlyForAccount && onlyForAccount !== account) { continue }
       if (mongoDbSystemDbs.includes(account)) { continue }
 
       const accountCon = await _h.db(account)

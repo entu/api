@@ -41,6 +41,9 @@ Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
 ### GET /auth
 Authenticates user by API key. API key must be sent in Bearer authorization header. Returns object with JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /account,  /entity and /property requests.
 
+#### Query parameters
+- **account** - Account key. If set, authentication is done only for this account.
+
 #### Example request
 ```http
 GET /auth HTTP/1.1
