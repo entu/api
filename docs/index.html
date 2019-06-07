@@ -15,7 +15,7 @@ Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
     &quot;deletedFilesSize&quot;: 1392158
   }
 }
-</code></pre><h2>Authentication</h2><h3>GET /auth</h3><p>Authenticates user by API key. API key must be sent in Bearer authorization header. Returns object with JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /account, /entity and /property requests.</p><h4>Query parameters</h4><ul><li><strong>account</strong> - Account key. If set, authentication is done only for this account.</li></ul><h4>Example request</h4><pre><code class="language-http">GET /auth HTTP/1.1
+</code></pre><h2>Authentication</h2><h3>GET /auth</h3><p>Authenticates user by API key. API key must be sent in Bearer authorization header. Returns array of object containing JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /account, /entity and /property requests.</p><h4>Query parameters</h4><ul><li><strong>account</strong> - Account key. If set, authentication is done only for this account.</li></ul><h4>Example request</h4><pre><code class="language-http">GET /auth HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF
