@@ -51,14 +51,18 @@ Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF
 
 #### Example response
 ```json
-{
-  "account1": {
+[
+  {
+    "_id": "3g5tee54fp36hssntqm4rasd",
+    "account": "account1",
     "token": "hNGcQgaeKh7ptWF5FVPbfKgpR5ZHCzT5cbA4BQWtmWGkfdQHg5HLDMCB8GwKw8gG"
   },
-  "account2": {
+  {
+    "_id": "dpjhnc8zq6u33xtnz7u75ydf",
+    "account": "account1",
     "token": "7RnGfkM7fayzDx7F8E2f65aTuuE5P7PEmYHVYNngKbDVx92bk2FVZBkfFBAPgpsT"
   }
-}
+]
 ```
 
 

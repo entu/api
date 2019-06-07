@@ -19,14 +19,18 @@ Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF
-</code></pre><h4>Example response</h4><pre><code class="language-json">{
-  &quot;account1&quot;: {
+</code></pre><h4>Example response</h4><pre><code class="language-json">[
+  {
+    &quot;_id&quot;: &quot;3g5tee54fp36hssntqm4rasd&quot;,
+    &quot;account&quot;: &quot;account1&quot;,
     &quot;token&quot;: &quot;hNGcQgaeKh7ptWF5FVPbfKgpR5ZHCzT5cbA4BQWtmWGkfdQHg5HLDMCB8GwKw8gG&quot;
   },
-  &quot;account2&quot;: {
+  {
+    &quot;_id&quot;: &quot;dpjhnc8zq6u33xtnz7u75ydf&quot;,
+    &quot;account&quot;: &quot;account1&quot;,
     &quot;token&quot;: &quot;7RnGfkM7fayzDx7F8E2f65aTuuE5P7PEmYHVYNngKbDVx92bk2FVZBkfFBAPgpsT&quot;
   }
-}
+]
 </code></pre><h3>GET /auth/[ google | apple | lhv | mid | idc ]</h3><p>Redirects user to given authentication provider (Google, Apple, LHV Bank, etc). After successful authentication:</p><ul><li>If query parameter <em>next</em> is set, user is redirected to given url. Temporary API key is added to url end. Use this key to get JWT tokens from <a href="#get-auth">/auth</a>.</li><li>If next is not set returns temporary API key.</li></ul><p>Use this temporary API key to get JWT tokens from <a href="#get-auth">/auth</a>. This key can be used only once.</p><h4>Query parameters</h4><ul><li><strong>next</strong> - Url where user is redirected after successful auth.</li></ul><h4>Example response</h4><pre><code class="language-json">{
   &quot;key&quot;: &quot;yp5xhSMf6uRnpJ5QKAeQ2RDT&quot;
 }
