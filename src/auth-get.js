@@ -43,7 +43,7 @@ exports.handler = async (event, context) => {
       const accountCon = await _h.db(account)
       const person = await accountCon.collection('entity').findOne(authFilter, { projection: { _id: true } })
 
-      if (person && ! accounts[account]) {
+      if (person) {
         const token = jwt.sign({}, jwtSecret, {
           issuer: account,
           audience: _.get(event, 'requestContext.identity.sourceIp'),
