@@ -119,6 +119,21 @@ functions:
                     path: /auth/google
                     method: get
 
+    auth-lhv-get:
+        handler: auth-lhv-post.handler
+        name: ${self:service}-auth-lhv-post
+        description: Handles POST request LHV
+        package:
+            include:
+                - auth-lhv-post.js
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
+        events:
+            -
+                http:
+                    path: /auth/lhv
+                    method: post
+
     entities-get:
         handler: entities-get.handler
         name: ${self:service}-entities-get
