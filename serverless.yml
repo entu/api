@@ -120,9 +120,24 @@ functions:
                     method: get
 
     auth-lhv-get:
+        handler: auth-lhv-get.handler
+        name: ${self:service}-auth-lhv-get
+        description: Get LHV banklink form url and signed data
+        package:
+            include:
+                - auth-lhv-get.js
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
+        events:
+            -
+                http:
+                    path: /auth/lhv
+                    method: get
+
+    auth-lhv-post:
         handler: auth-lhv-post.handler
         name: ${self:service}-auth-lhv-post
-        description: Handles POST request LHV
+        description: Handles POST request from LHV banklink
         package:
             include:
                 - auth-lhv-post.js
