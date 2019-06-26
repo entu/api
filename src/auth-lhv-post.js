@@ -39,7 +39,7 @@ exports.handler = async (event, context) => {
     const datetimeMin = new Date(datetime.getTime() - 300000)
     const datetimeMax = new Date(datetime.getTime() + 300000)
 
-    if (!crypto.createVerify('SHA1').update(mac).verify(lhvKey, data.VK_MAC, 'base64')) {
+    if (!crypto.createVerify('SHA1').update(mac).verify(lhvKey, request.VK_MAC, 'base64')) {
       return _h.error([400, 'Invalid VK_MAC.'])
     }
     if (_.get(request, 'VK_SERVICE') !== '3012') {
