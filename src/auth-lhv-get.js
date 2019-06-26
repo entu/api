@@ -4,6 +4,10 @@ const _ = require('lodash')
 const _h = require('./_helpers')
 const crypto = require('crypto')
 
+const strWithLength = (str) => {
+  return ('000' + str.length).slice(-3) + str
+}
+
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
 
@@ -12,7 +16,7 @@ exports.handler = async (event, context) => {
     const lhvKey = await _h.ssmParameter('entu-api-lhv-key')
     const next = _.get(event, 'queryStringParameters.next')
 
-    const data = {
+    const request = {
       VK_SERVICE: '4011',
       VK_VERSION: '008',
       VK_SND_ID: lhvId,
@@ -25,26 +29,19 @@ exports.handler = async (event, context) => {
       VK_LANG: 'EST',
     }
 
-    const macDataArray = [
-      ('000' + data.VK_SERVICE.length).slice(-3),
-      data.VK_SERVICE,
-      ('000' + data.VK_VERSION.length).slice(-3),
-      data.VK_VERSION,
-      ('000' + data.VK_SND_ID.length).slice(-3),
-      data.VK_SND_ID,
-      ('000' + data.VK_REPLY.length).slice(-3),
-      data.VK_REPLY,
-      ('000' + data.VK_RETURN.length).slice(-3),
-      data.VK_RETURN,
-      ('000' + data.VK_DATETIME.length).slice(-3),
-      data.VK_DATETIME,
-      ('000' + data.VK_RID.length).slice(-3),
-      data.VK_RID
-    ]
+    const mac = [
+      request.VK_SERVICE,
+      request.VK_VERSION,
+      request.VK_SND_ID,
+      request.VK_REPLY,
+      request.VK_RETURN,
+      request.VK_DATETIME,
+      request.VK_RID
+    ].map(strWithLength).join('')
 
-    data.VK_MAC = crypto.createSign('SHA1').update(macDataArray.join('')).sign(lhvKey, 'base64')
+    request.VK_MAC = crypto.createSign('SHA1').update(mac).sign(lhvKey, 'base64')
 
-    return _h.json({ url: 'https://www.lhv.ee/banklink', signedRequest: data })
+    return _h.json({ url: 'https://www.lhv.ee/banklink', signedRequest: request })
   } catch (e) {
     return _h.error(e)
   }
