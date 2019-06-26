@@ -14,6 +14,7 @@ exports.handler = async (event, context) => {
   try {
     const lhvId = await _h.ssmParameter('entu-api-lhv-id')
     const lhvKey = await _h.ssmParameter('entu-api-lhv-key')
+    const domain = await _h.ssmParameter('entu-api-domain')
     const next = _.get(event, 'queryStringParameters.next')
 
     const request = {
@@ -21,7 +22,7 @@ exports.handler = async (event, context) => {
       VK_VERSION: '008',
       VK_SND_ID: lhvId,
       VK_REPLY: '3012',
-      VK_RETURN: next ? 'https://api.entu.app/auth/lhv?next=' + next : 'https://api.entu.app/auth/lhv',
+      VK_RETURN: `https://${domain}/auth/lhv?next=${next}`,
       VK_DATETIME: (new Date()).toISOString().substr(0, 19) + 'Z',
       VK_RID: '',
       VK_MAC: null,
