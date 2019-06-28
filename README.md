@@ -39,7 +39,7 @@ Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
 ## Authentication
 
 ### GET /auth
-Authenticates user by API key. API key must be sent in Bearer authorization header. Returns array of object containing JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /account,  /entity and /property requests.
+Authenticates user by API key. API key must be sent in Bearer authorization header. Returns array of objects containing JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /account,  /entity and /property requests.
 
 #### Query parameters
 - **account** - Account key. If set, authentication is done only for this account.
@@ -73,7 +73,7 @@ Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF
 
 ### GET /auth/[ google \| apple \| lhv \| mid \| idc ]
 Redirects user to given authentication provider (Google, Apple, LHV Bank, etc). After successful authentication:
-- If query parameter *next* is set, user is redirected to given url. Temporary API key is added to url end. Use this key to get JWT tokens from [/auth](#get-auth).
+- If query parameter *next* is set, user is redirected to given url. Temporary API key is added to url end.
 - If next is not set returns temporary API key.
 
 Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key can be used only once.
