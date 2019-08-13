@@ -62,7 +62,7 @@ exports.user = async (event) => {
   const jwtSecret = await ssmParameter('entu-api-jwt-secret')
 
   return new Promise((resolve, reject) => {
-    const authHeaderParts = _.get(event, 'headers.Authorization', '').split(' ')
+    const jwtToken = _.get(event, 'headers.Authorization', '').replace('Bearer ', '')
     const jwtConf = {
       issuer: _.get(event, 'queryStringParameters.account'),
       audience: _.get(event, 'requestContext.identity.sourceIp')
@@ -72,9 +72,9 @@ exports.user = async (event) => {
       account: jwtConf.issuer
     }
 
-    if (authHeaderParts.length === 2 && authHeaderParts[0].toLowerCase() === 'bearer') {
+    if (jwtToken) {
       try {
-        const decoded = jwt.verify(authHeaderParts[1], jwtSecret, jwtConf)
+        const decoded = jwt.verify(jwtToken, jwtSecret, jwtConf)
 
         if (decoded.aud !== jwtConf.audience) {
           return reject([401, 'Invalid JWT audience'])

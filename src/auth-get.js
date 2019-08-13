@@ -12,10 +12,9 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
 
   try {
-    const authHeaderParts = _.get(event, 'headers.Authorization', '').split(' ')
-    if (authHeaderParts.length !== 2 || authHeaderParts[0].toLowerCase() !== 'bearer') { return _h.error([400, 'No key']) }
+    const key = _.get(event, 'headers.Authorization', '').replace('Bearer ', '')
 
-    const key = authHeaderParts[1]
+    if (!key) { return _h.error([400, 'No key']) }
     if (key.length !== 24 && key.length !== 48) { return _h.error([400, 'Invalid key']) }
 
     var authFilter = {}
