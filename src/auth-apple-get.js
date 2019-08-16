@@ -26,7 +26,7 @@ exports.handler = async (event, context) => {
       return _h.error(event.queryStringParameters.error_description)
     } else {
       const accessToken = await getToken(event)
-      // const profile = await getProfile(accessToken)
+      const profile = jwt.decode(accessToken)
       // const user = {
       //   provider: 'apple',
       //   id: _.get(profile, 'id'),
@@ -39,7 +39,7 @@ exports.handler = async (event, context) => {
       // if (_.has(event, 'queryStringParameters.state')) {
       //   return _h.redirect(`${event.queryStringParameters.state}${sessionId}`, 302)
       // } else {
-        return _h.json({ key: accessToken })
+        return _h.json({ key: profile })
       // }
     }
   } catch (e) {
@@ -90,8 +90,8 @@ const getToken = async (event) => {
       res.on('end', () => {
         data = JSON.parse(data)
 
-        if (res.statusCode === 200 && data.access_token) {
-          resolve(data.access_token)
+        if (res.statusCode === 200 && data.access_token && data.id_token) {
+          resolve(data.id_token)
         } else {
           reject(_.get(data, 'error_description', data))
         }
