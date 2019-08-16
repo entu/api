@@ -27,20 +27,19 @@ exports.handler = async (event, context) => {
     } else {
       const accessToken = await getToken(event)
       const profile = jwt.decode(accessToken)
-      // const user = {
-      //   provider: 'apple',
-      //   id: _.get(profile, 'id'),
-      //   name: _.get(profile, 'displayName'),
-      //   email: _.get(profile, 'emails.0.value'),
-      //   picture: _.get(profile, 'image.url')
-      // }
-      // const sessionId = await _h.addUserSession(user)
-      //
-      // if (_.has(event, 'queryStringParameters.state')) {
-      //   return _h.redirect(`${event.queryStringParameters.state}${sessionId}`, 302)
-      // } else {
+      const user = {
+        provider: 'apple',
+        id: _.get(profile, 'sub'),
+        // name: _.get(profile, 'displayName'),
+        email: _.get(profile, 'email'),
+      }
+      const sessionId = await _h.addUserSession(user)
+
+      if (_.has(event, 'queryStringParameters.state')) {
+        return _h.redirect(`${event.queryStringParameters.state}${sessionId}`, 302)
+      } else {
         return _h.json({ key: profile })
-      // }
+      }
     }
   } catch (e) {
     return _h.error(e)
