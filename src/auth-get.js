@@ -23,7 +23,8 @@ exports.handler = async (event, context) => {
     if (key.length === 24) {
       const session = await connection.collection('session').findOneAndUpdate({ _id: new ObjectID(key), deleted: { $exists: false } }, { $set: { deleted: new Date() } })
 
-      if (!_.get(session, 'value.user.email')) { return _h.error([400, 'No session']) }
+      if (!session) { return _h.error([400, 'No session']) }
+      if (!_.get(session, 'value.user.email')) { return _h.error([400, 'No user email']) }
 
       authFilter['private.entu_user.string'] = _.get(session, 'value.user.email')
     } else {
