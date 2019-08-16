@@ -55,7 +55,7 @@ const getToken = async (event) => {
     issuer: appleTeam,
     audience: 'https://appleid.apple.com',
     subject: appleId,
-    expiresIn: '60s',
+    expiresIn: '10s',
     algorithm: 'ES256'
   })
 
