@@ -71,6 +71,26 @@ Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF
 
 
 
+### GET /auth/apple
+Redirects user to Apple for authentication. After successful authentication:
+- If query parameter *next* is set, user is redirected to given url. Temporary API key is added to url end.
+- If next is not set returns temporary API key.
+
+Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key can be used only once.
+
+#### Query parameters
+- **next** - Url where user is redirected after successful auth.
+
+#### Example response
+```json
+{
+  "key": "M2s8xKpwxG77JYxbx7xw4cS9"
+}
+```
+
+
+
+
 ### GET /auth/google
 Redirects user to Google for authentication. After successful authentication:
 - If query parameter *next* is set, user is redirected to given url. Temporary API key is added to url end.
