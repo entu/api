@@ -15,8 +15,16 @@ exports.handler = async (event, context) => {
     const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
     const appleId = await _h.ssmParameter('entu-api-apple-id')
 
-    if (params.error) {
+    if (params.error && !params.state) {
       return _h.error(params.error_description)
+    } else if (params.error === 'user_cancelled_authorize' && params.state) {
+      const decodedState = jwt.verify(params.state, jwtSecret, { audience: _.get(event, 'requestContext.identity.sourceIp') })
+
+      if (decodedState.next) {
+        return _h.redirect(`${decodedState.next}`, 302)
+      } else {
+        return _h.json({ message: 'user_cancelled_authorize' })
+      }
     } else if (params.code && params.state) {
       const decodedState = jwt.verify(params.state, jwtSecret, { audience: _.get(event, 'requestContext.identity.sourceIp') })
       const accessToken = await getToken(event)
