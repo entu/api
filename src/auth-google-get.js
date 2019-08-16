@@ -3,27 +3,22 @@
 const _ = require('lodash')
 const _h = require('./_helpers')
 const https = require('https')
+const jwt = require('jsonwebtoken')
 const querystring = require('querystring')
 
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
 
-  const googleId = await _h.ssmParameter('entu-api-google-id')
-
   try {
-    if (!_.has(event, 'queryStringParameters.code') && !_.has(event, 'queryStringParameters.error')) {
-      const query = querystring.stringify({
-        client_id: googleId,
-        redirect_uri: `https://${event.headers.Host}${event.path}`,
-        response_type: 'code',
-        scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-        state: _.get(event, 'queryStringParameters.next')
-      })
+    const params = _.get(event, 'queryStringParameters') || {}
 
-      return _h.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${query}`, 302)
-    } else if (_.has(event, 'queryStringParameters.error')) {
-      return _h.error(event.queryStringParameters.error_description)
-    } else {
+    const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
+    const googleId = await _h.ssmParameter('entu-api-google-id')
+
+    if (params.error) {
+      return _h.error(params.error_description)
+    } else if (params.code && params.state) {
+      const decodedState = jwt.verify(params.state, jwtSecret, { audience: _.get(event, 'requestContext.identity.sourceIp') })
       const accessToken = await getToken(event)
       const profile = await getProfile(accessToken)
       const user = {
@@ -33,13 +28,29 @@ exports.handler = async (event, context) => {
         email: _.get(profile, 'emails.0.value'),
         picture: _.get(profile, 'image.url')
       }
+
       const sessionId = await _h.addUserSession(user)
 
-      if (_.has(event, 'queryStringParameters.state')) {
-        return _h.redirect(`${event.queryStringParameters.state}${sessionId}`, 302)
+      if (decodedState.next) {
+        return _h.redirect(`${decodedState.next}${sessionId}`, 302)
       } else {
         return _h.json({ key: sessionId })
       }
+    } else {
+      const state = jwt.sign({ next: params.next }, jwtSecret, {
+        audience: _.get(event, 'requestContext.identity.sourceIp'),
+        expiresIn: '5m'
+      })
+
+      const query = querystring.stringify({
+        client_id: googleId,
+        redirect_uri: `https://${event.headers.Host}${event.path}`,
+        response_type: 'code',
+        scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+        state: state
+      })
+
+      return _h.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${query}`, 302)
     }
   } catch (e) {
     return _h.error(e)

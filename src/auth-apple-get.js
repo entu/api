@@ -9,37 +9,46 @@ const querystring = require('querystring')
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
 
-  const appleId = await _h.ssmParameter('entu-api-apple-id')
-
   try {
-    if (!_.has(event, 'queryStringParameters.code') && !_.has(event, 'queryStringParameters.error')) {
-      const query = querystring.stringify({
-        client_id: appleId,
-        redirect_uri: `https://${event.headers.Host}${event.path}`,
-        response_type: 'code',
-        scope: 'name email',
-        state: _.get(event, 'queryStringParameters.next')
-      })
+    const params = _.get(event, 'queryStringParameters') || {}
 
-      return _h.redirect(`https://appleid.apple.com/auth/authorize?${query}`, 302)
-    } else if (_.has(event, 'queryStringParameters.error')) {
-      return _h.error(event.queryStringParameters.error_description)
-    } else {
+    const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
+    const appleId = await _h.ssmParameter('entu-api-apple-id')
+
+    if (params.error) {
+      return _h.error(params.error_description)
+    } else if (params.code && params.state) {
+      const decodedState = jwt.verify(params.state, jwtSecret, { audience: _.get(event, 'requestContext.identity.sourceIp') })
       const accessToken = await getToken(event)
       const profile = jwt.decode(accessToken)
       const user = {
         provider: 'apple',
         id: _.get(profile, 'sub'),
-        // name: _.get(profile, 'displayName'),
         email: _.get(profile, 'email'),
       }
+
       const sessionId = await _h.addUserSession(user)
 
-      if (_.has(event, 'queryStringParameters.state')) {
-        return _h.redirect(`${event.queryStringParameters.state}${sessionId}`, 302)
+      if (decodedState.next) {
+        return _h.redirect(`${decodedState.next}${sessionId}`, 302)
       } else {
-        return _h.json({ key: profile })
+        return _h.json({ key: sessionId })
       }
+    } else {
+      const state = jwt.sign({ next: params.next }, jwtSecret, {
+        audience: _.get(event, 'requestContext.identity.sourceIp'),
+        expiresIn: '5m'
+      })
+
+      const query = querystring.stringify({
+        client_id: appleId,
+        redirect_uri: `https://${event.headers.Host}${event.path}`,
+        response_type: 'code',
+        scope: 'name email',
+        state: state
+      })
+
+      return _h.redirect(`https://appleid.apple.com/auth/authorize?${query}`, 302)
     }
   } catch (e) {
     return _h.error(e)
