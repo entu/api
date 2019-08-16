@@ -31,6 +31,9 @@ Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF
     &quot;token&quot;: &quot;7RnGfkM7fayzDx7F8E2f65aTuuE5P7PEmYHVYNngKbDVx92bk2FVZBkfFBAPgpsT&quot;
   }
 ]
+</code></pre><h3>GET /auth/apple</h3><p>Redirects user to Apple for authentication. After successful authentication:</p><ul><li>If query parameter <em>next</em> is set, user is redirected to given url. Temporary API key is added to url end.</li><li>If next is not set returns temporary API key.</li></ul><p>Use this temporary API key to get JWT tokens from <a href="#get-auth">/auth</a>. This key can be used only once.</p><h4>Query parameters</h4><ul><li><strong>next</strong> - Url where user is redirected after successful auth.</li></ul><h4>Example response</h4><pre><code class="language-json">{
+  &quot;key&quot;: &quot;M2s8xKpwxG77JYxbx7xw4cS9&quot;
+}
 </code></pre><h3>GET /auth/google</h3><p>Redirects user to Google for authentication. After successful authentication:</p><ul><li>If query parameter <em>next</em> is set, user is redirected to given url. Temporary API key is added to url end.</li><li>If next is not set returns temporary API key.</li></ul><p>Use this temporary API key to get JWT tokens from <a href="#get-auth">/auth</a>. This key can be used only once.</p><h4>Query parameters</h4><ul><li><strong>next</strong> - Url where user is redirected after successful auth.</li></ul><h4>Example response</h4><pre><code class="language-json">{
   &quot;key&quot;: &quot;yp5xhSMf6uRnpJ5QKAeQ2RDT&quot;
 }
