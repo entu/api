@@ -104,6 +104,21 @@ functions:
                     method: get
                     cors: true
 
+    auth-apple-get:
+        handler: auth-apple-get.handler
+        name: ${self:service}-auth-apple-get
+        description: Redirects user to auth in Apple
+        package:
+            include:
+                - auth-apple-get.js
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
+        events:
+            -
+                http:
+                    path: /auth/apple
+                    method: get
+
     auth-google-get:
         handler: auth-google-get.handler
         name: ${self:service}-auth-google-get
