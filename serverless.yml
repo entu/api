@@ -66,10 +66,9 @@ package:
         - layers/**
         - node_modules/**
         - src/**
-        - '**'
         - '*'
     include:
-        - _helpers.js
+        - src/_helpers.js
 
 functions:
     account-get:
@@ -78,7 +77,7 @@ functions:
         description: Returns account info and usage statistics
         package:
             include:
-                - account/get.js
+                - src/account/get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -94,7 +93,7 @@ functions:
         description: Authenticates user by API key
         package:
             include:
-                - auth/get.js
+                - src/auth/get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -110,7 +109,7 @@ functions:
         description: Redirects user to auth in Apple
         package:
             include:
-                - auth/apple.js
+                - src/auth/apple.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -125,7 +124,7 @@ functions:
         description: Redirects user to auth in Google
         package:
             include:
-                - auth/google.js
+                - src/auth/google.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -140,7 +139,7 @@ functions:
         description: Get LHV banklink form url and signed data
         package:
             include:
-                - auth/lhv-get.js
+                - src/auth/lhv-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -155,7 +154,7 @@ functions:
         description: Handles POST request from LHV banklink
         package:
             include:
-                - auth/lhv-post.js
+                - src/auth/lhv-post.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -170,7 +169,7 @@ functions:
         description: Get list of entities
         package:
             include:
-                - entity/entities-get.js
+                - src/entity/entities-get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -186,7 +185,7 @@ functions:
         description: Get one entity with given id
         package:
             include:
-                - entity/get.js
+                - src/entity/get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -202,7 +201,7 @@ functions:
         description: Add new properties to entity
         package:
             include:
-                - entity/post.js
+                - src/entity/post.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -223,7 +222,7 @@ functions:
         description: Delete entity with given id
         package:
             include:
-                - entity/delete.js
+                - src/entity/delete.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -239,7 +238,7 @@ functions:
         description: Aggregate entity with given id
         package:
             include:
-                - entity/aggregate.js
+                - src/entity/aggregate.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         reservedConcurrency: 10
@@ -255,7 +254,7 @@ functions:
         description: Get property with given id
         package:
             include:
-                - property/get.js
+                - src/property/get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -271,7 +270,7 @@ functions:
         description: Delete property with given id
         package:
             include:
-                - property/delete.js
+                - src/property/delete.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:

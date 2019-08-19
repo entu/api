@@ -7,9 +7,6 @@ phases:
             - cp package*.json layers/nodejs
             - npm install
             - npm install --production --prefix layers/nodejs
-    pre_build:
-        commands:
-            - cp -r src/* ./
     build:
         commands:
             - npx serverless deploy
