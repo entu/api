@@ -24,7 +24,7 @@ const db = async (dbName) => {
 
   const mongoUrl = await ssmParameter('entu-api-mongodb')
 
-  dbConnection = await MongoClient.connect(mongoUrl, { ssl: true, sslValidate: true, useNewUrlParser: true })
+  dbConnection = await MongoClient.connect(mongoUrl, { ssl: true, sslValidate: true, useNewUrlParser: true, useUnifiedTopology: true })
   dbConnection.on('close', () => {
     dbConnection = null
     console.log(`Disconnected from ${dbName}`)
