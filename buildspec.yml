@@ -10,7 +10,7 @@ phases:
             - npm install --prefix layers/nodejs
     pre_build:
         commands:
-            - cp src/* ./
+            - cp -r src/* ./
     build:
         commands:
             - serverless deploy
