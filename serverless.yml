@@ -66,6 +66,7 @@ package:
         - layers/**
         - node_modules/**
         - src/**
+        - '**'
         - '*'
     include:
         - _helpers.js
