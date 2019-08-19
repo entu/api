@@ -72,7 +72,7 @@ package:
 
 functions:
     account-get:
-        handler: account/get.handler
+        handler: src/account/get.handler
         name: ${self:service}-account-get
         description: Returns account info and usage statistics
         package:
@@ -88,7 +88,7 @@ functions:
                     cors: true
 
     auth-get:
-        handler: auth/get.handler
+        handler: src/auth/get.handler
         name: ${self:service}-auth-get
         description: Authenticates user by API key
         package:
@@ -104,7 +104,7 @@ functions:
                     cors: true
 
     auth-apple-get:
-        handler: auth/apple.handler
+        handler: src/auth/apple.handler
         name: ${self:service}-auth-apple-get
         description: Redirects user to auth in Apple
         package:
@@ -119,7 +119,7 @@ functions:
                     method: get
 
     auth-google-get:
-        handler: auth/google.handler
+        handler: src/auth/google.handler
         name: ${self:service}-auth-google-get
         description: Redirects user to auth in Google
         package:
@@ -134,7 +134,7 @@ functions:
                     method: get
 
     auth-lhv-get:
-        handler: auth/lhv-get.handler
+        handler: src/auth/lhv-get.handler
         name: ${self:service}-auth-lhv-get
         description: Get LHV banklink form url and signed data
         package:
@@ -149,7 +149,7 @@ functions:
                     method: get
 
     auth-lhv-post:
-        handler: auth/lhv-post.handler
+        handler: src/auth/lhv-post.handler
         name: ${self:service}-auth-lhv-post
         description: Handles POST request from LHV banklink
         package:
@@ -164,7 +164,7 @@ functions:
                     method: post
 
     entities-get:
-        handler: entity/entities-get.handler
+        handler: src/entity/entities-get.handler
         name: ${self:service}-entities-get
         description: Get list of entities
         package:
@@ -180,7 +180,7 @@ functions:
                     cors: true
 
     entity-get:
-        handler: entity/get.handler
+        handler: src/entity/get.handler
         name: ${self:service}-entity-get
         description: Get one entity with given id
         package:
@@ -196,7 +196,7 @@ functions:
                     cors: true
 
     entity-post:
-        handler: entity/post.handler
+        handler: src/entity/post.handler
         name: ${self:service}-entity-post
         description: Add new properties to entity
         package:
@@ -217,7 +217,7 @@ functions:
                     cors: true
 
     entity-delete:
-        handler: entity/delete.handler
+        handler: src/entity/delete.handler
         name: ${self:service}-entity-delete
         description: Delete entity with given id
         package:
@@ -233,7 +233,7 @@ functions:
                     cors: true
 
     entity-aggregate:
-        handler: entity/aggregate.handler
+        handler: src/entity/aggregate.handler
         name: ${self:service}-entity-aggregate
         description: Aggregate entity with given id
         package:
@@ -249,7 +249,7 @@ functions:
                     batchSize: 1
 
     property-get:
-        handler: property/get.handler
+        handler: src/property/get.handler
         name: ${self:service}-property-get
         description: Get property with given id
         package:
@@ -265,7 +265,7 @@ functions:
                     cors: true
 
     property-delete:
-        handler: property/delete.handler
+        handler: src/property/delete.handler
         name: ${self:service}-property-delete
         description: Delete property with given id
         package:
