@@ -62,7 +62,11 @@ provider:
 package:
     individually: true
     exclude:
-        - '.*/**'
+        - docs/**
+        - layers/**
+        - node_modules/**
+        - src/**
+        - '*'
     include:
         - _helpers.js
 
