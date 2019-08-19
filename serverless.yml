@@ -62,7 +62,7 @@ provider:
 package:
     individually: true
     exclude:
-        - ./**
+        - '**'
     include:
         - _helpers.js
 
