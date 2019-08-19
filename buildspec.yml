@@ -3,14 +3,13 @@ version: 0.2
 phases:
     install:
         commands:
-            - npm install -g serverless
-            - npm install serverless-domain-manager serverless-plugin-git-variables --no-save
             - mkdir -p layers/nodejs
             - cp package*.json layers/nodejs
-            - npm install --prefix layers/nodejs
+            - npm install
+            - npm install --production --prefix layers/nodejs
     pre_build:
         commands:
             - cp -r src/* ./
     build:
         commands:
-            - serverless deploy
+            - npx serverless deploy
