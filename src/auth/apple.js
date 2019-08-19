@@ -1,7 +1,7 @@
 'use strict'
 
 const _ = require('lodash')
-const _h = require('./_helpers')
+const _h = require('../_helpers')
 const https = require('https')
 const jwt = require('jsonwebtoken')
 const querystring = require('querystring')
