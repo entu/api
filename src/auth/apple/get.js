@@ -9,18 +9,16 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
 
   try {
-    const params = _.get(event, 'queryStringParameters') || {}
-
     const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
-    const appleId = await _h.ssmParameter('entu-api-apple-id')
+    const clientId = await _h.ssmParameter('entu-api-apple-id')
 
-    const state = jwt.sign({ next: params.next }, jwtSecret, {
+    const state = jwt.sign({ next: _.get(event, 'queryStringParameters.next') }, jwtSecret, {
       audience: _.get(event, 'requestContext.identity.sourceIp'),
       expiresIn: '5m'
     })
 
     const query = querystring.stringify({
-      client_id: appleId,
+      client_id: clientId,
       redirect_uri: `https://${event.headers.Host}${event.path}`,
       response_type: 'code',
       response_mode: 'form_post',

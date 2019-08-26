@@ -17,29 +17,18 @@ exports.handler = async (event, context) => {
 
     const decodedState = jwt.verify(params.state, jwtSecret, { audience: _.get(event, 'requestContext.identity.sourceIp') })
 
-    if (params.error && params.error === 'user_cancelled_authorize') {
-      if (decodedState.next) {
-        return _h.redirect(`${decodedState.next}`, 302)
-      } else {
-        return _h.json({ message: 'user_cancelled_authorize' })
-      }
-    }
+    if (params.error) { return _h.error([400, params.error]) }
 
     if (!params.code) { return _h.error([400, 'No code']) }
 
     const accessToken = await getToken(params.code, `https://${event.headers.Host}${event.path}`)
-    const profile = jwt.decode(accessToken)
-    const profile_user = params.user ? JSON.parse(params.user) : {}
+    const profile = await getProfile(accessToken)
     const user = {
-      provider: 'apple',
-      id: _.get(profile, 'sub')
-    }
-
-    if (_.get(profile_user, 'name.firstName') || _.get(profile_user, 'name.lastName')) {
-      user.name = `${_.get(profile_user, 'name.firstName', '')} ${_.get(profile_user, 'name.lastName', '')}`.trim()
-    }
-    if (_.get(profile_user, 'email')) {
-      user.email = _.get(profile_user, 'email')
+      provider: 'google',
+      id: _.get(profile, 'id'),
+      name: _.get(profile, 'displayName'),
+      email: _.get(profile, 'emails.0.value'),
+      picture: _.get(profile, 'image.url')
     }
 
     const sessionId = await _h.addUserSession(user)
@@ -55,17 +44,8 @@ exports.handler = async (event, context) => {
 }
 
 const getToken = async (code, redirect_uri) => {
-  const appleTeam = await _h.ssmParameter('entu-api-apple-team')
-  const appleSecret = await _h.ssmParameter('entu-api-apple-secret')
-
-  const clientId = await _h.ssmParameter('entu-api-apple-id')
-  const clientSecret = jwt.sign({}, appleSecret, {
-    issuer: appleTeam,
-    audience: 'https://appleid.apple.com',
-    subject: clientId,
-    expiresIn: '10s',
-    algorithm: 'ES256'
-  })
+  const clientId = await _h.ssmParameter('entu-api-google-id')
+  const clientSecret = await _h.ssmParameter('entu-api-google-secret')
 
   return new Promise((resolve, reject) => {
     const query = querystring.stringify({
@@ -77,10 +57,10 @@ const getToken = async (code, redirect_uri) => {
     })
 
     const options = {
-      host: 'appleid.apple.com',
+      host: 'www.googleapis.com',
       port: 443,
       method: 'POST',
-      path: '/auth/token',
+      path: '/oauth2/v4/token',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': query.length
@@ -97,14 +77,42 @@ const getToken = async (code, redirect_uri) => {
       res.on('end', () => {
         data = JSON.parse(data)
 
-        if (res.statusCode === 200 && data.access_token && data.id_token) {
-          resolve(data.id_token)
+        if (res.statusCode === 200 && data.access_token) {
+          resolve(data.access_token)
         } else {
-          reject(_.get(data, 'error', data))
+          reject(_.get(data, 'error_description', data))
         }
       })
     }).on('error', err => {
       reject(err)
     }).write(query)
+  })
+}
+
+const getProfile = async (accessToken) => {
+  return new Promise((resolve, reject) => {
+    const query = querystring.stringify({
+      access_token: accessToken
+    })
+
+    https.get(`https://www.googleapis.com/plus/v1/people/me?${query}`, (res) => {
+      let data = ''
+
+      res.on('data', (chunk) => {
+        data += chunk
+      })
+
+      res.on('end', () => {
+        data = JSON.parse(data)
+
+        if (res.statusCode === 200) {
+          resolve(data)
+        } else {
+          reject(_.get(data, 'error_description', data))
+        }
+      })
+    }).on('error', err => {
+      reject(err)
+    })
   })
 }
