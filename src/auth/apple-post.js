@@ -26,9 +26,10 @@ exports.handler = async (event, context) => {
       }
     }
 
-    if (!params.id_token) { return _h.error([400, 'No id_token']) }
+    if (!params.code) { return _h.error([400, 'No code']) }
 
-    const profile = jwt.decode(params.id_token)
+    const accessToken = await getToken(params.code, `https://${event.headers.Host}${event.path}`)
+    const profile = jwt.decode(accessToken)
     const profile_user = params.user ? JSON.parse(params.user) : {}
     const user = {
       provider: 'apple',
@@ -52,4 +53,59 @@ exports.handler = async (event, context) => {
   } catch (e) {
     return _h.error(e)
   }
+}
+
+const getToken = async (code, redirect_uri) => {
+  const appleId = await _h.ssmParameter('entu-api-apple-id')
+  const appleTeam = await _h.ssmParameter('entu-api-apple-team')
+  const appleSecret = await _h.ssmParameter('entu-api-apple-secret')
+
+  const appleJwt = jwt.sign({}, appleSecret, {
+    issuer: appleTeam,
+    audience: 'https://appleid.apple.com',
+    subject: appleId,
+    expiresIn: '10s',
+    algorithm: 'ES256'
+  })
+
+  return new Promise((resolve, reject) => {
+    const query = querystring.stringify({
+      client_id: appleId,
+      client_secret: appleJwt,
+      code: code,
+      redirect_uri: redirect_uri,
+      grant_type: 'authorization_code'
+    })
+
+    const options = {
+      host: 'appleid.apple.com',
+      port: 443,
+      method: 'POST',
+      path: '/auth/token',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': query.length
+      }
+    }
+
+    https.request(options, (res) => {
+      let data = ''
+
+      res.on('data', (chunk) => {
+        data += chunk
+      })
+
+      res.on('end', () => {
+        data = JSON.parse(data)
+
+        if (res.statusCode === 200 && data.access_token && data.id_token) {
+          resolve(data.id_token)
+        } else {
+          reject(_.get(data, 'error', data))
+        }
+      })
+    }).on('error', err => {
+      reject(err)
+    }).write(query)
+  })
 }
