@@ -16,7 +16,6 @@ exports.handler = async (event, context) => {
     const key = _.get(event, 'headers.Authorization', '').replace('Bearer ', '')
 
     if (!key) { return _h.error([400, 'No key']) }
-    if (key.length !== 24 && key.length !== 48) { return _h.error([400, 'Invalid key']) }
 
     var authFilter = {}
     const connection = await _h.db('entu')
