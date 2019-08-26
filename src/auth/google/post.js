@@ -24,6 +24,7 @@ exports.handler = async (event, context) => {
     const accessToken = await getToken(params.code, `https://${event.headers.Host}${event.path}`)
     const profile = await getProfile(accessToken)
     const user = {
+      ip: _.get(event, 'requestContext.identity.sourceIp'),
       provider: 'google',
       id: _.get(profile, 'id'),
       name: _.get(profile, 'displayName'),

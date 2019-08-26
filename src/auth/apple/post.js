@@ -31,6 +31,7 @@ exports.handler = async (event, context) => {
     const profile = jwt.decode(accessToken)
     const profile_user = params.user ? JSON.parse(params.user) : {}
     const user = {
+      ip: _.get(event, 'requestContext.identity.sourceIp'),
       provider: 'apple',
       id: _.get(profile, 'sub')
     }
