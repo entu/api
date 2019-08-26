@@ -12,6 +12,7 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
 
   try {
+    const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
     const key = _.get(event, 'headers.Authorization', '').replace('Bearer ', '')
 
     if (!key) { return _h.error([400, 'No key']) }
@@ -20,18 +21,18 @@ exports.handler = async (event, context) => {
     var authFilter = {}
     const connection = await _h.db('entu')
 
-    if (key.length === 24) {
-      const session = await connection.collection('session').findOneAndUpdate({ _id: new ObjectID(key), deleted: { $exists: false } }, { $set: { deleted: new Date() } })
+    try {
+      const decoded = jwt.verify(key, jwtSecret, { audience: _.get(event, 'requestContext.identity.sourceIp') })
+      const session = await connection.collection('session').findOneAndUpdate({ _id: new ObjectID(decoded.sub), deleted: { $exists: false } }, { $set: { deleted: new Date() } })
 
       if (!_.get(session, 'value')) { return _h.error([400, 'No session']) }
       if (!_.get(session, 'value.user.email')) { return _h.error([400, 'No user email']) }
 
       authFilter['private.entu_user.string'] = _.get(session, 'value.user.email')
-    } else {
+    } catch (e) {
       authFilter['private.entu_api_key.string'] = crypto.createHash('sha256').update(key).digest('hex')
     }
 
-    const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
     const onlyForAccount = _.get(event, 'queryStringParameters.account')
 
     const dbs = await connection.admin().listDatabases()

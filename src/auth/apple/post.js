@@ -63,7 +63,7 @@ const getToken = async (code, redirect_uri) => {
     issuer: appleTeam,
     audience: 'https://appleid.apple.com',
     subject: clientId,
-    expiresIn: '10s',
+    expiresIn: '5m',
     algorithm: 'ES256'
   })
 

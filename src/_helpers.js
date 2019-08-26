@@ -102,6 +102,8 @@ exports.user = async (event) => {
 
 // Create user session
 exports.addUserSession = async (user) => {
+  const jwtSecret = await ssmParameter('entu-api-jwt-secret')
+
   return new Promise((resolve, reject) => {
     if (!user) { return reject('No user') }
 
@@ -112,7 +114,13 @@ exports.addUserSession = async (user) => {
 
     db('entu').then(connection => {
       connection.collection('session').insertOne(_.pickBy(session, _.identity)).then(result => {
-        resolve(result.insertedId)
+        const token = jwt.sign({}, jwtSecret, {
+          audience: _.get(event, 'requestContext.identity.sourceIp'),
+          subject: result.insertedId,
+          expiresIn: '5m'
+        })
+
+        resolve(token)
       }).catch(err => {
         reject(err)
       })
