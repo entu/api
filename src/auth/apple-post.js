@@ -10,95 +10,46 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
 
   try {
-    const params = querystring.parse(event.body) || {}
-
     const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
     const appleId = await _h.ssmParameter('entu-api-apple-id')
+    const params = querystring.parse(event.body) || {}
 
-    if (params.error && !params.state) {
-      return _h.error(params.error_description)
-    } else if (params.error === 'user_cancelled_authorize' && params.state) {
-      const decodedState = jwt.verify(params.state, jwtSecret, { audience: _.get(event, 'requestContext.identity.sourceIp') })
+    if (!params.state) { return _h.error([400, 'No state']) }
 
+    const decodedState = jwt.verify(params.state, jwtSecret, { audience: _.get(event, 'requestContext.identity.sourceIp') })
+
+    if (params.error && params.error === 'user_cancelled_authorize') {
       if (decodedState.next) {
         return _h.redirect(`${decodedState.next}`, 302)
       } else {
         return _h.json({ message: 'user_cancelled_authorize' })
       }
-    } else if (params.code && params.state) {
-      const decodedState = jwt.verify(params.state, jwtSecret, { audience: _.get(event, 'requestContext.identity.sourceIp') })
-      const accessToken = await getToken(event)
-      const profile = jwt.decode(accessToken)
-      const user = {
-        provider: 'apple',
-        id: _.get(profile, 'sub'),
-        email: _.get(profile, 'email'),
-      }
+    }
 
-      const sessionId = await _h.addUserSession(user)
+    if (!params.id_token) { return _h.error([400, 'No id_token']) }
 
-      if (decodedState.next) {
-        return _h.redirect(`${decodedState.next}${sessionId}`, 302)
-      } else {
-        return _h.json({ key: sessionId })
-      }
+    const profile = jwt.decode(params.id_token)
+    const profile_user = params.user ? JSON.parse(params.user) : {}
+    const user = {
+      provider: 'apple',
+      id: _.get(profile, 'sub')
+    }
+
+    if (_.get(profile_user, 'name.firstName') || _.get(profile_user, 'name.lastName')) {
+      user.name = `${_.get(profile_user, 'name.firstName', '')} ${_.get(profile_user, 'name.lastName', '')}`.trim()
+    }
+    if (_.get(profile_user, 'email')) {
+      user.email = _.get(profile_user, 'email')
+    }
+
+    const sessionId = await _h.addUserSession(user)
+
+    if (decodedState.next) {
+      return _h.redirect(`${decodedState.next}${sessionId}`, 302)
+    } else {
+      return _h.json({ key: sessionId })
     }
   } catch (e) {
     return _h.error(e)
   }
-}
-
-const getToken = async (event) => {
-  const appleId = await _h.ssmParameter('entu-api-apple-id')
-  const appleTeam = await _h.ssmParameter('entu-api-apple-team')
-  const appleSecret = await _h.ssmParameter('entu-api-apple-secret')
-
-  const appleJwt = jwt.sign({}, appleSecret, {
-    issuer: appleTeam,
-    audience: 'https://appleid.apple.com',
-    subject: appleId,
-    expiresIn: '10s',
-    algorithm: 'ES256'
-  })
-
-  return new Promise((resolve, reject) => {
-    const query = querystring.stringify({
-      client_id: appleId,
-      client_secret: appleJwt,
-      redirect_uri: `https://${event.headers.Host}${event.path}`,
-      code: event.queryStringParameters.code,
-      grant_type: 'authorization_code'
-    })
-
-    const options = {
-      host: 'appleid.apple.com',
-      port: 443,
-      method: 'POST',
-      path: '/auth/token',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': query.length
-      }
-    }
-
-    https.request(options, (res) => {
-      let data = ''
-
-      res.on('data', (chunk) => {
-        data += chunk
-      })
-
-      res.on('end', () => {
-        data = JSON.parse(data)
-
-        if (res.statusCode === 200 && data.access_token && data.id_token) {
-          resolve(data.id_token)
-        } else {
-          reject(_.get(data, 'error_description', data))
-        }
-      })
-    }).on('error', err => {
-      reject(err)
-    }).write(query)
-  })
 }
