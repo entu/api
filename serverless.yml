@@ -121,7 +121,7 @@ functions:
     auth-apple-post:
         handler: src/auth/apple/post.handler
         name: ${self:service}-auth-apple-post
-        description: Handles POST request from Apple
+        description: Handles return request from Apple auth
         package:
             include:
                 - src/auth/apple/post.js
@@ -147,6 +147,21 @@ functions:
                 http:
                     path: /auth/google
                     method: get
+
+    auth-google-post:
+        handler: src/auth/google/post.handler
+        name: ${self:service}-auth-google-post
+        description: Handles return request from Google auth
+        package:
+            include:
+                - src/auth/google/post.js
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
+        events:
+            -
+                http:
+                    path: /auth/google
+                    method: post
 
     auth-lhv-get:
         handler: src/auth/lhv/get.handler
