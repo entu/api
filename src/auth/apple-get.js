@@ -22,7 +22,7 @@ exports.handler = async (event, context) => {
     const query = querystring.stringify({
       client_id: appleId,
       redirect_uri: `https://${event.headers.Host}${event.path}`,
-      response_type: 'id_token',
+      response_type: 'code id_token',
       response_mode: 'form_post',
       scope: 'email name',
       state: state
