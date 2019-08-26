@@ -116,7 +116,7 @@ exports.addUserSession = async (user) => {
       connection.collection('session').insertOne(_.pickBy(session, _.identity)).then(result => {
         const token = jwt.sign({}, jwtSecret, {
           audience: user.ip,
-          subject: result.insertedId,
+          subject: result.insertedId.toString(),
           expiresIn: '5m'
         })
 
