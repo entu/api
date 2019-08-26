@@ -104,12 +104,12 @@ functions:
                     cors: true
 
     auth-apple-get:
-        handler: src/auth/apple-get.handler
+        handler: src/auth/apple/get.handler
         name: ${self:service}-auth-apple-get
         description: Redirects user to auth in Apple
         package:
             include:
-                - src/auth/apple-get.js
+                - src/auth/apple/get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -119,12 +119,12 @@ functions:
                     method: get
 
     auth-apple-post:
-        handler: src/auth/apple-post.handler
+        handler: src/auth/apple/post.handler
         name: ${self:service}-auth-apple-post
         description: Handles POST request from Apple
         package:
             include:
-                - src/auth/apple-post.js
+                - src/auth/apple/post.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -134,12 +134,12 @@ functions:
                     method: post
 
     auth-google-get:
-        handler: src/auth/google.handler
+        handler: src/auth/google/get.handler
         name: ${self:service}-auth-google-get
         description: Redirects user to auth in Google
         package:
             include:
-                - src/auth/google.js
+                - src/auth/google/get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -149,12 +149,12 @@ functions:
                     method: get
 
     auth-lhv-get:
-        handler: src/auth/lhv-get.handler
+        handler: src/auth/lhv/get.handler
         name: ${self:service}-auth-lhv-get
         description: Get LHV banklink form url and signed data
         package:
             include:
-                - src/auth/lhv-get.js
+                - src/auth/lhv/get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -164,12 +164,12 @@ functions:
                     method: get
 
     auth-lhv-post:
-        handler: src/auth/lhv-post.handler
+        handler: src/auth/lhv/post.handler
         name: ${self:service}-auth-lhv-post
         description: Handles POST request from LHV banklink
         package:
             include:
-                - src/auth/lhv-post.js
+                - src/auth/lhv/post.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
