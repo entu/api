@@ -205,7 +205,7 @@ const reference = async (entityId, user) => {
       'public.name': true
     }
   }
-  const e = await user.db.collection('entity').findOne({ _id: new ObjectId(entityId) }, config)
+  const e = await user.db.collection('entity').findOne({ _id: strToId(entityId) }, config)
   const entity = await claenupEntity(e, user)
 
   return _.get(entity, 'name', []).map((v) => v.string).join('; ')
@@ -269,7 +269,7 @@ const formulaField = async (str, entityId, user) => {
   switch (str.split('.').length) {
     case 1:
       const config = _.set({}, ['projection', `private.${str}.string`], true)
-      const e = await user.db.collection('entity').findOne({ _id: new ObjectId(entityId) }, config)
+      const e = await user.db.collection('entity').findOne({ _id: strToId(entityId) }, config)
       result = _.get(e, ['private', str, 0, 'string'], '')
       break
     default:
@@ -278,6 +278,11 @@ const formulaField = async (str, entityId, user) => {
 
   return result
 }
+
+const strToId = (str) => {
+  return new ObjectId(str)
+}
+exports.strToId = strToId
 
 exports.json = (data, code, headers) => {
   if (headers) {

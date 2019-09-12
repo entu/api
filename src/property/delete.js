@@ -2,7 +2,6 @@
 
 const _ = require('lodash')
 const _h = require('../_helpers')
-const { ObjectId } = require('mongodb')
 
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
@@ -11,7 +10,7 @@ exports.handler = async (event, context) => {
     const user = await _h.user(event)
     if (!user.id) { return _h.error([403, 'No user']) }
 
-    const pId = new ObjectId(event.pathParameters.id)
+    const pId = _h.strToId(event.pathParameters.id)
     const property = await user.db.collection('property').findOne({ _id: pId, deleted: { $exists: false } }, { projection: { _id: false, entity: true, type: true } })
 
     if (!property) { return _h.error([404, 'Property not found']) }
@@ -25,7 +24,7 @@ exports.handler = async (event, context) => {
 
     if (!access.includes(user.id)) { return _h.error([403, 'User not in _owner nor _editor property']) }
 
-    await user.db.collection('property').updateOne({ _id: pId }, { $set: { deleted: { at: new Date(), by: new ObjectId(user.id) } } })
+    await user.db.collection('property').updateOne({ _id: pId }, { $set: { deleted: { at: new Date(), by: _h.strToId(user.id) } } })
 
     await _h.addEntityAggregateSqs(context, user.account, property.entity)
 

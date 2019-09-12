@@ -2,14 +2,13 @@
 
 const _ = require('lodash')
 const _h = require('../_helpers')
-const { ObjectId } = require('mongodb')
 
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
 
   try {
     const user = await _h.user(event)
-    const eId = event.pathParameters && event.pathParameters.id ? new ObjectId(event.pathParameters.id) : null
+    const eId = event.pathParameters && event.pathParameters.id ? _h.strToId(event.pathParameters.id) : null
     const props = _.get(event, 'queryStringParameters.props', '').split(',').filter((x) => !!x)
     var fields = {}
     var result = {}
@@ -52,7 +51,7 @@ exports.handler = async (event, context) => {
 
           switch (type) {
             case 'reference':
-              value = new ObjectId(v)
+              value = _h.strToId(v)
               break
             case 'boolean':
               value = v.toLowerCase() === 'true'
@@ -91,7 +90,7 @@ exports.handler = async (event, context) => {
       })
 
       if (user.id) {
-        filter.access = { '$in': [new ObjectId(user.id), 'public'] }
+        filter.access = { '$in': [_h.strToId(user.id), 'public'] }
       } else {
         filter.access = 'public'
       }

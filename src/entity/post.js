@@ -3,7 +3,6 @@
 const _ = require('lodash')
 const _h = require('../_helpers')
 const aws = require('aws-sdk')
-const { ObjectId } = require('mongodb')
 
 const allowedTypes = [
   '_type',
@@ -31,14 +30,14 @@ exports.handler = async (event, context) => {
     if (!user.id) { return _h.error([403, 'No user']) }
 
     const createdDt = new Date()
-    const userId = new ObjectId(user.id)
+    const userId = _h.strToId(user.id)
 
     const body = JSON.parse(event.body)
     if (!body) { return _h.error([400, 'No data']) }
     if (!_.isArray(body)) { return _h.error([400, 'Data must be array']) }
     if (body.length === 0) { return _h.error([400, 'At least one property must be set']) }
 
-    let eId = event.pathParameters && event.pathParameters.id ? new ObjectId(event.pathParameters.id) : null
+    let eId = event.pathParameters && event.pathParameters.id ? _h.strToId(event.pathParameters.id) : null
 
     if (eId) {
       const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: { _id: false, 'private._owner': true, 'private._editor': true } })
@@ -63,7 +62,7 @@ exports.handler = async (event, context) => {
       if (property.type.startsWith('_') && !allowedTypes.includes(property.type)) { return _h.error([400, 'Property type can\'t begin with _']) }
 
       if (property.type === '_parent' && property.reference) {
-        const parent = await user.db.collection('entity').findOne({ _id: new ObjectId(property.reference) }, { projection: { _id: false, 'private._owner': true, 'private._editor': true, 'private._expander': true } })
+        const parent = await user.db.collection('entity').findOne({ _id: _h.strToId(property.reference) }, { projection: { _id: false, 'private._owner': true, 'private._editor': true, 'private._expander': true } })
 
         if (!parent) { return _h.error([400, 'Entity in _parent property not found']) }
 
@@ -85,7 +84,7 @@ exports.handler = async (event, context) => {
     for (let i = 0; i < body.length; i++) {
       let property = body[i]
 
-      if (property.reference) { property.reference = new ObjectId(property.reference) }
+      if (property.reference) { property.reference = _h.strToId(property.reference) }
       if (property.date) { property.date = new Date(property.date) }
       if (property.datetime) { property.datetime = new Date(property.datetime) }
 

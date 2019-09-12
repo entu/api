@@ -4,7 +4,6 @@ const _ = require('lodash')
 const _h = require('../_helpers')
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
-const ObjectID = require('mongodb').ObjectID
 
 const mongoDbSystemDbs = ['admin', 'config', 'local']
 
@@ -22,7 +21,7 @@ exports.handler = async (event, context) => {
 
     try {
       const decoded = jwt.verify(key, jwtSecret, { audience: _.get(event, 'requestContext.identity.sourceIp') })
-      const session = await connection.collection('session').findOneAndUpdate({ _id: new ObjectID(decoded.sub), deleted: { $exists: false } }, { $set: { deleted: new Date() } })
+      const session = await connection.collection('session').findOneAndUpdate({ _id: _h.strToId(decoded.sub), deleted: { $exists: false } }, { $set: { deleted: new Date() } })
 
       if (!_.get(session, 'value')) { return _h.error([400, 'No session']) }
       if (!_.get(session, 'value.user.email')) { return _h.error([400, 'No user email']) }

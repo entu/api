@@ -2,14 +2,13 @@
 
 const _ = require('lodash')
 const _h = require('../_helpers')
-const { ObjectId } = require('mongodb')
 
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return }
 
   try {
     const user = await _h.user(event)
-    let property = await user.db.collection('property').findOne({ _id: new ObjectId(event.pathParameters.id), deleted: { $exists: false } })
+    let property = await user.db.collection('property').findOne({ _id: _h.strToId(event.pathParameters.id), deleted: { $exists: false } })
 
     if (!property) { return _h.error([404, 'Property not found']) }
 
