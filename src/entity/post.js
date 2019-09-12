@@ -61,6 +61,16 @@ exports.handler = async (event, context) => {
       if (!property.type) { return _h.error([400, 'Property type not set']) }
       if (!property.type.match(/^[A-Za-z0-9\_]+$/)) { return _h.error([400, 'Property type must be alphanumeric']) }
       if (property.type.startsWith('_') && !allowedTypes.includes(property.type)) { return _h.error([400, 'Property type can\'t begin with _']) }
+
+      if (property.type === '_parent' && property.reference) {
+        const parent = await user.db.collection('entity').findOne({ _id: new ObjectId(property.reference) }, { projection: { _id: false, 'private._owner': true, 'private._editor': true, 'private._expander': true } })
+
+        if (!parent) { return _h.error([400, 'Entity in _parent property not found']) }
+
+        const parentAccess = _.get(parent, 'private._owner', []).concat(_.get(parent, 'private._editor', []), _.get(parent, 'private._expander', [])).map((s) => s.reference.toString())
+
+        if (!parentAccess.includes(user.id)) { return _h.error([403, 'User not in parent _owner, _editor nor _expander property']) }
+      }
     }
 
     if (!eId) {
