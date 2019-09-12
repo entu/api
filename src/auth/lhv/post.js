@@ -40,19 +40,19 @@ exports.handler = async (event, context) => {
     const datetimeMax = new Date(datetime.getTime() + 300000)
 
     if (!crypto.createVerify('SHA1').update(mac).verify(lhvKey, request.VK_MAC, 'base64')) {
-      return _h.error([400, 'Invalid VK_MAC.'])
+      return _h.error([400, 'Invalid VK_MAC'])
     }
     if (_.get(request, 'VK_SERVICE') !== '3012') {
-      return _h.error([400, 'Invalid VK_SERVICE.'])
+      return _h.error([400, 'Invalid VK_SERVICE'])
     }
     if (_.get(request, 'VK_SND_ID') !== 'LHV') {
-      return _h.error([400, 'Invalid VK_SND_ID.'])
+      return _h.error([400, 'Invalid VK_SND_ID'])
     }
     if (_.get(request, 'VK_REC_ID') !== lhvId) {
-      return _h.error([400, 'Invalid VK_REC_ID.'])
+      return _h.error([400, 'Invalid VK_REC_ID'])
     }
     if (now < datetimeMin || now > datetimeMax) {
-      return _h.error([400, 'Invalid VK_DATETIME.'])
+      return _h.error([400, 'Invalid VK_DATETIME'])
     }
 
     const user = {

@@ -33,7 +33,7 @@ exports.handler = async (event, context) => {
 
       result = await _h.claenupEntity(entity, user)
 
-      if (!result) { return _h.error([403, 'Forbidden. No accessible properties.']) }
+      if (!result) { return _h.error([403, 'No accessible properties']) }
     } else {
       const sort = _.get(event, 'queryStringParameters.sort', '').split(',').filter(x => !!x)
       const limit = _.toSafeInteger(_.get(event, 'queryStringParameters.limit')) || 100

@@ -28,7 +28,7 @@ exports.handler = async (event, context) => {
   try {
     const s3Bucket = await _h.ssmParameter('entu-api-files-s3-bucket')
     const user = await _h.user(event)
-    if (!user.id) { return _h.error([403, 'Forbidden. No user.']) }
+    if (!user.id) { return _h.error([403, 'No user']) }
 
     const createdDt = new Date()
     const userId = new ObjectId(user.id)
@@ -47,12 +47,12 @@ exports.handler = async (event, context) => {
 
       const access = _.get(entity, 'private._owner', []).concat(_.get(entity, 'private._editor', [])).map((s) => s.reference.toString())
 
-      if (!access.includes(user.id)) { return _h.error([403, 'Forbidden. User not in _owner nor _editor property.']) }
+      if (!access.includes(user.id)) { return _h.error([403, 'User not in _owner nor _editor property']) }
 
       const rigtsProperties = body.filter((property) => rightTypes.includes(property.type))
       const owners = _.get(entity, 'private._owner', []).map((s) => s.reference.toString())
 
-      if (rigtsProperties.length > 0 && !owners.includes(user.id)) { return _h.error([403, 'Forbidden. User not in _owner property.']) }
+      if (rigtsProperties.length > 0 && !owners.includes(user.id)) { return _h.error([403, 'User not in _owner property']) }
     }
 
     for (let i = 0; i < body.length; i++) {

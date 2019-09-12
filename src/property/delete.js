@@ -9,7 +9,7 @@ exports.handler = async (event, context) => {
 
   try {
     const user = await _h.user(event)
-    if (!user.id) { return _h.error([403, 'Forbidden. No user.']) }
+    if (!user.id) { return _h.error([403, 'No user']) }
 
     const pId = new ObjectId(event.pathParameters.id)
     const property = await user.db.collection('property').findOne({ _id: pId, deleted: { $exists: false } }, { projection: { _id: false, entity: true, type: true } })
@@ -23,7 +23,7 @@ exports.handler = async (event, context) => {
 
     const access = _.get(entity, 'private._owner', []).concat(_.get(entity, 'private._editor', [])).map((s) => s.reference.toString())
 
-    if (!access.includes(user.id)) { return _h.error([403, 'Forbidden. User not in _owner nor _editor property.']) }
+    if (!access.includes(user.id)) { return _h.error([403, 'User not in _owner nor _editor property']) }
 
     await user.db.collection('property').updateOne({ _id: pId }, { $set: { deleted: { at: new Date(), by: new ObjectId(user.id) } } })
 
