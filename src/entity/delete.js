@@ -9,7 +9,7 @@ exports.handler = async (event, context) => {
 
   try {
     const user = await _h.user(event)
-    if (!user.id) { return _h.error([403, 'Forbidden. No user.']) }
+    if (!user.id) { return _h.error([403, 'No user']) }
 
     var eId = new ObjectId(event.pathParameters.id)
     const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: { _id: false, 'private._owner': true } })
@@ -17,7 +17,7 @@ exports.handler = async (event, context) => {
 
     const access = _.get(entity, 'private._owner', []).map((s) => s.reference.toString())
 
-    if (!access.includes(user.id)) { return _h.error([403, 'Forbidden. User not in _owner property.']) }
+    if (!access.includes(user.id)) { return _h.error([403, 'User not in _owner property']) }
 
     await user.db.collection('property').insertOne({ entity: eId, type: '_deleted', reference: new ObjectId(user.id), datetime: new Date(), created: { at: new Date(), by: new ObjectId(user.id) } })
     await _h.addEntityAggregateSqs(context, user.account, eId)
