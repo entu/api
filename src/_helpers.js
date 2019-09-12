@@ -280,7 +280,11 @@ const formulaField = async (str, entityId, user) => {
 }
 
 const strToId = (str) => {
-  return new ObjectId(str)
+  try {
+    return new ObjectId(str)
+  } catch (e) {
+    throw 'Invalid _id'
+  }
 }
 exports.strToId = strToId
 
