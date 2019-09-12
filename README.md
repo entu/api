@@ -210,7 +210,7 @@ Content-Length: 151
 [
   { "type": "_type", "string": "book" },
   { "type": "title", "string": "Hobbit" },
-  { "type": "photo", "filename": "cover.jpg" "size": 1937 }
+  { "type": "photo", "filename": "cover.jpg", "size": 1937 }
 ]
 ```
 
@@ -277,7 +277,7 @@ Content-Length: 109
 
 [
   { "type": "title", "string": "Hobbit" },
-  { "type": "photo", "filename": "cover.jpg" "size": 1937 }
+  { "type": "photo", "filename": "cover.jpg", "size": 1937 }
 ]
 ```
 
