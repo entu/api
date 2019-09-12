@@ -306,8 +306,6 @@ exports.error = (err) => {
     'Access-Control-Allow-Origin': '*'
   }
 
-  console.error(err)
-
   if (process.env.GIT_SHA1) {
     headers['X-Entu-Version'] = process.env.GIT_SHA1
   }
@@ -315,8 +313,12 @@ exports.error = (err) => {
   if (err.constructor === Array) {
     code = err[0]
     message = err[1]
+
+    console.error(code, message)
   } else {
     message = err.toString()
+
+    console.error(err)
   }
 
   return {
