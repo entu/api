@@ -193,13 +193,13 @@ functions:
                     path: /auth/lhv
                     method: post
 
-    entities-get:
-        handler: src/entity/entities-get.handler
-        name: ${self:service}-entities-get
-        description: Get list of entities
+    entity-get:
+        handler: src/entity/get.handler
+        name: ${self:service}-entity-get
+        description: Get one entity with given id or list of entities if id is not given
         package:
             include:
-                - src/entity/entities-get.js
+                - src/entity/get.js
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
@@ -208,17 +208,6 @@ functions:
                     path: /entity
                     method: get
                     cors: true
-
-    entity-get:
-        handler: src/entity/get.handler
-        name: ${self:service}-entity-get
-        description: Get one entity with given id
-        package:
-            include:
-                - src/entity/get.js
-        layers:
-            - {Ref: CommonNodeLibsLambdaLayer}
-        events:
             -
                 http:
                     path: /entity/{id}
