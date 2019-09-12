@@ -40,14 +40,14 @@ exports.handler = async (event, context) => {
     ]).toArray()
 
     return _h.json({
-      entities: _.get(entities.filter(e => e._id === false), '0.count', 0),
-      deletedEntities: _.get(entities.filter(e => e._id === true), '0.count', 0),
-      properties: _.get(properties.filter(e => e._id === false), '0.count', 0),
-      deletedProperties: _.get(properties.filter(e => e._id === true), '0.count', 0),
-      files: _.get(files.filter(e => e._id === false), '0.count', 0),
-      filesSize: _.get(files.filter(e => e._id === false), '0.size', 0),
-      deletedFiles: _.get(files.filter(e => e._id === true), '0.count', 0),
-      deletedFilesSize: _.get(files.filter(e => e._id === true), '0.size', 0),
+      entities: _.get(entities.filter((e) => e._id === false), '0.count', 0),
+      deletedEntities: _.get(entities.filter((e) => e._id === true), '0.count', 0),
+      properties: _.get(properties.filter((e) => e._id === false), '0.count', 0),
+      deletedProperties: _.get(properties.filter((e) => e._id === true), '0.count', 0),
+      files: _.get(files.filter((e) => e._id === false), '0.count', 0),
+      filesSize: _.get(files.filter((e) => e._id === false), '0.size', 0),
+      deletedFiles: _.get(files.filter((e) => e._id === true), '0.count', 0),
+      deletedFilesSize: _.get(files.filter((e) => e._id === true), '0.size', 0),
       dbSize: stats.dataSize + stats.indexSize
     })
   } catch (e) {

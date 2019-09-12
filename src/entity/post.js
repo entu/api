@@ -45,12 +45,12 @@ exports.handler = async (event, context) => {
 
       if (!entity) { return _h.error([404, 'Entity not found']) }
 
-      const access = _.map(_.concat(_.get(entity, 'private._owner', []), _.get(entity, 'private._editor', [])), (s) => s.reference.toString())
+      const access = _.get(entity, 'private._owner', []).concat(_.get(entity, 'private._editor', [])).map((s) => s.reference.toString())
 
       if (!access.includes(user.id)) { return _h.error([403, 'Forbidden. User not in _owner nor _editor property.']) }
 
       const rigtsProperties = body.filter((property) => rightTypes.includes(property.type))
-      const owners = _.map(_.get(entity, 'private._owner', []), (s) => s.reference.toString())
+      const owners = _.get(entity, 'private._owner', []).map((s) => s.reference.toString())
 
       if (rigtsProperties.length > 0 && !owners.includes(user.id)) { return _h.error([403, 'Forbidden. User not in _owner property.']) }
     }

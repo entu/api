@@ -10,12 +10,12 @@ exports.handler = async (event, context) => {
   try {
     const user = await _h.user(event)
     const eId = event.pathParameters && event.pathParameters.id ? new ObjectId(event.pathParameters.id) : null
-    const props = _.compact(_.get(event, 'queryStringParameters.props', '').split(','))
+    const props = _.get(event, 'queryStringParameters.props', '').split(',').filter((x) => !!x)
     var fields = {}
     var result = {}
 
     if (props.length > 0) {
-      _.forEach(props, (f) => {
+      props.forEach((f) => {
         if (f === '_thumbnail') {
           fields[`private.photo.s3`] = true
           fields[`public.photo.s3`] = true
@@ -35,10 +35,10 @@ exports.handler = async (event, context) => {
 
       if (!result) { return _h.error([403, 'Forbidden. No accessible properties.']) }
     } else {
-      const sort = _.compact(_.get(event, 'queryStringParameters.sort', '').split(','))
+      const sort = _.get(event, 'queryStringParameters.sort', '').split(',').filter(x => !!x)
       const limit = _.toSafeInteger(_.get(event, 'queryStringParameters.limit')) || 100
       const skip = _.toSafeInteger(_.get(event, 'queryStringParameters.skip')) || 0
-      const query = _.compact(_.get(event, 'queryStringParameters.q', '').split(' '))
+      const query = _.get(event, 'queryStringParameters.q', '').split(' ').filter(x => !!x)
       var sortFields = {}
       var filter = {}
 
@@ -97,14 +97,14 @@ exports.handler = async (event, context) => {
       }
 
       if (query.length > 0) {
-        let queries = query.map(q => {
+        let queries = query.map((q) => {
           return { 'search.private': new RegExp(q.toLowerCase()) }
         })
         filter['$and'] = queries
       }
 
       if (sort.length > 0) {
-        _.forEach(sort, (f) => {
+        sort.forEach((f) => {
           if (f.startsWith('-')) {
             sortFields[`private.${f.substring(1)}`] = -1
           } else {

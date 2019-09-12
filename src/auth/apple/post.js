@@ -104,7 +104,7 @@ const getToken = async (code, redirect_uri) => {
           reject(_.get(data, 'error', data))
         }
       })
-    }).on('error', err => {
+    }).on('error', (err) => {
       reject(err)
     }).write(query)
   })

@@ -93,7 +93,7 @@ exports.user = async (event) => {
       return reject([401, 'No account parameter'])
     }
 
-    db(result.account).then(x => {
+    db(result.account).then((x) => {
       result.db = x
       resolve(result)
     })
@@ -112,8 +112,8 @@ exports.addUserSession = async (user) => {
       user: user
     }
 
-    db('entu').then(connection => {
-      connection.collection('session').insertOne(_.pickBy(session, _.identity)).then(result => {
+    db('entu').then((connection) => {
+      connection.collection('session').insertOne(_.pickBy(session, _.identity)).then((result) => {
         const token = jwt.sign({}, jwtSecret, {
           audience: user.ip,
           subject: result.insertedId.toString(),
@@ -121,10 +121,10 @@ exports.addUserSession = async (user) => {
         })
 
         resolve(token)
-      }).catch(err => {
+      }).catch((err) => {
         reject(err)
       })
-    }).catch(err => {
+    }).catch((err) => {
       reject(err)
     })
   })
@@ -152,7 +152,7 @@ const claenupEntity = async (entity, user) => {
 
   let result = { _id: entity._id }
 
-  const access = _.map(_.get(entity, 'access', []), (s) => s.toString())
+  const access = _.get(entity, 'access', []).map((s) => s.toString())
 
   if (user.id && access.includes(user.id)) {
     result = Object.assign({}, result, _.get(entity, 'private', {}))
@@ -184,7 +184,7 @@ const claenupEntity = async (entity, user) => {
   }
 
   if (_.has(result, 'entu_api_key')) {
-    _.get(result, 'entu_api_key', []).forEach(k => {
+    _.get(result, 'entu_api_key', []).forEach((k) => {
       k.string = '***'
     })
   }
@@ -208,7 +208,7 @@ const reference = async (entityId, user) => {
   const e = await user.db.collection('entity').findOne({ _id: new ObjectId(entityId) }, config)
   const entity = await claenupEntity(e, user)
 
-  return _.get(entity, 'name', []).map(v => v.string).join('; ')
+  return _.get(entity, 'name', []).map((v) => v.string).join('; ')
 }
 
 const formula = async (str, entityId, user) => {
@@ -299,7 +299,7 @@ exports.json = (data, code, headers) => {
   }
 }
 
-exports.error = err => {
+exports.error = (err) => {
   let code
   let message
   let headers = {

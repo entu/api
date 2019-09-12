@@ -17,7 +17,7 @@ exports.handler = async (event, context) => {
 
     if (!entity) { return _h.error([404, 'Entity not found']) }
 
-    const access = _.map(_.get(entity, 'access', []), (s) => s.toString())
+    const access = _.get(entity, 'access', []).map((s) => s.toString())
 
     if (property.public) {
       if (!access.includes('public')) { return _h.error([403, 'Forbidden. Not a public property.']) }

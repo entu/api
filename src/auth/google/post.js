@@ -84,7 +84,7 @@ const getToken = async (code, redirect_uri) => {
           reject(_.get(data, 'error_description', data))
         }
       })
-    }).on('error', err => {
+    }).on('error', (err) => {
       reject(err)
     }).write(query)
   })
@@ -112,7 +112,7 @@ const getProfile = async (accessToken) => {
           reject(_.get(data, 'error_description', data))
         }
       })
-    }).on('error', err => {
+    }).on('error', (err) => {
       reject(err)
     })
   })
