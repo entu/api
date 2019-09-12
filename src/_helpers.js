@@ -314,7 +314,7 @@ exports.error = (err) => {
     code = err[0]
     message = err[1]
 
-    console.error(code, message)
+    console.error(code.toString(), message)
   } else {
     message = err.toString()
 
