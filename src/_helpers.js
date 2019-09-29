@@ -173,7 +173,7 @@ const claenupEntity = async (entity, user) => {
     for (let i = 0; i < result[property].length; i++) {
       if (result[property][i].formula) {
         const f = await formula(result[property][i].formula, entity._id, user)
-        result[property][i].string = {...result[property][i].string, ...f}
+        result[property][i] = {...result[property][i], ...f}
       }
       if (result[property][i].reference) {
         result[property][i].string = await reference(result[property][i].reference, user)
