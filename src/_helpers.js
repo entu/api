@@ -172,7 +172,8 @@ const claenupEntity = async (entity, user) => {
 
     for (let i = 0; i < result[property].length; i++) {
       if (result[property][i].formula) {
-        result[property][i].string = await formula(result[property][i].formula, entity._id, user)
+        const formula = await formula(result[property][i].formula, entity._id, user)
+        result[property][i].string = {...result[property][i].string, ...formula}
       }
       if (result[property][i].reference) {
         result[property][i].string = await reference(result[property][i].reference, user)
@@ -239,25 +240,25 @@ const formula = async (str, entityId, user) => {
 
   switch (func) {
     case 'CONCAT':
-      return valueArray.join('')
+      return { string: valueArray.join('') }
       break
     case 'COUNT':
-      return valueArray.length
+      return { integer: valueArray.length }
       break
     case 'SUM':
-      return valueArray.reduce((a, b) => a + b, 0)
+      return { decimal: valueArray.reduce((a, b) => a + b, 0) }
       break
     case 'SUBTRACT':
-      return valueArray.reduce((a, b) => a - b, 0) + (a[0] * 2)
+      return { decimal: valueArray.reduce((a, b) => a - b, 0) + (a[0] * 2) }
       break
     case 'AVERAGE':
-      return valueArray.reduce((a, b) => a + b, 0) / arr.length
+      return { decimal: valueArray.reduce((a, b) => a + b, 0) / arr.length }
       break
     case 'MIN':
-      return Math.min(valueArray)
+      return { decimal: Math.min(valueArray) }
       break
     case 'MAX':
-      return Math.max(valueArray)
+      return { decimal: Math.max(valueArray) }
       break
   }
 }
