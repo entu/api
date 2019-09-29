@@ -212,29 +212,51 @@ const reference = async (entityId, user) => {
 }
 
 const formula = async (str, entityId, user) => {
-  let result = ''
+  let func = formulaFunction(str)
   let data = formulaContent(str)
+
+  if (!['CONCAT', 'COUNT', 'SUM', 'AVG'].includes(func)) {
+    return str
+  }
 
   if (data.includes('(') || data.includes(')')) {
     data = await formula(data)
   }
 
-  const dataArray = data.split(',')
-
-  switch (formulaFunction(str)) {
-    case 'CONCAT':
-      for (let i = 0; i < dataArray.length; i++) {
-        result += await formulaField(dataArray[i], entityId, user)
-      }
-      break
-    case null:
-      result = data
-      break
-    default:
-      result = str
+  if (func === null) {
+    return data
   }
 
-  return result
+  const dataArray = data.split(',')
+  let valueArray = []
+
+  for (let i = 0; i < dataArray.length; i++) {
+    const value = await formulaField(dataArray[i], entityId, user)
+    if (value !== None) {
+      valueArray.push(value)
+    }
+  }
+
+  switch (func) {
+    case 'CONCAT':
+      return valueArray.join('')
+      break
+    case 'COUNT':
+      return valueArray.length
+      break
+    case 'SUM':
+      return valueArray.reduce((a, b) => a + b, 0)
+      break
+    case 'AVERAGE':
+      return valueArray.reduce((a, b) => a + b, 0) / arr.length
+      break
+    case 'MIN':
+      return Math.min(valueArray)
+      break
+    case 'MAX':
+      return Math.max(valueArray)
+      break
+  }
 }
 
 const formulaFunction = (str) => {
@@ -273,7 +295,7 @@ const formulaField = async (str, entityId, user) => {
       result = _.get(e, ['private', str, 0, 'string'], '')
       break
     default:
-      result = ''
+      result = Null
   }
 
   return result
