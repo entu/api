@@ -232,7 +232,7 @@ const formula = async (str, entityId, user) => {
 
   for (let i = 0; i < dataArray.length; i++) {
     const value = await formulaField(dataArray[i], entityId, user)
-    if (value !== None) {
+    if (value !== null) {
       valueArray.push(value)
     }
   }
@@ -298,7 +298,7 @@ const formulaField = async (str, entityId, user) => {
       result = _.get(e, ['private', str, 0, 'string'], '')
       break
     default:
-      result = Null
+      result = null
   }
 
   return result
