@@ -19,11 +19,11 @@
   "dependencies": {
     "jsonwebtoken": "8.5.1",
     "lodash": "4.17.15",
-    "mongodb": "3.3.1"
+    "mongodb": "3.3.2"
   },
   "devDependencies": {
-    "entu-ssg": "5.0.7",
-    "serverless": "1.50.1",
+    "entu-ssg": "5.2.0",
+    "serverless": "1.53.0",
     "serverless-domain-manager": "3.3.0",
     "serverless-plugin-git-variables": "3.3.2"
   }
