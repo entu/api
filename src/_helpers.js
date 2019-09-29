@@ -217,15 +217,16 @@ const formula = async (str, entityId, user) => {
   let data = formulaContent(str)
 
   if (!['CONCAT', 'COUNT', 'SUM', 'AVG'].includes(func)) {
-    return str
+    return { string: str }
   }
 
   if (data.includes('(') || data.includes(')')) {
-    data = await formula(data)
+    const f = await formula(data)
+    data = f.string || f.integer || f.decimal || ''
   }
 
   if (func === null) {
-    return data
+    return { string: data }
   }
 
   const dataArray = data.split(',')
