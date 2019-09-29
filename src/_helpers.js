@@ -247,6 +247,9 @@ const formula = async (str, entityId, user) => {
     case 'SUM':
       return valueArray.reduce((a, b) => a + b, 0)
       break
+    case 'SUBTRACT':
+      return valueArray.reduce((a, b) => a - b, 0) + (a[0] * 2)
+      break
     case 'AVERAGE':
       return valueArray.reduce((a, b) => a + b, 0) / arr.length
       break
