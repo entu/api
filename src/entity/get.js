@@ -30,9 +30,15 @@ exports.handler = async (event, context) => {
       const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: fields })
       if (!entity) { return _h.error([404, 'Entity not found']) }
 
-      result = await _h.claenupEntity(entity, user)
+      const cleanedEntity = await _h.claenupEntity(entity, user)
 
-      if (!result) { return _h.error([403, 'No accessible properties']) }
+      if (!cleanedEntity) { return _h.error([403, 'No accessible properties']) }
+
+      result = {
+        filter: { _id: eId },
+        props: props,
+        entity: cleanedEntity
+      }
     } else {
       const sort = _.get(event, 'queryStringParameters.sort', '').split(',').filter(x => !!x)
       const limit = _.toSafeInteger(_.get(event, 'queryStringParameters.limit')) || 100
@@ -128,6 +134,8 @@ exports.handler = async (event, context) => {
 
       result = {
         count: count,
+        filter: filter,
+        props: props,
         entities: cleanedEntities
       }
     }
