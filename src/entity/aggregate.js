@@ -48,7 +48,7 @@ const aggregateEntity = async (db, entityId) => {
 }
 
 exports.handler = async (event, context) => {
-  if (event.source === 'aws.events') { return }
+  if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
 
   if (!event.Records && event.Records.length < 1) { return }
 

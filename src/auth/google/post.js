@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken')
 const querystring = require('querystring')
 
 exports.handler = async (event, context) => {
-  if (event.source === 'aws.events') { return }
+  if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
 
   try {
     const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
