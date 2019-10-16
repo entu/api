@@ -10,7 +10,7 @@ provider:
     endpointType: regional
     memorySize: 256
     timeout: 30
-    logRetentionInDays: 30
+    logRetentionInDays: 365
 
     apiGateway:
         minimumCompressionSize: 32
