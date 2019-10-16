@@ -35,7 +35,7 @@ const aggregateEntity = async (db, entityId) => {
           reject(err)
         })
       } else {
-        db.collection('entity').updateOne({ _id: entityId }, p).then((r) => {
+        db.collection('entity').replaceOne({ _id: entityId }, p).then((r) => {
           resolve(r)
         }).catch((err) => {
           reject(err)
