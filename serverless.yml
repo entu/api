@@ -2,7 +2,7 @@ service: entu-api
 
 provider:
     name: aws
-    runtime: nodejs10.x
+    runtime: nodejs12.x
     stage: prod
     stackName: ${self:service}
     apiName: ${self:service}
