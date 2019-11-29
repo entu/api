@@ -33,13 +33,17 @@ exports.handler = async (event, context) => {
     const userId = _h.strToId(user.id)
 
     const body = JSON.parse(event.body)
-    if (!body) { return _h.error([400, 'No data']) }
-    if (!_.isArray(body)) { return _h.error([400, 'Data must be array']) }
-    if (body.length === 0) { return _h.error([400, 'At least one property must be set']) }
+
+    if (body && !_.isArray(body)) { return _h.error([400, 'Data must be array']) }
 
     let eId = event.pathParameters && event.pathParameters.id ? _h.strToId(event.pathParameters.id) : null
 
     if (eId) {
+      if (!body || _.isArray(body) && body.length === 0) {
+        await _h.addEntityAggregateSqs(context, user.account, eId)
+        return _h.json({ _id: eId })
+      }
+
       const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: { _id: false, 'private._owner': true, 'private._editor': true } })
 
       if (!entity) { return _h.error([404, 'Entity not found']) }
@@ -53,6 +57,9 @@ exports.handler = async (event, context) => {
 
       if (rigtsProperties.length > 0 && !owners.includes(user.id)) { return _h.error([403, 'User not in _owner property']) }
     }
+
+    if (!body) { return _h.error([400, 'No data']) }
+    if (body.length === 0) { return _h.error([400, 'At least one property must be set']) }
 
     for (let i = 0; i < body.length; i++) {
       let property = body[i]
