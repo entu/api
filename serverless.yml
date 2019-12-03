@@ -163,6 +163,36 @@ functions:
                     path: /auth/google
                     method: post
 
+    auth-microsoft-get:
+        handler: src/auth/microsoft/get.handler
+        name: ${self:service}-auth-microsoft-get
+        description: Redirects user to auth in Google
+        package:
+            include:
+                - src/auth/microsoft/get.js
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
+        events:
+            -
+                http:
+                    path: /auth/microsoft
+                    method: get
+
+    auth-microsoft-post:
+        handler: src/auth/microsoft/post.handler
+        name: ${self:service}-auth-microsoft-post
+        description: Handles return request from Google auth
+        package:
+            include:
+                - src/auth/microsoft/post.js
+        layers:
+            - {Ref: CommonNodeLibsLambdaLayer}
+        events:
+            -
+                http:
+                    path: /auth/microsoft
+                    method: post
+
     auth-lhv-get:
         handler: src/auth/lhv/get.handler
         name: ${self:service}-auth-lhv-get
