@@ -28,8 +28,7 @@ exports.handler = async (event, context) => {
       provider: 'microsoft',
       id: _.get(profile, 'id'),
       name: _.get(profile, 'displayName'),
-      email: _.get(profile, 'emails.0.value'),
-      picture: _.get(profile, 'image.url')
+      email: _.get(profile, 'userPrincipalName')
     }
 
     const sessionId = await _h.addUserSession(user)
@@ -92,11 +91,13 @@ const getToken = async (code, redirect_uri) => {
 
 const getProfile = async (accessToken) => {
   return new Promise((resolve, reject) => {
-    const query = querystring.stringify({
-      access_token: accessToken
-    })
+    const options = {
+      headers: {
+        'Authorization': `Bearer ${accessToken}.`
+      }
+    }
 
-    https.get(`https://graph.microsoft.com?${query}`, (res) => {
+    https.get(`https://graph.microsoft.com/v1.0/me`, options, (res) => {
       let data = ''
 
       res.on('data', (chunk) => {
