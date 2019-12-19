@@ -134,14 +134,14 @@ exports.addUserSession = async (user) => {
 exports.addEntityAggregateSqs = async (context, account, entity) => {
   const region = context.invokedFunctionArn.split(':')[3]
   const accountId = context.invokedFunctionArn.split(':')[4]
-  const queueUrl = `https://sqs.${region}.amazonaws.com/${accountId}/entu-api-entity-aggregate-queue`
+  const queueUrl = `https://sqs.${region}.amazonaws.com/${accountId}/entu-api-entity-aggregate-queue.fifo`
   const message = {
     account: account,
     entity: entity.toString()
   }
 
   const sqs = new aws.SQS()
-  const sqsResponse = await sqs.sendMessage({ QueueUrl: queueUrl, MessageBody: JSON.stringify(message) }).promise()
+  const sqsResponse = await sqs.sendMessage({ QueueUrl: queueUrl, MessageGroupId: account, MessageBody: JSON.stringify(message) }).promise()
 
   return sqsResponse
 }
