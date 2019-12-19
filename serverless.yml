@@ -12,6 +12,10 @@ provider:
     timeout: 30
     logRetentionInDays: 365
 
+    tracing:
+        apiGateway: true
+        lambda: true
+
     apiGateway:
         minimumCompressionSize: 32
 
