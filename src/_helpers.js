@@ -172,10 +172,6 @@ const claenupEntity = async (entity, user) => {
     if (property === '_id') { continue }
 
     for (let i = 0; i < result[property].length; i++) {
-      if (result[property][i].formula) {
-        const f = await formula(result[property][i].formula, entity._id, user)
-        result[property][i] = {...result[property][i], ...f}
-      }
       if (result[property][i].date) {
         result[property][i].date = (new Date(result[property][i].date)).toISOString().substring(0, 9)
       }
@@ -195,100 +191,6 @@ const claenupEntity = async (entity, user) => {
   return result
 }
 exports.claenupEntity = claenupEntity
-
-const formula = async (str, entityId, user) => {
-  let func = formulaFunction(str)
-  let data = formulaContent(str)
-
-  if (!['CONCAT', 'COUNT', 'SUM', 'AVG'].includes(func)) {
-    return { string: str }
-  }
-
-  if (data.includes('(') || data.includes(')')) {
-    const f = await formula(data)
-    data = f.string || f.integer || f.decimal || ''
-  }
-
-  if (func === null) {
-    return { string: data }
-  }
-
-  const dataArray = data.split(',')
-  let valueArray = []
-
-  for (let i = 0; i < dataArray.length; i++) {
-    const value = await formulaField(dataArray[i], entityId, user)
-    if (value !== null) {
-      valueArray.push(value)
-    }
-  }
-
-  switch (func) {
-    case 'CONCAT':
-      return { string: valueArray.join('') }
-      break
-    case 'COUNT':
-      return { integer: valueArray.length }
-      break
-    case 'SUM':
-      return { decimal: valueArray.reduce((a, b) => a + b, 0) }
-      break
-    case 'SUBTRACT':
-      return { decimal: valueArray.reduce((a, b) => a - b, 0) + (a[0] * 2) }
-      break
-    case 'AVERAGE':
-      return { decimal: valueArray.reduce((a, b) => a + b, 0) / arr.length }
-      break
-    case 'MIN':
-      return { decimal: Math.min(valueArray) }
-      break
-    case 'MAX':
-      return { decimal: Math.max(valueArray) }
-      break
-  }
-}
-
-const formulaFunction = (str) => {
-  str = str.trim()
-
-  if (!str.includes('(') || !str.includes(')')) {
-    return null
-  } else {
-    return str.substring(0, str.indexOf('(')).toUpperCase()
-  }
-}
-
-const formulaContent = (str) => {
-  str = str.trim()
-
-  if (!str.includes('(') || !str.includes(')')) {
-    return str
-  } else {
-    return str.substring(str.indexOf('(') + 1, str.lastIndexOf(')'))
-  }
-}
-
-const formulaField = async (str, entityId, user) => {
-  str = str.trim()
-
-  if ((str.startsWith("'") || str.startsWith('"')) && (str.endsWith("'") || str.endsWith('"'))) {
-    return str.substring(1, str.length - 1)
-  }
-
-  let result
-
-  switch (str.split('.').length) {
-    case 1:
-      const config = _.set({}, ['projection', `private.${str}.string`], true)
-      const e = await user.db.collection('entity').findOne({ _id: strToId(entityId) }, config)
-      result = _.get(e, ['private', str, 0, 'string'], '')
-      break
-    default:
-      result = null
-  }
-
-  return result
-}
 
 const strToId = (str) => {
   try {

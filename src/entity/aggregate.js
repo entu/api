@@ -60,6 +60,11 @@ exports.handler = async (event, context) => {
         }
       }
 
+      if (prop.formula) {
+        const formulaResult = await formula(prop.formula, entityId, db)
+        cleanProp = {...cleanProp, ...formulaResult}
+      }
+
       if (!Array.isArray(cleanProp)) {
         cleanProp = [cleanProp]
       }
@@ -85,6 +90,101 @@ exports.handler = async (event, context) => {
       await _h.addEntityAggregateSqs(context, data.account, referrers[i]._id.toString(), entity.aggregated)
     }
 
-    console.log('Entity', entityId, 'updated and added', referrers.length, 'entities to sqs')
+    console.log('Entity', entityId, 'updated and added', referrers.length, 'entities to SQS')
   }
+}
+
+
+const formula = async (str, entityId, db) => {
+  let func = formulaFunction(str)
+  let data = formulaContent(str)
+
+  if (!['CONCAT', 'COUNT', 'SUM', 'AVG'].includes(func)) {
+    return { string: str }
+  }
+
+  if (data.includes('(') || data.includes(')')) {
+    const f = await formula(data)
+    data = f.string || f.integer || f.decimal || ''
+  }
+
+  if (func === null) {
+    return { string: data }
+  }
+
+  const dataArray = data.split(',')
+  let valueArray = []
+
+  for (let i = 0; i < dataArray.length; i++) {
+    const value = await formulaField(dataArray[i], entityId, db)
+    if (value !== null) {
+      valueArray.push(value)
+    }
+  }
+
+  switch (func) {
+    case 'CONCAT':
+      return { string: valueArray.join('') }
+      break
+    case 'COUNT':
+      return { integer: valueArray.length }
+      break
+    case 'SUM':
+      return { decimal: valueArray.reduce((a, b) => a + b, 0) }
+      break
+    case 'SUBTRACT':
+      return { decimal: valueArray.reduce((a, b) => a - b, 0) + (a[0] * 2) }
+      break
+    case 'AVERAGE':
+      return { decimal: valueArray.reduce((a, b) => a + b, 0) / arr.length }
+      break
+    case 'MIN':
+      return { decimal: Math.min(valueArray) }
+      break
+    case 'MAX':
+      return { decimal: Math.max(valueArray) }
+      break
+  }
+}
+
+const formulaFunction = (str) => {
+  str = str.trim()
+
+  if (!str.includes('(') || !str.includes(')')) {
+    return null
+  } else {
+    return str.substring(0, str.indexOf('(')).toUpperCase()
+  }
+}
+
+const formulaContent = (str) => {
+  str = str.trim()
+
+  if (!str.includes('(') || !str.includes(')')) {
+    return str
+  } else {
+    return str.substring(str.indexOf('(') + 1, str.lastIndexOf(')'))
+  }
+}
+
+const formulaField = async (str, entityId, db) => {
+  str = str.trim()
+
+  if ((str.startsWith("'") || str.startsWith('"')) && (str.endsWith("'") || str.endsWith('"'))) {
+    return str.substring(1, str.length - 1)
+  }
+
+  let result
+
+  switch (str.split('.').length) {
+    case 1:
+      const config = _.set({}, ['projection', `private.${str}.string`], true)
+      const e = await db.collection('entity').findOne({ _id: entityId }, config)
+      result = _.get(e, ['private', str, 0, 'string'], '')
+      break
+    default:
+      result = null
+  }
+
+  return result
 }
