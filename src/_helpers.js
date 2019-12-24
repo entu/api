@@ -131,13 +131,14 @@ exports.addUserSession = async (user) => {
 }
 
 // Add to entu-api-entity-aggregate-queue
-exports.addEntityAggregateSqs = async (context, account, entity) => {
+exports.addEntityAggregateSqs = async (context, account, entity, dt) => {
   const region = context.invokedFunctionArn.split(':')[3]
   const accountId = context.invokedFunctionArn.split(':')[4]
   const queueUrl = `https://sqs.${region}.amazonaws.com/${accountId}/entu-api-entity-aggregate-queue.fifo`
   const message = {
     account: account,
-    entity: entity.toString()
+    entity: entity.toString(),
+    dt: dt
   }
 
   const sqs = new aws.SQS()
@@ -175,9 +176,6 @@ const claenupEntity = async (entity, user) => {
         const f = await formula(result[property][i].formula, entity._id, user)
         result[property][i] = {...result[property][i], ...f}
       }
-      if (result[property][i].reference) {
-        result[property][i].string = await reference(result[property][i].reference, user)
-      }
       if (result[property][i].date) {
         result[property][i].date = (new Date(result[property][i].date)).toISOString().substring(0, 9)
       }
@@ -197,20 +195,6 @@ const claenupEntity = async (entity, user) => {
   return result
 }
 exports.claenupEntity = claenupEntity
-
-const reference = async (entityId, user) => {
-  const config = {
-    projection: {
-      access: true,
-      'private.name': true,
-      'public.name': true
-    }
-  }
-  const e = await user.db.collection('entity').findOne({ _id: strToId(entityId) }, config)
-  const entity = await claenupEntity(e, user)
-
-  return _.get(entity, 'name', []).map((v) => v.string).join('; ')
-}
 
 const formula = async (str, entityId, user) => {
   let func = formulaFunction(str)

@@ -3,62 +3,86 @@
 const _ = require('lodash')
 const _h = require('../_helpers')
 
-const aggregateEntity = async (db, entityId) => {
-  return new Promise((resolve, reject) => {
-    db.collection('property').find({ entity: entityId, deleted: { $exists: false } }).toArray().then((properties) => {
-      let p = _.groupBy(properties, (v) => { return v.public === true ? 'public' : 'private' })
-
-      if (p.public) {
-        p.public = _.mapValues(_.groupBy(p.public, 'type'), (o) => {
-          return o.map((p) => _.omit(p, ['entity', 'type', 'created', 'search', 'public']))
-        })
-      }
-      if (p.private) {
-        p.private = _.mapValues(_.groupBy(p.private, 'type'), (o) => {
-          return o.map((p) => _.omit(p, ['entity', 'type', 'created', 'search', 'public']))
-        })
-      }
-      p.private = Object.assign({}, _.get(p, 'public', {}), _.get(p, 'private', {}))
-
-      const access = _.union(_.get(p, 'private._viewer', []), _.get(p, 'private._expander', []), _.get(p, 'private._editor', []), _.get(p, 'private._owner', [])).map((x) => x.reference)
-      if (_.get(p, 'private._public.0.boolean', false) === true) {
-        access.push('public')
-      }
-      if (access.length > 0) {
-        p.access = access
-      }
-
-      if (_.has(p, 'private._deleted')) {
-        db.collection('entity').deleteOne({ _id: entityId }).then((r) => {
-          resolve(r)
-        }).catch((err) => {
-          reject(err)
-        })
-      } else {
-        db.collection('entity').replaceOne({ _id: entityId }, p).then((r) => {
-          resolve(r)
-        }).catch((err) => {
-          reject(err)
-        })
-      }
-    }).catch((err) => {
-      reject(err)
-    })
-  })
-}
-
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
 
-  if (!event.Records && event.Records.length < 1) { return }
+  if (!event.Records && event.Records.length === 0) { return }
 
   for (var i = 0; i < event.Records.length; i++) {
     const data = JSON.parse(event.Records[i].body)
+    const entityId = _h.strToId(data.entity)
     const db = await _h.db(data.account)
-    const eId = _h.strToId(data.entity)
 
-    const e = await aggregateEntity(db, eId)
+    if (data.dt) {
+      const e = await db.collection('entity').findOne({ _id: entityId, aggregated: { $gte: new Date(data.dt) } }, { projection: { _id: true } })
+      if (!e) {
+        console.log('Entity', entityId, 'already aggregated at', data.dt)
+        continue
+      }
+    }
 
-    console.log(JSON.stringify(e.result, null, 3))
+    const properties = await db.collection('property').find({ entity: entityId, deleted: { $exists: false } }).toArray()
+
+    if (properties.find(x => x.type === '_deleted')) {
+      const deleteResponse = await db.collection('entity').deleteOne({ _id: entityId })
+      console.log('Entity', entityId, 'deleted')
+      continue
+    }
+
+    let entity = {
+      aggregated: data.dt ? new Date(data.dt) : new Date()
+    }
+
+    for (var n = 0; n < properties.length; n++) {
+      const prop = properties[n]
+      let cleanProp = _.omit(prop, ['entity', 'type', 'created', 'search', 'public'])
+
+      if (prop.reference && ['_viewer', '_expander', '_editor', '_owner'].includes(prop.type)) {
+        if (!_.has(entity, 'access')) {
+          _.set(entity, 'access', [])
+        }
+        entity.access.push(prop.reference)
+      }
+
+      if (!_.has(entity, ['private', prop.type])) {
+        _.set(entity, ['private', prop.type], [])
+      }
+
+      if (prop.reference) {
+        const referenceEntities = await db.collection('entity').findOne({ _id: prop.reference }, { projection: { 'private.name': true }})
+
+        if (_.has(referenceEntities, 'private.name')) {
+          cleanProp = referenceEntities.private.name.map(x => {
+            return { ...cleanProp, ...x }
+          })
+        }
+      }
+
+      if (!Array.isArray(cleanProp)) {
+        cleanProp = [cleanProp]
+      }
+      entity.private[prop.type] = [...entity.private[prop.type], ...cleanProp]
+
+      if (prop.public) {
+        if (!_.has(entity, ['public', prop.type])) {
+          _.set(entity, ['public', prop.type], [])
+        }
+
+        entity.public[prop.type] = [...entity.public[prop.type], ...cleanProp]
+      }
+    }
+
+    const replaceResponse = await db.collection('entity').replaceOne({ _id: entityId }, entity)
+
+    const referrers = await db.collection('property').aggregate([
+      { $match: { reference: entityId, deleted: { $exists: false } } },
+      { $group: { _id: '$entity' } }
+    ]).toArray()
+
+    for (var i = 0; i < referrers.length; i++) {
+      await _h.addEntityAggregateSqs(context, data.account, referrers[i]._id.toString(), entity.aggregated)
+    }
+
+    console.log('Entity', entityId, 'updated and added', referrers.length, 'entities to sqs')
   }
 }
