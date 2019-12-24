@@ -167,17 +167,6 @@ const claenupEntity = async (entity, user) => {
     result._thumbnail = await getSignedUrl(_.get(result, 'photo.0.s3'))
   }
 
-  for (let property in result) {
-    if (!result.hasOwnProperty(property)) { continue }
-    if (property === '_id') { continue }
-
-    for (let i = 0; i < result[property].length; i++) {
-      if (result[property][i].date) {
-        result[property][i].date = (new Date(result[property][i].date)).toISOString().substring(0, 9)
-      }
-    }
-  }
-
   if (_.has(result, 'entu_api_key')) {
     _.get(result, 'entu_api_key', []).forEach((k) => {
       k.string = '***'

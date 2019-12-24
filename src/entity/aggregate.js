@@ -48,6 +48,11 @@ exports.handler = async (event, context) => {
         _.set(entity, ['private', prop.type], [])
       }
 
+      if (prop.date) {
+        const d = new Date(prop.date)
+        cleanProp = { ...cleanProp, string: d.toISOString().substring(0, 9) }
+      }
+
       if (prop.reference) {
         const referenceEntities = await db.collection('entity').findOne({ _id: prop.reference }, { projection: { 'private.name': true }})
 
