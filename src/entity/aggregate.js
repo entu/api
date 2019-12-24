@@ -55,6 +55,8 @@ exports.handler = async (event, context) => {
           cleanProp = referenceEntities.private.name.map(x => {
             return { ...cleanProp, ...x }
           })
+        } else {
+          cleanProp = { ...cleanProp, string: prop.reference }
         }
       }
 
