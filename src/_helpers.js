@@ -147,40 +147,6 @@ exports.addEntityAggregateSqs = async (context, account, entity, dt) => {
   return sqsResponse
 }
 
-// Return public or private properties (based user rights)
-const claenupEntity = async (entity, user) => {
-  if (!entity) { return }
-
-  let result = { _id: entity._id }
-
-  const access = _.get(entity, 'access', []).map((s) => s.toString())
-
-  if (user.id && access.includes(user.id)) {
-    result = Object.assign({}, result, _.get(entity, 'private', {}))
-  } else if (access.includes('public')) {
-    result = Object.assign({}, result, _.get(entity, 'public', {}))
-  } else {
-    return
-  }
-
-  if (_.has(result, 'photo.0.s3')) {
-    result._thumbnail = await getSignedUrl(_.get(result, 'photo.0.s3'))
-  }
-
-  if (_.has(result, 'entu_api_key')) {
-    _.get(result, 'entu_api_key', []).forEach((k) => {
-      k.string = '***'
-    })
-  }
-
-  if (!result._thumbnail) {
-    delete result._thumbnail
-  }
-
-  return result
-}
-exports.claenupEntity = claenupEntity
-
 const strToId = (str) => {
   try {
     return new ObjectId(str)

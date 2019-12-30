@@ -12,12 +12,14 @@ exports.handler = async (event, context) => {
     const props = _.get(event, 'queryStringParameters.props', '').split(',').filter((x) => !!x)
     var fields = {}
     var result = {}
+    var getThumbnail = props.length === 0
 
     if (props.length > 0) {
       props.forEach((f) => {
         if (f === '_thumbnail') {
           fields[`private.photo.s3`] = true
           fields[`public.photo.s3`] = true
+          getThumbnail = true
         } else {
           fields[`private.${f}`] = true
           fields[`public.${f}`] = true
@@ -30,7 +32,7 @@ exports.handler = async (event, context) => {
       const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: fields })
       if (!entity) { return _h.error([404, 'Entity not found']) }
 
-      const cleanedEntity = await _h.claenupEntity(entity, user)
+      const cleanedEntity = await claenupEntity(entity, user, getThumbnail)
 
       if (!cleanedEntity) { return _h.error([403, 'No accessible properties']) }
 
@@ -126,7 +128,8 @@ exports.handler = async (event, context) => {
 
       let cleanedEntities = []
       for (let i = 0; i < entities.length; i++) {
-        const entity = await _h.claenupEntity(entities[i], user)
+        const entity = await claenupEntity(entities[i], user, getThumbnail)
+
         if (entity) {
           cleanedEntities.push(entity)
         }
@@ -144,4 +147,37 @@ exports.handler = async (event, context) => {
   } catch (e) {
     return _h.error(e)
   }
+}
+
+// Return public or private properties (based user rights)
+const claenupEntity = async (entity, user, _thumbnail) => {
+  if (!entity) { return }
+
+  let result = { _id: entity._id }
+
+  const access = _.get(entity, 'access', []).map((s) => s.toString())
+
+  if (user.id && access.includes(user.id)) {
+    result = Object.assign({}, result, _.get(entity, 'private', {}))
+  } else if (access.includes('public')) {
+    result = Object.assign({}, result, _.get(entity, 'public', {}))
+  } else {
+    return
+  }
+
+  if (_thumbnail && _.has(result, 'photo.0.s3')) {
+    result._thumbnail = await getSignedUrl(_.get(result, 'photo.0.s3'))
+  }
+
+  if (_.has(result, 'entu_api_key')) {
+    _.get(result, 'entu_api_key', []).forEach((k) => {
+      k.string = '***'
+    })
+  }
+
+  if (!result._thumbnail) {
+    delete result._thumbnail
+  }
+
+  return result
 }
