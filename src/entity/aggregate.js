@@ -14,9 +14,9 @@ exports.handler = async (event, context) => {
     const db = await _h.db(data.account)
 
     if (data.dt) {
-      const e = await db.collection('entity').findOne({ _id: entityId, aggregated: { $gte: new Date(data.dt) } }, { projection: { _id: true } })
-      if (!e) {
-        console.log('Entity', entityId, 'already aggregated at', data.dt)
+      const e = await db.collection('entity').findOne({ _id: entityId, aggregated: { $gte: new Date(data.dt) } }, { projection: { _id: false, aggregated: true } })
+      if (e) {
+        console.log('Entity', entityId, 'already aggregated at', e.aggregated)
         continue
       }
     }
@@ -30,7 +30,7 @@ exports.handler = async (event, context) => {
     }
 
     let entity = {
-      aggregated: data.dt ? new Date(data.dt) : new Date()
+      aggregated: new Date()
     }
 
     for (var n = 0; n < properties.length; n++) {
@@ -91,8 +91,10 @@ exports.handler = async (event, context) => {
       { $group: { _id: '$entity' } }
     ]).toArray()
 
+    const dt = data.dt ? new Date(data.dt) : entity.aggregated
+
     for (var i = 0; i < referrers.length; i++) {
-      await _h.addEntityAggregateSqs(context, data.account, referrers[i]._id.toString(), entity.aggregated)
+      await _h.addEntityAggregateSqs(context, data.account, referrers[i]._id.toString(), dt)
     }
 
     console.log('Entity', entityId, 'updated and added', referrers.length, 'entities to SQS')
