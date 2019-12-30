@@ -299,7 +299,7 @@ functions:
             -
                 sqs:
                     arn: ${ssm:/entu-api-entity-aggregate-queue~true}
-                    batchSize: 10
+                    batchSize: 1
 
     property-get:
         handler: src/property/get.handler
