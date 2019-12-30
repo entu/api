@@ -16,7 +16,7 @@ exports.handler = async (event, context) => {
     if (data.dt) {
       const e = await db.collection('entity').findOne({ _id: entityId, aggregated: { $gte: new Date(data.dt) } }, { projection: { _id: false, aggregated: true } })
       if (e) {
-        console.log('Entity', entityId, 'already aggregated at', e.aggregated)
+        console.log('Entity', entityId, '@', data.account, 'already aggregated at', e.aggregated)
         continue
       }
     }
@@ -25,7 +25,7 @@ exports.handler = async (event, context) => {
 
     if (properties.find(x => x.type === '_deleted')) {
       const deleteResponse = await db.collection('entity').deleteOne({ _id: entityId })
-      console.log('Entity', entityId, 'deleted')
+      console.log('Entity', entityId, '@', data.account, 'deleted')
       continue
     }
 
@@ -97,7 +97,7 @@ exports.handler = async (event, context) => {
       await _h.addEntityAggregateSqs(context, data.account, referrers[i]._id.toString(), dt)
     }
 
-    console.log('Entity', entityId, 'updated and added', referrers.length, 'entities to SQS')
+    console.log('Entity', entityId, '@', data.account, 'updated and added', referrers.length, 'entities to SQS')
   }
 }
 
