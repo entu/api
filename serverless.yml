@@ -295,6 +295,7 @@ functions:
         layers:
             - {Ref: CommonNodeLibsLambdaLayer}
         reservedConcurrency: 10
+        timeout: 600
         events:
             -
                 sqs:
