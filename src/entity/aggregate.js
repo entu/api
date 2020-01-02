@@ -186,8 +186,18 @@ const formulaField = async (str, entityId, db) => {
   switch (str.split('.').length) {
     case 1:
       const config = _.set({}, ['projection', `private.${str}.string`], true)
-      const e = await db.collection('entity').findOne({ _id: entityId }, config)
-      result = _.get(e, ['private', str, 0, 'string'], '')
+
+      const p = await db.collection('property').findOne({
+        entity: entityId,
+        type: str,
+        string: { $exists: true },
+        deleted: { $exists: false }
+      }, {
+        sort: { _id: 1 },
+        projection: { _id: false, string: true }
+      })
+
+      result = _.get(p, ['string'], '')
       break
     default:
       result = null
