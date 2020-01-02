@@ -13,12 +13,11 @@ exports.handler = async (event, context) => {
     const entityId = _h.strToId(data.entity)
     const db = await _h.db(data.account)
 
-    if (data.dt) {
-      const e = await db.collection('entity').findOne({ _id: entityId, aggregated: { $gte: new Date(data.dt) } }, { projection: { _id: false, aggregated: true } })
-      if (e) {
-        console.log('Entity', entityId, '@', data.account, 'already aggregated at', e.aggregated)
-        continue
-      }
+    const { entity } = await db.collection('entity').findOne({ _id: entityId }, { projection: { _id: false, aggregated: true, 'private.name': true } })
+
+    if (data.dt && entity.aggregated && entity.aggregated >= new Date(data.dt)) {
+      console.log('Entity', entityId, '@', data.account, 'already aggregated at', e.aggregated)
+      continue
     }
 
     const properties = await db.collection('property').find({ entity: entityId, deleted: { $exists: false } }).toArray()
@@ -29,7 +28,7 @@ exports.handler = async (event, context) => {
       continue
     }
 
-    let entity = {
+    let newEntity = {
       aggregated: new Date()
     }
 
@@ -38,14 +37,14 @@ exports.handler = async (event, context) => {
       let cleanProp = _.omit(prop, ['entity', 'type', 'created', 'search', 'public'])
 
       if (prop.reference && ['_viewer', '_expander', '_editor', '_owner'].includes(prop.type)) {
-        if (!_.has(entity, 'access')) {
-          _.set(entity, 'access', [])
+        if (!_.has(newEntity, 'access')) {
+          _.set(newEntity, 'access', [])
         }
-        entity.access.push(prop.reference)
+        newEntity.access.push(prop.reference)
       }
 
-      if (!_.has(entity, ['private', prop.type])) {
-        _.set(entity, ['private', prop.type], [])
+      if (!_.has(newEntity, ['private', prop.type])) {
+        _.set(newEntity, ['private', prop.type], [])
       }
 
       if (prop.date) {
@@ -73,28 +72,33 @@ exports.handler = async (event, context) => {
       if (!Array.isArray(cleanProp)) {
         cleanProp = [cleanProp]
       }
-      entity.private[prop.type] = [...entity.private[prop.type], ...cleanProp]
+      newEntity.private[prop.type] = [...newEntity.private[prop.type], ...cleanProp]
 
       if (prop.public) {
-        if (!_.has(entity, ['public', prop.type])) {
-          _.set(entity, ['public', prop.type], [])
+        if (!_.has(newEntity, ['public', prop.type])) {
+          _.set(newEntity, ['public', prop.type], [])
         }
 
-        entity.public[prop.type] = [...entity.public[prop.type], ...cleanProp]
+        newEntity.public[prop.type] = [...newEntity.public[prop.type], ...cleanProp]
       }
     }
 
-    const replaceResponse = await db.collection('entity').replaceOne({ _id: entityId }, entity)
+    const replaceResponse = await db.collection('entity').replaceOne({ _id: entityId }, newEntity)
 
-    const referrers = await db.collection('property').aggregate([
-      { $match: { reference: entityId, deleted: { $exists: false } } },
-      { $group: { _id: '$entity' } }
-    ]).toArray()
+    const name = _.get(entity, 'private.name', []).map(x => x._id || '')
+    const newName = _.get(newEntity, 'private.name', []).map(x => x._id || '')
 
-    const dt = data.dt ? new Date(data.dt) : entity.aggregated
+    if (!_.isEqual(_.sortBy(name), _.sortBy(newName))) {
+      const referrers = await db.collection('property').aggregate([
+        { $match: { reference: entityId, deleted: { $exists: false } } },
+        { $group: { _id: '$entity' } }
+      ]).toArray()
 
-    for (var i = 0; i < referrers.length; i++) {
-      await _h.addEntityAggregateSqs(context, data.account, referrers[i]._id.toString(), dt)
+      const dt = data.dt ? new Date(data.dt) : newEntity.aggregated
+
+      for (var i = 0; i < referrers.length; i++) {
+        await _h.addEntityAggregateSqs(context, data.account, referrers[i]._id.toString(), dt)
+      }
     }
 
     console.log('Entity', entityId, '@', data.account, 'updated and added', referrers.length, 'entities to SQS')
