@@ -20,6 +20,8 @@ exports.ssmParameter = ssmParameter
 
 let dbConnection
 const db = async (dbName) => {
+  dbName = dbName.replace(/[^a-z0-9]/gi,'_')
+
   if (dbConnection) { return dbConnection.db(dbName) }
 
   const mongoUrl = await ssmParameter('entu-api-mongodb')
