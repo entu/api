@@ -13,10 +13,10 @@ exports.handler = async (event, context) => {
     const entityId = _h.strToId(data.entity)
     const db = await _h.db(data.account)
 
-    const { entity } = await db.collection('entity').findOne({ _id: entityId }, { projection: { _id: false, aggregated: true, 'private.name': true } })
+    const entity = await db.collection('entity').findOne({ _id: entityId }, { projection: { _id: false, aggregated: true, 'private.name': true } })
 
-    if (data.dt && entity.aggregated && entity.aggregated >= new Date(data.dt)) {
-      console.log('Entity', entityId, '@', data.account, 'already aggregated at', e.aggregated)
+    if (data.dt && entity.aggregated && new Date(data.dt) <= entity.aggregated) {
+      console.log('Entity', entityId, '@', data.account, 'already aggregated at', entity.aggregated)
       continue
     }
 
@@ -97,11 +97,13 @@ exports.handler = async (event, context) => {
       const dt = data.dt ? new Date(data.dt) : newEntity.aggregated
 
       for (var i = 0; i < referrers.length; i++) {
-        await _h.addEntityAggregateSqs(context, data.account, referrers[i]._id.toString(), dt)
+        //await _h.addEntityAggregateSqs(context, data.account, referrers[i]._id.toString(), dt)
       }
-    }
 
-    console.log('Entity', entityId, '@', data.account, 'updated and added', referrers.length, 'entities to SQS')
+      console.log('Entity', entityId, '@', data.account, 'updated and added', referrers.length, 'entities to SQS')
+    } else {
+      console.log('Entity', entityId, '@', data.account, 'updated')
+    }
   }
 }
 
