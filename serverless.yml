@@ -35,13 +35,16 @@ provider:
         -
             Effect: Allow
             Action:
-                - sqs:SendMessage
                 - sqs:GetQueueUrl
+                - sqs:GetQueueAttributes
+                - sqs:ReceiveMessage
+                - sqs:SendMessage
+                - sqs:DeleteMessage
             Resource: ${ssm:/entu-api-entity-aggregate-queue~true}
         -
             Effect: Allow
             Action: sqs:ListQueues
-            Resource: arn:aws:sqs:${self:provider.region}:*:*
+            Resource: *
         -
             Effect: Allow
             Action: ssm:GetParameter
