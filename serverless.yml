@@ -44,7 +44,7 @@ provider:
         -
             Effect: Allow
             Action: sqs:ListQueues
-            Resource: *
+            Resource: '*'
         -
             Effect: Allow
             Action: ssm:GetParameter
