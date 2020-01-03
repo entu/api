@@ -85,8 +85,8 @@ exports.handler = async (event, context) => {
 
     const replaceResponse = await db.collection('entity').replaceOne({ _id: entityId }, newEntity)
 
-    const name = _.get(entity, 'private.name', []).map(x => x._id || '')
-    const newName = _.get(newEntity, 'private.name', []).map(x => x._id || '')
+    const name = _.get(entity, 'private.name', []).map(x => x.string || '')
+    const newName = _.get(newEntity, 'private.name', []).map(x => x.string || '')
 
     if (!_.isEqual(_.sortBy(name), _.sortBy(newName))) {
       const referrers = await db.collection('property').aggregate([
