@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
 
     const entity = await db.collection('entity').findOne({ _id: entityId }, { projection: { _id: false, aggregated: true, 'private.name': true } })
 
-    if (data.dt && entity.aggregated && new Date(data.dt) <= entity.aggregated) {
+    if (entity && entity.aggregated && data.dt && entity.aggregated >= new Date(data.dt)) {
       console.log('Entity', entityId, '@', data.account, 'already aggregated at', entity.aggregated)
       continue
     }
@@ -41,6 +41,13 @@ exports.handler = async (event, context) => {
           _.set(newEntity, 'access', [])
         }
         newEntity.access.push(prop.reference)
+      }
+
+      if (prop.type === '_public' && prop.boolean === true) {
+        if (!_.has(newEntity, 'access')) {
+          _.set(newEntity, 'access', [])
+        }
+        newEntity.access.push('public')
       }
 
       if (!_.has(newEntity, ['private', prop.type])) {
@@ -97,7 +104,7 @@ exports.handler = async (event, context) => {
       const dt = data.dt ? new Date(data.dt) : newEntity.aggregated
 
       for (var i = 0; i < referrers.length; i++) {
-        //await _h.addEntityAggregateSqs(context, data.account, referrers[i]._id.toString(), dt)
+        await _h.addEntityAggregateSqs(context, data.account, referrers[i]._id.toString(), dt)
       }
 
       console.log('Entity', entityId, '@', data.account, 'updated and added', referrers.length, 'entities to SQS')
