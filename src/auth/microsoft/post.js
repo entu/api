@@ -93,7 +93,7 @@ const getProfile = async (accessToken) => {
   return new Promise((resolve, reject) => {
     const options = {
       headers: {
-        'Authorization': `Bearer ${accessToken}.`
+        'Authorization': `Bearer ${accessToken}`
       }
     }
 
