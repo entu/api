@@ -146,7 +146,7 @@ exports.addEntityAggregateSqs = async (context, account, entity, dt) => {
   const sqs = new aws.SQS()
   const sqsResponse = await sqs.sendMessage({ QueueUrl: queueUrl, MessageGroupId: account, MessageBody: JSON.stringify(message) }).promise()
 
-  console.log(`Entity ${} added to SQS`);
+  console.log(`Entity ${entity} added to SQS`);
 
   return sqsResponse
 }
