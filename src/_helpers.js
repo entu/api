@@ -140,7 +140,8 @@ exports.addEntityAggregateSqs = async (context, account, entity, dt) => {
   const message = {
     account: account,
     entity: entity.toString(),
-    dt: dt
+    dt: dt,
+    timestamp: (new Date()).getTime()
   }
 
   const sqs = new aws.SQS()
