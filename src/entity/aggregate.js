@@ -67,7 +67,7 @@ exports.handler = async (event, context) => {
             return { ...cleanProp, ...x }
           })
         } else {
-          cleanProp = { ...cleanProp, string: prop.reference }
+          cleanProp = { ...cleanProp, string: prop.reference.toString() }
         }
       }
 
