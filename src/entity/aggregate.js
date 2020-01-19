@@ -119,17 +119,8 @@ const formula = async (str, entityId, db) => {
   let func = formulaFunction(str)
   let data = formulaContent(str)
 
-  if (!['CONCAT', 'COUNT', 'SUM', 'AVG'].includes(func)) {
+  if (!['CONCAT', 'COUNT', 'SUM', 'SUBTRACT', 'AVERAGE', 'MIN', 'MAX'].includes(func)) {
     return { string: str }
-  }
-
-  if (data.includes('(') || data.includes(')')) {
-    const f = await formula(data)
-    data = f.string || f.integer || f.decimal || ''
-  }
-
-  if (func === null) {
-    return { string: data }
   }
 
   const dataArray = data.split(',')
@@ -137,10 +128,13 @@ const formula = async (str, entityId, db) => {
 
   for (let i = 0; i < dataArray.length; i++) {
     const value = await formulaField(dataArray[i], entityId, db)
-    if (value !== null) {
-      valueArray.push(value)
+
+    if (value) {
+      valueArray = [...valueArray, ...value]
     }
   }
+
+  valueArray = formulaValue(valueArray)
 
   switch (func) {
     case 'CONCAT':
@@ -153,16 +147,16 @@ const formula = async (str, entityId, db) => {
       return { decimal: valueArray.reduce((a, b) => a + b, 0) }
       break
     case 'SUBTRACT':
-      return { decimal: valueArray.reduce((a, b) => a - b, 0) + (a[0] * 2) }
+      return { decimal: valueArray.reduce((a, b) => a - b, 0) + (valueArray[0] * 2) }
       break
     case 'AVERAGE':
-      return { decimal: valueArray.reduce((a, b) => a + b, 0) / arr.length }
+      return { decimal: valueArray.reduce((a, b) => a + b, 0) / valueArray.length }
       break
     case 'MIN':
-      return { decimal: Math.min(valueArray) }
+      return { decimal: Math.min(...valueArray) }
       break
     case 'MAX':
-      return { decimal: Math.max(valueArray) }
+      return { decimal: Math.max(...valueArray) }
       break
   }
 }
@@ -191,30 +185,106 @@ const formulaField = async (str, entityId, db) => {
   str = str.trim()
 
   if ((str.startsWith("'") || str.startsWith('"')) && (str.endsWith("'") || str.endsWith('"'))) {
-    return str.substring(1, str.length - 1)
+    return [{
+      string: str.substring(1, str.length - 1)
+    }]
   }
+
+  if (parseFloat(str).toString() === str) {
+    return [{
+      decimal: parseFloat(str)
+    }]
+  }
+
+  const strParts = str.split('.')
+
+  const [ref, type, property] = str.split('.')
 
   let result
 
-  switch (str.split('.').length) {
-    case 1:
-      const config = _.set({}, ['projection', `private.${str}.string`], true)
+  // same entity _id
+  if (strParts.length === 1 && str === '_id') {
+    result = [{ _id: entityId }]
 
-      const p = await db.collection('property').findOne({
-        entity: entityId,
-        type: str,
-        string: { $exists: true },
-        deleted: { $exists: false }
+  // same entity property
+  } else if (strParts.length === 1 && str !== '_id') {
+    result = await db.collection('property').find({
+      entity: entityId,
+      type: str,
+      string: { $exists: true },
+      deleted: { $exists: false }
+    }, {
+      sort: { _id: 1 },
+      projection: { _id: false, entity: false, type: false }
+    }).toArray()
+
+  // childs _id
+  } else if (strParts.length === 3 && strParts[0] === 'child' && strParts[2] === '_id') {
+    const config = {
+      'private._parent.reference': entityId,
+    }
+
+    if (strParts[1] !== '*') {
+      _.set(config, ['private._type.string'], strParts[1])
+    }
+
+    result = await db.collection('entity').find(config, {
+      projection: { _id: true }
+    }).toArray()
+
+  // childs property
+  } else if (strParts.length === 3 && strParts[0] === 'child' && strParts[2] !== '_id') {
+    const config = [
+      {
+        $match : { 'private._parent.reference': entityId }
       }, {
-        sort: { _id: 1 },
-        projection: { _id: false, string: true }
-      })
+        $project: { _id: true }
+      }, {
+        $lookup: {
+          from: 'property',
+          let: { entityId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                type: strParts[2],
+                deleted: { $exists: false },
+                $expr: { $eq: [ '$entity',  '$$entityId' ] }
+              }
+            }, {
+              $project: { _id: false, entity: false, type: false, created: false }
+            }
+          ],
+          as: 'properties'
+        }
+      }, {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [
+              { properties: '$properties' },
+              '$$ROOT'
+            ]
+          }
+        }
+      }, {
+        $project: { _id: false, propertiesq: false }
+      }
+    ]
 
-      result = _.get(p, ['string'], '')
-      break
-    default:
-      result = null
+    if (strParts[1] !== '*') {
+      _.set(config, [0, '$match', 'private._type.string'], strParts[1])
+    }
+
+    const p = await db.collection('entity').aggregate(config).toArray()
+
+    result = p.map(x => x.properties).flat()
+
   }
 
   return result
+}
+
+const formulaValue = (values) => {
+  if (!values) { return [] }
+
+  return values.map(x => x.decimal || x.integer || x.datetime || x.date || x.string || x._id)
 }
