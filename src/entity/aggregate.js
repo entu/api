@@ -257,16 +257,7 @@ const formulaField = async (str, entityId, db) => {
           as: 'properties'
         }
       }, {
-        $replaceRoot: {
-          newRoot: {
-            $mergeObjects: [
-              { properties: '$properties' },
-              '$$ROOT'
-            ]
-          }
-        }
-      }, {
-        $project: { _id: false, propertiesq: false }
+        $project: { _id: false }
       }
     ]
 
