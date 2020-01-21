@@ -238,8 +238,6 @@ const formulaField = async (str, entityId, db) => {
       {
         $match : { 'private._parent.reference': entityId }
       }, {
-        $project: { _id: true }
-      }, {
         $lookup: {
           from: 'property',
           let: { entityId: '$_id' },
@@ -251,13 +249,13 @@ const formulaField = async (str, entityId, db) => {
                 $expr: { $eq: [ '$entity',  '$$entityId' ] }
               }
             }, {
-              $project: { _id: false, entity: false, type: false, created: false }
+              $project: { _id: false, entity: false, type: false, search: false, public: false, created: false }
             }
           ],
           as: 'properties'
         }
       }, {
-        $project: { _id: false }
+        $project: { _id: false, properties: true }
       }
     ]
 
@@ -270,8 +268,8 @@ const formulaField = async (str, entityId, db) => {
     result = p.map(x => x.properties).flat()
 
   // parents _id
-  } else if (strParts.length === 3 && strParts[0] === 'parent' && strParts[2] === '_id') {
-    const config = [
+  } else if (strParts.length === 3 && strParts[0] === 'parent' && strParts[1] === '*' && strParts[2] === '_id') {
+    result = await db.collection('property').aggregate([
       {
         $match : {
           entity: entityId,
@@ -280,15 +278,24 @@ const formulaField = async (str, entityId, db) => {
           deleted: { $exists: false }
         }
       }, {
-        $project: { _id: false, _id: '$reference' }
+        $project: { _id: '$reference' }
       }
-    ]
+    ]).toArray()
 
-    if (strParts[1] !== '*') {
-      config.push({
+  // parents (with type) _id
+  } else if (strParts.length === 3 && strParts[0] === 'parent' && strParts[1] !== '*' && strParts[2] === '_id') {
+    const p = await db.collection('property').aggregate([
+      {
+        $match : {
+          entity: entityId,
+          type: '_parent',
+          reference: { $exists: true },
+          deleted: { $exists: false }
+        }
+      }, {
         $lookup: {
           from: 'entity',
-          let: { entityId: '$_id' },
+          let: { entityId: '$reference' },
           pipeline: [
             {
               $match: {
@@ -301,16 +308,96 @@ const formulaField = async (str, entityId, db) => {
           ],
           as: 'parents'
         }
-      })
-      config.push({
-        $project: { _id: false }
-      })
-    }
-
-    const p = await db.collection('property').aggregate(config).toArray()
+      }, {
+        $project: { _id: false, parents: true }
+      }
+    ]).toArray()
 
     result = p.map(x => x.parents).flat()
 
+  // parents property
+  } else if (strParts.length === 3 && strParts[0] === 'parent' && strParts[1] === '*' && strParts[2] !== '_id') {
+    const p = await db.collection('property').aggregate([
+      {
+        $match : {
+          entity: entityId,
+          type: '_parent',
+          reference: { $exists: true },
+          deleted: { $exists: false }
+        }
+      }, {
+        $lookup: {
+          from: 'property',
+          let: { entityId: '$reference' },
+          pipeline: [
+            {
+              $match: {
+                type: strParts[2],
+                deleted: { $exists: false },
+                $expr: { $eq: [ '$entity',  '$$entityId' ] }
+              }
+            }, {
+              $project: { _id: false, entity: false, type: false, search: false, public: false, created: false }
+            }
+          ],
+          as: 'properties'
+        }
+      }, {
+        $project: { _id: false, properties: true }
+      }
+    ]).toArray()
+
+    result = p.map(x => x.properties).flat()
+
+  // parents (with type) property
+  } else if (strParts.length === 3 && strParts[0] === 'parent' && strParts[1] !== '*' && strParts[2] !== '_id') {
+    const p = await db.collection('property').aggregate([
+      {
+        $match : {
+          entity: entityId,
+          type: '_parent',
+          reference: { $exists: true },
+          deleted: { $exists: false }
+        }
+      }, {
+        $lookup: {
+          from: 'entity',
+          let: { entityId: '$reference' },
+          pipeline: [
+            {
+              $match: {
+                'private._type.string': strParts[1],
+                $expr: { $eq: [ '$_id',  '$$entityId' ] }
+              }
+            }, {
+              $project: { _id: true }
+            }
+          ],
+          as: 'parents'
+        }
+      }, {
+        $lookup: {
+          from: 'property',
+          let: { entityId: '$parents._id' },
+          pipeline: [
+            {
+              $match: {
+                type: strParts[2],
+                deleted: { $exists: false },
+                $expr: { $in: [ '$entity',  '$$entityId' ] }
+              }
+            }, {
+              $project: { _id: false, entity: false, type: false, search: false, public: false, created: false }
+            }
+          ],
+          as: 'properties'
+        }
+      }, {
+        $project: { _id: false, properties: true }
+      }
+    ]).toArray()
+
+    result = p.map(x => x.properties).flat()
   }
 
   return result
