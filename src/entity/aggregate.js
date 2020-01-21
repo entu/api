@@ -269,6 +269,48 @@ const formulaField = async (str, entityId, db) => {
 
     result = p.map(x => x.properties).flat()
 
+  // parents _id
+  } else if (strParts.length === 3 && strParts[0] === 'parent' && strParts[2] === '_id') {
+    const config = [
+      {
+        $match : {
+          entity: entityId,
+          type: '_parent',
+          reference: { $exists: true },
+          deleted: { $exists: false }
+        }
+      }, {
+        $project: { _id: false, _id: '$reference' }
+      }
+    ]
+
+    if (strParts[1] !== '*') {
+      config.push({
+        $lookup: {
+          from: 'entity',
+          let: { entityId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                'private._type.string': strParts[1],
+                $expr: { $eq: [ '$_id',  '$$entityId' ] }
+              }
+            }, {
+              $project: { _id: true }
+            }
+          ],
+          as: 'parents'
+        }
+      })
+      config.push({
+        $project: { _id: false }
+      })
+    }
+
+    const p = await db.collection('property').aggregate(config).toArray()
+
+    result = p.map(x => x.parents).flat()
+
   }
 
   return result
