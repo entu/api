@@ -219,22 +219,25 @@ const formulaField = async (str, entityId, db) => {
     }).toArray()
 
   // childs _id
-  } else if (strParts.length === 3 && strParts[0] === 'child' && strParts[2] === '_id') {
-    const config = {
+  } else if (strParts.length === 3 && strParts[0] === 'child' && strParts[1] === '*' && strParts[2] === '_id') {
+    result = await db.collection('entity').find({
       'private._parent.reference': entityId,
-    }
+    }, {
+      projection: { _id: true }
+    }).toArray()
 
-    if (strParts[1] !== '*') {
-      _.set(config, ['private._type.string'], strParts[1])
-    }
-
-    result = await db.collection('entity').find(config, {
+  // childs (with type) property
+  } else if (strParts.length === 3 && strParts[0] === 'child' && strParts[1] !== '*' && strParts[2] === '_id') {
+    result = await db.collection('entity').find({
+      'private._parent.reference': entityId,
+      'private._type.string': strParts[1]
+    }, {
       projection: { _id: true }
     }).toArray()
 
   // childs property
-  } else if (strParts.length === 3 && strParts[0] === 'child' && strParts[2] !== '_id') {
-    const config = [
+  } else if (strParts.length === 3 && strParts[0] === 'child' && strParts[1] === '*' && strParts[2] !== '_id') {
+    result = await db.collection('entity').aggregate([
       {
         $match : { 'private._parent.reference': entityId }
       }, {
@@ -255,17 +258,47 @@ const formulaField = async (str, entityId, db) => {
           as: 'properties'
         }
       }, {
-        $project: { _id: false, properties: true }
+        $project: { properties: true }
+      }, {
+        $unwind: '$properties'
+      }, {
+        $replaceWith: '$properties'
       }
-    ]
+    ]).toArray()
 
-    if (strParts[1] !== '*') {
-      _.set(config, [0, '$match', 'private._type.string'], strParts[1])
-    }
-
-    const p = await db.collection('entity').aggregate(config).toArray()
-
-    result = p.map(x => x.properties).flat()
+  // childs (with type) property
+  } else if (strParts.length === 3 && strParts[0] === 'child' && strParts[1] !== '*' && strParts[2] !== '_id') {
+    result = await db.collection('entity').aggregate([
+      {
+        $match : {
+          'private._parent.reference': entityId,
+          'private._type.string': strParts[1]
+        }
+      }, {
+        $lookup: {
+          from: 'property',
+          let: { entityId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                type: strParts[2],
+                deleted: { $exists: false },
+                $expr: { $eq: [ '$entity',  '$$entityId' ] }
+              }
+            }, {
+              $project: { _id: false, entity: false, type: false, search: false, public: false, created: false }
+            }
+          ],
+          as: 'properties'
+        }
+      }, {
+        $project: { properties: true }
+      }, {
+        $unwind: '$properties'
+      }, {
+        $replaceWith: '$properties'
+      }
+    ]).toArray()
 
   // parents _id
   } else if (strParts.length === 3 && strParts[0] === 'parent' && strParts[1] === '*' && strParts[2] === '_id') {
@@ -284,7 +317,7 @@ const formulaField = async (str, entityId, db) => {
 
   // parents (with type) _id
   } else if (strParts.length === 3 && strParts[0] === 'parent' && strParts[1] !== '*' && strParts[2] === '_id') {
-    const p = await db.collection('property').aggregate([
+    result = await db.collection('property').aggregate([
       {
         $match : {
           entity: entityId,
@@ -309,15 +342,15 @@ const formulaField = async (str, entityId, db) => {
           as: 'parents'
         }
       }, {
-        $project: { _id: false, parents: true }
+        $unwind: '$parents'
+      }, {
+        $replaceWith: '$parents'
       }
     ]).toArray()
 
-    result = p.map(x => x.parents).flat()
-
   // parents property
   } else if (strParts.length === 3 && strParts[0] === 'parent' && strParts[1] === '*' && strParts[2] !== '_id') {
-    const p = await db.collection('property').aggregate([
+    result = await db.collection('property').aggregate([
       {
         $match : {
           entity: entityId,
@@ -343,15 +376,17 @@ const formulaField = async (str, entityId, db) => {
           as: 'properties'
         }
       }, {
-        $project: { _id: false, properties: true }
+        $project: { properties: true }
+      }, {
+        $unwind: '$properties'
+      }, {
+        $replaceWith: '$properties'
       }
     ]).toArray()
 
-    result = p.map(x => x.properties).flat()
-
   // parents (with type) property
   } else if (strParts.length === 3 && strParts[0] === 'parent' && strParts[1] !== '*' && strParts[2] !== '_id') {
-    const p = await db.collection('property').aggregate([
+    result = await db.collection('property').aggregate([
       {
         $match : {
           entity: entityId,
@@ -393,11 +428,13 @@ const formulaField = async (str, entityId, db) => {
           as: 'properties'
         }
       }, {
-        $project: { _id: false, properties: true }
+        $project: { properties: true }
+      }, {
+        $unwind: '$properties'
+      }, {
+        $replaceWith: '$properties'
       }
     ]).toArray()
-
-    result = p.map(x => x.properties).flat()
   }
 
   return result
