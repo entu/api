@@ -90,6 +90,7 @@ exports.handler = async (event, context) => {
             _id: false,
             name: { $arrayElemAt: [ '$private.name.string', 0] },
             public: { $arrayElemAt: [ '$private.public.boolean', 0] },
+            search: { $arrayElemAt: [ '$private.search.boolean', 0] },
             formula: { $arrayElemAt: [ '$private.formula.string', 0] }
           }
         }
@@ -100,8 +101,26 @@ exports.handler = async (event, context) => {
           _.set(newEntity, ['private', definition[d].name, 0], await formula(definition[d].formula, entityId, db))
         }
 
-        if (definition[d].public && _.get(newEntity, ['private', definition[d].name])) {
-          _.set(newEntity, ['public', definition[d].name], _.get(newEntity, ['private', definition[d].name]))
+        let dValue = _.get(newEntity, ['private', definition[d].name])
+
+        if (definition[d].search && dValue) {
+          if (!newEntity.search || !newEntity.search.private) {
+            _.set(newEntity, 'search.private', [])
+          }
+
+          newEntity.search.private = [...newEntity.search.private, getValueArray(dValue)]
+
+          if (definition[d].public) {
+            if (!newEntity.search || !newEntity.search.public) {
+              _.set(newEntity, 'search.private', [])
+            }
+
+            newEntity.search.public = [...newEntity.search.public, getValueArray(dValue)]
+          }
+        }
+
+        if (definition[d].public && dValue) {
+          _.set(newEntity, ['public', definition[d].name], dValue)
         }
       }
     } else {
@@ -152,7 +171,7 @@ const formula = async (str, entityId, db) => {
     }
   }
 
-  valueArray = formulaValue(valueArray)
+  valueArray = getValueArray(valueArray)
 
   switch (func) {
     case 'CONCAT':
@@ -458,7 +477,7 @@ const formulaField = async (str, entityId, db) => {
   return result
 }
 
-const formulaValue = (values) => {
+const getValueArray = (values) => {
   if (!values) { return [] }
 
   return values.map(x => x.decimal || x.integer || x.datetime || x.date || x.string || x._id)
