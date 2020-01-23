@@ -71,22 +71,36 @@ exports.handler = async (event, context) => {
         }
       }
 
-      if (prop.formula) {
-        const formulaResult = await formula(prop.formula, entityId, db)
-        cleanProp = {...cleanProp, ...formulaResult}
-      }
-
       if (!Array.isArray(cleanProp)) {
         cleanProp = [cleanProp]
       }
       newEntity.private[prop.type] = [...newEntity.private[prop.type], ...cleanProp]
+    }
 
-      if (prop.public) {
-        if (!_.has(newEntity, ['public', prop.type])) {
-          _.set(newEntity, ['public', prop.type], [])
+    const definition = await db.collection('entity').aggregate([
+      {
+        $match: {
+          'private._parent.reference': newEntity.private._type[0].reference,
+          'private._type.string': 'property',
+          'private.name.string': { $exists: true }
         }
+      }, {
+        $project: {
+          _id: false,
+          name: { $arrayElemAt: [ '$private.name.string', 0] },
+          public: { $arrayElemAt: [ '$private.public.boolean', 0] },
+          formula: { $arrayElemAt: [ '$private.formula.string', 0] }
+        }
+      }
+    ]).toArray()
 
-        newEntity.public[prop.type] = [...newEntity.public[prop.type], ...cleanProp]
+    for (var d = 0; d < definition.length; d++) {
+      if (definition[d].formula) {
+        _.set(newEntity, ['private', definition[d].name, 0], await formula(definition[d].formula, entityId, db))
+      }
+
+      if (definition[d].public && _.get(newEntity, ['private', definition[d].name])) {
+        _.set(newEntity, ['public', definition[d].name], _.get(newEntity, ['private', definition[d].name]))
       }
     }
 
