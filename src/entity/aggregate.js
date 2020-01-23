@@ -108,14 +108,14 @@ exports.handler = async (event, context) => {
             _.set(newEntity, 'search.private', [])
           }
 
-          newEntity.search.private = [...newEntity.search.private, getValueArray(dValue)]
+          newEntity.search.private = [...newEntity.search.private, ...getValueArray(dValue)]
 
           if (definition[d].public) {
             if (!newEntity.search || !newEntity.search.public) {
-              _.set(newEntity, 'search.private', [])
+              _.set(newEntity, 'search.public', [])
             }
 
-            newEntity.search.public = [...newEntity.search.public, getValueArray(dValue)]
+            newEntity.search.public = [...newEntity.search.public, ...getValueArray(dValue)]
           }
         }
 
