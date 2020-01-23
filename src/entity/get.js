@@ -105,7 +105,11 @@ exports.handler = async (event, context) => {
 
       if (query.length > 0) {
         let queries = query.map((q) => {
-          return { 'search.private': new RegExp(q.toLowerCase()) }
+          if (user.id) {
+            return { 'search.private': new RegExp(q.toLowerCase(), 'i') }
+          } else {
+            return { 'search.public': new RegExp(q.toLowerCase(), 'i') }
+          }
         })
         filter['$and'] = queries
       }
