@@ -156,7 +156,7 @@ const formula = async (str, entityId, db) => {
   let func = formulaFunction(str)
   let data = formulaContent(str)
 
-  if (!['CONCAT', 'COUNT', 'SUM', 'SUBTRACT', 'AVERAGE', 'MIN', 'MAX'].includes(func)) {
+  if (func && !['CONCAT', 'COUNT', 'SUM', 'SUBTRACT', 'AVERAGE', 'MIN', 'MAX'].includes(func)) {
     return { string: str }
   }
 
@@ -194,6 +194,9 @@ const formula = async (str, entityId, db) => {
       break
     case 'MAX':
       return { decimal: Math.max(...valueArray) }
+      break
+    default:
+      return { string: valueArray.join('') }
       break
   }
 }
