@@ -259,7 +259,7 @@ const formulaField = async (str, entityId, db) => {
     }).toArray()
 
   // childs _id
-  } else if (strParts.length === 3 && fieldRef === 'child' && fieldType === '*' && fieldProperty === '_id') {
+  } else if (strParts.length === 3 && fieldRef === '_child' && fieldType === '*' && fieldProperty === '_id') {
     result = await db.collection('entity').find({
       'private._parent.reference': entityId,
     }, {
@@ -267,7 +267,7 @@ const formulaField = async (str, entityId, db) => {
     }).toArray()
 
   // childs (with type) property
-  } else if (strParts.length === 3 && fieldRef === 'child' && fieldType !== '*' && fieldProperty === '_id') {
+  } else if (strParts.length === 3 && fieldRef === '_child' && fieldType !== '*' && fieldProperty === '_id') {
     result = await db.collection('entity').find({
       'private._parent.reference': entityId,
       'private._type.string': fieldType
@@ -276,7 +276,7 @@ const formulaField = async (str, entityId, db) => {
     }).toArray()
 
   // childs property
-  } else if (strParts.length === 3 && fieldRef === 'child' && fieldType === '*' && fieldProperty !== '_id') {
+  } else if (strParts.length === 3 && fieldRef === '_child' && fieldType === '*' && fieldProperty !== '_id') {
     result = await db.collection('entity').aggregate([
       {
         $match : { 'private._parent.reference': entityId }
@@ -307,7 +307,7 @@ const formulaField = async (str, entityId, db) => {
     ]).toArray()
 
   // childs (with type) property
-  } else if (strParts.length === 3 && fieldRef === 'child' && fieldType !== '*' && fieldProperty !== '_id') {
+  } else if (strParts.length === 3 && fieldRef === '_child' && fieldType !== '*' && fieldProperty !== '_id') {
     result = await db.collection('entity').aggregate([
       {
         $match : {
@@ -341,7 +341,7 @@ const formulaField = async (str, entityId, db) => {
     ]).toArray()
 
   // parents _id
-  } else if (strParts.length === 3 && fieldRef === 'parent' && fieldType === '*' && fieldProperty === '_id') {
+  } else if (strParts.length === 3 && fieldRef === '_parent' && fieldType === '*' && fieldProperty === '_id') {
     result = await db.collection('property').aggregate([
       {
         $match : {
@@ -356,7 +356,7 @@ const formulaField = async (str, entityId, db) => {
     ]).toArray()
 
   // parents (with type) _id
-  } else if (strParts.length === 3 && fieldRef === 'parent' && fieldType !== '*' && fieldProperty === '_id') {
+  } else if (strParts.length === 3 && fieldRef === '_parent' && fieldType !== '*' && fieldProperty === '_id') {
     result = await db.collection('property').aggregate([
       {
         $match : {
@@ -389,7 +389,7 @@ const formulaField = async (str, entityId, db) => {
     ]).toArray()
 
   // parents property
-  } else if (strParts.length === 3 && fieldRef === 'parent' && fieldType === '*' && fieldProperty !== '_id') {
+  } else if (strParts.length === 3 && fieldRef === '_parent' && fieldType === '*' && fieldProperty !== '_id') {
     result = await db.collection('property').aggregate([
       {
         $match : {
@@ -425,7 +425,7 @@ const formulaField = async (str, entityId, db) => {
     ]).toArray()
 
   // parents (with type) property
-  } else if (strParts.length === 3 && fieldRef === 'parent' && fieldType !== '*' && fieldProperty !== '_id') {
+  } else if (strParts.length === 3 && fieldRef === '_parent' && fieldType !== '*' && fieldProperty !== '_id') {
     result = await db.collection('property').aggregate([
       {
         $match : {
