@@ -127,7 +127,7 @@ exports.handler = async (event, context) => {
       console.log('NO_TYPE', entityId);
     }
 
-    const replaceResponse = await db.collection('entity').replaceOne({ _id: entityId }, newEntity)
+    const replaceResponse = await db.collection('entity').replaceOne({ _id: entityId }, newEntity, { upsert: true })
 
     const name = _.get(entity, 'private.name', []).map(x => x.string || '')
     const newName = _.get(newEntity, 'private.name', []).map(x => x.string || '')
