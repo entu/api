@@ -292,7 +292,7 @@ const formulaField = async (str, entityId, db) => {
                 $expr: { $eq: [ '$entity',  '$$entityId' ] }
               }
             }, {
-              $project: { _id: false, entity: false, type: false, search: false, public: false, created: false }
+              $project: { _id: false, entity: false, type: false, created: false }
             }
           ],
           as: 'properties'
@@ -326,7 +326,7 @@ const formulaField = async (str, entityId, db) => {
                 $expr: { $eq: [ '$entity',  '$$entityId' ] }
               }
             }, {
-              $project: { _id: false, entity: false, type: false, search: false, public: false, created: false }
+              $project: { _id: false, entity: false, type: false, created: false }
             }
           ],
           as: 'properties'
@@ -410,7 +410,7 @@ const formulaField = async (str, entityId, db) => {
                 $expr: { $eq: [ '$entity',  '$$entityId' ] }
               }
             }, {
-              $project: { _id: false, entity: false, type: false, search: false, public: false, created: false }
+              $project: { _id: false, entity: false, type: false, created: false }
             }
           ],
           as: 'properties'
@@ -462,7 +462,7 @@ const formulaField = async (str, entityId, db) => {
                 $expr: { $in: [ '$entity',  '$$entityId' ] }
               }
             }, {
-              $project: { _id: false, entity: false, type: false, search: false, public: false, created: false }
+              $project: { _id: false, entity: false, type: false, created: false }
             }
           ],
           as: 'properties'
