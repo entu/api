@@ -25,7 +25,7 @@ exports.handler = async (event, context) => {
     }
 
     if (property.s3) {
-      property.url = await _h.getSignedUrl(property.s3)
+      property.url = await _h.getSignedUrl('getObject', { Key: property.s3 })
 
       _.unset(property, 's3')
     }

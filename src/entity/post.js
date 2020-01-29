@@ -118,7 +118,7 @@ exports.handler = async (event, context) => {
           ServerSideEncryption: 'AES256'
         }
 
-        const signedRequest = await s3.getSignedUrl('putObject', s3Params).promise()
+        const signedRequest = await _h.getSignedUrl('putObject', s3Params)
 
         pIds.push({
           _id: newProperty.insertedId,

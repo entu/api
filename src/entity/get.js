@@ -170,7 +170,7 @@ const claenupEntity = async (entity, user, _thumbnail) => {
   }
 
   if (_thumbnail && _.has(result, 'photo.0.s3')) {
-    result._thumbnail = await _h.getSignedUrl(_.get(result, 'photo.0.s3'))
+    result._thumbnail = await _h.getSignedUrl('getObject', { Key: _.get(result, 'photo.0.s3') })
   }
 
   if (_.has(result, 'entu_api_key')) {
