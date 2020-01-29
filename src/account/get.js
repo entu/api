@@ -28,13 +28,13 @@ exports.handler = async (event, context) => {
     const files = await user.db.collection('property').aggregate([
       {
         $match: {
-          size: { $exists: true }
+          filesize: { $exists: true }
         }
       }, {
         $group: {
           _id: { $gt: ['$deleted', null] },
           count: { $sum: 1 },
-          size: { $sum: '$size' }
+          filesize: { $sum: '$filesize' }
         }
       }
     ]).toArray()
@@ -45,9 +45,9 @@ exports.handler = async (event, context) => {
       properties: _.get(properties.filter((e) => e._id === false), '0.count', 0),
       deletedProperties: _.get(properties.filter((e) => e._id === true), '0.count', 0),
       files: _.get(files.filter((e) => e._id === false), '0.count', 0),
-      filesSize: _.get(files.filter((e) => e._id === false), '0.size', 0),
+      filesSize: _.get(files.filter((e) => e._id === false), '0.filesize', 0),
       deletedFiles: _.get(files.filter((e) => e._id === true), '0.count', 0),
-      deletedFilesSize: _.get(files.filter((e) => e._id === true), '0.size', 0),
+      deletedFilesSize: _.get(files.filter((e) => e._id === true), '0.filesize', 0),
       dbSize: stats.dataSize + stats.indexSize
     })
   } catch (e) {

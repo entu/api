@@ -192,11 +192,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ### POST /entity
 Create new entity. Data must be sent as JSON list containing property object(s).
 
-Returns created entity \_id and it's properties \_ids. If *filename* and *size* is set in property, returns upload *url* and *signedRequest* for file upload.
+Returns created entity \_id and it's properties \_ids. If *filename* and *filesize* is set in property, returns upload *url* and *signedRequest* for file upload.
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
-- [ **string** \| **reference** \| **boolean** \| **integer** \| **decimal** \| **date** \| **datetime** \| **filename** \| **size** ] - Property value
+- [ **string** \| **reference** \| **boolean** \| **integer** \| **decimal** \| **date** \| **datetime** \| **filename** \| **filesize** \| **filetype** ] - Property value
 
 #### Example request
 ```http
@@ -210,7 +210,7 @@ Content-Length: 151
 [
   { "type": "_type", "string": "book" },
   { "type": "title", "string": "Hobbit" },
-  { "type": "photo", "filename": "cover.jpg", "size": 1937 }
+  { "type": "photo", "filename": "cover.jpg", "filesize": 1937 }
 ]
 ```
 
@@ -260,11 +260,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ### POST /entity/{ \_id }
 Add new properties to existing entity. Data must be sent as JSON list containing property object(s).
 
-Returns created properties \_ids. If *filename* and *size* is set returns upload *url* and *signedRequest* for file upload.
+Returns created properties \_ids. If *filename* and *filesize* is set returns upload *url* and *signedRequest* for file upload.
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
-- [ **string** \| **reference** \| **boolean** \| **integer** \| **decimal** \| **date** \| **datetime** \| **filename** \| **size** ] - Property value
+- [ **string** \| **reference** \| **boolean** \| **integer** \| **decimal** \| **date** \| **datetime** \| **filename** \| **filesize** \| **filetype** ] - Property value
 
 #### Example request
 ```http
@@ -277,7 +277,7 @@ Content-Length: 109
 
 [
   { "type": "title", "string": "Hobbit" },
-  { "type": "photo", "filename": "cover.jpg", "size": 1937 }
+  { "type": "photo", "filename": "cover.jpg", "filesize": 1937 }
 ]
 ```
 

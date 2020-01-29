@@ -103,7 +103,7 @@ exports.handler = async (event, context) => {
 
       const newProperty = await user.db.collection('property').insertOne(property)
 
-      if (property.filename && property.size) {
+      if (property.filename && property.filesize) {
         aws.config = new aws.Config()
 
         const s3 = new aws.S3()
@@ -112,7 +112,7 @@ exports.handler = async (event, context) => {
           Bucket: s3Bucket,
           Key: key,
           Expires: 60,
-          ContentType: property.type,
+          ContentType: property.filetype,
           ACL: 'private',
           ContentDisposition: `inline;filename="${property.filename.replace('"', '\"')}"`,
           ServerSideEncryption: 'AES256'
