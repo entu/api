@@ -63,7 +63,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
   &quot;count&quot;: 0,
   &quot;entities&quot;: []
 }
-</code></pre><h3>POST /entity</h3><p>Create new entity. Data must be sent as JSON list containing property object(s).</p><p>Returns created entity _id and it's properties _ids. If <em>filename</em> and <em>filesize</em> is set in property, returns upload <em>url</em> and <em>signedRequest</em> for file upload.</p><h4>Property object parameters</h4><ul><li><strong>type</strong> - Property type. It's mandatory parameter. Must be alphanumeric. Can contain _, but not begin with one (except <a href="#system-properties">system properties</a>).</li><li>[ <strong>string</strong> | <strong>reference</strong> | <strong>boolean</strong> | <strong>integer</strong> | <strong>decimal</strong> | <strong>date</strong> | <strong>datetime</strong> | <strong>filename</strong> | <strong>filesize</strong> | <strong>filetype</strong> ] - Property value</li></ul><h4>Example request</h4><pre><code class="language-http">POST /entity HTTP/1.1
+</code></pre><h3>POST /entity</h3><p>Create new entity. Data must be sent as JSON list containing property object(s).</p><p>Returns created entity _id and it's properties _ids. If <em>filename</em> and <em>filesize</em> is set in property, returns upload <em>url</em> and <em>headers</em> for file upload. Make PUT request to this url with given header and file as body.</p><h4>Property object parameters</h4><ul><li><strong>type</strong> - Property type. It's mandatory parameter. Must be alphanumeric. Can contain _, but not begin with one (except <a href="#system-properties">system properties</a>).</li><li>[ <strong>string</strong> | <strong>reference</strong> | <strong>boolean</strong> | <strong>integer</strong> | <strong>decimal</strong> | <strong>date</strong> | <strong>datetime</strong> | <strong>filename</strong> | <strong>filesize</strong> | <strong>filetype</strong> ] - Property value</li></ul><h4>Example request</h4><pre><code class="language-http">POST /entity HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -93,7 +93,7 @@ Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 </code></pre><h4>Example response</h4><pre><code class="language-json">{}
-</code></pre><h3>POST /entity/{ _id }</h3><p>Add new properties to existing entity. Data must be sent as JSON list containing property object(s).</p><p>Returns created properties _ids. If <em>filename</em> and <em>filesize</em> is set returns upload <em>url</em> and <em>signedRequest</em> for file upload.</p><h4>Property object parameters</h4><ul><li><strong>type</strong> - Property type. It's mandatory parameter. Must be alphanumeric. Can contain _, but not begin with one (except <a href="#system-properties">system properties</a>).</li><li>[ <strong>string</strong> | <strong>reference</strong> | <strong>boolean</strong> | <strong>integer</strong> | <strong>decimal</strong> | <strong>date</strong> | <strong>datetime</strong> | <strong>filename</strong> | <strong>filesize</strong> | <strong>filetype</strong> ] - Property value</li></ul><h4>Example request</h4><pre><code class="language-http">POST /entity/hAazguCezHwDfLe2geyKKpqj HTTP/1.1
+</code></pre><h3>POST /entity/{ _id }</h3><p>Add new properties to existing entity. Data must be sent as JSON list containing property object(s).</p><p>Returns created entity _id and it's properties _ids. If <em>filename</em> and <em>filesize</em> is set in property, returns upload <em>url</em> and <em>headers</em> for file upload. Make PUT request to this url with given header and file as body.</p><h4>Property object parameters</h4><ul><li><strong>type</strong> - Property type. It's mandatory parameter. Must be alphanumeric. Can contain _, but not begin with one (except <a href="#system-properties">system properties</a>).</li><li>[ <strong>string</strong> | <strong>reference</strong> | <strong>boolean</strong> | <strong>integer</strong> | <strong>decimal</strong> | <strong>date</strong> | <strong>datetime</strong> | <strong>filename</strong> | <strong>filesize</strong> | <strong>filetype</strong> ] - Property value</li></ul><h4>Example request</h4><pre><code class="language-http">POST /entity/hAazguCezHwDfLe2geyKKpqj HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -102,7 +102,7 @@ Content-Length: 109
 
 [
   { &quot;type&quot;: &quot;title&quot;, &quot;string&quot;: &quot;Hobbit&quot; },
-  { &quot;type&quot;: &quot;photo&quot;, &quot;filename&quot;: &quot;cover.jpg&quot;, &quot;size&quot;: 1937 }
+  { &quot;type&quot;: &quot;photo&quot;, &quot;filename&quot;: &quot;cover.jpg&quot;, &quot;filesize&quot;: 1937 }
 ]
 </code></pre><h4>Example response</h4><pre><code class="language-json">{
   &quot;_id&quot;: &quot;bsskJkDWwQXHB8ut7vQvmWZ4&quot;,

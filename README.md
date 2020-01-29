@@ -192,7 +192,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ### POST /entity
 Create new entity. Data must be sent as JSON list containing property object(s).
 
-Returns created entity \_id and it's properties \_ids. If *filename* and *filesize* is set in property, returns upload *url* and *signedRequest* for file upload.
+Returns created entity \_id and it's properties \_ids. If *filename* and *filesize* is set in property, returns upload *url* and *headers* for file upload. Make PUT request to this url with given header and file as body.
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
@@ -260,7 +260,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ### POST /entity/{ \_id }
 Add new properties to existing entity. Data must be sent as JSON list containing property object(s).
 
-Returns created properties \_ids. If *filename* and *filesize* is set returns upload *url* and *signedRequest* for file upload.
+Returns created entity \_id and it's properties \_ids. If *filename* and *filesize* is set in property, returns upload *url* and *headers* for file upload. Make PUT request to this url with given header and file as body.
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).

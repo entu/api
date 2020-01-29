@@ -122,8 +122,12 @@ exports.handler = async (event, context) => {
 
         pIds.push({
           _id: newProperty.insertedId,
-          url: `https://${s3Bucket}.s3.amazonaws.com/${key}`,
-          signedRequest: signedRequest
+          url: signedRequest,
+          filename: property.filename,
+          header: {
+            'Content-Type': property.filetype,
+            ACL: 'private'
+          }
         })
       } else {
         pIds.push({ _id: newProperty.insertedId })
