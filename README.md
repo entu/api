@@ -192,7 +192,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ### POST /entity
 Create new entity. Data must be sent as JSON list containing property object(s).
 
-Returns created entity \_id and it's properties \_ids. If *filename* and *filesize* is set in property, returns upload *url* and *headers* for file upload. Make PUT request to this url with given header and file as body.
+Returns created entity \_id and added properties.
+
+For file upload, add *filename*, *filesize* and *filetype* to property parameters. Response contains *upload* object with info (url, method and header) where to upload file (as request body).
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
@@ -220,12 +222,25 @@ Content-Length: 151
   "_id": "bsskJkDWwQXHB8ut7vQvmWZ4",
   "properties": [
     {
-      "_id": "92eVbRk2xxFun2gXsxXaxWFk"
+      "_id": "92eVbRk2xx44n2gXsxXaxQcd",
+      "type": "_type",
+      "string": "book"
+    },
+    {
+      "_id": "92eVbRk2xxFun2gXsxXaxWFk",
+      "type": "title",
+      "string": "Hobbit"
     },
     {
       "_id": "qXNdbysby2NHcgVDK3rrXUZk",
-      "url": "https://entu-files.s3.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk",
-      "signedRequest": "https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?"
+      "type": "photo",
+      "filename": "cover.jpg",
+      "filesize": 1937,
+      "upload": {
+        "url": "https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?",
+        "method": "PUT",
+        "header": {}
+      }
     }
   ]
 }
@@ -260,7 +275,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ### POST /entity/{ \_id }
 Add new properties to existing entity. Data must be sent as JSON list containing property object(s).
 
-Returns created entity \_id and it's properties \_ids. If *filename* and *filesize* is set in property, returns upload *url* and *headers* for file upload. Make PUT request to this url with given header and file as body.
+Returns added properties.
+
+For file upload, add *filename*, *filesize* and *filetype* to property parameters. Response contains *upload* object with info (url, method and header) where to upload file (as request body).
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
@@ -287,12 +304,20 @@ Content-Length: 109
   "_id": "bsskJkDWwQXHB8ut7vQvmWZ4",
   "properties": [
     {
-      "_id": "92eVbRk2xxFun2gXsxXaxWFk"
+      "_id": "92eVbRk2xxFun2gXsxXaxWFk",
+      "type": "title",
+      "string": "Hobbit"
     },
     {
       "_id": "qXNdbysby2NHcgVDK3rrXUZk",
-      "url": "https://entu-files.s3.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk",
-      "signedRequest": "https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?"
+      "type": "photo",
+      "filename": "cover.jpg",
+      "filesize": 1937,
+      "upload": {
+        "url": "https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?",
+        "method": "PUT",
+        "header": {}
+      }
     }
   ]
 }
