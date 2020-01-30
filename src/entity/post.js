@@ -101,13 +101,17 @@ exports.handler = async (event, context) => {
         by: userId
       }
 
-      const newProperty = await user.db.collection('property').insertOne(property)
+      const insertedProperty = await user.db.collection('property').insertOne(property)
+      const newProperty = {
+        _id: insertedProperty.insertedId,
+        type: property.type
+      }
 
       if (property.filename && property.filesize) {
         aws.config = new aws.Config()
 
         const s3 = new aws.S3()
-        const key = `${user.account}/${newProperty.insertedId}`
+        const key = `${user.account}/${newProperty._id}`
         const s3Params = {
           Bucket: s3Bucket,
           Key: key,
@@ -118,20 +122,15 @@ exports.handler = async (event, context) => {
           ServerSideEncryption: 'AES256'
         }
 
-        const signedRequest = await _h.getSignedUrl('putObject', s3Params)
-
-        pIds.push({
-          _id: newProperty.insertedId,
-          url: signedRequest,
-          filename: property.filename,
-          header: {
-            'Content-Type': property.filetype,
-            ACL: 'private'
-          }
-        })
-      } else {
-        pIds.push({ _id: newProperty.insertedId })
+        newProperty.filename = property.filename
+        newProperty.url = await _h.getSignedUrl('putObject', s3Params)
+        newProperty.header = {
+          'Content-Type': property.filetype,
+          ACL: 'private'
+        }
       }
+
+      pIds.push(newProperty)
     }
 
     await _h.addEntityAggregateSqs(context, user.account, eId)
