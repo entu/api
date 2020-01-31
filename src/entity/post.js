@@ -132,6 +132,8 @@ exports.handler = async (event, context) => {
         }
       }
 
+      await user.db.collection('property').updateOne({ _id: newProperty._id }, { $set: { s3: `${user.account}/${newProperty._id}` } })
+
       pIds.push(newProperty)
     }
 
