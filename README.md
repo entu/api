@@ -194,7 +194,7 @@ Create new entity. Data must be sent as JSON list containing property object(s).
 
 Returns created entity \_id and added properties.
 
-For file upload, add *filename*, *filesize* and *filetype* to property parameters. Response contains *upload* object with info (url, method and header) where to upload file (as request body).
+For file upload, add *filename*, *filesize* and *filetype* to property parameters. Response contains *upload* object with info (url, method and headers) where to upload file (as request body).
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
@@ -239,7 +239,7 @@ Content-Length: 151
       "upload": {
         "url": "https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?",
         "method": "PUT",
-        "header": {}
+        "headers": {}
       }
     }
   ]
@@ -277,7 +277,7 @@ Add new properties to existing entity. Data must be sent as JSON list containing
 
 Returns added properties.
 
-For file upload, add *filename*, *filesize* and *filetype* to property parameters. Response contains *upload* object with info (url, method and header) where to upload file (as request body).
+For file upload, add *filename*, *filesize* and *filetype* to property parameters. Response contains *upload* object with info (url, method and headers) where to upload file (as request body).
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
@@ -316,7 +316,7 @@ Content-Length: 109
       "upload": {
         "url": "https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?",
         "method": "PUT",
-        "header": {}
+        "headers": {}
       }
     }
   ]

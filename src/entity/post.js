@@ -104,6 +104,9 @@ exports.handler = async (event, context) => {
       const insertedProperty = await user.db.collection('property').insertOne(property)
       const newProperty = { _id: insertedProperty.insertedId, ...property }
 
+      delete newProperty.entity
+      delete newProperty.created
+
       if (property.filename && property.filesize) {
         aws.config = new aws.Config()
 
@@ -122,7 +125,7 @@ exports.handler = async (event, context) => {
         newProperty.upload = {
           url: await _h.getSignedUrl('putObject', s3Params),
           method: 'PUT',
-          header: {
+          headers: {
             'Content-Type': property.filetype,
             ACL: 'private'
           }

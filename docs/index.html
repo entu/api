@@ -63,7 +63,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
   &quot;count&quot;: 0,
   &quot;entities&quot;: []
 }
-</code></pre><h3>POST /entity</h3><p>Create new entity. Data must be sent as JSON list containing property object(s).</p><p>Returns created entity _id and added properties.</p><p>For file upload, add <em>filename</em>, <em>filesize</em> and <em>filetype</em> to property parameters. Response contains <em>upload</em> object with info (url, method and header) where to upload file (as request body).</p><h4>Property object parameters</h4><ul><li><strong>type</strong> - Property type. It's mandatory parameter. Must be alphanumeric. Can contain _, but not begin with one (except <a href="#system-properties">system properties</a>).</li><li>[ <strong>string</strong> | <strong>reference</strong> | <strong>boolean</strong> | <strong>integer</strong> | <strong>decimal</strong> | <strong>date</strong> | <strong>datetime</strong> | <strong>filename</strong> | <strong>filesize</strong> | <strong>filetype</strong> ] - Property value</li></ul><h4>Example request</h4><pre><code class="language-http">POST /entity HTTP/1.1
+</code></pre><h3>POST /entity</h3><p>Create new entity. Data must be sent as JSON list containing property object(s).</p><p>Returns created entity _id and added properties.</p><p>For file upload, add <em>filename</em>, <em>filesize</em> and <em>filetype</em> to property parameters. Response contains <em>upload</em> object with info (url, method and headers) where to upload file (as request body).</p><h4>Property object parameters</h4><ul><li><strong>type</strong> - Property type. It's mandatory parameter. Must be alphanumeric. Can contain _, but not begin with one (except <a href="#system-properties">system properties</a>).</li><li>[ <strong>string</strong> | <strong>reference</strong> | <strong>boolean</strong> | <strong>integer</strong> | <strong>decimal</strong> | <strong>date</strong> | <strong>datetime</strong> | <strong>filename</strong> | <strong>filesize</strong> | <strong>filetype</strong> ] - Property value</li></ul><h4>Example request</h4><pre><code class="language-http">POST /entity HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -96,7 +96,7 @@ Content-Length: 151
       &quot;upload&quot;: {
         &quot;url&quot;: &quot;https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?&quot;,
         &quot;method&quot;: &quot;PUT&quot;,
-        &quot;header&quot;: {}
+        &quot;headers&quot;: {}
       }
     }
   ]
@@ -106,7 +106,7 @@ Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 </code></pre><h4>Example response</h4><pre><code class="language-json">{}
-</code></pre><h3>POST /entity/{ _id }</h3><p>Add new properties to existing entity. Data must be sent as JSON list containing property object(s).</p><p>Returns added properties.</p><p>For file upload, add <em>filename</em>, <em>filesize</em> and <em>filetype</em> to property parameters. Response contains <em>upload</em> object with info (url, method and header) where to upload file (as request body).</p><h4>Property object parameters</h4><ul><li><strong>type</strong> - Property type. It's mandatory parameter. Must be alphanumeric. Can contain _, but not begin with one (except <a href="#system-properties">system properties</a>).</li><li>[ <strong>string</strong> | <strong>reference</strong> | <strong>boolean</strong> | <strong>integer</strong> | <strong>decimal</strong> | <strong>date</strong> | <strong>datetime</strong> | <strong>filename</strong> | <strong>filesize</strong> | <strong>filetype</strong> ] - Property value</li></ul><h4>Example request</h4><pre><code class="language-http">POST /entity/hAazguCezHwDfLe2geyKKpqj HTTP/1.1
+</code></pre><h3>POST /entity/{ _id }</h3><p>Add new properties to existing entity. Data must be sent as JSON list containing property object(s).</p><p>Returns added properties.</p><p>For file upload, add <em>filename</em>, <em>filesize</em> and <em>filetype</em> to property parameters. Response contains <em>upload</em> object with info (url, method and headers) where to upload file (as request body).</p><h4>Property object parameters</h4><ul><li><strong>type</strong> - Property type. It's mandatory parameter. Must be alphanumeric. Can contain _, but not begin with one (except <a href="#system-properties">system properties</a>).</li><li>[ <strong>string</strong> | <strong>reference</strong> | <strong>boolean</strong> | <strong>integer</strong> | <strong>decimal</strong> | <strong>date</strong> | <strong>datetime</strong> | <strong>filename</strong> | <strong>filesize</strong> | <strong>filetype</strong> ] - Property value</li></ul><h4>Example request</h4><pre><code class="language-http">POST /entity/hAazguCezHwDfLe2geyKKpqj HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -133,7 +133,7 @@ Content-Length: 109
       &quot;upload&quot;: {
         &quot;url&quot;: &quot;https://entu-files.s3-eu-west-1.amazonaws.com/entu/qXNdbysby2NHcgVDK3rrXUZk?&quot;,
         &quot;method&quot;: &quot;PUT&quot;,
-        &quot;header&quot;: {}
+        &quot;headers&quot;: {}
       }
     }
   ]
