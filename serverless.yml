@@ -91,6 +91,8 @@ functions:
         events:
             -
                 httpApi: GET /account
+            -
+                httpApi: *
 
     auth-get:
         handler: src/auth/get.handler
