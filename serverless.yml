@@ -11,7 +11,8 @@ provider:
     memorySize: 256
     timeout: 30
     logRetentionInDays: 365
-
+    httpApi:
+        cors: true
     tracing:
         apiGateway: true
         lambda: true
@@ -89,10 +90,7 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /account
-                    method: get
-                    cors: true
+                httpApi: GET /account
 
     auth-get:
         handler: src/auth/get.handler
@@ -105,10 +103,7 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /auth
-                    method: get
-                    cors: true
+                httpApi: GET /auth
 
     auth-apple-get:
         handler: src/auth/apple/get.handler
@@ -121,9 +116,7 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /auth/apple
-                    method: get
+                httpApi: GET /auth/apple
 
     auth-apple-post:
         handler: src/auth/apple/post.handler
@@ -136,9 +129,7 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /auth/apple
-                    method: post
+                httpApi: POST /auth/apple
 
     auth-google-get:
         handler: src/auth/google/get.handler
@@ -151,9 +142,7 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /auth/google
-                    method: get
+                httpApi: GET /auth/google
 
     auth-google-post:
         handler: src/auth/google/post.handler
@@ -166,9 +155,7 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /auth/google
-                    method: post
+                httpApi: POST /auth/google
 
     auth-microsoft-get:
         handler: src/auth/microsoft/get.handler
@@ -181,9 +168,7 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /auth/microsoft
-                    method: get
+                httpApi: GET /auth/microsoft
 
     auth-microsoft-post:
         handler: src/auth/microsoft/post.handler
@@ -196,9 +181,7 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /auth/microsoft
-                    method: post
+                httpApi: POST /auth/microsoft
 
     auth-lhv-get:
         handler: src/auth/lhv/get.handler
@@ -211,9 +194,7 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /auth/lhv
-                    method: get
+                httpApi: GET /auth/lhv
 
     auth-lhv-post:
         handler: src/auth/lhv/post.handler
@@ -226,9 +207,7 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /auth/lhv
-                    method: post
+                httpApi: POST /auth/lhv
 
     entity-get:
         handler: src/entity/get.handler
@@ -241,15 +220,9 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /entity
-                    method: get
-                    cors: true
+                httpApi: GET /entity
             -
-                http:
-                    path: /entity/{id}
-                    method: get
-                    cors: true
+                httpApi: GET /entity/{id}
 
     entity-post:
         handler: src/entity/post.handler
@@ -262,15 +235,9 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /entity
-                    method: post
-                    cors: true
+                httpApi: POST /entity
             -
-                http:
-                    path: /entity/{id}
-                    method: post
-                    cors: true
+                httpApi: POST /entity/{id}
 
     entity-delete:
         handler: src/entity/delete.handler
@@ -283,10 +250,7 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /entity/{id}
-                    method: delete
-                    cors: true
+                httpApi: DELETE /entity/{id}
 
     entity-aggregate:
         handler: src/entity/aggregate.handler
@@ -316,10 +280,7 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /property/{id}
-                    method: get
-                    cors: true
+                httpApi: GET /property/{id}
 
     property-delete:
         handler: src/property/delete.handler
@@ -332,16 +293,13 @@ functions:
             - {Ref: CommonNodeLibsLambdaLayer}
         events:
             -
-                http:
-                    path: /property/{id}
-                    method: delete
-                    cors: true
+                httpApi: DELETE /property/{id}
 
 layers:
     commonNodeLibs:
         path: layers
         compatibleRuntimes:
-            - nodejs10.x
+            - nodejs12.x
 
 # resources:
 #     Resources:
