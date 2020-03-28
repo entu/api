@@ -92,7 +92,7 @@ functions:
             -
                 httpApi: GET /account
             -
-                httpApi: *
+                httpApi: GET *
 
     auth-get:
         handler: src/auth/get.handler
