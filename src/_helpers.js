@@ -173,7 +173,7 @@ exports.strToId = strToId
 
 const getHeader = (event, headerKey) => {
   const headers = Object.fromEntries(
-    Object.entries(obj).map(([k, v]) => [k.toLowerCase(), v])
+    Object.entries(event.headers).map(([k, v]) => [k.toLowerCase(), v])
   )
 
   return headers[headerKey.toLowerCase()] || ''
