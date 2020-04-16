@@ -74,7 +74,7 @@ exports.user = async (event) => {
   const jwtSecret = await ssmParameter('entu-api-jwt-secret')
 
   return new Promise((resolve, reject) => {
-    const jwtToken = _.get(event, 'headers.Authorization', '').replace('Bearer ', '')
+    const jwtToken = _.get(event, 'headers.authorization', '').replace('Bearer ', '')
     const jwtConf = {
       issuer: _.get(event, 'queryStringParameters.account'),
       audience: _.get(event, 'requestContext.identity.sourceIp')
