@@ -32,7 +32,7 @@ exports.handler = async (event, context) => {
     const createdDt = new Date()
     const userId = _h.strToId(user.id)
 
-    const body = JSON.parse(event.body)
+    const body = _h.getBody(event)
 
     if (body && !_.isArray(body)) { return _h.error([400, 'Data must be array']) }
 

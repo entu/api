@@ -3,6 +3,7 @@
 const _ = require('lodash')
 const aws = require('aws-sdk')
 const jwt = require('jsonwebtoken')
+const querystring = require('querystring')
 const { MongoClient, ObjectId } = require('mongodb')
 
 let ssmParameters = {}
@@ -169,6 +170,23 @@ const strToId = (str) => {
   }
 }
 exports.strToId = strToId
+
+exports.getBody = (event) => {
+  let body = event.body
+
+  if (!body) { return {} }
+
+  if (event.isBase64Encoded) {
+    let buff = new Buffer(body, 'base64')
+    body = buff.toString()
+  }
+
+  if (event.headers['Content-Type'] === 'application/x-www-form-urlencoded') {
+    return querystring.parse(body)
+  } else {
+    return JSON.parse(body)
+  }
+}
 
 exports.json = (data, code, headers) => {
   if (headers) {

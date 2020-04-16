@@ -3,7 +3,6 @@
 const _ = require('lodash')
 const _h = require('../../_helpers')
 const crypto = require('crypto')
-const querystring = require('querystring')
 
 const strWithLength = (str) => {
   return ('000' + str.length).slice(-3) + str
@@ -17,7 +16,7 @@ exports.handler = async (event, context) => {
     const lhvKey = await _h.ssmParameter('entu-api-lhv-public')
     const next = _.get(event, 'queryStringParameters.next')
 
-    const request = querystring.parse(event.body)
+    const request = _h.getBody(event)
 
     const mac = [
       request.VK_SERVICE,

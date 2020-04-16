@@ -11,7 +11,7 @@ exports.handler = async (event, context) => {
 
   try {
     const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
-    const params = querystring.parse(event.body) || {}
+    const params = _h.getBody(event)
 
     if (!params.state) { return _h.error([400, 'No state']) }
 
