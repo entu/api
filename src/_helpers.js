@@ -171,17 +171,14 @@ const strToId = (str) => {
 }
 exports.strToId = strToId
 
-
 const getHeader = (event, headerKey) => {
+  const headers = Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [k.toLowerCase(), v])
+  )
 
-  const headers = _.transform(event.headers, (result, val, key) => {
-    result[key.toLowerCase()] = val
-  })
-
-  return headers[headerKey.toLowerCase()]
+  return headers[headerKey.toLowerCase()] || ''
 }
 exports.getHeader = getHeader
-
 
 exports.getBody = (event) => {
   let body = event.body
