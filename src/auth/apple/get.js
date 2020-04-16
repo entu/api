@@ -19,7 +19,7 @@ exports.handler = async (event, context) => {
 
     const query = querystring.stringify({
       client_id: clientId,
-      redirect_uri: `https://${event.headers.Host}${event.path}`,
+      redirect_uri: `https://${_h.getHeader(event, 'host')}${event.path}`,
       response_type: 'code',
       response_mode: 'form_post',
       scope: 'email name',

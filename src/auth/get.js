@@ -12,7 +12,7 @@ exports.handler = async (event, context) => {
 
   try {
     const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
-    const key = _.get(event, 'headers.authorization', '').replace('Bearer ', '')
+    const key = _.getHeader(event, 'authorization').replace('Bearer ', '')
 
     if (!key) { return _h.error([400, 'No key']) }
 

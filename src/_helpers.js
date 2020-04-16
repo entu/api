@@ -74,7 +74,7 @@ exports.user = async (event) => {
   const jwtSecret = await ssmParameter('entu-api-jwt-secret')
 
   return new Promise((resolve, reject) => {
-    const jwtToken = _.get(event, 'headers.authorization', '').replace('Bearer ', '')
+    const jwtToken = _.getHeader(event, 'authorization').replace('Bearer ', '')
     const jwtConf = {
       issuer: _.get(event, 'queryStringParameters.account'),
       audience: _.get(event, 'requestContext.identity.sourceIp')
@@ -171,6 +171,18 @@ const strToId = (str) => {
 }
 exports.strToId = strToId
 
+
+const getHeader = (event, headerKey) => {
+
+  const headers = _.transform(event.headers, (result, val, key) => {
+    result[key.toLowerCase()] = val
+  })
+
+  return headers[headerKey.toLowerCase()]
+}
+exports.getHeader = getHeader
+
+
 exports.getBody = (event) => {
   let body = event.body
 
@@ -181,7 +193,7 @@ exports.getBody = (event) => {
     body = buff.toString()
   }
 
-  if (event.headers['Content-Type'] === 'application/x-www-form-urlencoded') {
+  if (getHeader(event, 'content-type') === 'application/x-www-form-urlencoded') {
     return querystring.parse(body)
   } else {
     return JSON.parse(body)

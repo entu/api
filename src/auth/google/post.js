@@ -21,7 +21,7 @@ exports.handler = async (event, context) => {
 
     if (!params.code) { return _h.error([400, 'No code']) }
 
-    const accessToken = await getToken(params.code, `https://${event.headers.Host}${event.path}`)
+    const accessToken = await getToken(params.code, `https://${_h.getHeader(event, 'host')}${event.path}`)
     const profile = await getProfile(accessToken)
     const user = {
       ip: _.get(event, 'requestContext.identity.sourceIp'),
