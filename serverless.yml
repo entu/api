@@ -9,19 +9,14 @@ provider:
     region: eu-central-1
     endpointType: regional
     memorySize: 256
-    timeout: 30
+    timeout: 29
     logRetentionInDays: 365
     httpApi:
         cors: true
     logs:
         httpApi: true
     tracing:
-        apiGateway: true
         lambda: true
-
-    apiGateway:
-        minimumCompressionSize: 32
-
     iamRoleStatements:
         -
             Effect: Allow
