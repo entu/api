@@ -13,6 +13,8 @@ provider:
     logRetentionInDays: 365
     httpApi:
         cors: true
+    logs:
+        httpApi: true
     tracing:
         apiGateway: true
         lambda: true
