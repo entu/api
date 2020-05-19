@@ -1,6 +1,7 @@
 'use strict'
 
-const _ = require('lodash')
+const _get = require('lodash/get')
+const _has = require('lodash/has')
 const _h = require('../../_helpers')
 const crypto = require('crypto')
 
@@ -14,7 +15,7 @@ exports.handler = async (event, context) => {
   try {
     const lhvId = await _h.ssmParameter('entu-api-lhv-id')
     const lhvKey = await _h.ssmParameter('entu-api-lhv-public')
-    const next = _.get(event, 'queryStringParameters.next')
+    const next = _get(event, 'queryStringParameters.next')
 
     const request = _h.getBody(event)
 
@@ -41,13 +42,13 @@ exports.handler = async (event, context) => {
     if (!crypto.createVerify('SHA1').update(mac).verify(lhvKey, request.VK_MAC, 'base64')) {
       return _h.error([400, 'Invalid VK_MAC'])
     }
-    if (_.get(request, 'VK_SERVICE') !== '3012') {
+    if (_get(request, 'VK_SERVICE') !== '3012') {
       return _h.error([400, 'Invalid VK_SERVICE'])
     }
-    if (_.get(request, 'VK_SND_ID') !== 'LHV') {
+    if (_get(request, 'VK_SND_ID') !== 'LHV') {
       return _h.error([400, 'Invalid VK_SND_ID'])
     }
-    if (_.get(request, 'VK_REC_ID') !== lhvId) {
+    if (_get(request, 'VK_REC_ID') !== lhvId) {
       return _h.error([400, 'Invalid VK_REC_ID'])
     }
     if (now < datetimeMin || now > datetimeMax) {
@@ -55,15 +56,15 @@ exports.handler = async (event, context) => {
     }
 
     const user = {
-      ip: _.get(event, 'requestContext.identity.sourceIp'),
+      ip: _get(event, 'requestContext.identity.sourceIp'),
       provider: 'lhv',
-      id: _.get(request, 'VK_USER_ID'),
-      name: _.get(request, 'VK_USER_NAME'),
-      email: _.get(request, 'VK_USER_ID') + '@eesti.ee'
+      id: _get(request, 'VK_USER_ID'),
+      name: _get(request, 'VK_USER_NAME'),
+      email: _get(request, 'VK_USER_ID') + '@eesti.ee'
     }
     const sessionId = await _h.addUserSession(user)
 
-    if (_.has(event, 'queryStringParameters.next')) {
+    if (_has(event, 'queryStringParameters.next')) {
       return _h.redirect(`${event.queryStringParameters.next}${sessionId}`, 302)
     } else {
       return _h.json({ key: sessionId })

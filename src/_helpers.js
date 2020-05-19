@@ -1,6 +1,8 @@
 'use strict'
 
-const _ = require('lodash')
+const _get = require('lodash/get')
+const _pickBy = require('lodash/pickBy')
+const _identity = require('lodash/identity')
 const aws = require('aws-sdk')
 const jwt = require('jsonwebtoken')
 const querystring = require('querystring')
@@ -76,8 +78,8 @@ exports.user = async (event) => {
   return new Promise((resolve, reject) => {
     const jwtToken = getHeader(event, 'authorization').replace('Bearer ', '')
     const jwtConf = {
-      issuer: _.get(event, 'queryStringParameters.account'),
-      audience: _.get(event, 'requestContext.identity.sourceIp')
+      issuer: _get(event, 'queryStringParameters.account'),
+      audience: _get(event, 'requestContext.identity.sourceIp')
     }
 
     let result = {
@@ -125,7 +127,7 @@ exports.addUserSession = async (user) => {
     }
 
     db('entu').then((connection) => {
-      connection.collection('session').insertOne(_.pickBy(session, _.identity)).then((result) => {
+      connection.collection('session').insertOne(_pickBy(session, _identity)).then((result) => {
         const token = jwt.sign({}, jwtSecret, {
           audience: user.ip,
           subject: result.insertedId.toString(),

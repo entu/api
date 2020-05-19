@@ -1,6 +1,6 @@
 'use strict'
 
-const _ = require('lodash')
+const _get = require('lodash/get')
 const _h = require('../_helpers')
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
@@ -20,24 +20,24 @@ exports.handler = async (event, context) => {
     const connection = await _h.db('entu')
 
     try {
-      const decoded = jwt.verify(key, jwtSecret, { audience: _.get(event, 'requestContext.identity.sourceIp') })
+      const decoded = jwt.verify(key, jwtSecret, { audience: _get(event, 'requestContext.identity.sourceIp') })
       const session = await connection.collection('session').findOneAndUpdate({ _id: _h.strToId(decoded.sub), deleted: { $exists: false } }, { $set: { deleted: new Date() } })
 
-      if (!_.get(session, 'value')) { return _h.error([400, 'No session']) }
-      if (!_.get(session, 'value.user.email')) { return _h.error([400, 'No user email']) }
+      if (!_get(session, 'value')) { return _h.error([400, 'No session']) }
+      if (!_get(session, 'value.user.email')) { return _h.error([400, 'No user email']) }
 
-      authFilter['private.entu_user.string'] = _.get(session, 'value.user.email')
+      authFilter['private.entu_user.string'] = _get(session, 'value.user.email')
     } catch (e) {
       authFilter['private.entu_api_key.string'] = crypto.createHash('sha256').update(key).digest('hex')
     }
 
-    const onlyForAccount = _.get(event, 'queryStringParameters.account')
+    const onlyForAccount = _get(event, 'queryStringParameters.account')
 
     const dbs = await connection.admin().listDatabases()
     let accounts = {}
 
     for (let i = 0; i < dbs.databases.length; i++) {
-      const account = _.get(dbs, ['databases', i, 'name'])
+      const account = _get(dbs, ['databases', i, 'name'])
       if (onlyForAccount && onlyForAccount !== account) { continue }
       if (mongoDbSystemDbs.includes(account)) { continue }
 
@@ -47,7 +47,7 @@ exports.handler = async (event, context) => {
       if (person) {
         const token = jwt.sign({}, jwtSecret, {
           issuer: account,
-          audience: _.get(event, 'requestContext.identity.sourceIp'),
+          audience: _get(event, 'requestContext.identity.sourceIp'),
           subject: person._id.toString(),
           expiresIn: '48h'
         })

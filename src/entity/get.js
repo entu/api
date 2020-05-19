@@ -1,6 +1,11 @@
 'use strict'
 
-const _ = require('lodash')
+const _forIn = require('lodash/forIn')
+const _get = require('lodash/get')
+const _has = require('lodash/has')
+const _set = require('lodash/set')
+const _toNumber = require('lodash/toNumber')
+const _toSafeInteger = require('lodash/toSafeInteger')
 const _h = require('../_helpers')
 
 exports.handler = async (event, context) => {
@@ -9,7 +14,7 @@ exports.handler = async (event, context) => {
   try {
     const user = await _h.user(event)
     const eId = event.pathParameters && event.pathParameters.id ? _h.strToId(event.pathParameters.id) : null
-    const props = _.get(event, 'queryStringParameters.props', '').split(',').filter((x) => !!x)
+    const props = _get(event, 'queryStringParameters.props', '').split(',').filter((x) => !!x)
     var fields = {}
     var result = {}
     var getThumbnail = props.length === 0
@@ -42,19 +47,19 @@ exports.handler = async (event, context) => {
         entity: cleanedEntity
       }
     } else {
-      const sort = _.get(event, 'queryStringParameters.sort', '').split(',').filter(x => !!x)
-      const limit = _.toSafeInteger(_.get(event, 'queryStringParameters.limit')) || 100
-      const skip = _.toSafeInteger(_.get(event, 'queryStringParameters.skip')) || 0
-      const query = _.get(event, 'queryStringParameters.q', '').split(' ').filter(x => !!x)
+      const sort = _get(event, 'queryStringParameters.sort', '').split(',').filter(x => !!x)
+      const limit = _toSafeInteger(_get(event, 'queryStringParameters.limit')) || 100
+      const skip = _toSafeInteger(_get(event, 'queryStringParameters.skip')) || 0
+      const query = _get(event, 'queryStringParameters.q', '').split(' ').filter(x => !!x)
       var sortFields = {}
       var filter = {}
 
-      _.forIn(_.get(event, 'queryStringParameters'), (v, k) => {
+      _forIn(_get(event, 'queryStringParameters'), (v, k) => {
         if (k.includes('.')) {
           const fieldArray = k.split('.')
-          let field = _.get(fieldArray, 0)
-          let type = _.get(fieldArray, 1)
-          let operator = _.get(fieldArray, 2)
+          let field = _get(fieldArray, 0)
+          let type = _get(fieldArray, 1)
+          let operator = _get(fieldArray, 2)
           let value
 
           switch (type) {
@@ -65,13 +70,13 @@ exports.handler = async (event, context) => {
               value = v.toLowerCase() === 'true'
               break
             case 'integer':
-              value = _.toNumber(v)
+              value = _toNumber(v)
               break
             case 'filesize':
-              value = _.toNumber(v)
+              value = _toNumber(v)
               break
             case 'decimal':
-              value = _.toNumber(v)
+              value = _toNumber(v)
               break
             case 'date':
               value = new Date(v)
@@ -90,7 +95,7 @@ exports.handler = async (event, context) => {
           }
 
           if (['gt', 'gte', 'lt', 'lte', 'ne', 'regex', 'exists'].includes(operator)) {
-            _.set(filter, [`private.${field}.${type}`, `$${operator}`], value)
+            _set(filter, [`private.${field}.${type}`, `$${operator}`], value)
           } else {
             filter[`private.${field}.${type}`] = value
           }
@@ -159,22 +164,22 @@ const claenupEntity = async (entity, user, _thumbnail) => {
 
   let result = { _id: entity._id }
 
-  const access = _.get(entity, 'access', []).map((s) => s.toString())
+  const access = _get(entity, 'access', []).map((s) => s.toString())
 
   if (user.id && access.includes(user.id)) {
-    result = Object.assign({}, result, _.get(entity, 'private', {}))
+    result = Object.assign({}, result, _get(entity, 'private', {}))
   } else if (access.includes('public')) {
-    result = Object.assign({}, result, _.get(entity, 'public', {}))
+    result = Object.assign({}, result, _get(entity, 'public', {}))
   } else {
     return
   }
 
-  if (_thumbnail && _.has(result, 'photo.0.s3')) {
-    result._thumbnail = await _h.getSignedUrl('getObject', { Key: _.get(result, 'photo.0.s3') })
+  if (_thumbnail && _has(result, 'photo.0.s3')) {
+    result._thumbnail = await _h.getSignedUrl('getObject', { Key: _get(result, 'photo.0.s3') })
   }
 
-  if (_.has(result, 'entu_api_key')) {
-    _.get(result, 'entu_api_key', []).forEach((k) => {
+  if (_has(result, 'entu_api_key')) {
+    _get(result, 'entu_api_key', []).forEach((k) => {
       k.string = '***'
     })
   }

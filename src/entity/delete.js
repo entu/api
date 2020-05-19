@@ -14,7 +14,7 @@ exports.handler = async (event, context) => {
     const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: { _id: false, 'private._owner': true } })
     if (!entity) { return _h.error([404, 'Entity not found']) }
 
-    const access = _.get(entity, 'private._owner', []).map((s) => s.reference.toString())
+    const access = _get(entity, 'private._owner', []).map((s) => s.reference.toString())
 
     if (!access.includes(user.id)) { return _h.error([403, 'User not in _owner property']) }
 

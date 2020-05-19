@@ -1,6 +1,6 @@
 'use strict'
 
-const _ = require('lodash')
+const _get = require('lodash/get')
 const _h = require('../../_helpers')
 const jwt = require('jsonwebtoken')
 const querystring = require('querystring')
@@ -12,8 +12,8 @@ exports.handler = async (event, context) => {
     const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
     const clientId = await _h.ssmParameter('entu-api-apple-id')
 
-    const state = jwt.sign({ next: _.get(event, 'queryStringParameters.next') }, jwtSecret, {
-      audience: _.get(event, 'requestContext.identity.sourceIp'),
+    const state = jwt.sign({ next: _get(event, 'queryStringParameters.next') }, jwtSecret, {
+      audience: _get(event, 'requestContext.identity.sourceIp'),
       expiresIn: '5m'
     })
 

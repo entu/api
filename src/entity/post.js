@@ -1,6 +1,7 @@
 'use strict'
 
-const _ = require('lodash')
+const _get = require('lodash/get')
+const _isArray = require('lodash/isArray')
 const _h = require('../_helpers')
 const aws = require('aws-sdk')
 
@@ -34,12 +35,12 @@ exports.handler = async (event, context) => {
 
     const body = _h.getBody(event)
 
-    if (body && !_.isArray(body)) { return _h.error([400, 'Data must be array']) }
+    if (body && !_isArray(body)) { return _h.error([400, 'Data must be array']) }
 
     let eId = event.pathParameters && event.pathParameters.id ? _h.strToId(event.pathParameters.id) : null
 
     if (eId) {
-      if (!body || _.isArray(body) && body.length === 0) {
+      if (!body || _isArray(body) && body.length === 0) {
         await _h.addEntityAggregateSqs(context, user.account, eId)
         return _h.json({ _id: eId })
       }
@@ -48,12 +49,12 @@ exports.handler = async (event, context) => {
 
       if (!entity) { return _h.error([404, 'Entity not found']) }
 
-      const access = _.get(entity, 'private._owner', []).concat(_.get(entity, 'private._editor', [])).map((s) => s.reference.toString())
+      const access = _get(entity, 'private._owner', []).concat(_get(entity, 'private._editor', [])).map((s) => s.reference.toString())
 
       if (!access.includes(user.id)) { return _h.error([403, 'User not in _owner nor _editor property']) }
 
       const rigtsProperties = body.filter((property) => rightTypes.includes(property.type))
-      const owners = _.get(entity, 'private._owner', []).map((s) => s.reference.toString())
+      const owners = _get(entity, 'private._owner', []).map((s) => s.reference.toString())
 
       if (rigtsProperties.length > 0 && !owners.includes(user.id)) { return _h.error([403, 'User not in _owner property']) }
     }
@@ -73,7 +74,7 @@ exports.handler = async (event, context) => {
 
         if (!parent) { return _h.error([400, 'Entity in _parent property not found']) }
 
-        const parentAccess = _.get(parent, 'private._owner', []).concat(_.get(parent, 'private._editor', []), _.get(parent, 'private._expander', [])).map((s) => s.reference.toString())
+        const parentAccess = _get(parent, 'private._owner', []).concat(_get(parent, 'private._editor', []), _get(parent, 'private._expander', [])).map((s) => s.reference.toString())
 
         if (!parentAccess.includes(user.id)) { return _h.error([403, 'User not in parent _owner, _editor nor _expander property']) }
       }

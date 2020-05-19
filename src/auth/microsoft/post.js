@@ -1,6 +1,6 @@
 'use strict'
 
-const _ = require('lodash')
+const _get = require('lodash/get')
 const _h = require('../../_helpers')
 const https = require('https')
 const jwt = require('jsonwebtoken')
@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
 
     if (!params.state) { return _h.error([400, 'No state']) }
 
-    const decodedState = jwt.verify(params.state, jwtSecret, { audience: _.get(event, 'requestContext.identity.sourceIp') })
+    const decodedState = jwt.verify(params.state, jwtSecret, { audience: _get(event, 'requestContext.identity.sourceIp') })
 
     if (params.error) { return _h.error([400, params.error]) }
 
@@ -24,11 +24,11 @@ exports.handler = async (event, context) => {
     const accessToken = await getToken(params.code, `https://${_h.getHeader(event, 'host')}${event.path}`)
     const profile = await getProfile(accessToken)
     const user = {
-      ip: _.get(event, 'requestContext.identity.sourceIp'),
+      ip: _get(event, 'requestContext.identity.sourceIp'),
       provider: 'microsoft',
-      id: _.get(profile, 'id'),
-      name: _.get(profile, 'displayName'),
-      email: _.get(profile, 'userPrincipalName')
+      id: _get(profile, 'id'),
+      name: _get(profile, 'displayName'),
+      email: _get(profile, 'userPrincipalName')
     }
 
     const sessionId = await _h.addUserSession(user)
@@ -80,7 +80,7 @@ const getToken = async (code, redirect_uri) => {
         if (res.statusCode === 200 && data.access_token) {
           resolve(data.access_token)
         } else {
-          reject(_.get(data, 'error_description', data))
+          reject(_get(data, 'error_description', data))
         }
       })
     }).on('error', (err) => {
@@ -110,7 +110,7 @@ const getProfile = async (accessToken) => {
         if (res.statusCode === 200) {
           resolve(data)
         } else {
-          reject(_.get(data, 'error_description', data))
+          reject(_get(data, 'error_description', data))
         }
       })
     }).on('error', (err) => {

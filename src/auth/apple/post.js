@@ -1,6 +1,6 @@
 'use strict'
 
-const _ = require('lodash')
+const _get = require('lodash/get')
 const _h = require('../../_helpers')
 const https = require('https')
 const jwt = require('jsonwebtoken')
@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
 
     if (!params.state) { return _h.error([400, 'No state']) }
 
-    const decodedState = jwt.verify(params.state, jwtSecret, { audience: _.get(event, 'requestContext.identity.sourceIp') })
+    const decodedState = jwt.verify(params.state, jwtSecret, { audience: _get(event, 'requestContext.identity.sourceIp') })
 
     if (params.error && params.error === 'user_cancelled_authorize') {
       if (decodedState.next) {
@@ -31,16 +31,16 @@ exports.handler = async (event, context) => {
     const profile = jwt.decode(accessToken)
     const profile_user = params.user ? JSON.parse(params.user) : {}
     const user = {
-      ip: _.get(event, 'requestContext.identity.sourceIp'),
+      ip: _get(event, 'requestContext.identity.sourceIp'),
       provider: 'apple',
-      id: _.get(profile, 'sub')
+      id: _get(profile, 'sub')
     }
 
-    if (_.get(profile_user, 'name.firstName') || _.get(profile_user, 'name.lastName')) {
-      user.name = `${_.get(profile_user, 'name.firstName', '')} ${_.get(profile_user, 'name.lastName', '')}`.trim()
+    if (_get(profile_user, 'name.firstName') || _get(profile_user, 'name.lastName')) {
+      user.name = `${_get(profile_user, 'name.firstName', '')} ${_get(profile_user, 'name.lastName', '')}`.trim()
     }
-    if (_.get(profile_user, 'email')) {
-      user.email = _.get(profile_user, 'email')
+    if (_get(profile_user, 'email')) {
+      user.email = _get(profile_user, 'email')
     }
 
     const sessionId = await _h.addUserSession(user)
@@ -101,7 +101,7 @@ const getToken = async (code, redirect_uri) => {
         if (res.statusCode === 200 && data.access_token && data.id_token) {
           resolve(data.id_token)
         } else {
-          reject(_.get(data, 'error', data))
+          reject(_get(data, 'error', data))
         }
       })
     }).on('error', (err) => {

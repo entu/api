@@ -1,6 +1,6 @@
 'use strict'
 
-const _ = require('lodash')
+const _get = require('lodash/get')
 const _h = require('../../_helpers')
 const crypto = require('crypto')
 
@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
     const lhvId = await _h.ssmParameter('entu-api-lhv-id')
     const lhvKey = await _h.ssmParameter('entu-api-lhv-key')
     const domain = await _h.ssmParameter('entu-api-domain')
-    const next = _.get(event, 'queryStringParameters.next')
+    const next = _get(event, 'queryStringParameters.next')
 
     const request = {
       VK_SERVICE: '4011',
