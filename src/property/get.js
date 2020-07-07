@@ -10,11 +10,21 @@ exports.handler = async (event, context) => {
 
   try {
     const user = await _h.user(event)
-    let property = await user.db.collection('property').findOne({ _id: _h.strToId(event.pathParameters.id), deleted: { $exists: false } })
+    let property = await user.db.collection('property').findOne({
+      _id: _h.strToId(event.pathParameters.id),
+      deleted: { $exists: false }
+    })
 
     if (!property) { return _h.error([404, 'Property not found']) }
 
-    const entity = await user.db.collection('entity').findOne({ _id: property.entity }, { projection: { _id: false, access: true } })
+    const entity = await user.db.collection('entity').findOne({
+      _id: property.entity
+    }, {
+      projection: {
+        _id: false,
+        access: true
+      }
+    })
 
     if (!entity) { return _h.error([404, 'Entity not found']) }
 

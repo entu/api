@@ -34,7 +34,11 @@ exports.handler = async (event, context) => {
     }
 
     if (eId) {
-      const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: fields })
+      const entity = await user.db.collection('entity').findOne({
+        _id: eId
+      }, {
+        projection: fields
+      })
       if (!entity) { return _h.error([404, 'Entity not found']) }
 
       const cleanedEntity = await claenupEntity(entity, user, getThumbnail)

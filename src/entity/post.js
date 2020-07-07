@@ -45,7 +45,15 @@ exports.handler = async (event, context) => {
         return _h.json({ _id: eId })
       }
 
-      const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: { _id: false, 'private._owner': true, 'private._editor': true } })
+      const entity = await user.db.collection('entity').findOne({
+        _id: eId
+      }, {
+        projection: {
+          _id: false,
+          'private._owner': true,
+          'private._editor': true
+        }
+      })
 
       if (!entity) { return _h.error([404, 'Entity not found']) }
 
@@ -70,7 +78,16 @@ exports.handler = async (event, context) => {
       if (property.type.startsWith('_') && !allowedTypes.includes(property.type)) { return _h.error([400, 'Property type can\'t begin with _']) }
 
       if (property.type === '_parent' && property.reference) {
-        const parent = await user.db.collection('entity').findOne({ _id: _h.strToId(property.reference) }, { projection: { _id: false, 'private._owner': true, 'private._editor': true, 'private._expander': true } })
+        const parent = await user.db.collection('entity').findOne({
+          _id: _h.strToId(property.reference)
+        }, {
+          projection: {
+            _id: false,
+            'private._owner': true,
+            'private._editor': true,
+            'private._expander': true
+          }
+        })
 
         if (!parent) { return _h.error([400, 'Entity in _parent property not found']) }
 
@@ -133,7 +150,13 @@ exports.handler = async (event, context) => {
         }
       }
 
-      await user.db.collection('property').updateOne({ _id: newProperty._id }, { $set: { s3: `${user.account}/${newProperty._id}` } })
+      await user.db.collection('property').updateOne({
+        _id: newProperty._id
+      }, {
+        $set: {
+          s3: `${user.account}/${newProperty._id}`
+        }
+      })
 
       pIds.push(newProperty)
     }
