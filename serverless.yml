@@ -9,7 +9,7 @@ provider:
     region: eu-central-1
     endpointType: regional
     memorySize: 256
-    timeout: 29
+    timeout: 21
     logRetentionInDays: 365
     httpApi:
         cors: true
