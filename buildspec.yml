@@ -11,4 +11,5 @@ phases:
             - npm install --production --prefix layers/nodejs
     build:
         commands:
+            - npx serverless create_domain
             - npx serverless deploy

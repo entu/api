@@ -316,6 +316,7 @@ plugins:
 custom:
     exportGitVariables: false
     customDomain:
+        apiType: http
         domainName: ${ssm:/entu-api-domain~true}
         basePath: ''
         stage: ${self:provider.stage}
