@@ -310,14 +310,16 @@ layers:
 #                 BucketName: ${ssm:/entu-api-files-s3-bucket~true}
 
 plugins:
-    # - serverless-domain-manager
+    - serverless-domain-manager
     - serverless-plugin-git-variables
 
 custom:
     exportGitVariables: false
-    # customDomain:
-    #     domainName: ${ssm:/entu-api-domain~true}
-    #     basePath: ''
-    #     stage: ${self:provider.stage}
-    #     createRoute53Record: false
-    #     endpointType: regional
+    customDomain:
+        domainName: ${ssm:/entu-api-domain~true}
+        basePath: ''
+        stage: ${self:provider.stage}
+        certificateName: ${ssm:/entu-api-domain~true}
+        createRoute53Record: true
+        endpointType: regional
+        securityPolicy: tls_1_2
