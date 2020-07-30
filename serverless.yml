@@ -4,8 +4,8 @@ provider:
     name: aws
     runtime: nodejs12.x
     stage: prod
-    stackName: ${self:provider.service}-${self:provider.stage}
-    apiName: ${self:provider.service}-${self:provider.stage}
+    stackName: ${self:service.stage}-${self:service}
+    apiName: ${self:service.stage}-${self:service}
     region: eu-central-1
     endpointType: regional
     memorySize: 256
@@ -49,7 +49,7 @@ provider:
             Resource: arn:aws:ssm:${self:provider.region}:*:*
 
     deploymentBucket:
-        name: ${self:provider.service}-${self:provider.stage}
+        name: ${self:service.stage}-${self:service}
         serverSideEncryption: AES256
 
     environment:
@@ -78,7 +78,7 @@ package:
 functions:
     account-get:
         handler: src/account/get.handler
-        name: ${self:provider.service}-${self:provider.stage}-account-get
+        name: ${self:service.stage}-${self:service}-account-get
         description: Returns account info and usage statistics
         package:
             include:
@@ -91,7 +91,7 @@ functions:
 
     auth-get:
         handler: src/auth/get.handler
-        name: ${self:provider.service}-${self:provider.stage}-auth-get
+        name: ${self:service.stage}-${self:service}-auth-get
         description: Authenticates user by API key
         package:
             include:
@@ -104,7 +104,7 @@ functions:
 
     auth-apple-get:
         handler: src/auth/apple/get.handler
-        name: ${self:provider.service}-${self:provider.stage}-auth-apple-get
+        name: ${self:service.stage}-${self:service}-auth-apple-get
         description: Redirects user to auth in Apple
         package:
             include:
@@ -117,7 +117,7 @@ functions:
 
     auth-apple-post:
         handler: src/auth/apple/post.handler
-        name: ${self:provider.service}-${self:provider.stage}-auth-apple-post
+        name: ${self:service.stage}-${self:service}-auth-apple-post
         description: Handles return request from Apple auth
         package:
             include:
@@ -130,7 +130,7 @@ functions:
 
     auth-google-get:
         handler: src/auth/google/get.handler
-        name: ${self:provider.service}-${self:provider.stage}-auth-google-get
+        name: ${self:service.stage}-${self:service}-auth-google-get
         description: Redirects user to auth in Google
         package:
             include:
@@ -143,7 +143,7 @@ functions:
 
     auth-google-post:
         handler: src/auth/google/post.handler
-        name: ${self:provider.service}-${self:provider.stage}-auth-google-post
+        name: ${self:service.stage}-${self:service}-auth-google-post
         description: Handles return request from Google auth
         package:
             include:
@@ -156,7 +156,7 @@ functions:
 
     auth-microsoft-get:
         handler: src/auth/microsoft/get.handler
-        name: ${self:provider.service}-${self:provider.stage}-auth-microsoft-get
+        name: ${self:service.stage}-${self:service}-auth-microsoft-get
         description: Redirects user to auth in Google
         package:
             include:
@@ -169,7 +169,7 @@ functions:
 
     auth-microsoft-post:
         handler: src/auth/microsoft/post.handler
-        name: ${self:provider.service}-${self:provider.stage}-auth-microsoft-post
+        name: ${self:service.stage}-${self:service}-auth-microsoft-post
         description: Handles return request from Google auth
         package:
             include:
@@ -182,7 +182,7 @@ functions:
 
     auth-lhv-get:
         handler: src/auth/lhv/get.handler
-        name: ${self:provider.service}-${self:provider.stage}-auth-lhv-get
+        name: ${self:service.stage}-${self:service}-auth-lhv-get
         description: Get LHV banklink form url and signed data
         package:
             include:
@@ -195,7 +195,7 @@ functions:
 
     auth-lhv-post:
         handler: src/auth/lhv/post.handler
-        name: ${self:provider.service}-${self:provider.stage}-auth-lhv-post
+        name: ${self:service.stage}-${self:service}-auth-lhv-post
         description: Handles POST request from LHV banklink
         package:
             include:
@@ -208,7 +208,7 @@ functions:
 
     entity-get:
         handler: src/entity/get.handler
-        name: ${self:provider.service}-${self:provider.stage}-entity-get
+        name: ${self:service.stage}-${self:service}-entity-get
         description: Get one entity with given id or list of entities if id is not given
         package:
             include:
@@ -223,7 +223,7 @@ functions:
 
     entity-post:
         handler: src/entity/post.handler
-        name: ${self:provider.service}-${self:provider.stage}-entity-post
+        name: ${self:service.stage}-${self:service}-entity-post
         description: Add new properties to entity
         package:
             include:
@@ -238,7 +238,7 @@ functions:
 
     entity-delete:
         handler: src/entity/delete.handler
-        name: ${self:provider.service}-${self:provider.stage}-entity-delete
+        name: ${self:service.stage}-${self:service}-entity-delete
         description: Delete entity with given id
         package:
             include:
@@ -251,7 +251,7 @@ functions:
 
     entity-aggregate:
         handler: src/entity/aggregate.handler
-        name: ${self:provider.service}-${self:provider.stage}-entity-aggregate
+        name: ${self:service.stage}-${self:service}-entity-aggregate
         description: Aggregate entity with given id
         package:
             include:
@@ -268,7 +268,7 @@ functions:
 
     property-get:
         handler: src/property/get.handler
-        name: ${self:provider.service}-${self:provider.stage}-property-get
+        name: ${self:service.stage}-${self:service}-property-get
         description: Get property with given id
         package:
             include:
@@ -281,7 +281,7 @@ functions:
 
     property-delete:
         handler: src/property/delete.handler
-        name: ${self:provider.service}-${self:provider.stage}-property-delete
+        name: ${self:service.stage}-${self:service}-property-delete
         description: Delete property with given id
         package:
             include:
