@@ -13,7 +13,7 @@ provider:
     logRetentionInDays: 365
     httpApi:
         cors: true
-        payload: 2.0
+        payload: '2.0'
     logs:
         httpApi: true
     tracing:
