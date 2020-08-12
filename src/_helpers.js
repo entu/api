@@ -79,7 +79,7 @@ exports.user = async (event) => {
     const jwtToken = getHeader(event, 'authorization').replace('Bearer ', '')
     const jwtConf = {
       issuer: _get(event, 'queryStringParameters.account'),
-      audience: _get(event, 'requestContext.identity.sourceIp')
+      audience: _get(event, 'requestContext.http.sourceIp')
     }
 
     let result = {

@@ -20,7 +20,7 @@ exports.handler = async (event, context) => {
     const connection = await _h.db('entu')
 
     try {
-      const decoded = jwt.verify(key, jwtSecret, { audience: _get(event, 'requestContext.identity.sourceIp') })
+      const decoded = jwt.verify(key, jwtSecret, { audience: _get(event, 'requestContext.http.sourceIp') })
       const session = await connection.collection('session').findOneAndUpdate({ _id: _h.strToId(decoded.sub), deleted: { $exists: false } }, { $set: { deleted: new Date() } })
 
       if (!_get(session, 'value')) { return _h.error([400, 'No session']) }
@@ -47,7 +47,7 @@ exports.handler = async (event, context) => {
       if (person) {
         const token = jwt.sign({}, jwtSecret, {
           issuer: account,
-          audience: _get(event, 'requestContext.identity.sourceIp'),
+          audience: _get(event, 'requestContext.http.sourceIp'),
           subject: person._id.toString(),
           expiresIn: '48h'
         })

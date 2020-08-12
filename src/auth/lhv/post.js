@@ -56,7 +56,7 @@ exports.handler = async (event, context) => {
     }
 
     const user = {
-      ip: _get(event, 'requestContext.identity.sourceIp'),
+      ip: _get(event, 'requestContext.http.sourceIp'),
       provider: 'lhv',
       id: _get(request, 'VK_USER_ID'),
       name: _get(request, 'VK_USER_NAME'),

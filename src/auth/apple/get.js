@@ -13,13 +13,13 @@ exports.handler = async (event, context) => {
     const clientId = await _h.ssmParameter('entu-api-apple-id')
 
     const state = jwt.sign({ next: _get(event, 'queryStringParameters.next') }, jwtSecret, {
-      audience: _get(event, 'requestContext.identity.sourceIp'),
+      audience: _get(event, 'requestContext.http.sourceIp'),
       expiresIn: '5m'
     })
 
     const query = querystring.stringify({
       client_id: clientId,
-      redirect_uri: `https://${_h.getHeader(event, 'host')}${event.path}`,
+      redirect_uri: `https://${_h.getHeader(event, 'host')}${event.rawPath}`,
       response_type: 'code',
       response_mode: 'form_post',
       scope: 'email name',

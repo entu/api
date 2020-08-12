@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
 
     if (!params.state) { return _h.error([400, 'No state']) }
 
-    const decodedState = jwt.verify(params.state, jwtSecret, { audience: _get(event, 'requestContext.identity.sourceIp') })
+    const decodedState = jwt.verify(params.state, jwtSecret, { audience: _get(event, 'requestContext.http.sourceIp') })
 
     if (params.error && params.error === 'user_cancelled_authorize') {
       if (decodedState.next) {
@@ -27,11 +27,11 @@ exports.handler = async (event, context) => {
 
     if (!params.code) { return _h.error([400, 'No code']) }
 
-    const accessToken = await getToken(params.code, `https://${_h.getHeader(event, 'host')}${event.path}`)
+    const accessToken = await getToken(params.code, `https://${_h.getHeader(event, 'host')}${event.rawPath}`)
     const profile = jwt.decode(accessToken)
     const profile_user = params.user ? JSON.parse(params.user) : {}
     const user = {
-      ip: _get(event, 'requestContext.identity.sourceIp'),
+      ip: _get(event, 'requestContext.http.sourceIp'),
       provider: 'apple',
       id: _get(profile, 'sub')
     }
