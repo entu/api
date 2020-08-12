@@ -26,7 +26,7 @@ exports.handler = async (event, context) => {
       state: state
     })
 
-    return _h.redirect(`https://appleid.apple.com/auth/authorize?${query}`, 302)
+    return _h.redirect(`https://appleid.apple.com/auth/authorize?${query}`)
   } catch (e) {
     return _h.error(e)
   }

@@ -35,7 +35,7 @@ exports.handler = async (event, context) => {
     const sessionId = await _h.addUserSession(user)
 
     if (decodedState.next) {
-      return _h.redirect(`${decodedState.next}${sessionId}`, 302)
+      return _h.redirect(`${decodedState.next}${sessionId}`)
     } else {
       return _h.json({ key: sessionId })
     }

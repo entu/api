@@ -26,7 +26,7 @@ exports.handler = async (event, context) => {
       state: state
     })
 
-    return _h.redirect(`https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${query}`, 302)
+    return _h.redirect(`https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${query}`)
   } catch (e) {
     return _h.error(e)
   }

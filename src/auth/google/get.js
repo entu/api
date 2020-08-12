@@ -26,7 +26,7 @@ exports.handler = async (event, context) => {
       state: state
     })
 
-    return _h.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${query}`, 302)
+    return _h.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${query}`)
   } catch (e) {
     return _h.error(e)
   }

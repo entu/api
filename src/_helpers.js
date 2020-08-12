@@ -199,21 +199,10 @@ exports.getBody = (event) => {
   }
 }
 
-exports.json = (data, code, headers) => {
-  if (headers) {
-    headers['Access-Control-Allow-Origin'] = '*'
-  } else {
-    headers = {
-      'Access-Control-Allow-Origin': '*'
-    }
-  }
-  if (process.env.GIT_SHA1) {
-    headers['X-Entu-Version'] = process.env.GIT_SHA1
-  }
-
+exports.json = (data) => {
   return {
-    statusCode: code || 200,
-    headers: headers || {},
+    statusCode: 200,
+    headers: { 'X-Entu-Version': process.env.GIT_SHA1 },
     body: JSON.stringify(data),
     isBase64Encoded: false
   }
@@ -222,13 +211,6 @@ exports.json = (data, code, headers) => {
 exports.error = (err) => {
   let code
   let message
-  let headers = {
-    'Access-Control-Allow-Origin': '*'
-  }
-
-  if (process.env.GIT_SHA1) {
-    headers['X-Entu-Version'] = process.env.GIT_SHA1
-  }
 
   if (err.constructor === Array) {
     code = err[0]
@@ -243,25 +225,16 @@ exports.error = (err) => {
 
   return {
     statusCode: code || 500,
-    headers: headers,
+    headers: { 'X-Entu-Version': process.env.GIT_SHA1 },
     body: JSON.stringify({ message: message }),
     isBase64Encoded: false
   }
 }
 
-exports.redirect = (url, code, headers) => {
-  if (headers) {
-    headers['Location'] = url
-  } else {
-    headers = {
-      Location: url
-    }
-  }
-  headers['Access-Control-Allow-Origin'] = '*'
-
+exports.redirect = (url) => {
   return {
-    statusCode: code || 302,
-    headers: headers,
+    statusCode: 302,
+    headers: { Location: url },
     body: null
   }
 }

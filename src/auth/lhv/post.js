@@ -65,7 +65,7 @@ exports.handler = async (event, context) => {
     const sessionId = await _h.addUserSession(user)
 
     if (_has(event, 'queryStringParameters.next')) {
-      return _h.redirect(`${event.queryStringParameters.next}${sessionId}`, 302)
+      return _h.redirect(`${event.queryStringParameters.next}${sessionId}`)
     } else {
       return _h.json({ key: sessionId })
     }

@@ -19,7 +19,7 @@ exports.handler = async (event, context) => {
 
     if (params.error && params.error === 'user_cancelled_authorize') {
       if (decodedState.next) {
-        return _h.redirect(`${decodedState.next}`, 302)
+        return _h.redirect(decodedState.next)
       } else {
         return _h.json({ message: 'user_cancelled_authorize' })
       }
@@ -46,7 +46,7 @@ exports.handler = async (event, context) => {
     const sessionId = await _h.addUserSession(user)
 
     if (decodedState.next) {
-      return _h.redirect(`${decodedState.next}${sessionId}`, 302)
+      return _h.redirect(`${decodedState.next}${sessionId}`)
     } else {
       return _h.json({ key: sessionId })
     }
