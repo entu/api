@@ -22,12 +22,12 @@ exports.handler = async (event, context) => {
       VK_VERSION: '008',
       VK_SND_ID: lhvId,
       VK_REPLY: '3012',
-      VK_RETURN: `https://${domain}/auth/lhv?next=${next || ''}`,
+      VK_RETURN: `https://${domain}/auth/lhv?next=${next || ''}`,
       VK_DATETIME: (new Date()).toISOString().substr(0, 19) + 'Z',
       VK_RID: '',
       VK_MAC: null,
       VK_ENCODING: 'UTF-8',
-      VK_LANG: 'EST',
+      VK_LANG: 'EST'
     }
 
     const mac = [

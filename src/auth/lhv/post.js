@@ -15,7 +15,6 @@ exports.handler = async (event, context) => {
   try {
     const lhvId = await _h.ssmParameter('entu-api-lhv-id')
     const lhvKey = await _h.ssmParameter('entu-api-lhv-public')
-    const next = _get(event, 'queryStringParameters.next')
 
     const request = _h.getBody(event)
 

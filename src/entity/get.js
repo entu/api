@@ -15,22 +15,22 @@ exports.handler = async (event, context) => {
     const user = await _h.user(event)
     const eId = event.pathParameters && event.pathParameters.id ? _h.strToId(event.pathParameters.id) : null
     const props = _get(event, 'queryStringParameters.props', '').split(',').filter((x) => !!x)
-    var fields = {}
-    var result = {}
-    var getThumbnail = props.length === 0
+    const fields = {}
+    let result = {}
+    let getThumbnail = props.length === 0
 
     if (props.length > 0) {
       props.forEach((f) => {
         if (f === '_thumbnail') {
-          fields[`private.photo.s3`] = true
-          fields[`public.photo.s3`] = true
+          fields['private.photo.s3'] = true
+          fields['public.photo.s3'] = true
           getThumbnail = true
         } else {
           fields[`private.${f}`] = true
           fields[`public.${f}`] = true
         }
       })
-      fields['access'] = true
+      fields.access = true
     }
 
     if (eId) {
@@ -55,15 +55,15 @@ exports.handler = async (event, context) => {
       const limit = _toSafeInteger(_get(event, 'queryStringParameters.limit')) || 100
       const skip = _toSafeInteger(_get(event, 'queryStringParameters.skip')) || 0
       const query = _get(event, 'queryStringParameters.q', '').split(' ').filter(x => !!x)
-      var sortFields = {}
-      var filter = {}
+      let sortFields = {}
+      const filter = {}
 
       _forIn(_get(event, 'queryStringParameters'), (v, k) => {
         if (k.includes('.')) {
           const fieldArray = k.split('.')
-          let field = _get(fieldArray, 0)
-          let type = _get(fieldArray, 1)
-          let operator = _get(fieldArray, 2)
+          const field = _get(fieldArray, 0)
+          const type = _get(fieldArray, 1)
+          const operator = _get(fieldArray, 2)
           let value
 
           switch (type) {
@@ -107,20 +107,20 @@ exports.handler = async (event, context) => {
       })
 
       if (user.id) {
-        filter.access = { '$in': [_h.strToId(user.id), 'public'] }
+        filter.access = { $in: [_h.strToId(user.id), 'public'] }
       } else {
         filter.access = 'public'
       }
 
       if (query.length > 0) {
-        let queries = query.map((q) => {
+        const queries = query.map((q) => {
           if (user.id) {
             return { 'search.private': new RegExp(q.toLowerCase(), 'i') }
           } else {
             return { 'search.public': new RegExp(q.toLowerCase(), 'i') }
           }
         })
-        filter['$and'] = queries
+        filter.$and = queries
       }
 
       if (sort.length > 0) {
@@ -139,7 +139,7 @@ exports.handler = async (event, context) => {
       const count = await findedEntities.count()
       const entities = await findedEntities.sort(sortFields).skip(skip).limit(limit).toArray()
 
-      let cleanedEntities = []
+      const cleanedEntities = []
       for (let i = 0; i < entities.length; i++) {
         const entity = await claenupEntity(entities[i], user, getThumbnail)
 

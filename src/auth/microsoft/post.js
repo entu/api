@@ -43,7 +43,7 @@ exports.handler = async (event, context) => {
   }
 }
 
-const getToken = async (code, redirect_uri) => {
+const getToken = async (code, redirectUri) => {
   const clientId = await _h.ssmParameter('entu-api-microsoft-id')
   const clientSecret = await _h.ssmParameter('entu-api-microsoft-secret')
 
@@ -52,7 +52,7 @@ const getToken = async (code, redirect_uri) => {
       client_id: clientId,
       client_secret: clientSecret,
       code: code,
-      redirect_uri: redirect_uri,
+      redirect_uri: redirectUri,
       grant_type: 'authorization_code'
     })
 
@@ -93,11 +93,11 @@ const getProfile = async (accessToken) => {
   return new Promise((resolve, reject) => {
     const options = {
       headers: {
-        'Authorization': `Bearer ${accessToken}`
+        Authorization: `Bearer ${accessToken}`
       }
     }
 
-    https.get(`https://graph.microsoft.com/v1.0/me`, options, (res) => {
+    https.get('https://graph.microsoft.com/v1.0/me', options, (res) => {
       let data = ''
 
       res.on('data', (chunk) => {

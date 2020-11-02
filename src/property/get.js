@@ -10,7 +10,7 @@ exports.handler = async (event, context) => {
 
   try {
     const user = await _h.user(event)
-    let property = await user.db.collection('property').findOne({
+    const property = await user.db.collection('property').findOne({
       _id: _h.strToId(event.pathParameters.id),
       deleted: { $exists: false }
     })

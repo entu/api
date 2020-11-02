@@ -16,7 +16,7 @@ exports.handler = async (event, context) => {
 
     if (!key) { return _h.error([400, 'No key']) }
 
-    var authFilter = {}
+    const authFilter = {}
     const connection = await _h.db('entu')
 
     try {
@@ -34,7 +34,7 @@ exports.handler = async (event, context) => {
     const onlyForAccount = _get(event, 'queryStringParameters.account')
 
     const dbs = await connection.admin().listDatabases()
-    let accounts = {}
+    const accounts = {}
 
     for (let i = 0; i < dbs.databases.length; i++) {
       const account = _get(dbs, ['databases', i, 'name'])

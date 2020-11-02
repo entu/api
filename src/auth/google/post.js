@@ -44,7 +44,7 @@ exports.handler = async (event, context) => {
   }
 }
 
-const getToken = async (code, redirect_uri) => {
+const getToken = async (code, redirectUri) => {
   const clientId = await _h.ssmParameter('entu-api-google-id')
   const clientSecret = await _h.ssmParameter('entu-api-google-secret')
 
@@ -53,7 +53,7 @@ const getToken = async (code, redirect_uri) => {
       client_id: clientId,
       client_secret: clientSecret,
       code: code,
-      redirect_uri: redirect_uri,
+      redirect_uri: redirectUri,
       grant_type: 'authorization_code'
     })
 

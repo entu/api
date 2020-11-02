@@ -29,18 +29,18 @@ exports.handler = async (event, context) => {
 
     const accessToken = await getToken(params.code, `https://${_h.getHeader(event, 'host')}${event.rawPath}`)
     const profile = jwt.decode(accessToken)
-    const profile_user = params.user ? JSON.parse(params.user) : {}
+    const profileUser = params.user ? JSON.parse(params.user) : {}
     const user = {
       ip: _get(event, 'requestContext.http.sourceIp'),
       provider: 'apple',
       id: _get(profile, 'sub')
     }
 
-    if (_get(profile_user, 'name.firstName') || _get(profile_user, 'name.lastName')) {
-      user.name = `${_get(profile_user, 'name.firstName', '')} ${_get(profile_user, 'name.lastName', '')}`.trim()
+    if (_get(profileUser, 'name.firstName') || _get(profileUser, 'name.lastName')) {
+      user.name = `${_get(profileUser, 'name.firstName', '')} ${_get(profileUser, 'name.lastName', '')}`.trim()
     }
-    if (_get(profile_user, 'email')) {
-      user.email = _get(profile_user, 'email')
+    if (_get(profileUser, 'email')) {
+      user.email = _get(profileUser, 'email')
     }
 
     const sessionId = await _h.addUserSession(user)
@@ -55,7 +55,7 @@ exports.handler = async (event, context) => {
   }
 }
 
-const getToken = async (code, redirect_uri) => {
+const getToken = async (code, redirectUri) => {
   const appleTeam = await _h.ssmParameter('entu-api-apple-team')
   const appleSecret = await _h.ssmParameter('entu-api-apple-secret')
 
@@ -73,7 +73,7 @@ const getToken = async (code, redirect_uri) => {
       client_id: clientId,
       client_secret: clientSecret,
       code: code,
-      redirect_uri: redirect_uri,
+      redirect_uri: redirectUri,
       grant_type: 'authorization_code'
     })
 

@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken')
 const querystring = require('querystring')
 const { MongoClient, ObjectId } = require('mongodb')
 
-let ssmParameters = {}
+const ssmParameters = {}
 const ssmParameter = async (name) => {
   if (ssmParameters[name]) { return ssmParameters[name] }
 
@@ -23,7 +23,7 @@ exports.ssmParameter = ssmParameter
 
 let dbConnection
 const db = async (dbName) => {
-  dbName = dbName.replace(/[^a-z0-9]/gi,'_')
+  dbName = dbName.replace(/[^a-z0-9]/gi, '_')
 
   if (dbConnection) { return dbConnection.db(dbName) }
 
@@ -91,7 +91,7 @@ exports.user = async (event) => {
         const decoded = jwt.verify(jwtToken, jwtSecret, jwtConf)
 
         if (decoded.aud !== jwtConf.audience) {
-          return reject([401, 'Invalid JWT audience'])
+          return reject(new Error('401:Invalid JWT audience'))
         }
 
         result = {
@@ -99,12 +99,12 @@ exports.user = async (event) => {
           account: decoded.iss
         }
       } catch (e) {
-        return reject([401, e.message || e])
+        return reject(new Error(`401:${e.message || e}`))
       }
     }
 
     if (!result.account) {
-      return reject([401, 'No account parameter'])
+      return reject(new Error('401:No account parameter'))
     }
 
     db(result.account).then((x) => {
@@ -119,7 +119,7 @@ exports.addUserSession = async (user) => {
   const jwtSecret = await ssmParameter('entu-api-jwt-secret')
 
   return new Promise((resolve, reject) => {
-    if (!user) { return reject('No user') }
+    if (!user) { return reject(new Error('No user')) }
 
     const session = {
       created: new Date(),
@@ -159,7 +159,7 @@ exports.addEntityAggregateSqs = async (context, account, entity, dt) => {
   const sqs = new aws.SQS()
   const sqsResponse = await sqs.sendMessage({ QueueUrl: queueUrl, MessageGroupId: account, MessageBody: JSON.stringify(message) }).promise()
 
-  console.log(`Entity ${entity} added to SQS`);
+  console.log(`Entity ${entity} added to SQS`)
 
   return sqsResponse
 }
@@ -168,7 +168,7 @@ const strToId = (str) => {
   try {
     return new ObjectId(str)
   } catch (e) {
-    throw 'Invalid _id'
+    throw new Error('Invalid _id')
   }
 }
 exports.strToId = strToId
@@ -188,8 +188,7 @@ exports.getBody = (event) => {
   if (!body) { return {} }
 
   if (event.isBase64Encoded) {
-    let buff = new Buffer(body, 'base64')
-    body = buff.toString()
+    body = Buffer.from(body, 'base64').toString()
   }
 
   if (getHeader(event, 'content-type') === 'application/x-www-form-urlencoded') {

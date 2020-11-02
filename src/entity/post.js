@@ -3,7 +3,6 @@
 const _get = require('lodash/get')
 const _isArray = require('lodash/isArray')
 const _h = require('../_helpers')
-const aws = require('aws-sdk')
 
 const allowedTypes = [
   '_type',
@@ -40,7 +39,7 @@ exports.handler = async (event, context) => {
     let eId = event.pathParameters && event.pathParameters.id ? _h.strToId(event.pathParameters.id) : null
 
     if (eId) {
-      if (!body || _isArray(body) && body.length === 0) {
+      if (!body || (_isArray(body) && body.length === 0)) {
         await _h.addEntityAggregateSqs(context, user.account, eId)
         return _h.json({ _id: eId })
       }
@@ -71,10 +70,10 @@ exports.handler = async (event, context) => {
     if (body.length === 0) { return _h.error([400, 'At least one property must be set']) }
 
     for (let i = 0; i < body.length; i++) {
-      let property = body[i]
+      const property = body[i]
 
       if (!property.type) { return _h.error([400, 'Property type not set']) }
-      if (!property.type.match(/^[A-Za-z0-9\_]+$/)) { return _h.error([400, 'Property type must be alphanumeric']) }
+      if (!property.type.match(/^[A-Za-z0-9_]+$/)) { return _h.error([400, 'Property type must be alphanumeric']) }
       if (property.type.startsWith('_') && !allowedTypes.includes(property.type)) { return _h.error([400, 'Property type can\'t begin with _']) }
 
       if (property.type === '_parent' && property.reference) {
@@ -105,9 +104,9 @@ exports.handler = async (event, context) => {
       body.push({ entity: eId, type: '_created', reference: userId, datetime: createdDt, created: { at: createdDt, by: userId } })
     }
 
-    var pIds = []
+    const pIds = []
     for (let i = 0; i < body.length; i++) {
-      let property = body[i]
+      const property = body[i]
 
       if (property.reference) { property.reference = _h.strToId(property.reference) }
       if (property.date) { property.date = new Date(property.date) }
@@ -126,9 +125,6 @@ exports.handler = async (event, context) => {
       delete newProperty.created
 
       if (property.filename && property.filesize) {
-        aws.config = new aws.Config()
-
-        const s3 = new aws.S3()
         const key = `${user.account}/${newProperty._id}`
         const s3Params = {
           Bucket: s3Bucket,
