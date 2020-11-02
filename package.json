@@ -25,7 +25,7 @@
   "devDependencies": {
     "entu-ssg": "5.2.7",
     "serverless": "2.9.0",
-    "serverless-plugin-git-variables": "5.0.0",
+    "serverless-plugin-git-variables": "4.1.0",
     "standard": "16.0.1"
   }
 }
