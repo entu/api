@@ -18,14 +18,15 @@
     "test": "standard --fix"
   },
   "dependencies": {
+    "aws-sdk": "2.869.0",
     "jsonwebtoken": "8.5.1",
-    "lodash": "4.17.20",
-    "mongodb": "3.6.3"
+    "lodash": "4.17.21",
+    "mongodb": "3.6.5"
   },
   "devDependencies": {
-    "entu-ssg": "5.2.7",
-    "serverless": "2.11.1",
-    "serverless-plugin-git-variables": "5.0.1",
+    "entu-ssg": "5.2.10",
+    "serverless": "2.31.0",
+    "serverless-plugin-git-variables": "5.1.0",
     "standard": "16.0.3"
   }
 }
