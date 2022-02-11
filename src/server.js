@@ -15,11 +15,11 @@ if (!fs.existsSync(mongoDbCAPath)) {
   console.log('MongoDb CA certificate saved')
 }
 
-const dbClient = new MongoClient(mongoDbUrl)
+const dbClient = new MongoClient(mongoDbUrl, { tls: true, tlsCAFile: mongoDbCAPath })
 
 const server = http.createServer(async (req, res) => {
   await dbClient.connect()
-  const database = dbClient.db(mongoDbName, { tls: true, tlsCAFile: mongoDbCAPath })
+  const database = dbClient.db(mongoDbName)
   await database.command({ ping: 1 })
 
   console.log('Connected to MongoDb')
