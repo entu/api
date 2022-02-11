@@ -19,6 +19,9 @@
     "lint": "eslint ./ --fix --ignore-path .gitignore --ext .js",
     "docs": "entu-ssg build docs/source/config.yaml full"
   },
+  "engines": {
+    "node": "16"
+  },
   "dependencies": {
     "jsonwebtoken": "8.5.1",
     "lodash": "4.17.21",
