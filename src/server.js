@@ -1,6 +1,11 @@
 const http = require('http')
 
 const port = process.env.PORT || 8080
+const mongoDbUrl = process.env.MONGODB_URL
+const mongoDbCA = process.env.MONGODB_CERT
+
+console.log(mongoDbUrl)
+console.log(mongoDbCA)
 
 const server = http.createServer(async (req, res) => {
   try {
