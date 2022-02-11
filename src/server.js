@@ -6,9 +6,6 @@ const port = process.env.PORT || 8080
 const mongoDbName = process.env.MONGODB_NAME
 
 const server = http.createServer(async (req, res) => {
-  const con = await db(mongoDbName)
-  await con.command({ ping: 1 })
-
   try {
     const { method, socket } = req
     const headers = getHeaders(req)
@@ -16,9 +13,12 @@ const server = http.createServer(async (req, res) => {
     const { pathname } = new URL(req.url, `${req.protocol}://${headers.host}/`)
 
     if (method === 'GET' && pathname === '/') {
+      const con = await db(mongoDbName)
+      const result = await con.command({ ping: 1 })
+
       res.writeHead(404, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify({
-        ok: true
+        result
       }))
     } else {
       res.writeHead(404, { 'Content-Type': 'application/json' })
