@@ -6,10 +6,12 @@ const mongoDbName = process.env.MONGODB_NAME
 const mongoDbUrl = process.env.MONGODB_URL
 const mongoDbCA = process.env.MONGODB_CERT
 
-const dbClient = new MongoClient(mongoDbUrl)
+console.log(mongoDbUrl)
+
+const dbClient = new MongoClient()
 
 const server = http.createServer(async (req, res) => {
-  await dbClient.connect()
+  await dbClient.connect(mongoDbUrl)
   const database = dbClient.db(mongoDbName)
   await database.command({ ping: 1 })
 
