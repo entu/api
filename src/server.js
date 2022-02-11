@@ -1,4 +1,6 @@
 const http = require('http')
+const fs = require('fs')
+const path = require('path')
 const { MongoClient } = require('mongodb')
 
 const port = process.env.PORT || 8080
@@ -6,12 +8,16 @@ const mongoDbName = process.env.MONGODB_NAME
 const mongoDbUrl = process.env.MONGODB_URL
 const mongoDbCA = process.env.MONGODB_CERT
 
-console.log(mongoDbUrl)
+const mongoDbCAPath = path.resolve(__dirname, 'mongodb.ca.crt')
 
-const dbClient = new MongoClient()
+if (!fs.existsSync(mongoDbCAPath)) {
+  fs.writeFileSync(mongoDbCAPath, mongoDbCA)
+}
+
+const dbClient = new MongoClient(mongoDbUrl)
 
 const server = http.createServer(async (req, res) => {
-  await dbClient.connect(mongoDbUrl)
+  await dbClient.connect()
   const database = dbClient.db(mongoDbName)
   await database.command({ ping: 1 })
 
