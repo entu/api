@@ -1,12 +1,13 @@
 const http = require('http')
 
-const database = require('./database.js')
+const { db } = require('./database.js')
 
 const port = process.env.PORT || 8080
 const mongoDbName = process.env.MONGODB_NAME
 
 const server = http.createServer(async (req, res) => {
-  await database.db(mongoDbName).command({ ping: 1 })
+  const con = await db(mongoDbName)
+  await con.command({ ping: 1 })
 
   try {
     const { method, socket } = req
