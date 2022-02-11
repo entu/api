@@ -19,7 +19,7 @@ const dbClient = new MongoClient(mongoDbUrl)
 
 const server = http.createServer(async (req, res) => {
   await dbClient.connect()
-  const database = dbClient.db(mongoDbName, { tlsCAFile: mongoDbCAPath, ssl: true, sslValidate: true })
+  const database = dbClient.db(mongoDbName, { tls: true, tlsCAFile: mongoDbCAPath })
   await database.command({ ping: 1 })
 
   console.log('Connected to MongoDb')
