@@ -1,13 +1,20 @@
 const http = require('http')
+const { MongoClient } = require('mongodb')
 
 const port = process.env.PORT || 8080
+const mongoDbName = process.env.MONGODB_NAME
 const mongoDbUrl = process.env.MONGODB_URL
 const mongoDbCA = process.env.MONGODB_CERT
 
-console.log(mongoDbUrl)
-console.log(mongoDbCA)
+const dbClient = new MongoClient(mongoDbUrl)
 
 const server = http.createServer(async (req, res) => {
+  await dbClient.connect()
+  const database = dbClient.db(mongoDbName)
+  await database.command({ ping: 1 })
+
+  console.log('Connected to MongoDb')
+
   try {
     const { method, socket } = req
     const headers = getHeaders(req)
