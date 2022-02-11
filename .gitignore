@@ -1,4 +1,3 @@
-.serverless
-jspm_packages
-layers
+.env
+data
 node_modules
