@@ -1,6 +1,5 @@
 'use strict'
 
-const _get = require('lodash/get')
 const _h = require('../_helpers')
 
 exports.handler = async (event, context) => {
@@ -40,14 +39,14 @@ exports.handler = async (event, context) => {
     ]).toArray()
 
     return _h.json({
-      entities: _get(entities.filter((e) => e._id === false), '0.count', 0),
-      deletedEntities: _get(entities.filter((e) => e._id === true), '0.count', 0),
-      properties: _get(properties.filter((e) => e._id === false), '0.count', 0),
-      deletedProperties: _get(properties.filter((e) => e._id === true), '0.count', 0),
-      files: _get(files.filter((e) => e._id === false), '0.count', 0),
-      filesSize: _get(files.filter((e) => e._id === false), '0.filesize', 0),
-      deletedFiles: _get(files.filter((e) => e._id === true), '0.count', 0),
-      deletedFilesSize: _get(files.filter((e) => e._id === true), '0.filesize', 0),
+      entities: entities.find((e) => e._id === false)?.count || 0,
+      deletedEntities: entities.find((e) => e._id === true)?.count || 0,
+      properties: properties.find((e) => e._id === false)?.count || 0,
+      deletedProperties: properties.find((e) => e._id === true)?.count || 0,
+      files: files.find((e) => e._id === false)?.count || 0,
+      filesSize: files.find((e) => e._id === false)?.filesize || 0,
+      deletedFiles: files.find((e) => e._id === true)?.count || 0,
+      deletedFilesSize: files.find((e) => e._id === true)?.filesize || 0,
       dbSize: stats.dataSize + stats.indexSize
     })
   } catch (e) {

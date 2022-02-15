@@ -1,6 +1,5 @@
 'use strict'
 
-const _get = require('lodash/get')
 const _h = require('../../_helpers')
 const https = require('https')
 const jwt = require('jsonwebtoken')
@@ -15,7 +14,7 @@ exports.handler = async (event, context) => {
 
     if (!params.state) { return _h.error([400, 'No state']) }
 
-    const decodedState = jwt.verify(params.state, jwtSecret, { audience: _get(event, 'requestContext.http.sourceIp') })
+    const decodedState = jwt.verify(params.state, jwtSecret, { audience: event.requestContext?.http?.sourceIp })
 
     if (params.error && params.error === 'user_cancelled_authorize') {
       if (decodedState.next) {
@@ -31,16 +30,16 @@ exports.handler = async (event, context) => {
     const profile = jwt.decode(accessToken)
     const profileUser = params.user ? JSON.parse(params.user) : {}
     const user = {
-      ip: _get(event, 'requestContext.http.sourceIp'),
+      ip: event.requestContext?.http?.sourceIp,
       provider: 'apple',
-      id: _get(profile, 'sub')
+      id: profile.sub
     }
 
-    if (_get(profileUser, 'name.firstName') || _get(profileUser, 'name.lastName')) {
-      user.name = `${_get(profileUser, 'name.firstName', '')} ${_get(profileUser, 'name.lastName', '')}`.trim()
+    if (profileUser.name?.firstName || profileUser.name?.lastName) {
+      user.name = `${profileUser.name?.firstName} ${profileUser.name?.lastName}`.trim()
     }
-    if (_get(profileUser, 'email')) {
-      user.email = _get(profileUser, 'email')
+    if (profileUser.email) {
+      user.email = profileUser.email
     }
 
     const sessionId = await _h.addUserSession(user)
@@ -101,7 +100,7 @@ const getToken = async (code, redirectUri) => {
         if (res.statusCode === 200 && data.access_token && data.id_token) {
           resolve(data.id_token)
         } else {
-          reject(_get(data, 'error', data))
+          reject(data.error?.data)
         }
       })
     }).on('error', (err) => {

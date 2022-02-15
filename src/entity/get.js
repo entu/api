@@ -1,8 +1,6 @@
 'use strict'
 
 const _forIn = require('lodash/forIn')
-const _get = require('lodash/get')
-const _has = require('lodash/has')
 const _set = require('lodash/set')
 const _toNumber = require('lodash/toNumber')
 const _toSafeInteger = require('lodash/toSafeInteger')
@@ -14,7 +12,7 @@ exports.handler = async (event, context) => {
   try {
     const user = await _h.user(event)
     const eId = event.pathParameters && event.pathParameters.id ? _h.strToId(event.pathParameters.id) : null
-    const props = _get(event, 'queryStringParameters.props', '').split(',').filter((x) => !!x)
+    const props = (event.queryStringParameters?.props || '').split(',').filter((x) => !!x)
     const fields = {}
     let result = {}
     let getThumbnail = props.length === 0
@@ -51,19 +49,19 @@ exports.handler = async (event, context) => {
         entity: cleanedEntity
       }
     } else {
-      const sort = _get(event, 'queryStringParameters.sort', '').split(',').filter(x => !!x)
-      const limit = _toSafeInteger(_get(event, 'queryStringParameters.limit')) || 100
-      const skip = _toSafeInteger(_get(event, 'queryStringParameters.skip')) || 0
-      const query = _get(event, 'queryStringParameters.q', '').split(' ').filter(x => !!x)
+      const sort = (event.queryStringParameters?.sort || '').split(',').filter(x => !!x)
+      const limit = _toSafeInteger(event.queryStringParameters?.limit) || 100
+      const skip = _toSafeInteger(event.queryStringParameters?.skip) || 0
+      const query = (event.queryStringParameters?.q || '').split(' ').filter(x => !!x)
       let sortFields = {}
       const filter = {}
 
-      _forIn(_get(event, 'queryStringParameters'), (v, k) => {
+      _forIn(event.queryStringParameters, (v, k) => {
         if (k.includes('.')) {
           const fieldArray = k.split('.')
-          const field = _get(fieldArray, 0)
-          const type = _get(fieldArray, 1)
-          const operator = _get(fieldArray, 2)
+          const field = fieldArray[0]
+          const type = fieldArray[1]
+          const operator = fieldArray[2]
           let value
 
           switch (type) {
@@ -168,22 +166,22 @@ const claenupEntity = async (entity, user, _thumbnail) => {
 
   let result = { _id: entity._id }
 
-  const access = _get(entity, 'access', []).map((s) => s.toString())
+  const access = (entity.access || []).map((s) => s.toString())
 
   if (user.id && access.includes(user.id)) {
-    result = Object.assign({}, result, _get(entity, 'private', {}))
+    result = Object.assign({}, result, (entity.private || {}))
   } else if (access.includes('public')) {
-    result = Object.assign({}, result, _get(entity, 'public', {}))
+    result = Object.assign({}, result, (entity.public || {}))
   } else {
     return
   }
 
-  if (_thumbnail && _has(result, 'photo.0.s3')) {
-    result._thumbnail = await _h.getSignedUrl('getObject', { Key: _get(result, 'photo.0.s3') })
+  if (_thumbnail && result.photo[0]?.s3) {
+    result._thumbnail = await _h.getSignedUrl('getObject', { Key: result.photo[0]?.s3 })
   }
 
-  if (_has(result, 'entu_api_key')) {
-    _get(result, 'entu_api_key', []).forEach((k) => {
+  if (result.entu_api_key) {
+    (result.entu_api_key || []).forEach((k) => {
       k.string = '***'
     })
   }

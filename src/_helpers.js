@@ -1,6 +1,5 @@
 'use strict'
 
-const _get = require('lodash/get')
 const _pickBy = require('lodash/pickBy')
 const _identity = require('lodash/identity')
 const aws = require('aws-sdk')
@@ -78,8 +77,8 @@ exports.user = async (event) => {
   return new Promise((resolve, reject) => {
     const jwtToken = getHeader(event, 'authorization').replace('Bearer ', '')
     const jwtConf = {
-      issuer: _get(event, 'queryStringParameters.account'),
-      audience: _get(event, 'requestContext.http.sourceIp')
+      issuer: event.queryStringParameters?.account,
+      audience: event.requestContext?.http?.sourceIp
     }
 
     let result = {

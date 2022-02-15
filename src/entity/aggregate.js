@@ -1,6 +1,8 @@
 'use strict'
 
-const _ = require('lodash')
+const _isEqual = require('lodash/isequal')
+const _sortBy = require('lodash/sortby')
+const _omit = require('lodash/omit')
 const _h = require('../_helpers')
 
 exports.handler = async (event, context) => {
@@ -34,24 +36,24 @@ exports.handler = async (event, context) => {
 
     for (let n = 0; n < properties.length; n++) {
       const prop = properties[n]
-      let cleanProp = _.omit(prop, ['entity', 'type', 'created', 'search', 'public'])
+      let cleanProp = _omit(prop, ['entity', 'type', 'created', 'search', 'public'])
 
       if (prop.reference && ['_viewer', '_expander', '_editor', '_owner'].includes(prop.type)) {
-        if (!_.has(newEntity, 'access')) {
-          _.set(newEntity, 'access', [])
+        if (!newEntity.access) {
+          newEntity.access = []
         }
         newEntity.access.push(prop.reference)
       }
 
       if (prop.type === '_public' && prop.boolean === true) {
-        if (!_.has(newEntity, 'access')) {
-          _.set(newEntity, 'access', [])
+        if (!newEntity.access) {
+          newEntity.access = []
         }
         newEntity.access.push('public')
       }
 
-      if (!_.has(newEntity, ['private', prop.type])) {
-        _.set(newEntity, ['private', prop.type], [])
+      if (!newEntity.private[prop.type]) {
+        newEntity.private[prop.type] = []
       }
 
       if (prop.date) {
@@ -62,7 +64,7 @@ exports.handler = async (event, context) => {
       if (prop.reference) {
         const referenceEntities = await db.collection('entity').findOne({ _id: prop.reference }, { projection: { 'private.name': true } })
 
-        if (_.has(referenceEntities, 'private.name')) {
+        if (referenceEntities.private?.name) {
           cleanProp = referenceEntities.private.name.map(x => {
             return { ...cleanProp, ...x }
           })
@@ -98,29 +100,25 @@ exports.handler = async (event, context) => {
 
       for (let d = 0; d < definition.length; d++) {
         if (definition[d].formula) {
-          _.set(newEntity, ['private', definition[d].name, 0], await formula(definition[d].formula, entityId, db))
+          newEntity.private[definition[d].name] = [await formula(definition[d].formula, entityId, db)]
         }
 
-        const dValue = _.get(newEntity, ['private', definition[d].name])
+        const dValue = newEntity.private[definition[d].name]
 
         if (definition[d].search && dValue) {
-          if (!newEntity.search || !newEntity.search.private) {
-            _.set(newEntity, 'search.private', [])
+          if (!newEntity.search) {
+            newEntity.search = {}
           }
 
-          newEntity.search.private = [...newEntity.search.private, ...getValueArray(dValue)]
+          newEntity.search.private = [...(newEntity.search.private || []), ...getValueArray(dValue)]
 
           if (definition[d].public) {
-            if (!newEntity.search || !newEntity.search.public) {
-              _.set(newEntity, 'search.public', [])
-            }
-
-            newEntity.search.public = [...newEntity.search.public, ...getValueArray(dValue)]
+            newEntity.search.public = [...(newEntity.search.public || []), ...getValueArray(dValue)]
           }
         }
 
         if (definition[d].public && dValue) {
-          _.set(newEntity, ['public', definition[d].name], dValue)
+          newEntity.public[definition[d].name] = dValue
         }
       }
     } else {
@@ -129,10 +127,10 @@ exports.handler = async (event, context) => {
 
     await db.collection('entity').replaceOne({ _id: entityId }, newEntity, { upsert: true })
 
-    const name = _.get(entity, 'private.name', []).map(x => x.string || '')
-    const newName = _.get(newEntity, 'private.name', []).map(x => x.string || '')
+    const name = (entity.private?.name || []).map(x => x.string || '')
+    const newName = (newEntity.private?.name || []).map(x => x.string || '')
 
-    if (!_.isEqual(_.sortBy(name), _.sortBy(newName))) {
+    if (!_isEqual(_sortBy(name), _sortBy(newName))) {
       const referrers = await db.collection('property').aggregate([
         { $match: { reference: entityId, deleted: { $exists: false } } },
         { $group: { _id: '$entity' } }

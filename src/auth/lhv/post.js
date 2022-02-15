@@ -1,7 +1,5 @@
 'use strict'
 
-const _get = require('lodash/get')
-const _has = require('lodash/has')
 const _h = require('../../_helpers')
 const crypto = require('crypto')
 
@@ -41,13 +39,13 @@ exports.handler = async (event, context) => {
     if (!crypto.createVerify('SHA1').update(mac).verify(lhvKey, request.VK_MAC, 'base64')) {
       return _h.error([400, 'Invalid VK_MAC'])
     }
-    if (_get(request, 'VK_SERVICE') !== '3012') {
+    if (request.VK_SERVICE !== '3012') {
       return _h.error([400, 'Invalid VK_SERVICE'])
     }
-    if (_get(request, 'VK_SND_ID') !== 'LHV') {
+    if (request.VK_SND_ID !== 'LHV') {
       return _h.error([400, 'Invalid VK_SND_ID'])
     }
-    if (_get(request, 'VK_REC_ID') !== lhvId) {
+    if (request.VK_REC_ID !== lhvId) {
       return _h.error([400, 'Invalid VK_REC_ID'])
     }
     if (now < datetimeMin || now > datetimeMax) {
@@ -55,15 +53,15 @@ exports.handler = async (event, context) => {
     }
 
     const user = {
-      ip: _get(event, 'requestContext.http.sourceIp'),
+      ip: event.requestContext?.http?.sourceIp,
       provider: 'lhv',
-      id: _get(request, 'VK_USER_ID'),
-      name: _get(request, 'VK_USER_NAME'),
-      email: _get(request, 'VK_USER_ID') + '@eesti.ee'
+      id: request.VK_USER_ID,
+      name: request.VK_USER_NAME,
+      email: request.VK_USER_ID + '@eesti.ee'
     }
     const sessionId = await _h.addUserSession(user)
 
-    if (_has(event, 'queryStringParameters.next')) {
+    if (event.queryStringParameters?.next) {
       return _h.redirect(`${event.queryStringParameters.next}${sessionId}`)
     } else {
       return _h.json({ key: sessionId })
