@@ -7,6 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
         SAM_CLI_TELEMETRY: 0
+        stack_name: entu-api-prod
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
@@ -22,6 +23,5 @@ jobs:
       - run: npm ci --production
       - run: cp -LRv ./node_modules ./src/layers/nodejs/
       - run: ls -lha ./src/layers/nodejs/node_modules
-      - run: echo 'entu-api-${{ github.ref_name }}'
       - run: sam build --use-container
-      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name entu-api-${{ github.ref_name }}
+      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name ${{ stack_name }} --s3-bucket ${{ secrets.AWS_S3_BUCKET }}
