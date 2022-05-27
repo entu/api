@@ -6,7 +6,16 @@
   "author": "Argo Roots <argo@roots.ee>",
   "homepage": "https://entu.dev",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/entu/api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/entu/api/issues"
+  },
   "scripts": {
+    "dev": "nodemon node ./src/server.js",
+    "start": "node ./src/server.js",
     "lint": "eslint ./ --fix --ignore-path .gitignore --ext .js",
     "docs": "entu-ssg build docs/source/config.yaml full"
   },
@@ -24,6 +33,7 @@
     "eslint-config-standard": "16.0.3",
     "eslint-plugin-import": "2.25.4",
     "eslint-plugin-node": "11.1.0",
-    "eslint-plugin-promise": "5.2.0"
+    "eslint-plugin-promise": "5.2.0",
+    "nodemon": "2.0.15"
   }
 }
