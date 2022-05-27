@@ -24,4 +24,4 @@ jobs:
       - run: cp -LRv ./node_modules ./src/layers/nodejs/
       - run: ls -lha ./src/layers/nodejs/node_modules
       - run: sam build --use-container
-      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name ${{ stack_name }} --s3-bucket ${{ secrets.AWS_S3_BUCKET }}
+      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name ${{ env.stack_name }} --s3-bucket ${{ secrets.AWS_S3_BUCKET }}
