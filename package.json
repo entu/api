@@ -20,7 +20,7 @@
     "docs": "entu-ssg build docs/source/config.yaml full"
   },
   "engines": {
-    "node": "16"
+    "node": "14"
   },
   "dependencies": {
     "api-helpers": "file:src/layers/nodejs/api-helpers",
@@ -34,6 +34,6 @@
     "eslint-config-standard": "16.0.3",
     "eslint-plugin-import": "2.25.4",
     "eslint-plugin-node": "11.1.0",
-    "eslint-plugin-promise": "5.2.0",
+    "eslint-plugin-promise": "5.2.0"
   }
 }
