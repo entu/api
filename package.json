@@ -23,6 +23,7 @@
     "node": "16"
   },
   "dependencies": {
+    "api-helpers": "file:src/layers/nodejs/api-helpers",
     "jsonwebtoken": "8.5.1",
     "lodash": "4.17.21",
     "mongodb": "4.6.0"
