@@ -21,7 +21,7 @@ jobs:
           aws-region: eu-central-1
       - run: npm ci --production
       - run: cp -r ./node_modules ./src/layers/nodejs/
-      - run: la -lha ./src/layers/nodejs/
-      - run: sam build --use-container
+      - run: ls -lha ./src/layers/nodejs/
       - run: echo 'entu-api-${{ github.head_ref }}'
+      - run: sam build --use-container
       - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name "entu-api-${{ github.head_ref }}"
