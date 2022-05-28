@@ -3,6 +3,12 @@ Transform: AWS::Serverless-2016-10-31
 Parameters:
   GitCommit:
     Type: String
+  DomainName:
+    Type: String
+  CertificateArn:
+    Type: String
+  HostedZoneId:
+    Type: String
 
 Globals:
   Function:
@@ -18,9 +24,17 @@ Globals:
       - !Ref LambdaLayer
 
 Resources:
+  Domain:
+    DomainName: !Ref DomainName
+    CertificateArn: !Ref CertificateArn
+    EndpointConfiguration: REGIONAL
+    Route53:
+      HostedZoneId: !Ref HostedZoneId
+
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
+      Domain: !Ref Domain
       CorsConfiguration:
         AllowMethods:
           - GET
