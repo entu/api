@@ -129,10 +129,10 @@ Resources:
             Method: POST
             ApiId: !Ref HttpApi
 
-  FunctionEntityPost:
+  FunctionEntityDelete:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${AWS::StackName}-entity-post"
+      FunctionName: !Sub "${AWS::StackName}-entity-delete"
       CodeUri: src/functions/entity/
       Handler: get.handler
       Description: Delete entity with given id
@@ -159,10 +159,10 @@ Resources:
             Method: GET
             ApiId: !Ref HttpApi
 
-  FunctionPropertyPost:
+  FunctionPropertyDelete:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${AWS::StackName}-property-post"
+      FunctionName: !Sub "${AWS::StackName}-property-delete"
       CodeUri: src/functions/property/
       Handler: get.handler
       Description: Delete property with given id
