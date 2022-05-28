@@ -42,16 +42,136 @@ Resources:
   FunctionAccountGet:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${AWS::StackName}-test-get"
-      CodeUri: src/account/
+      FunctionName: !Sub "${AWS::StackName}-account-get"
+      CodeUri: src/functions/account/
       Handler: get.handler
-      Description: A function to get account
+      Description: Returns account info and usage statistics
       Events:
         HttpApiEvent:
           Type: HttpApi
           Properties:
             Path: /account
             Method: GET
+            ApiId: !Ref HttpApi
+
+  FunctionAccountGet:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-auth-get"
+      CodeUri: src/functions/auth/
+      Handler: get.handler
+      Description: Authenticates user by API key
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /auth
+            Method: GET
+            ApiId: !Ref HttpApi
+
+  FunctionAccountGet:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-entity-list-get"
+      CodeUri: src/functions/entity/
+      Handler: get.handler
+      Description: Get list of entities
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /entity
+            Method: GET
+            ApiId: !Ref HttpApi
+
+  FunctionAccountGet:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-entity-list-post"
+      CodeUri: src/functions/entity/
+      Handler: post.handler
+      Description: Create new entity
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /entity
+            Method: POST
+            ApiId: !Ref HttpApi
+
+  FunctionAccountGet:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-entity-get"
+      CodeUri: src/functions/entity/
+      Handler: get.handler
+      Description: Get one entity with given id
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /entity/{_id}
+            Method: GET
+            ApiId: !Ref HttpApi
+
+  FunctionAccountGet:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-entity-post"
+      CodeUri: src/functions/entity/
+      Handler: get.handler
+      Description: Add new properties to existing entity
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /entity/{_id}
+            Method: POST
+            ApiId: !Ref HttpApi
+
+  FunctionAccountGet:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-entity-post"
+      CodeUri: src/functions/entity/
+      Handler: get.handler
+      Description: Delete entity with given id
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /entity/{_id}
+            Method: DELETE
+            ApiId: !Ref HttpApi
+
+  FunctionAccountGet:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-property-get"
+      CodeUri: src/functions/property/
+      Handler: get.handler
+      Description: Get property with given id
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /property/{_id}
+            Method: GET
+            ApiId: !Ref HttpApi
+
+  FunctionAccountGet:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-property-post"
+      CodeUri: src/functions/property/
+      Handler: get.handler
+      Description: Delete property with given id
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /property/{_id}
+            Method: DELETE
             ApiId: !Ref HttpApi
 
 Outputs:
