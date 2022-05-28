@@ -24,17 +24,15 @@ Globals:
       - !Ref LambdaLayer
 
 Resources:
-  Domain:
-    DomainName: !Ref DomainName
-    CertificateArn: !Ref CertificateArn
-    EndpointConfiguration: REGIONAL
-    Route53:
-      HostedZoneId: !Ref HostedZoneId
-
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
-      Domain: !Ref Domain
+      Domain:
+        DomainName: !Ref DomainName
+        CertificateArn: !Ref CertificateArn
+        EndpointConfiguration: REGIONAL
+        Route53:
+          HostedZoneId: !Ref HostedZoneId
       CorsConfiguration:
         AllowMethods:
           - GET
