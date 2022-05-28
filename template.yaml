@@ -54,7 +54,7 @@ Resources:
             Method: GET
             ApiId: !Ref HttpApi
 
-  FunctionAccountGet:
+  FunctionAuthGet:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-auth-get"
@@ -69,7 +69,7 @@ Resources:
             Method: GET
             ApiId: !Ref HttpApi
 
-  FunctionAccountGet:
+  FunctionEntityListGet:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-entity-list-get"
@@ -84,7 +84,7 @@ Resources:
             Method: GET
             ApiId: !Ref HttpApi
 
-  FunctionAccountGet:
+  FunctionEntityListPost:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-entity-list-post"
@@ -99,7 +99,7 @@ Resources:
             Method: POST
             ApiId: !Ref HttpApi
 
-  FunctionAccountGet:
+  FunctionEntityGet:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-entity-get"
@@ -114,7 +114,7 @@ Resources:
             Method: GET
             ApiId: !Ref HttpApi
 
-  FunctionAccountGet:
+  FunctionEntityPost:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-entity-post"
@@ -129,7 +129,7 @@ Resources:
             Method: POST
             ApiId: !Ref HttpApi
 
-  FunctionAccountGet:
+  FunctionEntityPost:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-entity-post"
@@ -144,7 +144,7 @@ Resources:
             Method: DELETE
             ApiId: !Ref HttpApi
 
-  FunctionAccountGet:
+  FunctionPropertyGet:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-property-get"
@@ -159,7 +159,7 @@ Resources:
             Method: GET
             ApiId: !Ref HttpApi
 
-  FunctionAccountGet:
+  FunctionPropertyPost:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-property-post"
