@@ -55,7 +55,8 @@
         "lambda:GetFunction",
         "lambda:GetLayerVersion",
         "lambda:PublishLayerVersion",
-        "lambda:RemovePermission"
+        "lambda:RemovePermission",
+        "lambda:UpdateFunctionConfiguration"
       ],
       "Resource": [
         "arn:aws:lambda:*:*:layer:entu-api-*",
