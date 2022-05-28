@@ -33,6 +33,16 @@
       "Resource": "arn:aws:iam::*:role/entu-api-*"
     },
     {
+      "Sid": "route53",
+      "Effect": "Allow",
+      "Action": [
+        "route53:GetChange",
+        "route53:GetHostedZone",
+        "route53:ChangeResourceRecordSets"
+      ],
+      "Resource": "arn:aws:route53:::*"
+    },
+    {
       "Sid": "apigateway",
       "Effect": "Allow",
       "Action": [
