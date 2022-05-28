@@ -54,6 +54,7 @@
         "lambda:DeleteLayerVersion",
         "lambda:GetFunction",
         "lambda:GetLayerVersion",
+        "lambda:ListTags",
         "lambda:PublishLayerVersion",
         "lambda:RemovePermission",
         "lambda:UpdateFunctionConfiguration"
