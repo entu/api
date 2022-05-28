@@ -28,12 +28,6 @@ Resources:
           - Content-Type
         AllowOrigins:
           - "*"
-      AccessLogSettings:
-        DestinationArn: !GetAtt HttpApiAccessLogs.Arn
-        Format: $context.requestId
-
-  HttpApiAccessLogs:
-    Type: AWS::Logs::LogGroup
 
   LambdaLayer:
     Type: AWS::Serverless::LayerVersion
