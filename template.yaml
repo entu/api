@@ -1,10 +1,14 @@
 Transform: AWS::Serverless-2016-10-31
 
+Parameters:
+  GitCommit:
+    Type: String
+
 Globals:
   Function:
-    # Environment:
-    #   Variables:
-    #     X:Y
+    Environment:
+      Variables:
+        GIT_COMMIT: !Ref GitCommit
     Architectures:
       - arm64
     Runtime: nodejs16.x
