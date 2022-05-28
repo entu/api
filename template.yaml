@@ -5,8 +5,9 @@ Globals:
     # Environment:
     #   Variables:
     #     X:Y
-    Runtime: nodejs14.x
-    MemorySize: 128
+    Architectures: arm64
+    Runtime: nodejs16.x
+    MemorySize: 256
     Timeout: 30
     Layers:
       - !Ref LambdaLayer
