@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
         SAM_CLI_TELEMETRY: 0
-        stack_name: entu-api-prod
+        stack_name: entu-api-${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
