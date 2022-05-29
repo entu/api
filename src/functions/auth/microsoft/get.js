@@ -22,7 +22,7 @@ exports.handler = async (event, context) => {
       response_type: 'code',
       response_mode: 'form_post',
       scope: 'https://graph.microsoft.com/User.Read',
-      state: state
+      state
     })
 
     return _h.redirect(`https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${query}`)

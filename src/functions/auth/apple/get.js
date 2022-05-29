@@ -22,7 +22,7 @@ exports.handler = async (event, context) => {
       response_type: 'code',
       response_mode: 'form_post',
       scope: 'email name',
-      state: state
+      state
     })
 
     return _h.redirect(`https://appleid.apple.com/auth/authorize?${query}`)

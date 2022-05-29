@@ -24,9 +24,9 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(404, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify({
         clientIp: headers['x-forwarded-for'] || socket.remoteAddress,
-        method: method,
+        method,
         path: pathname,
-        params: params
+        params
       }))
     }
   } catch (error) {

@@ -53,8 +53,8 @@ exports.handler = async (event, context) => {
 
         accounts[account] = {
           _id: person._id.toString(),
-          account: account,
-          token: token
+          account,
+          token
         }
       }
     }

@@ -122,7 +122,7 @@ exports.addUserSession = async (user) => {
 
     const session = {
       created: new Date(),
-      user: user
+      user
     }
 
     db('entu').then((connection) => {
@@ -149,9 +149,9 @@ exports.addEntityAggregateSqs = async (context, account, entity, dt) => {
   const accountId = context.invokedFunctionArn.split(':')[4]
   const queueUrl = `https://sqs.${region}.amazonaws.com/${accountId}/entu-api-entity-aggregate-queue-${account}.fifo`
   const message = {
-    account: account,
+    account,
     entity: entity.toString(),
-    dt: dt,
+    dt,
     timestamp: (new Date()).getTime()
   }
 
@@ -224,7 +224,7 @@ exports.error = (err) => {
   return {
     statusCode: code || 500,
     headers: { 'Content-Type': 'application/json', 'X-Entu-Version': process.env.GIT_SHA1 },
-    body: JSON.stringify({ message: message }),
+    body: JSON.stringify({ message }),
     isBase64Encoded: false
   }
 }

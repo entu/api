@@ -45,7 +45,7 @@ exports.handler = async (event, context) => {
 
       result = {
         filter: { _id: eId },
-        props: props,
+        props,
         entity: cleanedEntity
       }
     } else {
@@ -147,9 +147,9 @@ exports.handler = async (event, context) => {
       }
 
       result = {
-        count: count,
-        filter: filter,
-        props: props,
+        count,
+        filter,
+        props,
         entities: cleanedEntities
       }
     }

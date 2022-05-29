@@ -50,7 +50,7 @@ const getToken = async (code, redirectUri) => {
     const query = querystring.stringify({
       client_id: clientId,
       client_secret: clientSecret,
-      code: code,
+      code,
       redirect_uri: redirectUri,
       grant_type: 'authorization_code'
     })
