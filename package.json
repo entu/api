@@ -14,13 +14,9 @@
     "url": "https://github.com/entu/api/issues"
   },
   "scripts": {
-    "dev": "nodemon node ./src/server.js",
-    "start": "node ./src/server.js",
+    "dev": "sam local start-api --env-vars env.json --warm-containers LAZY",
     "lint": "eslint ./ --fix --ignore-path .gitignore --ext .js",
     "docs": "entu-ssg build docs/source/config.yaml full"
-  },
-  "engines": {
-    "node": "14"
   },
   "dependencies": {
     "api-helpers": "file:src/layers/nodejs/api-helpers",
