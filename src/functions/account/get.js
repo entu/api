@@ -1,6 +1,6 @@
 'use strict'
 
-const _h = require('../_helpers')
+const _h = require('api-helpers')
 
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }

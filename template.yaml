@@ -9,12 +9,19 @@ Parameters:
     Type: String
   HostedZoneId:
     Type: String
+  MongoDbUrl:
+    Type: String
+  JwtSecret:
+    Type: String
 
 Globals:
   Function:
     Environment:
       Variables:
+        NODE_ENV: production
         GIT_COMMIT: !Ref GitCommit
+        MONGODB_URL: !Ref MongoDbUrl
+        JWT_SECRET: !Ref JwtSecret
     # Architectures:
     #   - arm64
     Runtime: nodejs16.x
