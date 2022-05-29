@@ -15,14 +15,14 @@ jobs:
         stack_name: entu-api-${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
       - uses: actions/setup-node@v3
+      - uses: actions/setup-python@v3
       - uses: aws-actions/setup-sam@v2
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-central-1
+          aws-region: ${{ secrets.AWS_REGION }}
       - run: npm ci --quiet --production
       - run: cp -LRv ./node_modules ./layers/nodejs/
       - run: sam build --use-container
@@ -34,6 +34,7 @@ jobs:
             --no-progressbar \
             --force-upload \
             --capabilities CAPABILITY_IAM \
+            --region ${{ secrets.AWS_REGION }}
             --stack-name ${{ env.stack_name }} \
             --s3-bucket ${{ secrets.AWS_S3_BUCKET }} \
             --s3-prefix ${{ github.ref_name }} \
