@@ -7,8 +7,8 @@ const jwt = require('jsonwebtoken')
 const querystring = require('querystring')
 const { MongoClient, ObjectId } = require('mongodb')
 
-const dbClient = new MongoClient(process.env.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
 const ssmParameters = {}
+const dbClient = new MongoClient(process.env.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
 let dbConnection
 
 exports.ssmParameter = async (name) => {

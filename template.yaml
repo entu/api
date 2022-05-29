@@ -59,7 +59,7 @@ Resources:
     Properties:
       LayerName: !Sub "${AWS::StackName}-dependencies"
       Description: Some code to share with the API
-      ContentUri: src/layers
+      ContentUri: layers
       CompatibleRuntimes:
         - nodejs14.x
       RetentionPolicy: Delete
@@ -68,7 +68,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-account-get"
-      CodeUri: src/functions/account/
+      CodeUri: functions/account/
       Handler: get.handler
       Description: Returns account info and usage statistics
       Events:
@@ -83,7 +83,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-auth-get"
-      CodeUri: src/functions/auth/
+      CodeUri: functions/auth/
       Handler: get.handler
       Description: Authenticates user by API key
       Events:
@@ -98,7 +98,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-entity-list-get"
-      CodeUri: src/functions/entity/
+      CodeUri: functions/entity/
       Handler: get.handler
       Description: Get list of entities
       Events:
@@ -113,7 +113,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-entity-list-post"
-      CodeUri: src/functions/entity/
+      CodeUri: functions/entity/
       Handler: post.handler
       Description: Create new entity
       Events:
@@ -128,7 +128,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-entity-get"
-      CodeUri: src/functions/entity/
+      CodeUri: functions/entity/
       Handler: get.handler
       Description: Get one entity with given id
       Events:
@@ -143,7 +143,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-entity-post"
-      CodeUri: src/functions/entity/
+      CodeUri: functions/entity/
       Handler: get.handler
       Description: Add new properties to existing entity
       Events:
@@ -158,7 +158,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-entity-delete"
-      CodeUri: src/functions/entity/
+      CodeUri: functions/entity/
       Handler: get.handler
       Description: Delete entity with given id
       Events:
@@ -173,7 +173,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-property-get"
-      CodeUri: src/functions/property/
+      CodeUri: functions/property/
       Handler: get.handler
       Description: Get property with given id
       Events:
@@ -188,7 +188,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-property-delete"
-      CodeUri: src/functions/property/
+      CodeUri: functions/property/
       Handler: get.handler
       Description: Delete property with given id
       Events:

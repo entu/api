@@ -14,12 +14,12 @@
     "url": "https://github.com/entu/api/issues"
   },
   "scripts": {
-    "dev": "sam local start-api --env-vars env.json --warm-containers LAZY",
+    "dev": "cp layers/nodejs/api-helpers/index.js layers/nodejs/node_modules/api-helpers && sam local start-api --env-vars env.json --warm-containers LAZY",
     "lint": "eslint ./ --fix --ignore-path .gitignore --ext .js",
     "docs": "entu-ssg build docs/source/config.yaml full"
   },
   "dependencies": {
-    "api-helpers": "file:src/layers/nodejs/api-helpers",
+    "api-helpers": "file:layers/nodejs/api-helpers",
     "jsonwebtoken": "8.5.1",
     "lodash": "4.17.21",
     "mongodb": "4.6.0"
