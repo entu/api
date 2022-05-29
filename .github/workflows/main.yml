@@ -28,8 +28,10 @@ jobs:
       - run: sam build --use-container
       - run: |
           sam deploy \
+            --debug
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
+            --no-progressbar \
             --force-upload \
             --capabilities CAPABILITY_IAM \
             --stack-name ${{ env.stack_name }} \
