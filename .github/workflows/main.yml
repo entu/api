@@ -14,12 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
-        with:
-            cache: 'pip'
       - uses: actions/setup-node@v3
-        with:
-            node-version: 14
-            cache: 'npm'
       - uses: aws-actions/setup-sam@v2
       - uses: aws-actions/configure-aws-credentials@v1
         with:
