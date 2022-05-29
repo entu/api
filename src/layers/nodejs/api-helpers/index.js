@@ -195,7 +195,7 @@ exports.getBody = (event) => {
 exports.json = (data) => {
   return {
     statusCode: 200,
-    headers: { 'Content-Type': 'application/json', 'X-Entu-Version': process.env.GIT_SHA1 },
+    headers: { 'Content-Type': 'application/json', 'X-Entu-Version': process.env.GIT_SHA },
     body: JSON.stringify(data),
     isBase64Encoded: false
   }
@@ -218,7 +218,7 @@ exports.error = (err) => {
 
   return {
     statusCode: code || 500,
-    headers: { 'Content-Type': 'application/json', 'X-Entu-Version': process.env.GIT_SHA1 },
+    headers: { 'Content-Type': 'application/json', 'X-Entu-Version': process.env.GIT_SHA },
     body: JSON.stringify({ message }),
     isBase64Encoded: false
   }

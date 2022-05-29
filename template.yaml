@@ -1,7 +1,7 @@
 Transform: AWS::Serverless-2016-10-31
 
 Parameters:
-  GitCommit:
+  GitSha:
     Type: String
   DomainName:
     Type: String
@@ -19,7 +19,7 @@ Globals:
     Environment:
       Variables:
         NODE_ENV: production
-        GIT_COMMIT: !Ref GitCommit
+        GIT_SHA: !Ref GitSha
         MONGODB_URL: !Ref MongoDbUrl
         JWT_SECRET: !Ref JwtSecret
     # Architectures:
