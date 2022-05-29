@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
         SAM_CLI_TELEMETRY: 0
-        stack_name: entu-api-${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -35,7 +34,7 @@ jobs:
             --force-upload \
             --capabilities CAPABILITY_IAM \
             --region ${{ secrets.AWS_REGION }} \
-            --stack-name ${{ env.stack_name }} \
+            --stack-name entu-api-${{ github.ref_name }} \
             --s3-bucket ${{ secrets.AWS_S3_BUCKET }} \
             --s3-prefix ${{ github.ref_name }} \
             --parameter-overrides \
