@@ -34,7 +34,7 @@ jobs:
             --no-progressbar \
             --force-upload \
             --capabilities CAPABILITY_IAM \
-            --region ${{ secrets.AWS_REGION }}
+            --region ${{ secrets.AWS_REGION }} \
             --stack-name ${{ env.stack_name }} \
             --s3-bucket ${{ secrets.AWS_S3_BUCKET }} \
             --s3-prefix ${{ github.ref_name }} \
