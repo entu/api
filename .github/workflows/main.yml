@@ -26,4 +26,4 @@ jobs:
       - run: npm ci --quiet --production
       - run: cp -LRv ./node_modules ./layers/nodejs/
       - run: sam build --use-container
-      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --no-progressbar --force-upload --capabilities CAPABILITY_IAM --stack-name ${{ env.stack_name }} --s3-bucket ${{ secrets.AWS_S3_BUCKET }} --s3-prefix ${{ github.ref_name }} --parameter-overrides GitSha=${{ github.sha }} DomainName=${{ secrets.DOMAIN }} CertificateArn=${{ secrets.AWS_CERT_ARN }} HostedZoneId=${{ secrets.AWS_ZONE_ID }} MongoDbUrl=${{ secrets.MONGODB_URL }} JwtSecret=${{ secrets.JWT_SECRET }}
+      - run: sam deploy --debug --no-confirm-changeset --no-fail-on-empty-changeset --no-progressbar --force-upload --capabilities CAPABILITY_IAM --stack-name ${{ env.stack_name }} --s3-bucket ${{ secrets.AWS_S3_BUCKET }} --s3-prefix ${{ github.ref_name }} --parameter-overrides GitSha=${{ github.sha }} DomainName=${{ secrets.DOMAIN }} CertificateArn=${{ secrets.AWS_CERT_ARN }} HostedZoneId=${{ secrets.AWS_ZONE_ID }} MongoDbUrl=${{ secrets.MONGODB_URL }} JwtSecret=${{ secrets.JWT_SECRET }}
