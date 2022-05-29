@@ -1,8 +1,10 @@
 name: sam-build-deployment
+description: "SAM build and deployment"
 
 on:
   push:
     branches:
+      - dev
       - main
 
 jobs:
