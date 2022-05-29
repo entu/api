@@ -1,5 +1,4 @@
 name: sam-build-deployment
-description: sam build and deployment
 
 on:
   push:
