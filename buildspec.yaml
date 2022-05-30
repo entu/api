@@ -10,7 +10,7 @@ phases:
       nodejs: 12
     commands:
       - n 14
-      - npm ci --quiet --production --prefix layers
+      - npm ci --quiet --production --prefix layers/nodejs
   build:
     commands:
       - sam build --parallel
