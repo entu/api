@@ -10,7 +10,6 @@ phases:
       python: 3.9
       nodejs: 12
     commands:
-      - n 16
       - npm ci --quiet --production --prefix layers/nodejs
   build:
     commands:
