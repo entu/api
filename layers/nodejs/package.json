@@ -1,0 +1,9 @@
+{
+  "name": "api-helpers",
+  "version": "1.0.0",
+  "dependencies": {
+    "jsonwebtoken": "8.5.1",
+    "lodash": "4.17.21",
+    "mongodb": "4.6.0"
+  }
+}
