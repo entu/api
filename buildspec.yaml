@@ -3,7 +3,8 @@ version: 0.2
 env:
   variables:
     SAM_CLI_TELEMETRY: 0
-    AWS_S3_PREFIX: $AWS_STACK_NAME/$CODEBUILD_RESOLVED_SOURCE_VERSION
+    STACK_NAME: entu-api-$STAGE
+    AWS_S3_PREFIX: $STAGE/$CODEBUILD_RESOLVED_SOURCE_VERSION
     GIT_SHA: $CODEBUILD_RESOLVED_SOURCE_VERSION
 
 phases:
@@ -16,4 +17,4 @@ phases:
   build:
     commands:
       - sam build
-      - sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --capabilities CAPABILITY_IAM --region $AWS_REGION --stack-name $AWS_STACK_NAME --s3-bucket $AWS_S3_BUCKET --s3-prefix $AWS_S3_PREFIX --parameter-overrides GitSha=$GIT_SHA DomainName=$DOMAIN CertificateArn=$AWS_CERT_ARN HostedZoneId=$AWS_ZONE_ID MongoDbUrl=$MONGODB_URL JwtSecret=$JWT_SECRET
+      - sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --capabilities CAPABILITY_IAM --region $AWS_REGION --stack-name $STACK_NAME --s3-bucket $AWS_S3_BUCKET --s3-prefix $AWS_S3_PREFIX --parameter-overrides GitSha=$GIT_SHA DomainName=$DOMAIN CertificateArn=$AWS_CERT_ARN HostedZoneId=$AWS_ZONE_ID MongoDbUrl=$MONGODB_URL JwtSecret=$JWT_SECRET
