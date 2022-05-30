@@ -14,7 +14,7 @@
     "url": "https://github.com/entu/api/issues"
   },
   "scripts": {
-    "dev": "npm ci --quiet --production --prefix layers/nodejs && sam local start-api --env-vars env.json --warm-containers LAZY",
+    "dev": "npm ci --quiet --production --prefix layers && sam local start-api --env-vars env.json --warm-containers LAZY",
     "lint": "eslint ./ --fix --ignore-path .gitignore --ext .js",
     "docs": "entu-ssg build docs/source/config.yaml full"
   },
