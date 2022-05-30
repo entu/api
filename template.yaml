@@ -65,9 +65,9 @@ Resources:
       CompatibleRuntimes:
         - nodejs16.x
       RetentionPolicy: Delete
-    Metadata:
-      BuildMethod: nodejs16.x
-      BuildArchitecture: arm64
+    # Metadata:
+    #   BuildMethod: nodejs16.x
+    #   BuildArchitecture: arm64
 
   FunctionAccountGet:
     Type: AWS::Serverless::Function
