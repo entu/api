@@ -2,7 +2,7 @@
   "name": "api-helpers",
   "version": "1.0.0",
   "dependencies": {
-    "api-helpers":"file:api-helpers.js",
+    "helpers":"file:helpers.js",
     "jsonwebtoken": "8.5.1",
     "lodash": "4.17.21",
     "mongodb": "4.6.0"
