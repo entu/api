@@ -1,6 +1,6 @@
 'use strict'
 
-const _h = require('../_helpers')
+const _h = require('helpers')
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
 

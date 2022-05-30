@@ -3,7 +3,7 @@
 const _isEqual = require('lodash/isequal')
 const _sortBy = require('lodash/sortby')
 const _omit = require('lodash/omit')
-const _h = require('../_helpers')
+const _h = require('helpers')
 
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }

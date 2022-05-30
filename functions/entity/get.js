@@ -4,7 +4,7 @@ const _forIn = require('lodash/forIn')
 const _set = require('lodash/set')
 const _toNumber = require('lodash/toNumber')
 const _toSafeInteger = require('lodash/toSafeInteger')
-const _h = require('../_helpers')
+const _h = require('helpers')
 
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }

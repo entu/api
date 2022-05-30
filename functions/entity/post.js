@@ -1,7 +1,7 @@
 'use strict'
 
 const _isArray = require('lodash/isArray')
-const _h = require('../_helpers')
+const _h = require('helpers')
 
 const allowedTypes = [
   '_type',
