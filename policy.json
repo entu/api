@@ -67,6 +67,7 @@
         "lambda:ListTags",
         "lambda:PublishLayerVersion",
         "lambda:RemovePermission",
+        "lambda:UpdateFunctionCode",
         "lambda:UpdateFunctionConfiguration"
       ],
       "Resource": [
