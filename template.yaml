@@ -15,6 +15,9 @@ Parameters:
     Type: String
   JwtSecret:
     Type: String
+  Architecture:
+    Type: String
+    Default: arm64
 
 Globals:
   Function:
@@ -25,7 +28,7 @@ Globals:
         MONGODB_URL: !Ref MongoDbUrl
         JWT_SECRET: !Ref JwtSecret
     Architectures:
-      - arm64
+      - !Ref Architecture
     Runtime: nodejs14.x
     MemorySize: 256
     Timeout: 30
@@ -66,7 +69,7 @@ Resources:
         - nodejs14.x
       RetentionPolicy: Delete
     Metadata:
-      BuildArchitecture: arm64
+      BuildArchitecture: !Ref Architecture
 
   FunctionAccountGet:
     Type: AWS::Serverless::Function
