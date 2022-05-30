@@ -62,8 +62,8 @@ Resources:
       LayerName: !Sub "${AWS::StackName}-dependencies"
       Description: Entu API dependencies
       ContentUri: layers
-      CompatibleRuntimes:
-        - nodejs16.x
+      # CompatibleRuntimes:
+      #   - nodejs16.x
       RetentionPolicy: Delete
     # Metadata:
     #   BuildMethod: nodejs16.x
