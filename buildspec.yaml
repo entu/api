@@ -4,7 +4,7 @@ phases:
   install:
     runtime-versions:
       python: 3.9
-      nodejs: 14
+      nodejs: 12
     commands:
       - n 14
       - npm ci --quiet --production --prefix layers/nodejs
