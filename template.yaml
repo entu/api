@@ -60,11 +60,13 @@ Resources:
     Type: AWS::Serverless::LayerVersion
     Properties:
       LayerName: !Sub "${AWS::StackName}-dependencies"
-      Description: Some code to share with the API
+      Description: Entu API dependencies
       ContentUri: layers
       CompatibleRuntimes:
-        - nodejs14.x
+        - nodejs16.x
       RetentionPolicy: Delete
+    Metadata:
+      BuildMethod: nodejs16.x
 
   FunctionAccountGet:
     Type: AWS::Serverless::Function
