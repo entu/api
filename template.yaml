@@ -26,7 +26,7 @@ Globals:
         JWT_SECRET: !Ref JwtSecret
     Architectures:
       - arm64
-    Runtime: nodejs16.x
+    Runtime: nodejs14.x
     MemorySize: 256
     Timeout: 30
     Layers:
@@ -62,12 +62,12 @@ Resources:
       LayerName: !Sub "${AWS::StackName}-dependencies"
       Description: Entu API dependencies
       ContentUri: layers
-      # CompatibleRuntimes:
-      #   - nodejs16.x
+      CompatibleRuntimes:
+        - nodejs14.x
       RetentionPolicy: Delete
-    # Metadata:
-    #   BuildMethod: nodejs16.x
-    #   BuildArchitecture: arm64
+    Metadata:
+      BuildMethod: nodejs14.x
+      BuildArchitecture: arm64
 
   FunctionAccountGet:
     Type: AWS::Serverless::Function
