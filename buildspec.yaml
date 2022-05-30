@@ -12,5 +12,5 @@ phases:
       - npm ci --quiet --production --prefix layers/nodejs
   build:
     commands:
-      - sam build --use-container
+      - sam build
       - sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --capabilities CAPABILITY_IAM --region $AWS_REGION --stack-name $AWS_STACK_NAME --s3-bucket $AWS_S3_BUCKET --s3-prefix $CODEBUILD_SOURCE_VERSION/$CODEBUILD_RESOLVED_SOURCE_VERSION --parameter-overrides GitSha=$CODEBUILD_RESOLVED_SOURCE_VERSION DomainName=$DOMAIN CertificateArn=$AWS_CERT_ARN HostedZoneId=$AWS_ZONE_ID MongoDbUrl=$MONGODB_URL JwtSecret=$JWT_SECRET
