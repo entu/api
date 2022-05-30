@@ -24,8 +24,8 @@ Globals:
         GIT_SHA: !Ref GitSha
         MONGODB_URL: !Ref MongoDbUrl
         JWT_SECRET: !Ref JwtSecret
-    # Architectures:
-    #   - arm64
+    Architectures:
+      - arm64
     Runtime: nodejs16.x
     MemorySize: 256
     Timeout: 30
@@ -67,6 +67,7 @@ Resources:
       RetentionPolicy: Delete
     Metadata:
       BuildMethod: nodejs16.x
+      BuildArchitecture: arm64
 
   FunctionAccountGet:
     Type: AWS::Serverless::Function

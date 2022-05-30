@@ -1,5 +1,9 @@
 version: 0.2
 
+env:
+  variables:
+    SAM_CLI_TELEMETRY:0
+
 phases:
   install:
     runtime-versions:
