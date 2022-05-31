@@ -2,6 +2,7 @@
   "name": "api-helpers",
   "version": "1.0.0",
   "dependencies": {
+    "@aws-sdk/client-ssm": "3.100.0",
     "helpers": "file:helpers",
     "jsonwebtoken": "8.5.1",
     "lodash": "4.17.21",

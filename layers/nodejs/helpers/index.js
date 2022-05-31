@@ -5,16 +5,19 @@ const _identity = require('lodash/identity')
 const aws = require('aws-sdk')
 const jwt = require('jsonwebtoken')
 const querystring = require('querystring')
+const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm')
 const { MongoClient, ObjectId } = require('mongodb')
 
+const ssmClient = new SSMClient()
 const ssmParameters = {}
+
 let dbConnection
 
 exports.ssmParameter = async (name) => {
   if (ssmParameters[name]) { return ssmParameters[name] }
 
-  const ssm = new aws.SSM()
-  const ssmValue = await ssm.getParameter({ Name: `${process.env.STACK_NAME}-${name}`, WithDecryption: true }).promise()
+  const command = new GetParameterCommand({ Name: `${process.env.STACK_NAME}-${name}`, WithDecryption: true })
+  const ssmValue = await ssmClient.send(command)
 
   ssmParameters[name] = ssmValue.Parameter.Value
 
