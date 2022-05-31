@@ -32,7 +32,7 @@ Globals:
       Variables:
         NODE_ENV: production
         GIT_SHA: !Ref GitSha
-        STACK_NAME: ${AWS::StackName}
+        STACK_NAME: !Sub "${AWS::StackName}"
     Architectures:
       - !Ref Architecture
     Runtime: nodejs14.x
