@@ -10,13 +10,13 @@ Parameters:
     Type: String
   DomainName:
     Type: AWS::SSM::Parameter::Value<String>
-    Default: !Sub "${AWS::StackName}-doamin"
+    Default: entu-api-doamin
   CertificateArn:
     Type: AWS::SSM::Parameter::Value<String>
-    Default: !Sub "${AWS::StackName}-certificate-arn"
+    Default: entu-api-certificate-arn
   HostedZoneId:
     Type: AWS::SSM::Parameter::Value<String>
-    Default: !Sub "${AWS::StackName}-hosted-zone-id"
+    Default: entu-api-hosted-zone-id
   # VpcSubnet:
   #   Type: AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>
   #   Description: SSM Parameter store key of type StringList with the list of VPC Subnet to be used by Lambda function
