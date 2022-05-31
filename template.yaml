@@ -91,10 +91,9 @@ Resources:
       CodeUri: functions/account/
       Handler: get.handler
       Description: Returns account info and usage statistics
-      Properties:
-        Policies:
-          - SSMParameterReadPolicy:
-              ParameterName: "entu-api-*"
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: "entu-api-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -110,10 +109,9 @@ Resources:
       CodeUri: functions/auth/
       Handler: get.handler
       Description: Authenticates user by API key
-      Properties:
-        Policies:
-          - SSMParameterReadPolicy:
-              ParameterName: "entu-api-*"
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: "entu-api-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -129,10 +127,9 @@ Resources:
       CodeUri: functions/entity/
       Handler: get.handler
       Description: Get list of entities
-      Properties:
-        Policies:
-          - SSMParameterReadPolicy:
-              ParameterName: "entu-api-*"
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: "entu-api-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -148,10 +145,9 @@ Resources:
       CodeUri: functions/entity/
       Handler: post.handler
       Description: Create new entity
-      Properties:
-        Policies:
-          - SSMParameterReadPolicy:
-              ParameterName: "entu-api-*"
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: "entu-api-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -167,10 +163,9 @@ Resources:
       CodeUri: functions/entity/
       Handler: get.handler
       Description: Get one entity with given id
-      Properties:
-        Policies:
-          - SSMParameterReadPolicy:
-              ParameterName: "entu-api-*"
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: "entu-api-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -186,10 +181,9 @@ Resources:
       CodeUri: functions/entity/
       Handler: get.handler
       Description: Add new properties to existing entity
-      Properties:
-        Policies:
-          - SSMParameterReadPolicy:
-              ParameterName: "entu-api-*"
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: "entu-api-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -205,10 +199,9 @@ Resources:
       CodeUri: functions/entity/
       Handler: get.handler
       Description: Delete entity with given id
-      Properties:
-        Policies:
-          - SSMParameterReadPolicy:
-              ParameterName: "entu-api-*"
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: "entu-api-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -224,10 +217,9 @@ Resources:
       CodeUri: functions/property/
       Handler: get.handler
       Description: Get property with given id
-      Properties:
-        Policies:
-          - SSMParameterReadPolicy:
-              ParameterName: "entu-api-*"
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: "entu-api-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -243,10 +235,9 @@ Resources:
       CodeUri: functions/property/
       Handler: get.handler
       Description: Delete property with given id
-      Properties:
-        Policies:
-          - SSMParameterReadPolicy:
-              ParameterName: "entu-api-*"
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: "entu-api-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
