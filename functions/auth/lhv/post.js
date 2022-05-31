@@ -11,8 +11,8 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
 
   try {
-    const lhvId = await _h.ssmParameter('entu-api-lhv-id')
-    const lhvKey = await _h.ssmParameter('entu-api-lhv-public')
+    const lhvId = await _h.ssmParameter('lhv-id')
+    const lhvKey = await _h.ssmParameter('lhv-public')
 
     const request = _h.getBody(event)
 

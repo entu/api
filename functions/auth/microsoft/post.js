@@ -9,7 +9,7 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
 
   try {
-    const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
+    const jwtSecret = await _h.ssmParameter('jwt-secret')
     const params = _h.getBody(event)
 
     if (!params.state) { return _h.error([400, 'No state']) }
@@ -43,8 +43,8 @@ exports.handler = async (event, context) => {
 }
 
 const getToken = async (code, redirectUri) => {
-  const clientId = await _h.ssmParameter('entu-api-microsoft-id')
-  const clientSecret = await _h.ssmParameter('entu-api-microsoft-secret')
+  const clientId = await _h.ssmParameter('microsoft-id')
+  const clientSecret = await _h.ssmParameter('microsoft-secret')
 
   return new Promise((resolve, reject) => {
     const query = querystring.stringify({

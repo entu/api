@@ -8,8 +8,8 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
 
   try {
-    const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
-    const clientId = await _h.ssmParameter('entu-api-google-id')
+    const jwtSecret = await _h.ssmParameter('jwt-secret')
+    const clientId = await _h.ssmParameter('google-id')
 
     const state = jwt.sign({ next: event.queryStringParameters?.next }, jwtSecret, {
       audience: event.requestContext?.http?.sourceIp,

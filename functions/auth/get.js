@@ -10,7 +10,7 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
 
   try {
-    const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
+    const jwtSecret = await _h.ssmParameter('jwt-secret')
     const key = _h.getHeader(event, 'authorization').replace('Bearer ', '')
 
     if (!key) { return _h.error([400, 'No key']) }

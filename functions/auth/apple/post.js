@@ -9,7 +9,7 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
 
   try {
-    const jwtSecret = await _h.ssmParameter('entu-api-jwt-secret')
+    const jwtSecret = await _h.ssmParameter('jwt-secret')
     const params = _h.getBody(event)
 
     if (!params.state) { return _h.error([400, 'No state']) }
@@ -55,10 +55,10 @@ exports.handler = async (event, context) => {
 }
 
 const getToken = async (code, redirectUri) => {
-  const appleTeam = await _h.ssmParameter('entu-api-apple-team')
-  const appleSecret = await _h.ssmParameter('entu-api-apple-secret')
+  const appleTeam = await _h.ssmParameter('apple-team')
+  const appleSecret = await _h.ssmParameter('apple-secret')
 
-  const clientId = await _h.ssmParameter('entu-api-apple-id')
+  const clientId = await _h.ssmParameter('apple-id')
   const clientSecret = jwt.sign({}, appleSecret, {
     issuer: appleTeam,
     audience: 'https://appleid.apple.com',

@@ -15,7 +15,7 @@ exports.ssmParameter = async (name) => {
   if (ssmParameters[name]) { return ssmParameters[name] }
 
   const ssm = new aws.SSM()
-  const ssmValue = await ssm.getParameter({ Name: name, WithDecryption: true }).promise()
+  const ssmValue = await ssm.getParameter({ Name: `${process.env.STACK_NAME}-${name}`, WithDecryption: true }).promise()
 
   ssmParameters[name] = ssmValue.Parameter.Value
 

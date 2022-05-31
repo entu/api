@@ -23,7 +23,7 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
 
   try {
-    const s3Bucket = await _h.ssmParameter('entu-api-files-s3-bucket')
+    const s3Bucket = await _h.ssmParameter('files-s3-bucket')
     const user = await _h.user(event)
     if (!user.id) { return _h.error([403, 'No user']) }
 
