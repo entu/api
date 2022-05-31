@@ -205,7 +205,7 @@ exports.error = (err) => {
   let code
   let message
 
-  if (err.constructor === Array) {
+  if (Array.isArray(err)) {
     code = err[0]
     message = err[1]
 

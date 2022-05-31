@@ -1,6 +1,5 @@
 'use strict'
 
-const _isArray = require('lodash/isArray')
 const _h = require('helpers')
 
 const allowedTypes = [
@@ -33,12 +32,12 @@ exports.handler = async (event, context) => {
 
     const body = _h.getBody(event)
 
-    if (body && !_isArray(body)) { return _h.error([400, 'Data must be array']) }
+    if (body && !Array.isArray(body)) { return _h.error([400, 'Data must be array']) }
 
     let eId = event.pathParameters && event.pathParameters.id ? _h.strToId(event.pathParameters.id) : null
 
     if (eId) {
-      if (!body || (_isArray(body) && body.length === 0)) {
+      if (!body || (Array.isArray(body) && body.length === 0)) {
         await _h.addEntityAggregateSqs(context, user.account, eId)
         return _h.json({ _id: eId })
       }
