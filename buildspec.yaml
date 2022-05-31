@@ -14,4 +14,4 @@ phases:
   build:
     commands:
       - sam build --parallel
-      - sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --capabilities CAPABILITY_IAM --region $AWS_REGION --stack-name entu-api-$STAGE --s3-bucket $AWS_S3_BUCKET --s3-prefix $STAGE/$CODEBUILD_RESOLVED_SOURCE_VERSION --parameter-overrides GitSha=$CODEBUILD_RESOLVED_SOURCE_VERSION DomainName=entu-api-$STAGE-doamin CertificateArn=entu-api-$STAGE-certificate-arn HostedZoneId=entu-api-$STAGE-hosted-zone-id
+      - sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --capabilities CAPABILITY_IAM --region $AWS_REGION --stack-name entu-api-$STAGE --s3-bucket $AWS_S3_BUCKET --s3-prefix $STAGE/$CODEBUILD_RESOLVED_SOURCE_VERSION --parameter-overrides GitSha=$CODEBUILD_RESOLVED_SOURCE_VERSION DomainName=entu-api-$STAGE-domain CertificateArn=entu-api-$STAGE-certificate-arn HostedZoneId=entu-api-$STAGE-hosted-zone-id

@@ -10,7 +10,7 @@ Parameters:
     Type: String
   DomainName:
     Type: AWS::SSM::Parameter::Value<String>
-    Default: entu-api-doamin
+    Default: entu-api-domain
   CertificateArn:
     Type: AWS::SSM::Parameter::Value<String>
     Default: entu-api-certificate-arn
