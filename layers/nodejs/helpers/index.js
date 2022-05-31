@@ -6,6 +6,8 @@ const aws = require('aws-sdk')
 const jwt = require('jsonwebtoken')
 const querystring = require('querystring')
 const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm')
+const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 const { MongoClient, ObjectId } = require('mongodb')
 
 const ssmClient = new SSMClient()
@@ -43,34 +45,45 @@ exports.db = async (dbName) => {
   return dbConnection.db(dbName)
 }
 
-exports.getSignedUrl = async (operation, params) => {
-  const s3Endpoint = await this.ssmParameter('entu-api-files-s3-endpoint')
-  const s3Bucket = await this.ssmParameter('entu-api-files-s3-bucket')
+exports.getSignedDownloadUrl = async (key) => {
+  const s3Endpoint = await this.ssmParameter('files-s3-endpoint')
+  const s3Bucket = await this.ssmParameter('files-s3-bucket')
+  const config = {}
 
-  if (!params.Bucket) {
-    params.Bucket = s3Bucket
+  if (s3Endpoint) {
+    config.endpoint = s3Endpoint
+    config.s3BucketEndpoint = true
   }
 
-  if (!params.Expires) {
-    params.Expires = 60
+  const s3 = new S3Client(config)
+  const command = new GetObjectCommand({ Bucket: s3Bucket, Key: key })
+  const url = await getSignedUrl(s3, command, { expiresIn: 60 })
+
+  return url
+}
+
+exports.getSignedUploadUrl = async (key, filename, filetype) => {
+  const s3Endpoint = await this.ssmParameter('files-s3-endpoint')
+  const s3Bucket = await this.ssmParameter('files-s3-bucket')
+  const config = {}
+
+  if (s3Endpoint) {
+    config.endpoint = s3Endpoint
+    config.s3BucketEndpoint = true
   }
 
-  return new Promise((resolve, reject) => {
-    let conf
-
-    if (s3Endpoint) {
-      conf = { endpoint: s3Endpoint, s3BucketEndpoint: true }
-    }
-
-    aws.config = new aws.Config()
-    const s3 = new aws.S3(conf)
-
-    s3.getSignedUrl(operation, params, (err, url) => {
-      if (err) { return reject(err) }
-
-      resolve(url)
-    })
+  const s3 = new S3Client(config)
+  const command = new PutObjectCommand({
+    Bucket: s3Bucket,
+    Key: key,
+    ContentType: filetype,
+    ContentDisposition: `inline;filename="${filename.replace('"', '\"')}"`,
+    ACL: 'private',
+    ServerSideEncryption: 'AES256'
   })
+  const url = await getSignedUrl(s3, command, { expiresIn: 60 })
+
+  return url
 }
 
 exports.user = async (event) => {

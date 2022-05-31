@@ -34,7 +34,7 @@ exports.handler = async (event, context) => {
     }
 
     if (property.s3) {
-      property.url = await _h.getSignedUrl('getObject', { Key: property.s3 })
+      property.url = await _h.getSignedDownloadUrl(property.s3)
 
       delete property.s3
     }

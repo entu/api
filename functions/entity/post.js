@@ -23,7 +23,6 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
 
   try {
-    const s3Bucket = await _h.ssmParameter('files-s3-bucket')
     const user = await _h.user(event)
     if (!user.id) { return _h.error([403, 'No user']) }
 
@@ -123,19 +122,8 @@ exports.handler = async (event, context) => {
       delete newProperty.created
 
       if (property.filename && property.filesize) {
-        const key = `${user.account}/${newProperty._id}`
-        const s3Params = {
-          Bucket: s3Bucket,
-          Key: key,
-          Expires: 60,
-          ContentType: property.filetype,
-          ACL: 'private',
-          ContentDisposition: `inline;filename="${property.filename.replace('"', '\"')}"`,
-          ServerSideEncryption: 'AES256'
-        }
-
         newProperty.upload = {
-          url: await _h.getSignedUrl('putObject', s3Params),
+          url: await _h.getSignedUploadUrl(`${user.account}/${newProperty._id}`, property.filename, property.filetype),
           method: 'PUT',
           headers: {
             'Content-Type': property.filetype,
