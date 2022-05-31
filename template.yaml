@@ -3,21 +3,20 @@ Transform: AWS::Serverless-2016-10-31
 Description: Entu API
 
 Parameters:
-  GitSha:
-    Type: String
-  DomainName:
-    Type: String
-  CertificateArn:
-    Type: String
-  HostedZoneId:
-    Type: String
-  MongoDbUrl:
-    Type: String
-  JwtSecret:
-    Type: String
   Architecture:
     Type: String
     Default: arm64
+  GitSha:
+    Type: String
+  DomainName:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: !Sub "${AWS::StackName}-doamin"
+  CertificateArn:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: !Sub "${AWS::StackName}-certificate-arn"
+  HostedZoneId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: !Sub "${AWS::StackName}-hosted-zone-id"
   # VpcSubnet:
   #   Type: AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>
   #   Description: SSM Parameter store key of type StringList with the list of VPC Subnet to be used by Lambda function
@@ -33,8 +32,7 @@ Globals:
       Variables:
         NODE_ENV: production
         GIT_SHA: !Ref GitSha
-        MONGODB_URL: !Ref MongoDbUrl
-        JWT_SECRET: !Ref JwtSecret
+        STACK_NAME: ${AWS::StackName}
     Architectures:
       - !Ref Architecture
     Runtime: nodejs14.x
