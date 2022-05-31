@@ -44,6 +44,12 @@
       "Resource": "arn:aws:route53:::*"
     },
     {
+      "Sid": "ssm",
+      "Effect": "Allow",
+      "Action": "ssm:GetParameters",
+      "Resource": "arn:aws:ssm:*:*:parameter/entu-api-*"
+    },
+    {
       "Sid": "apigateway",
       "Effect": "Allow",
       "Action": [
