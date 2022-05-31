@@ -8,7 +8,6 @@ const querystring = require('querystring')
 const { MongoClient, ObjectId } = require('mongodb')
 
 const ssmParameters = {}
-const dbClient = new MongoClient(process.env.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
 let dbConnection
 
 exports.ssmParameter = async (name) => {
@@ -26,6 +25,9 @@ exports.db = async (dbName) => {
   dbName = dbName.replace(/[^a-z0-9]/gi, '_')
 
   if (dbConnection) { return dbConnection.db(dbName) }
+
+  const mongoUrl = await this.ssmParameter('mongodb-url')
+  const dbClient = new MongoClient(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
 
   dbConnection = await dbClient.connect()
   dbConnection.on('close', () => {
@@ -69,7 +71,7 @@ exports.getSignedUrl = async (operation, params) => {
 }
 
 exports.user = async (event) => {
-  const jwtSecret = process.env.JWT_SECRET
+  const jwtSecret = await this.ssmParameter('jwt-secret')
 
   return new Promise((resolve, reject) => {
     const jwtToken = this.getHeader(event, 'authorization').replace('Bearer ', '')
@@ -112,7 +114,7 @@ exports.user = async (event) => {
 
 // Create user session
 exports.addUserSession = async (user) => {
-  const jwtSecret = process.env.JWT_SECRET
+  const jwtSecret = await this.ssmParameter('jwt-secret')
 
   return new Promise((resolve, reject) => {
     if (!user) { return reject(new Error('No user')) }
