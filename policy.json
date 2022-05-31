@@ -28,6 +28,7 @@
         "iam:DetachRolePolicy",
         "iam:GetRole",
         "iam:PassRole",
+        "iam:PutRolePolicy",
         "iam:TagRole"
       ],
       "Resource": "arn:aws:iam::*:role/entu-api-*"
