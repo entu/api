@@ -2,15 +2,14 @@
 
 const _pickBy = require('lodash/pickBy')
 const _identity = require('lodash/identity')
-const aws = require('aws-sdk')
 const jwt = require('jsonwebtoken')
 const querystring = require('querystring')
 const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm')
 const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
+const { SQSClient, CreateQueueCommand } = require('@aws-sdk/client-sqs')
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 const { MongoClient, ObjectId } = require('mongodb')
 
-const ssmClient = new SSMClient()
 const ssmParameters = {}
 
 let dbConnection
@@ -18,6 +17,7 @@ let dbConnection
 exports.ssmParameter = async (name) => {
   if (ssmParameters[name]) { return ssmParameters[name] }
 
+  const ssmClient = new SSMClient()
   const command = new GetParameterCommand({ Name: `${process.env.STACK_NAME}-${name}`, WithDecryption: true })
   const ssmValue = await ssmClient.send(command)
 
@@ -128,7 +128,6 @@ exports.user = async (event) => {
   })
 }
 
-// Create user session
 exports.addUserSession = async (user) => {
   const jwtSecret = await this.ssmParameter('jwt-secret')
 
@@ -158,7 +157,6 @@ exports.addUserSession = async (user) => {
   })
 }
 
-// Add to entu-api-entity-aggregate-queue
 exports.addEntityAggregateSqs = async (context, account, entity, dt) => {
   const region = context.invokedFunctionArn.split(':')[3]
   const accountId = context.invokedFunctionArn.split(':')[4]
@@ -170,8 +168,9 @@ exports.addEntityAggregateSqs = async (context, account, entity, dt) => {
     timestamp: (new Date()).getTime()
   }
 
-  const sqs = new aws.SQS()
-  const sqsResponse = await sqs.sendMessage({ QueueUrl: queueUrl, MessageGroupId: account, MessageBody: JSON.stringify(message) }).promise()
+  const sqsClient = new SQSClient()
+  const command = new CreateQueueCommand({ QueueUrl: queueUrl, MessageGroupId: account, MessageBody: JSON.stringify(message) })
+  const sqsResponse = await sqsClient.send(command)
 
   console.log(`Entity ${entity} added to SQS`)
 
