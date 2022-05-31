@@ -91,7 +91,7 @@ Resources:
       Description: Returns account info and usage statistics
       Policies:
         - SSMParameterReadPolicy:
-            ParameterName: "entu-api-*"
+            ParameterName: !Sub "${AWS::StackName}-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -109,7 +109,7 @@ Resources:
       Description: Authenticates user by API key
       Policies:
         - SSMParameterReadPolicy:
-            ParameterName: "entu-api-*"
+            ParameterName: !Sub "${AWS::StackName}-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -127,7 +127,7 @@ Resources:
       Description: Get list of entities
       Policies:
         - SSMParameterReadPolicy:
-            ParameterName: "entu-api-*"
+            ParameterName: !Sub "${AWS::StackName}-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -145,7 +145,7 @@ Resources:
       Description: Create new entity
       Policies:
         - SSMParameterReadPolicy:
-            ParameterName: "entu-api-*"
+            ParameterName: !Sub "${AWS::StackName}-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -163,7 +163,7 @@ Resources:
       Description: Get one entity with given id
       Policies:
         - SSMParameterReadPolicy:
-            ParameterName: "entu-api-*"
+            ParameterName: !Sub "${AWS::StackName}-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -181,7 +181,7 @@ Resources:
       Description: Add new properties to existing entity
       Policies:
         - SSMParameterReadPolicy:
-            ParameterName: "entu-api-*"
+            ParameterName: !Sub "${AWS::StackName}-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -199,7 +199,7 @@ Resources:
       Description: Delete entity with given id
       Policies:
         - SSMParameterReadPolicy:
-            ParameterName: "entu-api-*"
+            ParameterName: !Sub "${AWS::StackName}-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -217,7 +217,7 @@ Resources:
       Description: Get property with given id
       Policies:
         - SSMParameterReadPolicy:
-            ParameterName: "entu-api-*"
+            ParameterName: !Sub "${AWS::StackName}-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -235,7 +235,7 @@ Resources:
       Description: Delete property with given id
       Policies:
         - SSMParameterReadPolicy:
-            ParameterName: "entu-api-*"
+            ParameterName: !Sub "${AWS::StackName}-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
