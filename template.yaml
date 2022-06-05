@@ -118,6 +118,42 @@ Resources:
             Method: GET
             ApiId: !Ref HttpApi
 
+  FunctionAuthGoogleGet:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-auth-google-get"
+      CodeUri: functions/auth/google/
+      Handler: get.handler
+      Description: Redirect user to Google
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${AWS::StackName}-*"
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /auth/google
+            Method: GET
+            ApiId: !Ref HttpApi
+
+  FunctionAuthGooglePost:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-auth-google-post"
+      CodeUri: functions/auth/google/
+      Handler: post.handler
+      Description: Authenticates user by Google
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${AWS::StackName}-*"
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /auth/google
+            Method: POST
+            ApiId: !Ref HttpApi
+
   FunctionEntityListGet:
     Type: AWS::Serverless::Function
     Properties:
