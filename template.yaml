@@ -208,6 +208,24 @@ Resources:
             Method: DELETE
             ApiId: !Ref HttpApi
 
+  FunctionEntityAggregateGet:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-entity-aggregate"
+      CodeUri: functions/entity/
+      Handler: aggregate.handler
+      Description: Aggregate entity with given id
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${AWS::StackName}-*"
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /entity/{_id}/aggregate
+            Method: GET
+            ApiId: !Ref HttpApi
+
   FunctionPropertyGet:
     Type: AWS::Serverless::Function
     Properties:
