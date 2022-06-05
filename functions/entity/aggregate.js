@@ -1,8 +1,6 @@
 'use strict'
 
-const _isEqual = require('lodash/isequal')
-const _sortBy = require('lodash/sortby')
-const _omit = require('lodash/omit')
+const _ = require('lodash')
 const _h = require('helpers')
 
 exports.handler = async (event, context) => {
@@ -14,24 +12,37 @@ exports.handler = async (event, context) => {
 
   const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: { _id: false, aggregated: true, 'private.name': true } })
 
+  if (!entity) { return _h.error([404, 'Entity not found']) }
+
   if (entity && entity.aggregated && date && entity.aggregated >= new Date(date)) {
-    return { message: `Entity ${eId}@${user.account} is already aggregated at ${entity.aggregated}` }
+    return {
+      account: user.account,
+      entity: eId,
+      ignored: true,
+      message: `Entity is already aggregated at ${entity.aggregated.toISOString()}`
+    }
   }
 
   const properties = await user.db.collection('property').find({ entity: eId, deleted: { $exists: false } }).toArray()
 
   if (properties.find(x => x.type === '_deleted')) {
     await user.db.collection('entity').deleteOne({ _id: eId })
-    return { message: `Entity ${eId}@${user.account} is deleted` }
+    return {
+      account: user.account,
+      entity: eId,
+      deleted: true,
+      message: 'Entity is deleted'
+    }
   }
 
   const newEntity = {
-    aggregated: new Date()
+    aggregated: new Date(),
+    private: {}
   }
 
   for (let n = 0; n < properties.length; n++) {
     const prop = properties[n]
-    let cleanProp = _omit(prop, ['entity', 'type', 'created', 'search', 'public'])
+    let cleanProp = _.omit(prop, ['entity', 'type', 'created', 'search', 'public'])
 
     if (prop.reference && ['_viewer', '_expander', '_editor', '_owner'].includes(prop.type)) {
       if (!newEntity.access) {
@@ -125,7 +136,7 @@ exports.handler = async (event, context) => {
   const name = (entity.private?.name || []).map(x => x.string || '')
   const newName = (newEntity.private?.name || []).map(x => x.string || '')
 
-  if (!_isEqual(_sortBy(name), _sortBy(newName))) {
+  if (!_.isEqual(_.sortBy(name), _.sortBy(newName))) {
     const referrers = await user.db.collection('property').aggregate([
       { $match: { reference: eId, deleted: { $exists: false } } },
       { $group: { _id: '$entity' } }
@@ -137,9 +148,20 @@ exports.handler = async (event, context) => {
       // await _h.addEntityAggregateSqs(context, user.account, referrers[j]._id.toString(), dt)
     }
 
-    console.log('Entity', eId, '@', user.account, 'updated and added', referrers.length, 'entities to SQS')
+    return {
+      _id: eId,
+      account: user.account,
+      updated: true,
+      sqsLength: referrers.length,
+      message: `Entity updated and added ${referrers.length} entities to SQS`
+    }
   } else {
-    console.log('Entity', eId, '@', user.account, 'updated')
+    return {
+      _id: eId,
+      account: user.account,
+      updated: true,
+      message: 'Entity updated'
+    }
   }
 }
 
