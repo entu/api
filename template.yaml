@@ -64,9 +64,7 @@ Resources:
           - DELETE
           - PUT
         AllowHeaders:
-          - Authorization
-          - Access-Control-Allow-Origin
-          - Content-Type
+          - "*"
         AllowOrigins:
           - "*"
 
