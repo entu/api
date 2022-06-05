@@ -1,6 +1,6 @@
 'use strict'
 
-const _h = require('../../_helpers')
+const _h = require('helpers')
 const https = require('https')
 const jwt = require('jsonwebtoken')
 const querystring = require('querystring')
