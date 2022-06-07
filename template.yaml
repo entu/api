@@ -46,6 +46,9 @@ Globals:
     #     SecurityGroupIds:
     #       - !Ref VpcSecurityGroup
 
+  LogGroup:
+    RetentionInDays: 365
+
 Resources:
   HttpApi:
     Type: AWS::Serverless::HttpApi
@@ -86,11 +89,6 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-account-get"
-          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -109,11 +107,6 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-get"
-          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -132,11 +125,6 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-google-get"
-          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -155,11 +143,6 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-google-post"
-          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -178,11 +161,6 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-list-get"
-          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -201,11 +179,6 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-list-post"
-          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -224,11 +197,6 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-get"
-          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -247,11 +215,6 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-post"
-          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -270,11 +233,6 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-delete"
-          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -293,11 +251,6 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-aggregate"
-          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -316,11 +269,6 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-property-get"
-          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -339,11 +287,6 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-property-delete"
-          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -351,6 +294,66 @@ Resources:
             Path: /property/{_id}
             Method: DELETE
             ApiId: !Ref HttpApi
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-account-get"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-get"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-google-get"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-google-post"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-list-get"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-list-post"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-get"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-post"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-delete"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-aggregate"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-property-get"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-property-delete"
 
 Outputs:
   HttpApiUrl:
