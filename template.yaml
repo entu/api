@@ -40,6 +40,11 @@ Globals:
     Timeout: 30
     Layers:
       - !Ref LambdaLayer
+    LogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        RetentionInDays: 365
+
     # Properties:
     #   VpcConfig:
     #     SubnetIds: !Ref VpcSubnet
@@ -58,11 +63,7 @@ Resources:
           HostedZoneId: !Ref HostedZoneId
       CorsConfiguration:
         AllowMethods:
-          - GET
-          - POST
-          - OPTIONS
-          - DELETE
-          - PUT
+          - "*"
         AllowHeaders:
           - "*"
         AllowOrigins:
