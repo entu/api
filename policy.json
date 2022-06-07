@@ -100,10 +100,11 @@
       "Effect": "Allow",
       "Action": [
         "logs:CreateLogGroup",
-        "logs:DeleteLogGroup"
+        "logs:DeleteLogGroup",
+        "logs:PutRetentionPolicy"
       ],
       "Resource": [
-        "arn:aws:logs:*:*:log-group:entu-api-*"
+        "arn:aws:logs:*:*:log-group:*entu-api-*"
       ]
     }
   ]
