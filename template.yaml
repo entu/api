@@ -40,11 +40,6 @@ Globals:
     Timeout: 30
     Layers:
       - !Ref LambdaLayer
-    LogGroup:
-      Type: AWS::Logs::LogGroup
-      Properties:
-        RetentionInDays: 365
-
     # Properties:
     #   VpcConfig:
     #     SubnetIds: !Ref VpcSubnet
@@ -88,6 +83,10 @@ Resources:
       CodeUri: functions/account/
       Handler: get.handler
       Description: Returns account info and usage statistics
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -106,6 +105,10 @@ Resources:
       CodeUri: functions/auth/
       Handler: get.handler
       Description: Authenticates user by API key
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -124,6 +127,10 @@ Resources:
       CodeUri: functions/auth/google/
       Handler: get.handler
       Description: Redirect user to Google
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -142,6 +149,10 @@ Resources:
       CodeUri: functions/auth/google/
       Handler: post.handler
       Description: Authenticates user by Google
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -160,6 +171,10 @@ Resources:
       CodeUri: functions/entity/
       Handler: get.handler
       Description: Get list of entities
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -178,6 +193,10 @@ Resources:
       CodeUri: functions/entity/
       Handler: post.handler
       Description: Create new entity
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -196,6 +215,10 @@ Resources:
       CodeUri: functions/entity/
       Handler: get.handler
       Description: Get one entity with given id
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -214,6 +237,10 @@ Resources:
       CodeUri: functions/entity/
       Handler: get.handler
       Description: Add new properties to existing entity
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -232,6 +259,10 @@ Resources:
       CodeUri: functions/entity/
       Handler: get.handler
       Description: Delete entity with given id
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -250,6 +281,10 @@ Resources:
       CodeUri: functions/entity/
       Handler: aggregate.handler
       Description: Aggregate entity with given id
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -268,6 +303,10 @@ Resources:
       CodeUri: functions/property/
       Handler: get.handler
       Description: Get property with given id
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -286,6 +325,10 @@ Resources:
       CodeUri: functions/property/
       Handler: get.handler
       Description: Delete property with given id
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
