@@ -83,13 +83,14 @@ Resources:
       CodeUri: functions/account/
       Handler: get.handler
       Description: Returns account info and usage statistics
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          LogGroupName: !Sub "${AWS::StackName}-account-get"
+          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -105,13 +106,14 @@ Resources:
       CodeUri: functions/auth/
       Handler: get.handler
       Description: Authenticates user by API key
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          LogGroupName: !Sub "${AWS::StackName}-auth-get"
+          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -127,13 +129,14 @@ Resources:
       CodeUri: functions/auth/google/
       Handler: get.handler
       Description: Redirect user to Google
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          LogGroupName: !Sub "${AWS::StackName}-auth-google-get"
+          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -149,13 +152,14 @@ Resources:
       CodeUri: functions/auth/google/
       Handler: post.handler
       Description: Authenticates user by Google
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          LogGroupName: !Sub "${AWS::StackName}-auth-google-post"
+          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -171,13 +175,14 @@ Resources:
       CodeUri: functions/entity/
       Handler: get.handler
       Description: Get list of entities
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          LogGroupName: !Sub "${AWS::StackName}-entity-list-get"
+          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -193,13 +198,14 @@ Resources:
       CodeUri: functions/entity/
       Handler: post.handler
       Description: Create new entity
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          LogGroupName: !Sub "${AWS::StackName}-entity-list-post"
+          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -215,13 +221,14 @@ Resources:
       CodeUri: functions/entity/
       Handler: get.handler
       Description: Get one entity with given id
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          LogGroupName: !Sub "${AWS::StackName}-entity-get"
+          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -237,13 +244,14 @@ Resources:
       CodeUri: functions/entity/
       Handler: get.handler
       Description: Add new properties to existing entity
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          LogGroupName: !Sub "${AWS::StackName}-entity-post"
+          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -259,13 +267,14 @@ Resources:
       CodeUri: functions/entity/
       Handler: get.handler
       Description: Delete entity with given id
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          LogGroupName: !Sub "${AWS::StackName}-entity-delete"
+          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -281,13 +290,14 @@ Resources:
       CodeUri: functions/entity/
       Handler: aggregate.handler
       Description: Aggregate entity with given id
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          LogGroupName: !Sub "${AWS::StackName}-entity-aggregate"
+          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -303,13 +313,14 @@ Resources:
       CodeUri: functions/property/
       Handler: get.handler
       Description: Get property with given id
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          LogGroupName: !Sub "${AWS::StackName}-property-get"
+          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -325,13 +336,14 @@ Resources:
       CodeUri: functions/property/
       Handler: get.handler
       Description: Delete property with given id
-      LogGroup:
-        Type: AWS::Logs::LogGroup
-        Properties:
-          RetentionInDays: 365
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+      LogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+          LogGroupName: !Sub "${AWS::StackName}-property-delete"
+          RetentionInDays: 365
       Events:
         HttpApiEvent:
           Type: HttpApi
