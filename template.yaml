@@ -46,9 +46,6 @@ Globals:
     #     SecurityGroupIds:
     #       - !Ref VpcSecurityGroup
 
-  LogGroup:
-    RetentionInDays: 365
-
 Resources:
   HttpApi:
     Type: AWS::Serverless::HttpApi
@@ -299,61 +296,73 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-account-get"
+      RetentionInDays: 365
 
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-get"
+      RetentionInDays: 365
 
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-google-get"
+      RetentionInDays: 365
 
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-google-post"
+      RetentionInDays: 365
 
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-list-get"
+      RetentionInDays: 365
 
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-list-post"
+      RetentionInDays: 365
 
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-get"
+      RetentionInDays: 365
 
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-post"
+      RetentionInDays: 365
 
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-delete"
+      RetentionInDays: 365
 
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-aggregate"
+      RetentionInDays: 365
 
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-property-get"
+      RetentionInDays: 365
 
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-property-delete"
+      RetentionInDays: 365
 
 Outputs:
   HttpApiUrl:
