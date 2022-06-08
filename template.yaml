@@ -263,7 +263,6 @@ Resources:
             Path: /entity/{_id}/aggregate
             Method: GET
             ApiId: !Ref HttpApi
-      Events:
         SQSEvent:
           Type: SQS
           Properties:
