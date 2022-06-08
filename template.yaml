@@ -50,7 +50,7 @@ Resources:
   SqsQueueEntityAggregate:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub "${AWS::StackName}-entity-aggregate"
+      QueueName: !Sub "${AWS::StackName}-entity-aggregate.fifo"
       FifoQueue: true
 
   HttpApi:
