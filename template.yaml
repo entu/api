@@ -47,6 +47,11 @@ Globals:
     #       - !Ref VpcSecurityGroup
 
 Resources:
+  SqsQueueEntityAggregate:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "${AWS::StackName}-entity-aggregate.fifo"
+
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -241,13 +246,15 @@ Resources:
   FunctionEntityAggregateGet:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${AWS::StackName}-entity-aggregate"
+      FunctionName: !Sub "${AWS::StackName}-entity-aggregate-get"
       CodeUri: functions/entity/
       Handler: aggregate.handler
       Description: Aggregate entity with given id
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - SQSSendMessagePolicy:
+            QueueName: !Sub "${AWS::StackName}-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -255,6 +262,12 @@ Resources:
             Path: /entity/{_id}/aggregate
             Method: GET
             ApiId: !Ref HttpApi
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !Ref SqsQueueEntityAggregate
+            BatchSize: 1
 
   FunctionPropertyGet:
     Type: AWS::Serverless::Function
