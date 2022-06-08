@@ -25,6 +25,7 @@
         "iam:AttachRolePolicy",
         "iam:CreateRole",
         "iam:DeleteRole",
+        "iam:DeleteRolePolicy",
         "iam:DetachRolePolicy",
         "iam:GetRole",
         "iam:PassRole",
@@ -48,6 +49,12 @@
       "Effect": "Allow",
       "Action": "ssm:GetParameters",
       "Resource": "arn:aws:ssm:*:*:parameter/entu-api-*"
+    },
+    {
+      "Sid": "sqs",
+      "Effect": "Allow",
+      "Action": "sqs:CreateQueue",
+      "Resource": "arn:aws:sqs:*:*:entu-api-*",
     },
     {
       "Sid": "apigateway",
