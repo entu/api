@@ -133,9 +133,8 @@ exports.handler = async (event, context) => {
         sortFields = { _id: 1 }
       }
 
-      const findedEntities = await user.db.collection('entity').find(filter, { projection: fields })
-      const count = await findedEntities.count()
-      const entities = await findedEntities.sort(sortFields).skip(skip).limit(limit).toArray()
+      const entities = await user.db.collection('entity').find(filter, { projection: fields }).sort(sortFields).skip(skip).limit(limit).toArray()
+      const count = await user.db.collection('entity').countDocuments(filter)
 
       const cleanedEntities = []
       for (let i = 0; i < entities.length; i++) {
