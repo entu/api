@@ -39,7 +39,8 @@ exports.handler = async (event, context) => {
 
   const newEntity = {
     aggregated: new Date(),
-    private: {}
+    private: {},
+    public: {}
   }
 
   for (let n = 0; n < properties.length; n++) {
