@@ -10,12 +10,22 @@ exports.handler = async (event, context) => {
 
     const stats = await user.db.stats()
 
-    const entities = await user.db.collection('entity').aggregate([{
-      $group: {
-        _id: { $gt: ['$private._deleted', null] },
-        count: { $sum: 1 }
+    const entities = await user.db.collection('entity').count()
+    const deletedEntities = await user.db.collection('property').aggregate([
+      {
+        $match: {
+          type: '_deleted'
+        }
+      },
+      {
+        $group: {
+          _id: '$entity'
+        }
+      },
+      {
+        $count: 'count'
       }
-    }]).toArray()
+    ]).toArray()
 
     const properties = await user.db.collection('property').aggregate([{
       $group: {
@@ -39,8 +49,8 @@ exports.handler = async (event, context) => {
     ]).toArray()
 
     return _h.json({
-      entities: entities.find((e) => e._id === false)?.count || 0,
-      deletedEntities: entities.find((e) => e._id === true)?.count || 0,
+      entities,
+      deletedEntities: deletedEntities[0]?.count || 0,
       properties: properties.find((e) => e._id === false)?.count || 0,
       deletedProperties: properties.find((e) => e._id === true)?.count || 0,
       files: files.find((e) => e._id === false)?.count || 0,
