@@ -53,8 +53,11 @@
     {
       "Sid": "sqs",
       "Effect": "Allow",
-      "Action": "sqs:CreateQueue",
-      "Resource": "arn:aws:sqs:*:*:entu-api-*",
+      "Action": [
+        "sqs:CreateQueue",
+        "sqs:SetQueueAttributes"
+      ],
+      "Resource": "arn:aws:sqs:*:*:entu-api-*"
     },
     {
       "Sid": "apigateway",
