@@ -4,6 +4,8 @@ const _ = require('lodash')
 const _h = require('helpers')
 
 exports.handler = async (event, context) => {
+  console.log(event)
+
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
 
   const user = await _h.user(event)
@@ -145,7 +147,7 @@ exports.handler = async (event, context) => {
     const dt = date ? new Date(date) : newEntity.aggregated
 
     for (let j = 0; j < referrers.length; j++) {
-      // await _h.addEntityAggregateSqs(context, user.account, referrers[j]._id.toString(), dt)
+      await _h.addEntityAggregateSqs(context, user.account, referrers[j]._id.toString(), dt)
     }
 
     return {
