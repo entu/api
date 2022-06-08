@@ -266,7 +266,7 @@ Resources:
         SQSEvent:
           Type: SQS
           Properties:
-            Queue: !Ref SqsQueueEntityAggregate
+            Queue: !GetAtt SqsQueueEntityAggregate.Arn
             BatchSize: 1
 
   FunctionPropertyGet:
