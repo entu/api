@@ -10,7 +10,7 @@ exports.handler = async (event, context) => {
 
     const stats = await user.db.stats()
 
-    const entities = await user.db.collection('entity').count()
+    const entities = await user.db.collection('entity').countDocuments()
     const deletedEntities = await user.db.collection('property').aggregate([
       {
         $match: {
