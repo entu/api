@@ -176,8 +176,8 @@ const claenupEntity = async (entity, user, _thumbnail) => {
     return
   }
 
-  if (_thumbnail && result.photo[0]?.s3) {
-    result._thumbnail = await _h.getSignedDownloadUrl(result.photo[0]?.s3)
+  if (_thumbnail && result.photo?.[0]?.s3) {
+    result._thumbnail = await _h.getSignedDownloadUrl(result.photo[0].s3)
   }
 
   if (result.entu_api_key) {

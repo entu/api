@@ -27,7 +27,7 @@ exports.handler = async (event, context) => {
       provider: 'google',
       id: profile.id,
       name: profile.displayName,
-      email: profile.emails[0]?.value,
+      email: profile.emails?.[0]?.value,
       picture: profile.image?.url
     }
 
