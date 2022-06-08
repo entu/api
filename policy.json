@@ -55,6 +55,7 @@
       "Effect": "Allow",
       "Action": [
         "sqs:CreateQueue",
+        "sqs:GetQueueAttributes",
         "sqs:SetQueueAttributes"
       ],
       "Resource": "arn:aws:sqs:*:*:entu-api-*"
