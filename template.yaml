@@ -184,7 +184,7 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-        - S3ReadPolicy:
+        - S3WritePolicy:
             BucketName: "*"
       Events:
         HttpApiEvent:
