@@ -11,7 +11,7 @@ exports.handler = async (event, context) => {
 
   try {
     const user = await _h.user(event)
-    const eId = event.pathParameters && event.pathParameters.id ? _h.strToId(event.pathParameters.id) : null
+    const eId = event.pathParameters && event.pathParameters._id ? _h.strToId(event.pathParameters._id) : null
     const props = (event.queryStringParameters?.props || '').split(',').filter((x) => !!x)
     const fields = {}
     let result = {}

@@ -9,7 +9,7 @@ exports.handler = async (event, context) => {
     const user = await _h.user(event)
     if (!user.id) { return _h.error([403, 'No user']) }
 
-    const pId = _h.strToId(event.pathParameters.id)
+    const pId = _h.strToId(event.pathParameters._id)
     const property = await user.db.collection('property').findOne({
       _id: pId,
       deleted: { $exists: false }

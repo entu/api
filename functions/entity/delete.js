@@ -9,7 +9,7 @@ exports.handler = async (event, context) => {
     const user = await _h.user(event)
     if (!user.id) { return _h.error([403, 'No user']) }
 
-    const eId = _h.strToId(event.pathParameters.id)
+    const eId = _h.strToId(event.pathParameters._id)
     const entity = await user.db.collection('entity').findOne({
       _id: eId
     }, {

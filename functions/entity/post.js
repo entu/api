@@ -33,7 +33,7 @@ exports.handler = async (event, context) => {
 
     if (body && !Array.isArray(body)) { return _h.error([400, 'Data must be array']) }
 
-    let eId = event.pathParameters && event.pathParameters.id ? _h.strToId(event.pathParameters.id) : null
+    let eId = event.pathParameters && event.pathParameters._id ? _h.strToId(event.pathParameters._id) : null
 
     if (eId) {
       if (!body || (Array.isArray(body) && body.length === 0)) {
