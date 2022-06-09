@@ -164,6 +164,8 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - S3ReadPolicy:
+            BucketName: "*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -182,6 +184,8 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - S3ReadPolicy:
+            BucketName: "*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -200,6 +204,8 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - S3ReadPolicy:
+            BucketName: "*"
       Events:
         HttpApiEvent:
           Type: HttpApi
