@@ -4,8 +4,6 @@ const _ = require('lodash')
 const _h = require('helpers')
 
 exports.handler = async (event, context) => {
-  console.log(event)
-
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
 
   const user = await _h.user(event)
@@ -17,6 +15,7 @@ exports.handler = async (event, context) => {
   if (!entity) { return _h.error([404, 'Entity not found']) }
 
   if (entity && entity.aggregated && date && entity.aggregated >= new Date(date)) {
+    console.log(`SKIP ${eId.toString()}`)
     return {
       account: user.account,
       entity: eId,
@@ -29,6 +28,8 @@ exports.handler = async (event, context) => {
 
   if (properties.find(x => x.type === '_deleted')) {
     await user.db.collection('entity').deleteOne({ _id: eId })
+
+    console.log(`DELETED ${eId.toString()}`)
     return {
       account: user.account,
       entity: eId,
@@ -123,7 +124,7 @@ exports.handler = async (event, context) => {
       }
     }
   } else {
-    console.log('NO_TYPE', eId)
+    console.log(`NO_TYPE ${newEntity.private._type} ${eId.toString()}`)
   }
 
   if (Object.keys(newEntity.public).length === 0) {
@@ -136,6 +137,7 @@ exports.handler = async (event, context) => {
   const newName = (newEntity.private?.name || []).map(x => x.string || '')
 
   if (_.isEqual(_.sortBy(name), _.sortBy(newName))) {
+    console.log(`UPDATED ${eId.toString()}`)
     return {
       _id: eId,
       account: user.account,
@@ -155,6 +157,7 @@ exports.handler = async (event, context) => {
     await _h.addEntityAggregateSqs(context, user.account, referrers[j]._id.toString(), dt)
   }
 
+  console.log(`UPDATED_SQS ${eId.toString()}`)
   return {
     _id: eId,
     account: user.account,
@@ -164,7 +167,7 @@ exports.handler = async (event, context) => {
   }
 }
 
-const formula = async (str, eId, db) => {
+async function formula (str, eId, db) {
   const func = formulaFunction(str)
   const data = formulaContent(str)
 
@@ -205,27 +208,7 @@ const formula = async (str, eId, db) => {
   }
 }
 
-const formulaFunction = (str) => {
-  str = str.trim()
-
-  if (!str.includes('(') || !str.includes(')')) {
-    return null
-  } else {
-    return str.substring(0, str.indexOf('(')).toUpperCase()
-  }
-}
-
-const formulaContent = (str) => {
-  str = str.trim()
-
-  if (!str.includes('(') || !str.includes(')')) {
-    return str
-  } else {
-    return str.substring(str.indexOf('(') + 1, str.lastIndexOf(')'))
-  }
-}
-
-const formulaField = async (str, eId, db) => {
+async function formulaField (str, eId, db) {
   str = str.trim()
 
   if ((str.startsWith("'") || str.startsWith('"')) && (str.endsWith("'") || str.endsWith('"'))) {
@@ -484,7 +467,27 @@ const formulaField = async (str, eId, db) => {
   return result
 }
 
-const getValueArray = (values) => {
+function formulaFunction (str) {
+  str = str.trim()
+
+  if (!str.includes('(') || !str.includes(')')) {
+    return null
+  } else {
+    return str.substring(0, str.indexOf('(')).toUpperCase()
+  }
+}
+
+function formulaContent (str) {
+  str = str.trim()
+
+  if (!str.includes('(') || !str.includes(')')) {
+    return str
+  } else {
+    return str.substring(str.indexOf('(') + 1, str.lastIndexOf(')'))
+  }
+}
+
+function getValueArray (values) {
   if (!values) { return [] }
 
   return values.map(x => x.decimal || x.integer || x.datetime || x.date || x.string || x._id)
