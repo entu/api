@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken')
 const querystring = require('querystring')
 const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm')
 const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
-const { SQSClient, CreateQueueCommand } = require('@aws-sdk/client-sqs')
+const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs')
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 const { MongoClient, ObjectId } = require('mongodb')
 
@@ -169,7 +169,7 @@ exports.addEntityAggregateSqs = async (context, account, entity, dt) => {
   }
 
   const sqsClient = new SQSClient()
-  const command = new CreateQueueCommand({ QueueUrl: queueUrl, MessageGroupId: account, MessageBody: JSON.stringify(message) })
+  const command = new SendMessageCommand({ QueueUrl: queueUrl, MessageGroupId: account, MessageBody: JSON.stringify(message) })
   const sqsResponse = await sqsClient.send(command)
 
   console.log(`Entity ${entity} added to SQS`)
