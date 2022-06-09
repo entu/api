@@ -46,14 +46,14 @@ exports.db = async (dbName) => {
 }
 
 exports.getSignedDownloadUrl = async (key) => {
-  const s3Endpoint = await this.ssmParameter('files-s3-endpoint')
+  // const s3Endpoint = await this.ssmParameter('files-s3-endpoint')
   const s3Bucket = await this.ssmParameter('files-s3-bucket')
   const config = {}
 
-  if (s3Endpoint) {
-    config.endpoint = s3Endpoint
-    config.s3BucketEndpoint = true
-  }
+  // if (s3Endpoint) {
+  //   config.endpoint = s3Endpoint
+  //   config.s3BucketEndpoint = true
+  // }
 
   const s3 = new S3Client(config)
   const command = new GetObjectCommand({ Bucket: s3Bucket, Key: key })
