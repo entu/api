@@ -40,7 +40,9 @@ exports.handler = async (event, context) => {
   const newEntity = {
     aggregated: new Date(),
     private: {},
-    public: {}
+    public: {},
+    access: [],
+    search: {}
   }
 
   for (let n = 0; n < properties.length; n++) {
@@ -48,16 +50,10 @@ exports.handler = async (event, context) => {
     let cleanProp = _.omit(prop, ['entity', 'type', 'created', 'search', 'public'])
 
     if (prop.reference && ['_viewer', '_expander', '_editor', '_owner'].includes(prop.type)) {
-      if (!newEntity.access) {
-        newEntity.access = []
-      }
       newEntity.access.push(prop.reference)
     }
 
     if (prop.type === '_public' && prop.boolean === true) {
-      if (!newEntity.access) {
-        newEntity.access = []
-      }
       newEntity.access.push('public')
     }
 
@@ -115,10 +111,6 @@ exports.handler = async (event, context) => {
       const dValue = newEntity.private[definition[d].name]
 
       if (definition[d].search && dValue) {
-        if (!newEntity.search) {
-          newEntity.search = {}
-        }
-
         newEntity.search.private = [...(newEntity.search.private || []), ...getValueArray(dValue)]
 
         if (definition[d].public) {
@@ -134,37 +126,41 @@ exports.handler = async (event, context) => {
     console.log('NO_TYPE', eId)
   }
 
+  if (Object.keys(newEntity.public).length === 0) {
+    delete newEntity.public
+  }
+
   await user.db.collection('entity').replaceOne({ _id: eId }, newEntity, { upsert: true })
 
   const name = (entity.private?.name || []).map(x => x.string || '')
   const newName = (newEntity.private?.name || []).map(x => x.string || '')
 
-  if (!_.isEqual(_.sortBy(name), _.sortBy(newName))) {
-    const referrers = await user.db.collection('property').aggregate([
-      { $match: { reference: eId, deleted: { $exists: false } } },
-      { $group: { _id: '$entity' } }
-    ]).toArray()
-
-    const dt = date ? new Date(date) : newEntity.aggregated
-
-    for (let j = 0; j < referrers.length; j++) {
-      await _h.addEntityAggregateSqs(context, user.account, referrers[j]._id.toString(), dt)
-    }
-
-    return {
-      _id: eId,
-      account: user.account,
-      updated: true,
-      sqsLength: referrers.length,
-      message: `Entity updated and added ${referrers.length} entities to SQS`
-    }
-  } else {
+  if (_.isEqual(_.sortBy(name), _.sortBy(newName))) {
     return {
       _id: eId,
       account: user.account,
       updated: true,
       message: 'Entity updated'
     }
+  }
+
+  const referrers = await user.db.collection('property').aggregate([
+    { $match: { reference: eId, deleted: { $exists: false } } },
+    { $group: { _id: '$entity' } }
+  ]).toArray()
+
+  const dt = date ? new Date(date) : newEntity.aggregated
+
+  for (let j = 0; j < referrers.length; j++) {
+    await _h.addEntityAggregateSqs(context, user.account, referrers[j]._id.toString(), dt)
+  }
+
+  return {
+    _id: eId,
+    account: user.account,
+    updated: true,
+    sqsLength: referrers.length,
+    message: `Entity updated and added ${referrers.length} entities to SQS`
   }
 }
 
