@@ -47,14 +47,12 @@ exports.db = async (dbName) => {
 
 exports.getSignedDownloadUrl = async (key) => {
   const s3Region = await this.ssmParameter('files-s3-region')
-  const s3Endpoint = await this.ssmParameter('files-s3-endpoint')
   const s3Bucket = await this.ssmParameter('files-s3-bucket')
-  const config = {}
 
-  if (s3Endpoint) {
-    config.region = s3Region
-    config.endpoint = s3Endpoint
-    config.s3BucketEndpoint = true
+  const config = {
+    region: s3Region,
+    s3BucketEndpoint: true,
+    endpoint: `https://s3.${s3Region}.amazonaws.com`
   }
 
   const s3 = new S3Client(config)
@@ -66,14 +64,12 @@ exports.getSignedDownloadUrl = async (key) => {
 
 exports.getSignedUploadUrl = async (key, filename, filetype) => {
   const s3Region = await this.ssmParameter('files-s3-region')
-  const s3Endpoint = await this.ssmParameter('files-s3-endpoint')
   const s3Bucket = await this.ssmParameter('files-s3-bucket')
-  const config = {}
 
-  if (s3Endpoint) {
-    config.region = s3Region
-    config.endpoint = s3Endpoint
-    config.s3BucketEndpoint = true
+  const config = {
+    region: s3Region,
+    s3BucketEndpoint: true,
+    endpoint: `https://s3.${s3Region}.amazonaws.com`
   }
 
   const s3 = new S3Client(config)
