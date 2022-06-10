@@ -47,12 +47,6 @@ Globals:
     #       - !Ref VpcSecurityGroup
 
 Resources:
-  SqsQueueEntityAggregate:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: !Sub "${AWS::StackName}-entity-aggregate.fifo"
-      FifoQueue: true
-
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -164,6 +158,8 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - S3ReadPolicy:
+            BucketName: "*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -182,6 +178,8 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - S3WritePolicy:
+            BucketName: "*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -200,6 +198,8 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - S3ReadPolicy:
+            BucketName: "*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -218,6 +218,8 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - S3WritePolicy:
+            BucketName: "*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -263,11 +265,6 @@ Resources:
             Path: /entity/{_id}/aggregate
             Method: GET
             ApiId: !Ref HttpApi
-        SQSEvent:
-          Type: SQS
-          Properties:
-            Queue: !GetAtt SqsQueueEntityAggregate.Arn
-            BatchSize: 1
 
   FunctionPropertyGet:
     Type: AWS::Serverless::Function
@@ -279,6 +276,8 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - S3ReadPolicy:
+            BucketName: "*"
       Events:
         HttpApiEvent:
           Type: HttpApi

@@ -46,11 +46,13 @@ exports.db = async (dbName) => {
 }
 
 exports.getSignedDownloadUrl = async (key) => {
+  const s3Region = await this.ssmParameter('files-s3-region')
   const s3Endpoint = await this.ssmParameter('files-s3-endpoint')
   const s3Bucket = await this.ssmParameter('files-s3-bucket')
   const config = {}
 
   if (s3Endpoint) {
+    config.region = s3Region
     config.endpoint = s3Endpoint
     config.s3BucketEndpoint = true
   }
@@ -63,11 +65,13 @@ exports.getSignedDownloadUrl = async (key) => {
 }
 
 exports.getSignedUploadUrl = async (key, filename, filetype) => {
+  const s3Region = await this.ssmParameter('files-s3-region')
   const s3Endpoint = await this.ssmParameter('files-s3-endpoint')
   const s3Bucket = await this.ssmParameter('files-s3-bucket')
   const config = {}
 
   if (s3Endpoint) {
+    config.region = s3Region
     config.endpoint = s3Endpoint
     config.s3BucketEndpoint = true
   }
@@ -227,7 +231,8 @@ exports.error = (err) => {
     message = err[1]
 
     console.error(code.toString(), message)
-  } else {
+  } else if (parseInt(err.toString().split(':')[1])) {
+    code = parseInt(err.toString().split(':')[1])
     message = err.toString()
 
     console.error(err)
