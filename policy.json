@@ -4,7 +4,14 @@
     {
       "Sid": "cloudformation",
       "Effect": "Allow",
-      "Action": "*",
+      "Action": [
+        "cloudformation:CreateChangeSet",
+        "cloudformation:DescribeChangeSet",
+        "cloudformation:DescribeStackEvents",
+        "cloudformation:DescribeStacks",
+        "cloudformation:ExecuteChangeSet",
+        "cloudformation:GetTemplateSummary"
+      ],
       "Resource": [
         "arn:aws:cloudformation:*:*:stack/entu-api-*",
         "arn:aws:cloudformation:*:*:stackset/entu-api-*:*",
@@ -14,7 +21,17 @@
     {
       "Sid": "iam",
       "Effect": "Allow",
-      "Action": "*",
+      "Action": [
+        "iam:AttachRolePolicy",
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:DeleteRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:GetRole",
+        "iam:PassRole",
+        "iam:PutRolePolicy",
+        "iam:TagRole"
+      ],
       "Resource": "arn:aws:iam::*:role/entu-api-*"
     },
     {
@@ -30,13 +47,17 @@
     {
       "Sid": "ssm",
       "Effect": "Allow",
-      "Action": "*",
+      "Action": "ssm:GetParameters",
       "Resource": "arn:aws:ssm:*:*:parameter/entu-api-*"
     },
     {
       "Sid": "sqs",
       "Effect": "Allow",
-      "Action": "*",
+      "Action": [
+        "sqs:CreateQueue",
+        "sqs:GetQueueAttributes",
+        "sqs:SetQueueAttributes"
+      ],
       "Resource": "arn:aws:sqs:*:*:entu-api-*"
     },
     {
@@ -54,7 +75,19 @@
     {
       "Sid": "lambda",
       "Effect": "Allow",
-      "Action": "*",
+      "Action": [
+        "lambda:AddPermission",
+        "lambda:CreateFunction",
+        "lambda:DeleteFunction",
+        "lambda:DeleteLayerVersion",
+        "lambda:GetFunction",
+        "lambda:GetLayerVersion",
+        "lambda:ListTags",
+        "lambda:PublishLayerVersion",
+        "lambda:RemovePermission",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration"
+      ],
       "Resource": [
         "arn:aws:lambda:*:*:layer:entu-api-*",
         "arn:aws:lambda:*:*:function:entu-api-*"
@@ -63,7 +96,11 @@
     {
       "Sid": "s3",
       "Effect": "Allow",
-      "Action": "*",
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:PutObject"
+      ],
       "Resource": [
         "arn:aws:s3:::entu-api",
         "arn:aws:s3:::entu-api/*"
@@ -72,7 +109,11 @@
     {
       "Sid": "logs",
       "Effect": "Allow",
-      "Action": "*",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:DeleteLogGroup",
+        "logs:PutRetentionPolicy"
+      ],
       "Resource": [
         "arn:aws:logs:*:*:log-group:*entu-api-*"
       ]
