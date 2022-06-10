@@ -231,7 +231,8 @@ exports.error = (err) => {
     message = err[1]
 
     console.error(code.toString(), message)
-  } else {
+  } else if (parseInt(err.toString().split(':')[1])) {
+    code = parseInt(err.toString().split(':')[1])
     message = err.toString()
 
     console.error(err)
