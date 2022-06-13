@@ -91,11 +91,13 @@ const getToken = async (code, redirectUri) => {
 
 const getProfile = async (accessToken) => {
   return new Promise((resolve, reject) => {
-    const query = querystring.stringify({
+    const url = new URL('https://www.googleapis.com')
+    url.pathname = '/plus/v1/people/me'
+    url.search = new URLSearchParams({
       access_token: accessToken
-    })
+    }).toString()
 
-    https.get(`https://www.googleapis.com/plus/v1/people/me?${query}`, (res) => {
+    https.get(url, (res) => {
       let data = ''
 
       res.on('data', (chunk) => {

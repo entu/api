@@ -2,7 +2,6 @@
 
 const _h = require('helpers')
 const jwt = require('jsonwebtoken')
-const querystring = require('querystring')
 
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
@@ -16,16 +15,18 @@ exports.handler = async (event, context) => {
       expiresIn: '5m'
     })
 
-    const query = querystring.stringify({
+    const url = new URL('https://appleid.apple.com')
+    url.pathname = '/auth/authorize'
+    url.search = new URLSearchParams({
       client_id: clientId,
       redirect_uri: `https://${_h.getHeader(event, 'host')}${event.rawPath}`,
       response_type: 'code',
       response_mode: 'form_post',
       scope: 'email name',
       state
-    })
+    }).toString()
 
-    return _h.redirect(`https://appleid.apple.com/auth/authorize?${query}`)
+    return _h.redirect(url)
   } catch (e) {
     return _h.error(e)
   }
