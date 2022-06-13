@@ -53,7 +53,7 @@ const getToken = async (code, redirectUri) => {
       code,
       redirect_uri: redirectUri,
       grant_type: 'authorization_code'
-    }).toString().substring(1)
+    }).toString()
 
     const options = {
       host: 'www.googleapis.com',
