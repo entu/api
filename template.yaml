@@ -256,6 +256,8 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - SQSPollerPolicy:
+            QueueName: !Sub "${AWS::StackName}-*"
         - SQSSendMessagePolicy:
             QueueName: !Sub "${AWS::StackName}-*"
       Events:
