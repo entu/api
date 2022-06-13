@@ -3,7 +3,6 @@
 const _h = require('helpers')
 const https = require('https')
 const jwt = require('jsonwebtoken')
-const querystring = require('querystring')
 
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
@@ -48,13 +47,13 @@ const getToken = async (code, redirectUri) => {
   const clientSecret = await _h.ssmParameter('google-secret')
 
   return new Promise((resolve, reject) => {
-    const query = querystring.stringify({
+    const query = new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
       code,
       redirect_uri: redirectUri,
       grant_type: 'authorization_code'
-    })
+    }).toString()
 
     const options = {
       host: 'www.googleapis.com',
@@ -91,11 +90,13 @@ const getToken = async (code, redirectUri) => {
 
 const getProfile = async (accessToken) => {
   return new Promise((resolve, reject) => {
-    const query = querystring.stringify({
+    const url = new URL('https://www.googleapis.com')
+    url.pathname = '/plus/v1/people/me'
+    url.search = new URLSearchParams({
       access_token: accessToken
-    })
+    }).toString()
 
-    https.get(`https://www.googleapis.com/plus/v1/people/me?${query}`, (res) => {
+    https.get(url, (res) => {
       let data = ''
 
       res.on('data', (chunk) => {

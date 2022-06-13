@@ -3,7 +3,6 @@
 const _pickBy = require('lodash/pickBy')
 const _identity = require('lodash/identity')
 const jwt = require('jsonwebtoken')
-const querystring = require('querystring')
 const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm')
 const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
 const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs')
@@ -203,7 +202,8 @@ exports.getBody = (event) => {
   }
 
   if (this.getHeader(event, 'content-type') === 'application/x-www-form-urlencoded') {
-    return querystring.parse(body)
+    const url = new URL('?' + body, 'http://localhost')
+    return Object.fromEntries(url.searchParams)
   } else {
     return JSON.parse(body)
   }
@@ -222,6 +222,8 @@ exports.error = (err) => {
   let code
   let message
 
+  console.error(err)
+
   if (Array.isArray(err)) {
     code = err[0]
     message = err[1]
@@ -230,8 +232,6 @@ exports.error = (err) => {
   } else if (parseInt(err.toString().split(':')[1])) {
     code = parseInt(err.toString().split(':')[1])
     message = err.toString()
-
-    console.error(err)
   }
 
   return {
