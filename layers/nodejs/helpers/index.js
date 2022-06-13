@@ -202,7 +202,7 @@ exports.getBody = (event) => {
   }
 
   if (this.getHeader(event, 'content-type') === 'application/x-www-form-urlencoded') {
-    const url = new URL(body, 'http://localhost')
+    const url = new URL('?' + body, 'http://localhost')
     return Object.fromEntries(url.searchParams)
   } else {
     return JSON.parse(body)
