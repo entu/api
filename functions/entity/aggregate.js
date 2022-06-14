@@ -70,7 +70,7 @@ exports.handler = async (event, context) => {
     if (prop.reference) {
       const referenceEntities = await user.db.collection('entity').findOne({ _id: prop.reference }, { projection: { 'private.name': true } })
 
-      if (referenceEntities.private?.name) {
+      if (referenceEntities?.private?.name) {
         cleanProp = referenceEntities.private.name.map(x => {
           return { ...cleanProp, ...x }
         })
