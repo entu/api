@@ -43,6 +43,7 @@ exports.handler = async (event, context) => {
     private: {},
     public: {},
     access: [],
+    references: [],
     search: {}
   }
 
@@ -68,12 +69,10 @@ exports.handler = async (event, context) => {
     }
 
     if (prop.reference) {
-      const referenceEntities = await user.db.collection('entity').findOne({ _id: prop.reference }, { projection: { 'private.name': true } })
+      const referenceEntity = await user.db.collection('entity').findOne({ _id: prop.reference }, { projection: { 'private.name': true, 'private.type': true } })
 
-      if (referenceEntities?.private?.name) {
-        cleanProp = referenceEntities.private.name.map(x => {
-          return { ...cleanProp, ...x }
-        })
+      if (referenceEntity?.private?.name) {
+        cleanProp = referenceEntity.private.name.map(x => ({ ...cleanProp, ...x }))
       } else {
         cleanProp = { ...cleanProp, string: prop.reference.toString() }
       }
@@ -82,7 +81,13 @@ exports.handler = async (event, context) => {
     if (!Array.isArray(cleanProp)) {
       cleanProp = [cleanProp]
     }
+
     newEntity.private[prop.type] = [...newEntity.private[prop.type], ...cleanProp]
+
+    if (prop.reference) {
+      const refProps = cleanProp.map(x => ({ ...x, entityType: referenceEntity?.private?.type }))
+      newEntity.references = [...newEntity.references, ...refProps]
+    }
   }
 
   if (newEntity.private._type) {
