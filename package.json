@@ -19,11 +19,11 @@
     "docs": "entu-ssg build docs/source/config.yaml full"
   },
   "devDependencies": {
-    "entu-ssg": "5.4.5",
+    "entu-ssg": "5.4.7",
     "eslint": "8.17.0",
     "eslint-config-standard": "17.0.0",
     "eslint-plugin-import": "2.26.0",
-    "eslint-plugin-n": "15.2.1",
+    "eslint-plugin-n": "15.2.3",
     "eslint-plugin-promise": "6.0.0"
   }
 }
