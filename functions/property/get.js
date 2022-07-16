@@ -3,7 +3,7 @@
 const _h = require('helpers')
 
 exports.handler = async (event, context) => {
-  if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
+  if (event.source === 'aws.events') return _h.json({ message: 'OK' })
 
   try {
     const user = await _h.user(event)
@@ -12,7 +12,7 @@ exports.handler = async (event, context) => {
       deleted: { $exists: false }
     })
 
-    if (!property) { return _h.error([404, 'Property not found']) }
+    if (!property) return _h.error([404, 'Property not found'])
 
     const entity = await user.db.collection('entity').findOne({
       _id: property.entity
@@ -23,14 +23,14 @@ exports.handler = async (event, context) => {
       }
     })
 
-    if (!entity) { return _h.error([404, 'Entity not found']) }
+    if (!entity) return _h.error([404, 'Entity not found'])
 
     const access = (entity.access || []).map((s) => s.toString())
 
     if (property.public) {
-      if (!access.includes('public')) { return _h.error([403, 'Not a public property']) }
+      if (!access.includes('public')) return _h.error([403, 'Not a public property'])
     } else {
-      if (!access.includes(user.id)) { return _h.error([403, 'User not in any rights property']) }
+      if (!access.includes(user.id)) return _h.error([403, 'User not in any rights property'])
     }
 
     if (property.s3) {
