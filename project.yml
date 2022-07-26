@@ -2,11 +2,8 @@ packages:
   - name: api
     actions:
       - name: account
-        runtime: 'nodejs:14'
         limits:
-          timeout: 30000
+          timeout: 5000
           memory: 256
-          logs: 512
 environment:
   DATABASE_URL: ${DATABASE_URL}
-  JWT_SECRET: ${JWT_SECRET}
