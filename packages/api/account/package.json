@@ -1,8 +1,5 @@
 {
   "name": "entu-api-account",
   "version": "3.0.0",
-  "main": "index.js",
-  "workspaces": [
-    "../../../helpers"
-  ]
+  "main": "index.js"
 }
