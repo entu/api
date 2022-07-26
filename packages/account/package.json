@@ -1,0 +1,7 @@
+{
+  "name": "entu-api-account",
+  "version": "3.0.0",
+  "workspaces": [
+    "../../helpers"
+  ]
+}

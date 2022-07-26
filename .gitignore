@@ -1,5 +1,2 @@
-.aws-sam/
 .env
-data
 node_modules
-env.json

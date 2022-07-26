@@ -3,35 +3,18 @@
 const _pickBy = require('lodash/pickBy')
 const _identity = require('lodash/identity')
 const jwt = require('jsonwebtoken')
-const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm')
-const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
-const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs')
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 const { MongoClient, ObjectId } = require('mongodb')
-
-const ssmParameters = {}
+const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 
 let dbConnection
-
-exports.ssmParameter = async (name) => {
-  if (ssmParameters[name]) { return ssmParameters[name] }
-
-  const ssmClient = new SSMClient()
-  const command = new GetParameterCommand({ Name: `${process.env.STACK_NAME}-${name}`, WithDecryption: true })
-  const ssmValue = await ssmClient.send(command)
-
-  ssmParameters[name] = ssmValue.Parameter.Value
-
-  return ssmValue.Parameter.Value
-}
 
 exports.db = async (dbName) => {
   dbName = dbName.replace(/[^a-z0-9]/gi, '_')
 
   if (dbConnection) { return dbConnection.db(dbName) }
 
-  const mongoUrl = await this.ssmParameter('mongodb-url')
-  const dbClient = new MongoClient(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
+  const dbClient = new MongoClient(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true })
 
   dbConnection = await dbClient.connect()
   dbConnection.on('close', () => {
@@ -45,8 +28,8 @@ exports.db = async (dbName) => {
 }
 
 exports.getSignedDownloadUrl = async (key) => {
-  const s3Region = await this.ssmParameter('files-s3-region')
-  const s3Bucket = await this.ssmParameter('files-s3-bucket')
+  const s3Region = process.env.S3_REGION
+  const s3Bucket = process.env.S3_BUCKET
 
   const config = {
     region: s3Region,
@@ -62,8 +45,8 @@ exports.getSignedDownloadUrl = async (key) => {
 }
 
 exports.getSignedUploadUrl = async (key, filename, filetype) => {
-  const s3Region = await this.ssmParameter('files-s3-region')
-  const s3Bucket = await this.ssmParameter('files-s3-bucket')
+  const s3Region = process.env.S3_REGION
+  const s3Bucket = process.env.S3_BUCKET
 
   const config = {
     region: s3Region,
@@ -86,8 +69,6 @@ exports.getSignedUploadUrl = async (key, filename, filetype) => {
 }
 
 exports.user = async (event) => {
-  const jwtSecret = await this.ssmParameter('jwt-secret')
-
   return new Promise((resolve, reject) => {
     const jwtToken = this.getHeader(event, 'authorization').replace('Bearer ', '')
     const jwtConf = {
@@ -101,7 +82,7 @@ exports.user = async (event) => {
 
     if (jwtToken) {
       try {
-        const decoded = jwt.verify(jwtToken, jwtSecret, jwtConf)
+        const decoded = jwt.verify(jwtToken, process.env.JWT_SECRET, jwtConf)
 
         if (decoded.aud !== jwtConf.audience) {
           return reject(new Error('401:Invalid JWT audience'))
@@ -128,8 +109,6 @@ exports.user = async (event) => {
 }
 
 exports.addUserSession = async (user) => {
-  const jwtSecret = await this.ssmParameter('jwt-secret')
-
   return new Promise((resolve, reject) => {
     if (!user) { return reject(new Error('No user')) }
 
@@ -140,7 +119,7 @@ exports.addUserSession = async (user) => {
 
     this.db('entu').then((connection) => {
       connection.collection('session').insertOne(_pickBy(session, _identity)).then((result) => {
-        const token = jwt.sign({}, jwtSecret, {
+        const token = jwt.sign({}, process.env.JWT_SECRET, {
           audience: user.ip,
           subject: result.insertedId.toString(),
           expiresIn: '5m'
@@ -154,26 +133,6 @@ exports.addUserSession = async (user) => {
       reject(err)
     })
   })
-}
-
-exports.addEntityAggregateSqs = async (context, account, entity, dt) => {
-  const region = context.invokedFunctionArn.split(':')[3]
-  const accountId = context.invokedFunctionArn.split(':')[4]
-  const queueUrl = `https://sqs.${region}.amazonaws.com/${accountId}/${process.env.STACK_NAME}-entity-aggregate-${account}.fifo`
-  const message = {
-    account,
-    entity: entity.toString(),
-    dt,
-    timestamp: new Date().getTime()
-  }
-
-  const sqsClient = new SQSClient()
-  const command = new SendMessageCommand({ QueueUrl: queueUrl, MessageGroupId: account, MessageBody: JSON.stringify(message) })
-  const sqsResponse = await sqsClient.send(command)
-
-  console.log(`Entity ${entity} added to SQS`)
-
-  return sqsResponse
 }
 
 exports.strToId = (str) => {
