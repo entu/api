@@ -1,7 +1,7 @@
 packages:
-  - name: account
+  - name: api
     actions:
-      - name: get
+      - name: account
         limits:
           timeout: 5000
           memory: 256
