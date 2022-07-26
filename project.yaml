@@ -2,6 +2,7 @@ packages:
   - name: api
     actions:
       - name: account
+        runtime: nodejs:18
         limits:
           timeout: 5000
           memory: 256
