@@ -2,7 +2,7 @@ packages:
   - name: api
     actions:
       - name: account
-        runtime: 'nodejs:18'
+        runtime: 'nodejs:14'
         limits:
           timeout: 30000
           memory: 256
