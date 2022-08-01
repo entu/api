@@ -8,7 +8,7 @@ const strWithLength = (str) => {
 }
 
 exports.handler = async (event, context) => {
-  if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
+  if (event.source === 'aws.events') return _h.json({ message: 'OK' })
 
   try {
     const lhvId = await _h.ssmParameter('lhv-id')

@@ -7,7 +7,7 @@ const _toSafeInteger = require('lodash/toSafeInteger')
 const _h = require('helpers')
 
 exports.handler = async (event, context) => {
-  if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
+  if (event.source === 'aws.events') return _h.json({ message: 'OK' })
 
   try {
     const user = await _h.user(event)
@@ -37,11 +37,11 @@ exports.handler = async (event, context) => {
       }, {
         projection: fields
       })
-      if (!entity) { return _h.error([404, 'Entity not found']) }
+      if (!entity) return _h.error([404, 'Entity not found'])
 
       const cleanedEntity = await claenupEntity(entity, user, getThumbnail)
 
-      if (!cleanedEntity) { return _h.error([403, 'No accessible properties']) }
+      if (!cleanedEntity) return _h.error([403, 'No accessible properties'])
 
       result = {
         filter: { _id: eId },
@@ -161,7 +161,7 @@ exports.handler = async (event, context) => {
 
 // Return public or private properties (based user rights)
 const claenupEntity = async (entity, user, _thumbnail) => {
-  if (!entity) { return }
+  if (!entity) return
 
   let result = { _id: entity._id }
 

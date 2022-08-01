@@ -3,11 +3,11 @@
 const _h = require('helpers')
 
 exports.handler = async (event, context) => {
-  if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
+  if (event.source === 'aws.events') return _h.json({ message: 'OK' })
 
   try {
     const user = await _h.user(event)
-    if (!user.id) { return _h.error([403, 'No user']) }
+    if (!user.id) return _h.error([403, 'No user'])
 
     const eId = _h.strToId(event.pathParameters._id)
     const entity = await user.db.collection('entity').findOne({
@@ -18,11 +18,11 @@ exports.handler = async (event, context) => {
         'private._owner': true
       }
     })
-    if (!entity) { return _h.error([404, 'Entity not found']) }
+    if (!entity) return _h.error([404, 'Entity not found'])
 
     const access = (entity.private?._owner || []).map((s) => s.reference.toString())
 
-    if (!access.includes(user.id)) { return _h.error([403, 'User not in _owner property']) }
+    if (!access.includes(user.id)) return _h.error([403, 'User not in _owner property'])
 
     await user.db.collection('property').insertOne({
       entity: eId,

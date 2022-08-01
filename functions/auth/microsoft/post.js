@@ -5,19 +5,19 @@ const https = require('https')
 const jwt = require('jsonwebtoken')
 
 exports.handler = async (event, context) => {
-  if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
+  if (event.source === 'aws.events') return _h.json({ message: 'OK' })
 
   try {
     const jwtSecret = await _h.ssmParameter('jwt-secret')
     const params = _h.getBody(event)
 
-    if (!params.state) { return _h.error([400, 'No state']) }
+    if (!params.state) return _h.error([400, 'No state'])
 
     const decodedState = jwt.verify(params.state, jwtSecret, { audience: event.requestContext?.http?.sourceIp })
 
-    if (params.error) { return _h.error([400, params.error]) }
+    if (params.error) return _h.error([400, params.error])
 
-    if (!params.code) { return _h.error([400, 'No code']) }
+    if (!params.code) return _h.error([400, 'No code'])
 
     const accessToken = await getToken(params.code, `https://${_h.getHeader(event, 'host')}${event.rawPath}`)
     const profile = await getProfile(accessToken)

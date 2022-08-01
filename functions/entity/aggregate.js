@@ -4,7 +4,7 @@ const _ = require('lodash')
 const _h = require('helpers')
 
 exports.handler = async (event, context) => {
-  if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
+  if (event.source === 'aws.events') return _h.json({ message: 'OK' })
 
   const user = await _h.user(event)
   const eId = event.pathParameters?._id ? _h.strToId(event.pathParameters._id) : null
@@ -12,7 +12,7 @@ exports.handler = async (event, context) => {
 
   const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: { _id: false, aggregated: true, 'private.name': true } })
 
-  if (!entity) { return _h.error([404, 'Entity not found']) }
+  if (!entity) return _h.error([404, 'Entity not found'])
 
   if (entity && entity.aggregated && date && entity.aggregated >= new Date(date)) {
     console.log(`SKIP ${eId.toString()}`)
@@ -493,7 +493,7 @@ function formulaContent (str) {
 }
 
 function getValueArray (values) {
-  if (!values) { return [] }
+  if (!values) return []
 
   return values.map(x => x.decimal || x.integer || x.datetime || x.date || x.string || x._id)
 }

@@ -20,18 +20,18 @@ const rightTypes = [
 ]
 
 exports.handler = async (event, context) => {
-  if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
+  if (event.source === 'aws.events') return _h.json({ message: 'OK' })
 
   try {
     const user = await _h.user(event)
-    if (!user.id) { return _h.error([403, 'No user']) }
+    if (!user.id) return _h.error([403, 'No user'])
 
     const createdDt = new Date()
     const userId = _h.strToId(user.id)
 
     const body = _h.getBody(event)
 
-    if (body && !Array.isArray(body)) { return _h.error([400, 'Data must be array']) }
+    if (body && !Array.isArray(body)) return _h.error([400, 'Data must be array'])
 
     let eId = event.pathParameters && event.pathParameters._id ? _h.strToId(event.pathParameters._id) : null
 
@@ -51,27 +51,27 @@ exports.handler = async (event, context) => {
         }
       })
 
-      if (!entity) { return _h.error([404, 'Entity not found']) }
+      if (!entity) return _h.error([404, 'Entity not found'])
 
       const access = [...(entity.private?._owner || []), ...(entity.private?._editor || [])].map((s) => s.reference.toString())
 
-      if (!access.includes(user.id)) { return _h.error([403, 'User not in _owner nor _editor property']) }
+      if (!access.includes(user.id)) return _h.error([403, 'User not in _owner nor _editor property'])
 
       const rigtsProperties = body.filter((property) => rightTypes.includes(property.type))
       const owners = (entity.private?._owner || []).map((s) => s.reference.toString())
 
-      if (rigtsProperties.length > 0 && !owners.includes(user.id)) { return _h.error([403, 'User not in _owner property']) }
+      if (rigtsProperties.length > 0 && !owners.includes(user.id)) return _h.error([403, 'User not in _owner property'])
     }
 
-    if (!body) { return _h.error([400, 'No data']) }
-    if (body.length === 0) { return _h.error([400, 'At least one property must be set']) }
+    if (!body) return _h.error([400, 'No data'])
+    if (body.length === 0) return _h.error([400, 'At least one property must be set'])
 
     for (let i = 0; i < body.length; i++) {
       const property = body[i]
 
-      if (!property.type) { return _h.error([400, 'Property type not set']) }
-      if (!property.type.match(/^[A-Za-z0-9_]+$/)) { return _h.error([400, 'Property type must be alphanumeric']) }
-      if (property.type.startsWith('_') && !allowedTypes.includes(property.type)) { return _h.error([400, 'Property type can\'t begin with _']) }
+      if (!property.type) return _h.error([400, 'Property type not set'])
+      if (!property.type.match(/^[A-Za-z0-9_]+$/)) return _h.error([400, 'Property type must be alphanumeric'])
+      if (property.type.startsWith('_') && !allowedTypes.includes(property.type)) return _h.error([400, 'Property type can\'t begin with _'])
 
       if (property.type === '_parent' && property.reference) {
         const parent = await user.db.collection('entity').findOne({
@@ -85,11 +85,11 @@ exports.handler = async (event, context) => {
           }
         })
 
-        if (!parent) { return _h.error([400, 'Entity in _parent property not found']) }
+        if (!parent) return _h.error([400, 'Entity in _parent property not found'])
 
         const parentAccess = [...(parent.private?._owner || []), ...(parent.private?._editor || []), ...(parent.private?._expander || [])].map((s) => s.reference.toString())
 
-        if (!parentAccess.includes(user.id)) { return _h.error([403, 'User not in parent _owner, _editor nor _expander property']) }
+        if (!parentAccess.includes(user.id)) return _h.error([403, 'User not in parent _owner, _editor nor _expander property'])
       }
     }
 

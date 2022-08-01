@@ -2,13 +2,13 @@
   "name": "api-helpers",
   "version": "1.0.0",
   "dependencies": {
-    "@aws-sdk/client-s3": "3.109.0",
-    "@aws-sdk/client-sqs": "3.109.0",
-    "@aws-sdk/client-ssm": "3.109.0",
-    "@aws-sdk/s3-request-presigner": "3.109.0",
+    "@aws-sdk/client-s3": "3.137.0",
+    "@aws-sdk/client-sqs": "3.137.0",
+    "@aws-sdk/client-ssm": "3.138.0",
+    "@aws-sdk/s3-request-presigner": "3.137.0",
     "helpers": "file:helpers",
     "jsonwebtoken": "8.5.1",
     "lodash": "4.17.21",
-    "mongodb": "4.7.0"
+    "mongodb": "4.8.1"
   }
 }

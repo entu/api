@@ -7,13 +7,13 @@ const jwt = require('jsonwebtoken')
 const mongoDbSystemDbs = ['admin', 'config', 'local']
 
 exports.handler = async (event, context) => {
-  if (event.source === 'aws.events') { return _h.json({ message: 'OK' }) }
+  if (event.source === 'aws.events') return _h.json({ message: 'OK' })
 
   try {
     const jwtSecret = await _h.ssmParameter('jwt-secret')
     const key = _h.getHeader(event, 'authorization').replace('Bearer ', '')
 
-    if (!key) { return _h.error([400, 'No key']) }
+    if (!key) return _h.error([400, 'No key'])
 
     const authFilter = {}
     const connection = await _h.db('entu')
@@ -22,8 +22,8 @@ exports.handler = async (event, context) => {
       const decoded = jwt.verify(key, jwtSecret, { audience: event.requestContext?.http?.sourceIp })
       const session = await connection.collection('session').findOneAndUpdate({ _id: _h.strToId(decoded.sub), deleted: { $exists: false } }, { $set: { deleted: new Date() } })
 
-      if (!session?.value) { return _h.error([400, 'No session']) }
-      if (!session.value.user?.email) { return _h.error([400, 'No user email']) }
+      if (!session?.value) return _h.error([400, 'No session'])
+      if (!session.value.user?.email) return _h.error([400, 'No user email'])
 
       authFilter['private.entu_user.string'] = session.value?.user?.email
     } catch (e) {

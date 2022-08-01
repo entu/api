@@ -14,7 +14,7 @@ const ssmParameters = {}
 let dbConnection
 
 exports.ssmParameter = async (name) => {
-  if (ssmParameters[name]) { return ssmParameters[name] }
+  if (ssmParameters[name]) return ssmParameters[name]
 
   const ssmClient = new SSMClient()
   const command = new GetParameterCommand({ Name: `${process.env.STACK_NAME}-${name}`, WithDecryption: true })
@@ -28,7 +28,7 @@ exports.ssmParameter = async (name) => {
 exports.db = async (dbName) => {
   dbName = dbName.replace(/[^a-z0-9]/gi, '_')
 
-  if (dbConnection) { return dbConnection.db(dbName) }
+  if (dbConnection) return dbConnection.db(dbName)
 
   const mongoUrl = await this.ssmParameter('mongodb-url')
   const dbClient = new MongoClient(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -131,7 +131,7 @@ exports.addUserSession = async (user) => {
   const jwtSecret = await this.ssmParameter('jwt-secret')
 
   return new Promise((resolve, reject) => {
-    if (!user) { return reject(new Error('No user')) }
+    if (!user) return reject(new Error('No user'))
 
     const session = {
       created: new Date(),
@@ -195,7 +195,7 @@ exports.getHeader = (event, headerKey) => {
 exports.getBody = (event) => {
   let body = event.body
 
-  if (!body) { return {} }
+  if (!body) return {}
 
   if (event.isBase64Encoded) {
     body = Buffer.from(body, 'base64').toString()
