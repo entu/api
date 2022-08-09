@@ -19,10 +19,10 @@ jobs:
       with:
         node-version: 16.x
 
-    - name: Build
+    - name: Build Docs
       run: |
         npm install
-        npm run build
+        npm run build:docs
 
   deploy:
     environment:
