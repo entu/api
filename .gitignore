@@ -1,5 +1,4 @@
-_site/build.json
-_site/index.html
+_site
 .aws-sam
 env.json
 node_modules
