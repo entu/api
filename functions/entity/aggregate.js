@@ -69,7 +69,7 @@ exports.handler = async (event, context) => {
     }
 
     if (prop.reference) {
-      const referenceEntity = await user.db.collection('entity').findOne({ _id: prop.reference }, { projection: { 'private.name': true, 'private.type': true } })
+      const referenceEntity = await user.db.collection('entity').findOne({ _id: prop.reference }, { projection: { 'private.name': true } })
 
       if (referenceEntity?.private?.name) {
         cleanProp = referenceEntity.private.name.map(x => ({ ...cleanProp, ...x }))
@@ -85,8 +85,23 @@ exports.handler = async (event, context) => {
     newEntity.private[prop.type] = [...newEntity.private[prop.type], ...cleanProp]
 
     if (prop.reference) {
-      const refProps = cleanProp.map(x => ({ ...x, entityType: referenceEntity?.private?.type }))
-      newEntity.references = [...newEntity.references, ...refProps]
+      const referenceEntities = await user.db.collection('entity').aggregate([
+        {
+          $addFields: { privateArray: { $objectToArray: '$private' } }
+        }, {
+          $unwind: { path: '$privateArray' }
+        }, {
+          $match: { 'privateArray.v.reference': prop.reference }
+        }, {
+          $project: { 'private._type': true, privateArray: true }
+        }
+      ]).toArray()
+
+      newEntity.references = referenceEntities.map(x => ({
+        _id: x._id,
+        entity: x.private._type[0].string,
+        property: x.privateArray.k
+      }))
     }
   }
 
