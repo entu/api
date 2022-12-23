@@ -7,7 +7,7 @@
     "@aws-sdk/client-ssm": "3.138.0",
     "@aws-sdk/s3-request-presigner": "3.137.0",
     "helpers": "file:helpers",
-    "jsonwebtoken": "8.5.1",
+    "jsonwebtoken": "9.0.0",
     "lodash": "4.17.21",
     "mongodb": "4.8.1"
   }
