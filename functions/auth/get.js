@@ -41,7 +41,7 @@ exports.handler = async (event, context) => {
       if (mongoDbSystemDbs.includes(account)) { continue }
 
       const accountCon = await _h.db(account)
-      const person = await accountCon.collection('entity').findOne(authFilter, { projection: { _id: true, 'name.string': true } })
+      const person = await accountCon.collection('entity').findOne(authFilter, { projection: { _id: true, 'private.name.string': true } })
 
       if (person) {
         const token = jwt.sign({}, jwtSecret, {
@@ -53,7 +53,7 @@ exports.handler = async (event, context) => {
 
         accounts[account] = {
           _id: person._id.toString(),
-          name: person.name?.[0]?.string,
+          name: person.private?.name?[0]?.string,
           account,
           token
         }
