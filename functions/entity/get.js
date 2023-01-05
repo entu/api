@@ -135,15 +135,18 @@ exports.handler = async (event, context) => {
       }
 
       const cleanedEntities = []
+      let entities = 0
       let count = 0
 
       if (group.length > 0) {
         const groupIds = {}
+        const unwinds = []
         const groupFields = { access: { $first: '$access' } }
         const projectIds = { 'public._count': '$_count', 'private._count': '$_count', access: true, _id: false }
 
         group.forEach((g) => {
-          groupIds[g.replaceAll('.', '#')] = { $first: `$private.${g}` }
+          groupIds[g.replaceAll('.', '#')] = `$private.${g}`
+          unwinds.push({ $unwind: { path: `$private.${g.split('.')[0]}`, preserveNullAndEmptyArrays: true } })
         })
 
         Object.keys(fields).forEach((g) => {
@@ -151,28 +154,23 @@ exports.handler = async (event, context) => {
           projectIds[g] = `$${g.replaceAll('.', '#')}`
         })
 
-        const entities = await user.db.collection('entity').aggregate([
+        entities = await user.db.collection('entity').aggregate([
           { $match: filter },
+          ...unwinds,
           { $group: { ...groupFields, _id: groupIds, _count: { $count: {} } } },
           { $project: projectIds },
           { $sort: sortFields }
         ]).toArray()
         count = entities.length
-
-        for (let i = 0; i < entities.length; i++) {
-          const entity = await claenupEntity(entities[i], user, getThumbnail)
-
-          if (entity) cleanedEntities.push(entity)
-        }
       } else {
-        const entities = await user.db.collection('entity').find(filter, { projection: fields }).sort(sortFields).skip(skip).limit(limit).toArray()
+        entities = await user.db.collection('entity').find(filter, { projection: fields }).sort(sortFields).skip(skip).limit(limit).toArray()
         count = await user.db.collection('entity').countDocuments(filter)
+      }
 
-        for (let i = 0; i < entities.length; i++) {
-          const entity = await claenupEntity(entities[i], user, getThumbnail)
+      for (let i = 0; i < entities.length; i++) {
+        const entity = await claenupEntity(entities[i], user, getThumbnail)
 
-          if (entity) cleanedEntities.push(entity)
-        }
+        if (entity) cleanedEntities.push(entity)
       }
 
       result = {
@@ -181,6 +179,8 @@ exports.handler = async (event, context) => {
         props,
         group,
         sort,
+        limit,
+        skip,
         entities: cleanedEntities
       }
   }
