@@ -164,7 +164,8 @@ Get list of entities. To filter entities by property value. Use dot separated li
 
 #### Query (other) parameters
 - **q** - Search string. Will search only from searchable fields.
-- **props** - Comma separated list of properties to get. If not set all properties are returned.
+- **props** - Comma separated list of properties to get. If not set all properties are returned (except on group request).
+- **group** - Comma separated list of properties to group by. If set, then parameters limit and skip are ignored. Will return only group's count and properties set in props parameter.
 - **sort** - Comma separated list of properties to use for sorting. Use - (minus) sign before property name for descending sort. If not set sorts by \_id.
 - **limit** - How many entities to return.
 - **skip** - How many entities to skip in result.

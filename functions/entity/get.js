@@ -13,6 +13,7 @@ exports.handler = async (event, context) => {
     const user = await _h.user(event)
     const eId = event.pathParameters && event.pathParameters._id ? _h.strToId(event.pathParameters._id) : null
     const props = (event.queryStringParameters?.props || '').split(',').filter((x) => !!x)
+    const group = (event.queryStringParameters?.group || '').split(',').filter((x) => !!x)
     const fields = {}
     let result = {}
     let getThumbnail = props.length === 0
@@ -133,15 +134,44 @@ exports.handler = async (event, context) => {
         sortFields = { _id: 1 }
       }
 
-      const entities = await user.db.collection('entity').find(filter, { projection: fields }).sort(sortFields).skip(skip).limit(limit).toArray()
-      const count = await user.db.collection('entity').countDocuments(filter)
-
       const cleanedEntities = []
-      for (let i = 0; i < entities.length; i++) {
-        const entity = await claenupEntity(entities[i], user, getThumbnail)
+      let count = 0
 
-        if (entity) {
-          cleanedEntities.push(entity)
+      if (group.length > 0) {
+        const groupIds = {}
+        const groupFields = { access: { $first: '$access' } }
+        const projectIds = { 'public._count': '$count', 'private._count': '$_count', access: true, _id: false }
+
+        group.forEach((g) => {
+          groupIds[g.replaceAll('.', '#')] = { $first: `$private.${g}` }
+        })
+
+        Object.keys(fields).forEach((g) => {
+          groupFields[g.replaceAll('.', '#')] = { $first: `$${g}` }
+          projectIds[g] = `$${g.replaceAll('.', '#')}`
+        })
+
+        const entities = await user.db.collection('entity').aggregate([
+          { $match: filter },
+          { $group: { ...groupFields, _id: groupIds, _count: { $count: {} } } },
+          { $project: projectIds },
+          { $sort: sortFields }
+        ]).toArray()
+        count = entities.length
+
+        for (let i = 0; i < entities.length; i++) {
+          const entity = await claenupEntity(entities[i], user, getThumbnail)
+
+          if (entity) cleanedEntities.push(entity)
+        }
+      } else {
+        const entities = await user.db.collection('entity').find(filter, { projection: fields }).sort(sortFields).skip(skip).limit(limit).toArray()
+        count = await user.db.collection('entity').countDocuments(filter)
+
+        for (let i = 0; i < entities.length; i++) {
+          const entity = await claenupEntity(entities[i], user, getThumbnail)
+
+          if (entity) cleanedEntities.push(entity)
         }
       }
 
@@ -149,9 +179,11 @@ exports.handler = async (event, context) => {
         count,
         filter,
         props,
+        group,
+        sort,
         entities: cleanedEntities
       }
-    }
+  }
 
     return _h.json(result)
   } catch (e) {
@@ -168,9 +200,9 @@ const claenupEntity = async (entity, user, _thumbnail) => {
   const access = (entity.access || []).map((s) => s.toString())
 
   if (user.id && access.includes(user.id)) {
-    result = Object.assign({}, result, (entity.private || {}))
+    result = { ...result, ...entity.private }
   } else if (access.includes('public')) {
-    result = Object.assign({}, result, (entity.public || {}))
+    result = { ...result, ...entity.public }
   } else {
     return
   }
@@ -188,6 +220,10 @@ const claenupEntity = async (entity, user, _thumbnail) => {
   if (!result._thumbnail) {
     delete result._thumbnail
   }
+
+  _forIn(result, (v, k) => {
+    if (v === null || v === undefined || v === '') delete result[k]
+  })
 
   return result
 }
