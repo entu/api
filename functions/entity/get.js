@@ -140,7 +140,7 @@ exports.handler = async (event, context) => {
       if (group.length > 0) {
         const groupIds = {}
         const groupFields = { access: { $first: '$access' } }
-        const projectIds = { 'public._count': '$count', 'private._count': '$_count', access: true, _id: false }
+        const projectIds = { 'public._count': '$_count', 'private._count': '$_count', access: true, _id: false }
 
         group.forEach((g) => {
           groupIds[g.replaceAll('.', '#')] = { $first: `$private.${g}` }
