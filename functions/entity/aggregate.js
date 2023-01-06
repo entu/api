@@ -76,6 +76,13 @@ exports.handler = async (event, context) => {
       } else {
         cleanProp = { ...cleanProp, string: prop.reference.toString() }
       }
+
+      if (!Array.isArray(cleanProp)) {
+        cleanProp = [cleanProp]
+      }
+
+      const refProps = cleanProp.map(x => ({ ...x, entityType: referenceEntity?.private?.type }))
+      newEntity.references = [...newEntity.references, ...refProps]
     }
 
     if (!Array.isArray(cleanProp)) {
@@ -83,12 +90,7 @@ exports.handler = async (event, context) => {
     }
 
     newEntity.private[prop.type] = [...newEntity.private[prop.type], ...cleanProp]
-
-    if (prop.reference) {
-      const refProps = cleanProp.map(x => ({ ...x, entityType: referenceEntity?.private?.type }))
-      newEntity.references = [...newEntity.references, ...refProps]
-    }
-  }
+ }
 
   if (newEntity.private._type) {
     const definition = await user.db.collection('entity').aggregate([
