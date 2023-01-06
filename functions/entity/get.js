@@ -78,7 +78,7 @@ exports.handler = async (event, context) => {
             case 'filesize':
               value = _toNumber(v)
               break
-            case 'decimal':
+            case 'double':
               value = _toNumber(v)
               break
             case 'date':

@@ -201,15 +201,15 @@ async function formula (str, eId, db) {
     case 'COUNT':
       return { integer: valueArray.length }
     case 'SUM':
-      return { decimal: valueArray.reduce((a, b) => a + b, 0) }
+      return { double: valueArray.reduce((a, b) => a + b, 0) }
     case 'SUBTRACT':
-      return { decimal: valueArray.reduce((a, b) => a - b, 0) + (valueArray[0] * 2) }
+      return { double: valueArray.reduce((a, b) => a - b, 0) + (valueArray[0] * 2) }
     case 'AVERAGE':
-      return { decimal: valueArray.reduce((a, b) => a + b, 0) / valueArray.length }
+      return { double: valueArray.reduce((a, b) => a + b, 0) / valueArray.length }
     case 'MIN':
-      return { decimal: Math.min(...valueArray) }
+      return { double: Math.min(...valueArray) }
     case 'MAX':
-      return { decimal: Math.max(...valueArray) }
+      return { double: Math.max(...valueArray) }
     default:
       return { string: valueArray.join('') }
   }
@@ -226,7 +226,7 @@ async function formulaField (str, eId, db) {
 
   if (parseFloat(str).toString() === str) {
     return [{
-      decimal: parseFloat(str)
+      double: parseFloat(str)
     }]
   }
 
@@ -497,5 +497,5 @@ function formulaContent (str) {
 function getValueArray (values) {
   if (!values) return []
 
-  return values.map(x => x.decimal || x.integer || x.datetime || x.date || x.string || x._id)
+  return values.map(x => x.double || x.integer || x.datetime || x.date || x.string || x._id)
 }

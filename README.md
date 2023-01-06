@@ -199,7 +199,7 @@ For file upload, add *filename*, *filesize* and *filetype* to property parameter
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
-- [ **string** \| **reference** \| **boolean** \| **integer** \| **decimal** \| **date** \| **datetime** \| **filename** \| **filesize** \| **filetype** ] - Property value
+- [ **string** \| **reference** \| **boolean** \| **integer** \| **double** \| **date** \| **datetime** \| **filename** \| **filesize** \| **filetype** ] - Property value
 
 #### Example request
 ```http
@@ -282,7 +282,7 @@ For file upload, add *filename*, *filesize* and *filetype* to property parameter
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
-- [ **string** \| **reference** \| **boolean** \| **integer** \| **decimal** \| **date** \| **datetime** \| **filename** \| **filesize** \| **filetype** ] - Property value
+- [ **string** \| **reference** \| **boolean** \| **integer** \| **double** \| **date** \| **datetime** \| **filename** \| **filesize** \| **filetype** ] - Property value
 
 #### Example request
 ```http
