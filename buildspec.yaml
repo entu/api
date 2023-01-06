@@ -7,9 +7,9 @@ env:
 phases:
   install:
     runtime-versions:
-      nodejs: 12
+      nodejs: 16
     commands:
-      - n 16
+      - n 18
       - npm ci --quiet --production --prefix layers/nodejs
   build:
     commands:
