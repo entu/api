@@ -397,12 +397,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ## System properties
 
 Entu system properties begin with \_. Those properties are:
-- **_type** - String containing object's type.
-- **_parent** - Reference property to parent object.
+- **_type** - Reference to object's type.
+- **_parent** - Reference to parent object.
 - **_public** - If set to *true*, object (only it's public properties) is visible without authentication.
-
-For rights management Entu uses following reference properties:
-- **_viewer** - Who can view this object.
-- **_expander** - Who can add new objects under this object.
-- **_editor** - Who can change this object's properties (except rights!).
-- **_owner** - Who can do anything with this object (view, change, delete and manage rights).
+- **_viewer** - Reference to who can view this object.
+- **_expander** - Reference to who can add new objects under this object.
+- **_editor** - Reference to who can change this object's properties (except rights!).
+- **_owner** - Reference to who can do anything with this object (view, change, delete and manage rights).
