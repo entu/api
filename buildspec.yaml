@@ -9,7 +9,6 @@ phases:
     runtime-versions:
       nodejs: 16
     commands:
-      - n 18
       - npm ci --quiet --production --prefix layers/nodejs
   build:
     commands:
