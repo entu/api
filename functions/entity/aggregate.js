@@ -90,7 +90,7 @@ exports.handler = async (event, context) => {
     }
 
     newEntity.private[prop.type] = [...newEntity.private[prop.type], ...cleanProp]
- }
+  }
 
   if (newEntity.private._type) {
     const definition = await user.db.collection('entity').aggregate([
@@ -199,17 +199,17 @@ async function formula (str, eId, db) {
     case 'CONCAT':
       return { string: valueArray.join('') }
     case 'COUNT':
-      return { integer: valueArray.length }
+      return { number: valueArray.length }
     case 'SUM':
-      return { double: valueArray.reduce((a, b) => a + b, 0) }
+      return { number: valueArray.reduce((a, b) => a + b, 0) }
     case 'SUBTRACT':
-      return { double: valueArray.reduce((a, b) => a - b, 0) + (valueArray[0] * 2) }
+      return { number: valueArray.reduce((a, b) => a - b, 0) + (valueArray[0] * 2) }
     case 'AVERAGE':
-      return { double: valueArray.reduce((a, b) => a + b, 0) / valueArray.length }
+      return { number: valueArray.reduce((a, b) => a + b, 0) / valueArray.length }
     case 'MIN':
-      return { double: Math.min(...valueArray) }
+      return { number: Math.min(...valueArray) }
     case 'MAX':
-      return { double: Math.max(...valueArray) }
+      return { number: Math.max(...valueArray) }
     default:
       return { string: valueArray.join('') }
   }
@@ -226,7 +226,7 @@ async function formulaField (str, eId, db) {
 
   if (parseFloat(str).toString() === str) {
     return [{
-      double: parseFloat(str)
+      number: parseFloat(str)
     }]
   }
 
@@ -497,5 +497,5 @@ function formulaContent (str) {
 function getValueArray (values) {
   if (!values) return []
 
-  return values.map(x => x.double || x.integer || x.datetime || x.date || x.string || x._id)
+  return values.map(x => x.number || x.datetime || x.date || x.string || x._id)
 }

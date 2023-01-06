@@ -72,13 +72,10 @@ exports.handler = async (event, context) => {
             case 'boolean':
               value = v.toLowerCase() === 'true'
               break
-            case 'integer':
+            case 'number':
               value = _toNumber(v)
               break
             case 'filesize':
-              value = _toNumber(v)
-              break
-            case 'double':
               value = _toNumber(v)
               break
             case 'date':
@@ -183,7 +180,7 @@ exports.handler = async (event, context) => {
         skip,
         entities: cleanedEntities
       }
-  }
+    }
 
     return _h.json(result)
   } catch (e) {
