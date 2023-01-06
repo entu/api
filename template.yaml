@@ -71,6 +71,7 @@ Resources:
       Description: Entu API dependencies
       ContentUri: layers
       CompatibleRuntimes:
+        - nodejs16.x
         - nodejs18.x
       RetentionPolicy: Delete
     Metadata:
