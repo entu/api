@@ -35,7 +35,7 @@ Globals:
         STACK_NAME: !Sub "${AWS::StackName}"
     Architectures:
       - !Ref Architecture
-    Runtime: nodejs16.x
+    Runtime: nodejs18.x
     MemorySize: 256
     Timeout: 30
     Layers:
@@ -71,7 +71,7 @@ Resources:
       Description: Entu API dependencies
       ContentUri: layers
       CompatibleRuntimes:
-        - nodejs16.x
+        - nodejs18.x
       RetentionPolicy: Delete
     Metadata:
       BuildArchitecture: !Ref Architecture
