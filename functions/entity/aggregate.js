@@ -66,9 +66,9 @@ exports.handler = async (event, context) => {
       const referenceEntity = await user.db.collection('entity').findOne({ _id: prop.reference }, { projection: { _id: false, 'private.name': true, 'private._type': true } })
 
       if (referenceEntity) {
-        cleanProp = { ...cleanProp, string: referenceEntity.private?.name?.[0].string, _type: referenceEntity.private?._type?.[0].string }
+        cleanProp = { ...cleanProp, property_type: prop.type, string: referenceEntity.private?.name?.[0].string, entity_type: referenceEntity.private?._type?.[0].string }
       } else {
-        cleanProp = { ...cleanProp, string: prop.reference.toString() }
+        cleanProp = { ...cleanProp, property_type: prop.type, string: prop.reference.toString() }
         console.log(`NO_REFERENCE ${prop.reference.toString()}`)
       }
 
