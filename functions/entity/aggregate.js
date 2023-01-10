@@ -6,32 +6,53 @@ const _h = require('helpers')
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') return _h.json({ message: 'OK' })
 
-  const user = await _h.user(event)
-  const eId = event.pathParameters?._id ? _h.strToId(event.pathParameters._id) : null
-  const date = event.queryStringParameters?.date
+  const results = []
 
-  const entity = await user.db.collection('entity').findOne({ _id: eId }, { projection: { _id: false, aggregated: true, 'private.name': true } })
+  if (event.Records?.length > 0) {
+    console.log('SQS_RECORDS', JSON.stringify(event.Records.map(x => x.body), null, 2))
+
+    for (let n = 0; n < event.Records.length; n++) {
+      const body = JSON.parse(event.Records[n].body)
+
+      results.push(await aggregate(context, body.account, body.entity, body.dt))
+    }
+  } else {
+    const user = await _h.user(event)
+
+    results.push(await aggregate(context, user.account, event.pathParameters._id, event.queryStringParameters.date))
+  }
+
+  console.log('RESULTS', JSON.stringify(results, null, 2))
+
+  return { results }
+}
+
+async function aggregate (context, account, entityId, date) {
+  const database = await _h.db(account)
+  const eId = _h.strToId(entityId)
+
+  const entity = await database.collection('entity').findOne({ _id: eId }, { projection: { _id: false, aggregated: true, 'private.name': true } })
 
   if (!entity) return _h.error([404, 'Entity not found'])
 
   if (entity && entity.aggregated && date && entity.aggregated >= new Date(date)) {
     console.log(`SKIP ${eId.toString()}`)
     return {
-      account: user.account,
+      account,
       entity: eId,
       ignored: true,
       message: `Entity is already aggregated at ${entity.aggregated.toISOString()}`
     }
   }
 
-  const properties = await user.db.collection('property').find({ entity: eId, deleted: { $exists: false } }).toArray()
+  const properties = await database.collection('property').find({ entity: eId, deleted: { $exists: false } }).toArray()
 
   if (properties.find(x => x.type === '_deleted')) {
-    await user.db.collection('entity').deleteOne({ _id: eId })
+    await database.collection('entity').deleteOne({ _id: eId })
 
     console.log(`DELETED ${eId.toString()}`)
     return {
-      account: user.account,
+      account,
       entity: eId,
       deleted: true,
       message: 'Entity is deleted'
@@ -63,7 +84,7 @@ exports.handler = async (event, context) => {
     }
 
     if (prop.reference) {
-      const referenceEntity = await user.db.collection('entity').findOne({ _id: prop.reference }, { projection: { _id: false, 'private.name': true, 'private._type': true } })
+      const referenceEntity = await database.collection('entity').findOne({ _id: prop.reference }, { projection: { _id: false, 'private.name': true, 'private._type': true } })
 
       if (referenceEntity) {
         cleanProp = { ...cleanProp, property_type: prop.type, string: referenceEntity.private?.name?.[0].string, entity_type: referenceEntity.private?._type?.[0].string }
@@ -79,11 +100,12 @@ exports.handler = async (event, context) => {
       newEntity.private._reference = [...newEntity.private._reference, cleanProp]
     }
 
-    newEntity.private[prop.type] = [...newEntity.private[prop.type], cleanProp]
+    newEntity.private[prop.type] = [...newEntity.private[prop.type], _.omit(cleanProp, ['property_type', 'entity_type'])
+    ]
   }
 
   if (newEntity.private._type) {
-    const definition = await user.db.collection('entity').aggregate([
+    const definition = await database.collection('entity').aggregate([
       {
         $match: {
           'private._parent.reference': newEntity.private._type[0].reference,
@@ -103,7 +125,7 @@ exports.handler = async (event, context) => {
 
     for (let d = 0; d < definition.length; d++) {
       if (definition[d].formula) {
-        newEntity.private[definition[d].name] = [await formula(definition[d].formula, eId, user.db)]
+        newEntity.private[definition[d].name] = [await formula(definition[d].formula, eId, database)]
       }
 
       const dValue = newEntity.private[definition[d].name]
@@ -128,7 +150,7 @@ exports.handler = async (event, context) => {
     delete newEntity.public
   }
 
-  await user.db.collection('entity').replaceOne({ _id: eId }, newEntity, { upsert: true })
+  await database.collection('entity').replaceOne({ _id: eId }, newEntity, { upsert: true })
 
   const name = (entity.private?.name || []).map(x => x.string || '')
   const newName = (newEntity.private?.name || []).map(x => x.string || '')
@@ -137,13 +159,13 @@ exports.handler = async (event, context) => {
     console.log(`UPDATED ${eId.toString()}`)
     return {
       _id: eId,
-      account: user.account,
+      account,
       updated: true,
       message: 'Entity updated'
     }
   }
 
-  const referrers = await user.db.collection('property').aggregate([
+  const referrers = await database.collection('property').aggregate([
     { $match: { reference: eId, deleted: { $exists: false } } },
     { $group: { _id: '$entity' } }
   ]).toArray()
@@ -151,13 +173,13 @@ exports.handler = async (event, context) => {
   const dt = date ? new Date(date) : newEntity.aggregated
 
   for (let j = 0; j < referrers.length; j++) {
-    await _h.addEntityAggregateSqs(context, user.account, referrers[j]._id.toString(), dt)
+    await _h.addEntityAggregateSqs(context, account, referrers[j]._id.toString(), dt)
   }
 
   console.log(`UPDATED_SQS ${eId.toString()}`)
   return {
     _id: eId,
-    account: user.account,
+    account,
     updated: true,
     sqsLength: referrers.length,
     message: `Entity updated and added ${referrers.length} entities to SQS`

@@ -159,10 +159,10 @@ exports.addUserSession = async (user) => {
 exports.addEntityAggregateSqs = async (context, account, entity, dt) => {
   const region = context.invokedFunctionArn.split(':')[3]
   const accountId = context.invokedFunctionArn.split(':')[4]
-  const queueUrl = `https://sqs.${region}.amazonaws.com/${accountId}/${process.env.STACK_NAME}-entity-aggregate-${account}.fifo`
+  const queueUrl = `https://sqs.${region}.amazonaws.com/${accountId}/${process.env.STACK_NAME}-entity-aggregate-${account}`
   const message = {
     account,
-    entity: entity.toString(),
+    entity,
     dt,
     timestamp: new Date().getTime()
   }
