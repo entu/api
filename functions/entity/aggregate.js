@@ -43,7 +43,6 @@ exports.handler = async (event, context) => {
     private: {},
     public: {},
     access: [],
-    references: [],
     search: {}
   }
 
@@ -63,33 +62,24 @@ exports.handler = async (event, context) => {
       newEntity.private[prop.type] = []
     }
 
-    if (prop.date) {
-      const d = new Date(prop.date)
-      cleanProp = { ...cleanProp, string: d.toISOString().substring(0, 9) }
-    }
-
     if (prop.reference) {
-      const referenceEntity = await user.db.collection('entity').findOne({ _id: prop.reference }, { projection: { 'private.name': true, 'private.type': true } })
+      const referenceEntity = await user.db.collection('entity').findOne({ _id: prop.reference }, { projection: { _id: false, 'private.name': true, 'private._type': true } })
 
-      if (referenceEntity?.private?.name) {
-        cleanProp = referenceEntity.private.name.map(x => ({ ...cleanProp, ...x }))
+      if (referenceEntity) {
+        cleanProp = { ...cleanProp, string: referenceEntity.private?.name?.[0].string, _type: referenceEntity.private?._type?.[0].string }
       } else {
         cleanProp = { ...cleanProp, string: prop.reference.toString() }
+        console.log(`NO_REFERENCE ${prop.reference.toString()}`)
       }
 
-      if (!Array.isArray(cleanProp)) {
-        cleanProp = [cleanProp]
+      if (!newEntity.private._reference) {
+        newEntity.private._reference = []
       }
 
-      const refProps = cleanProp.map(x => ({ ...x, entityType: referenceEntity?.private?.type }))
-      newEntity.references = [...newEntity.references, ...refProps]
+      newEntity.private._reference = [...newEntity.private._reference, cleanProp]
     }
 
-    if (!Array.isArray(cleanProp)) {
-      cleanProp = [cleanProp]
-    }
-
-    newEntity.private[prop.type] = [...newEntity.private[prop.type], ...cleanProp]
+    newEntity.private[prop.type] = [...newEntity.private[prop.type], cleanProp]
   }
 
   if (newEntity.private._type) {
