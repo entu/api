@@ -93,11 +93,13 @@ async function aggregate (context, account, entityId, date) {
         console.log(`NO_REFERENCE ${prop.reference.toString()}`)
       }
 
-      if (!newEntity.private._reference) {
-        newEntity.private._reference = []
+      if (!prop.type.startsWith('_')) {
+        if (newEntity.private._reference) {
+          newEntity.private._reference = [...newEntity.private._reference, cleanProp]
+        } else {
+          newEntity.private._reference = [cleanProp]
+        }
       }
-
-      newEntity.private._reference = [...newEntity.private._reference, cleanProp]
     }
 
     newEntity.private[prop.type] = [...newEntity.private[prop.type], _.omit(cleanProp, ['property_type', 'entity_type'])
