@@ -36,9 +36,12 @@ exports.handler = async (event, context) => {
           at: '$created.at',
           by: '$created.by',
           new: {
+            boolean: '$boolean',
             date: '$date',
             datetime: '$datetime',
             filename: '$filename',
+            filesize: '$filesize',
+            md5: '$md5',
             number: '$number',
             reference: '$reference',
             string: '$string'
@@ -62,9 +65,12 @@ exports.handler = async (event, context) => {
                 at: '$deleted.at',
                 by: '$deleted.by',
                 old: {
+                  boolean: '$boolean',
                   date: '$date',
                   datetime: '$datetime',
                   filename: '$filename',
+                  filesize: '$filesize',
+                  md5: '$md5',
                   number: '$number',
                   reference: '$reference',
                   string: '$string'
