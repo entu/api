@@ -348,6 +348,25 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 
 
+### GET /entity/{ \_id }/history
+Get entity history (changelog).
+
+#### Example request
+```http
+GET /entity/59abac1bb5684200016be61e/history HTTP/1.1
+Host: api.entu.app
+Accept-Encoding: deflate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+```
+
+#### Example response
+```json
+{}
+```
+
+
+
+
 ## Property
 
 ### GET /property/{ \_id }
