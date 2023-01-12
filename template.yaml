@@ -246,6 +246,28 @@ Resources:
             Method: DELETE
             ApiId: !Ref HttpApi
 
+  FunctionEntityHistoryGet:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-entity-history-get"
+      CodeUri: functions/entity/
+      Handler: history.handler
+      Description: Get entity history with given id
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${AWS::StackName}-*"
+        - SQSPollerPolicy:
+            QueueName: !Sub "${AWS::StackName}-*"
+        - SQSSendMessagePolicy:
+            QueueName: !Sub "${AWS::StackName}-*"
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /entity/{_id}/history
+            Method: GET
+            ApiId: !Ref HttpApi
+
   FunctionEntityAggregateGet:
     Type: AWS::Serverless::Function
     Properties:
