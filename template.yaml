@@ -117,7 +117,7 @@ Resources:
     Properties:
       FunctionName: !Sub "${AWS::StackName}-auth-oauth"
       CodeUri: functions/auth/
-      Handler: get.handler
+      Handler: oauth.handler
       Description: Redirect user to OAuth.ee and authenticate user if request is redirected back from OAuth.ee
       Policies:
         - SSMParameterReadPolicy:
