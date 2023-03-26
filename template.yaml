@@ -112,13 +112,13 @@ Resources:
             Method: GET
             ApiId: !Ref HttpApi
 
-  FunctionAuthOauthGet:
+  FunctionAuthOauth:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${AWS::StackName}-auth-oauth-get"
-      CodeUri: functions/auth/oauth/
+      FunctionName: !Sub "${AWS::StackName}-auth-oauth"
+      CodeUri: functions/auth/
       Handler: get.handler
-      Description: Redirect user to OAuth.ee
+      Description: Redirect user to OAuth.ee and authenticate user if request is redirected back from OAuth.ee
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -126,7 +126,7 @@ Resources:
         HttpApiEvent:
           Type: HttpApi
           Properties:
-            Path: /auth/oauth/{provider}
+            Path: /auth/{provider}
             Method: GET
             ApiId: !Ref HttpApi
 

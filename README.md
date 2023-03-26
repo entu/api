@@ -71,12 +71,15 @@ Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF
 
 
 
-### GET /auth/apple
-Redirects user to Apple for authentication. After successful authentication:
+### GET /auth/{ provider }
+Redirects user to OAuth.ee for authentication. After successful authentication:
 - If query parameter *next* is set, user is redirected to given url. Temporary API key is added to url end.
 - If next is not set returns temporary API key.
 
 Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key can be used only once.
+
+#### Path parameters
+- **provider** - Authentication provider - google, apple, smart-id, mobile-id ro id-card.
 
 #### Query parameters
 - **next** - Url where user is redirected after successful auth.
@@ -85,65 +88,6 @@ Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key c
 ```json
 {
   "key": "M2s8xKpwxG77JYxbx7xw4cS9"
-}
-```
-
-
-
-
-### GET /auth/google
-Redirects user to Google for authentication. After successful authentication:
-- If query parameter *next* is set, user is redirected to given url. Temporary API key is added to url end.
-- If next is not set returns temporary API key.
-
-Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key can be used only once.
-
-#### Query parameters
-- **next** - Url where user is redirected after successful auth.
-
-#### Example response
-```json
-{
-  "key": "yp5xhSMf6uRnpJ5QKAeQ2RDT"
-}
-```
-
-
-
-
-### GET /auth/lhv
-Get form data for authentication with [LHV Bank link](https://www.lhv.ee/en/bank-link). Make a form (with all data from *signedRequest*) and POST it to given *url*. After successful authentication:
-- If query parameter *next* is set, user is redirected to given url. Temporary API key is added to url end.
-- If next is not set returns temporary API key.
-
-Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key can be used only once.
-
-#### Query parameters
-- **next** - Url where user is redirected after successful auth.
-
-#### Example request
-```http
-GET /auth/lhv?next=https://entu.app/auth/lhv/ HTTP/1.1
-Host: api.entu.app
-Accept-Encoding: deflate
-```
-
-#### Example response
-```json
-{
-  "url": "https://www.lhv.ee/banklink",
-  "signedRequest": {
-    "VK_SERVICE": "4011",
-    "VK_VERSION": "008",
-    "VK_SND_ID": "...",
-    "VK_REPLY": "3012",
-    "VK_RETURN": "https://api.entu.app/auth/lhv?next=",
-    "VK_DATETIME": "2019-07-01T11:09:31Z",
-    "VK_RID": "",
-    "VK_MAC": "KxTYo4qb7RuGJQSO0UKxTYo4FL0BcHYAQxT8Qj//0YsXKp3YeRGJQSO0U5wGKlFxlg==",
-    "VK_ENCODING": "UTF-8",
-    "VK_LANG": "EST"
-  }
 }
 ```
 
