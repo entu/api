@@ -8,21 +8,22 @@ exports.handler = async (event, context) => {
 
   try {
     const jwtSecret = await _h.ssmParameter('jwt-secret')
-    const clientId = await _h.ssmParameter('microsoft-id')
+    const clientId = await _h.ssmParameter('oauth-id')
+    const provider = event.pathParameters?.provider
 
     const state = jwt.sign({ next: event.queryStringParameters?.next }, jwtSecret, {
+      provider,
       audience: event.requestContext?.http?.sourceIp,
       expiresIn: '5m'
     })
 
-    const url = new URL('https://login.microsoftonline.com')
-    url.pathname = '/common/oauth2/v2.0/authorize'
+    const url = new URL('https://oauth.ee')
+    url.pathname = `/auth/${provider}`
     url.search = new URLSearchParams({
       client_id: clientId,
       redirect_uri: `https://${_h.getHeader(event, 'host')}${event.rawPath}`,
       response_type: 'code',
-      response_mode: 'form_post',
-      scope: 'https://graph.microsoft.com/User.Read',
+      scope: 'openid',
       state
     }).toString()
 

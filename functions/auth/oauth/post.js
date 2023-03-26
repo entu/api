@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
 
     const decodedState = jwt.verify(params.state, jwtSecret, { audience: event.requestContext?.http?.sourceIp })
 
-    if (params.error) return _h.error([400, params.error])
+    if (params.error) return _h.error({ 400: params.error })
 
     if (!params.code) return _h.error([400, 'No code'])
 
@@ -23,11 +23,10 @@ exports.handler = async (event, context) => {
     const profile = await getProfile(accessToken)
     const user = {
       ip: event.requestContext?.http?.sourceIp,
-      provider: 'google',
+      provider: 'oauth',
       id: profile.id,
-      name: profile.displayName,
-      email: profile.emails?.[0]?.value,
-      picture: profile.image?.url
+      name: profile.name,
+      email: profile.email
     }
 
     const sessionId = await _h.addUserSession(user)
@@ -42,26 +41,25 @@ exports.handler = async (event, context) => {
   }
 }
 
-const getToken = async (code, redirectUri) => {
-  const clientId = await _h.ssmParameter('google-id')
-  const clientSecret = await _h.ssmParameter('google-secret')
+const getToken = async (code) => {
+  const clientId = await _h.ssmParameter('oauth-id')
+  const clientSecret = await _h.ssmParameter('oauth-secret')
 
   return new Promise((resolve, reject) => {
-    const query = new URLSearchParams({
+    const query = JSON.stringify({
       client_id: clientId,
       client_secret: clientSecret,
       code,
-      redirect_uri: redirectUri,
       grant_type: 'authorization_code'
-    }).toString()
+    })
 
     const options = {
-      host: 'www.googleapis.com',
+      host: 'oauth.ee',
       port: 443,
       method: 'POST',
-      path: '/oauth2/v4/token',
+      path: '/api/token',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
         'Content-Length': query.length
       }
     }
@@ -79,7 +77,7 @@ const getToken = async (code, redirectUri) => {
         if (res.statusCode === 200 && data.access_token) {
           resolve(data.access_token)
         } else {
-          reject(data.error_description?.data)
+          reject(data)
         }
       })
     }).on('error', (err) => {
@@ -90,8 +88,8 @@ const getToken = async (code, redirectUri) => {
 
 const getProfile = async (accessToken) => {
   return new Promise((resolve, reject) => {
-    const url = new URL('https://www.googleapis.com')
-    url.pathname = '/plus/v1/people/me'
+    const url = new URL('https://oauth.ee')
+    url.pathname = '/api/user'
     url.search = new URLSearchParams({
       access_token: accessToken
     }).toString()
@@ -109,7 +107,7 @@ const getProfile = async (accessToken) => {
         if (res.statusCode === 200) {
           resolve(data)
         } else {
-          reject(data.error_description?.data)
+          reject(data)
         }
       })
     }).on('error', (err) => {

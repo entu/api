@@ -112,13 +112,13 @@ Resources:
             Method: GET
             ApiId: !Ref HttpApi
 
-  FunctionAuthGoogleGet:
+  FunctionAuthOauthGet:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${AWS::StackName}-auth-google-get"
-      CodeUri: functions/auth/google/
+      FunctionName: !Sub "${AWS::StackName}-auth-oauth-get"
+      CodeUri: functions/auth/oauth/
       Handler: get.handler
-      Description: Redirect user to Google
+      Description: Redirect user to OAuth.ee
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -126,17 +126,17 @@ Resources:
         HttpApiEvent:
           Type: HttpApi
           Properties:
-            Path: /auth/google
+            Path: /auth/oauth/{provider}
             Method: GET
             ApiId: !Ref HttpApi
 
-  FunctionAuthGooglePost:
+  FunctionAuthOauthPost:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${AWS::StackName}-auth-google-post"
-      CodeUri: functions/auth/google/
+      FunctionName: !Sub "${AWS::StackName}-auth-oauth-post"
+      CodeUri: functions/auth/oauth/
       Handler: post.handler
-      Description: Authenticates user by Google
+      Description: Authenticates user by OAuth.ee
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
@@ -144,7 +144,7 @@ Resources:
         HttpApiEvent:
           Type: HttpApi
           Properties:
-            Path: /auth/google
+            Path: /auth/oauth
             Method: POST
             ApiId: !Ref HttpApi
 
@@ -343,13 +343,13 @@ Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-google-get"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-oauth-get"
       RetentionInDays: 365
 
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-google-post"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-oauth-post"
       RetentionInDays: 365
 
   LogGroup:
