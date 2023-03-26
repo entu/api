@@ -12,7 +12,6 @@ exports.handler = async (event, context) => {
     const provider = event.pathParameters?.provider
 
     const state = jwt.sign({ next: event.queryStringParameters?.next }, jwtSecret, {
-      provider,
       audience: event.requestContext?.http?.sourceIp,
       expiresIn: '5m'
     })

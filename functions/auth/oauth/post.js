@@ -23,7 +23,7 @@ exports.handler = async (event, context) => {
     const profile = await getProfile(accessToken)
     const user = {
       ip: event.requestContext?.http?.sourceIp,
-      provider: 'oauth',
+      provider: profile.provider,
       id: profile.id,
       name: profile.name,
       email: profile.email
