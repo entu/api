@@ -22,10 +22,10 @@ exports.handler = async (event, context) => {
       const decoded = jwt.verify(key, jwtSecret, { audience: event.requestContext?.http?.sourceIp })
       const session = await connection.collection('session').findOneAndUpdate({ _id: _h.strToId(decoded.sub), deleted: { $exists: false } }, { $set: { deleted: new Date() } })
 
-      if (!session?.value) return _h.error([400, 'No session'])
-      if (!session.value.user?.email) return _h.error([400, 'No user email'])
+      if (!session) return _h.error([400, 'No session'])
+      if (!session.user?.email) return _h.error([400, 'No user email'])
 
-      authFilter['private.entu_user.string'] = session.value?.user?.email
+      authFilter['private.entu_user.string'] = session.user.email
     } catch (e) {
       authFilter['private.entu_api_key.string'] = crypto.createHash('sha256').update(key).digest('hex')
     }
