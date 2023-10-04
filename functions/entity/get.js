@@ -57,7 +57,7 @@ exports.handler = async (event, context) => {
       let sortFields = {}
       const filter = {}
 
-      _forIn(event.queryStringParameters, (v, k) => {
+      _forIn(event.queryStringParameters || {}, (v, k) => {
         if (k.includes('.')) {
           const fieldArray = k.split('.')
           const field = fieldArray[0]
