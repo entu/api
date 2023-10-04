@@ -19,7 +19,7 @@ exports.handler = async (event, context) => {
   } else {
     const user = await _h.user(event)
 
-    results.push(await aggregate(context, user.account, event.pathParameters._id, event.queryStringParameters.date))
+    results.push(await aggregate(context, user.account, event.pathParameters._id, event.queryStringParameters?.date))
   }
 
   console.log('RESULTS', JSON.stringify(results, null, 2))

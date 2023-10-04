@@ -11,7 +11,7 @@ exports.handler = async (event, context) => {
     const jwtSecret = await _h.ssmParameter('jwt-secret')
     const clientId = await _h.ssmParameter('oauth-id')
     const provider = event.pathParameters?.provider
-    const { code, error, state } = event.queryStringParameters
+    const { code, error, state } = event.queryStringParameters || {}
 
     if (error) return _h.error({ 400: error })
 
