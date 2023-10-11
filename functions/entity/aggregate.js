@@ -189,7 +189,7 @@ async function aggregate (context, account, entityId, date) {
 }
 
 async function formula (str, eId, db) {
-  const strArray = str.trim().split(' ')
+  const strArray = str.trim().split(/(?<!['"])\s+(?!(?:[^'"]*['"][^'"]*['"])*[^'"]*['"])/)
 
   const func = formulaFunction(strArray)
   const data = formulaContent(strArray, func)
