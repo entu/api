@@ -189,18 +189,15 @@ async function aggregate (context, account, entityId, date) {
 }
 
 async function formula (str, eId, db) {
-  const func = formulaFunction(str)
-  const data = formulaContent(str)
+  const strArray = str.trim().split(' ')
 
-  if (func && !['CONCAT', 'COUNT', 'SUM', 'SUBTRACT', 'AVERAGE', 'MIN', 'MAX'].includes(func)) {
-    return { string: str }
-  }
+  const func = formulaFunction(strArray)
+  const data = formulaContent(strArray, func)
 
-  const dataArray = data.split(',')
   let valueArray = []
 
-  for (let i = 0; i < dataArray.length; i++) {
-    const value = await formulaField(dataArray[i], eId, db)
+  for (let i = 0; i < data.length; i++) {
+    const value = await formulaField(data[i], eId, db)
 
     if (value) {
       valueArray = [...valueArray, ...value]
@@ -488,23 +485,21 @@ async function formulaField (str, eId, db) {
   return result
 }
 
-function formulaFunction (str) {
-  str = str.trim()
+function formulaFunction (data) {
+  const func = data.at(-1)
 
-  if (!str.includes('(') || !str.includes(')')) {
-    return null
+  if (['CONCAT', 'COUNT', 'SUM', 'SUBTRACT', 'AVERAGE', 'MIN', 'MAX'].includes(func)) {
+    return func
   } else {
-    return str.substring(0, str.indexOf('(')).toUpperCase()
+    return 'CONCAT'
   }
 }
 
-function formulaContent (str) {
-  str = str.trim()
-
-  if (!str.includes('(') || !str.includes(')')) {
-    return str
+function formulaContent (data, func) {
+  if (data.at(-1) === func) {
+    return data.slice(0, -1)
   } else {
-    return str.substring(str.indexOf('(') + 1, str.lastIndexOf(')'))
+    return data
   }
 }
 
