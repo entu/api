@@ -79,7 +79,7 @@ Redirects user to OAuth.ee for authentication. After successful authentication:
 Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key can be used only once.
 
 #### Path parameters
-- **provider** - Authentication provider - google, apple, smart-id, mobile-id or id-card.
+- **provider** - Authentication provider - apple, google, smart-id, mobile-id or id-card.
 
 #### Query parameters
 - **next** - Url where user is redirected after successful auth.
