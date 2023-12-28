@@ -197,7 +197,7 @@ Resources:
     Properties:
       FunctionName: !Sub "${AWS::StackName}-entity-post"
       CodeUri: functions/entity/
-      Handler: get.handler
+      Handler: post.handler
       Description: Add new properties to existing entity
       Policies:
         - SSMParameterReadPolicy:
@@ -299,7 +299,7 @@ Resources:
     Properties:
       FunctionName: !Sub "${AWS::StackName}-property-delete"
       CodeUri: functions/property/
-      Handler: get.handler
+      Handler: delete.handler
       Description: Delete property with given id
       Policies:
         - SSMParameterReadPolicy:
