@@ -11,7 +11,7 @@ exports.handler = async (event, context) => {
 
   try {
     const user = await _h.user(event)
-    const eId = event.pathParameters && event.pathParameters._id ? _h.strToId(event.pathParameters._id) : null
+    const eId = event.pathParameters?._id ? _h.strToId(event.pathParameters._id) : null
     const props = (event.queryStringParameters?.props || '').split(',').filter((x) => !!x)
     const group = (event.queryStringParameters?.group || '').split(',').filter((x) => !!x)
     const fields = {}
@@ -60,9 +60,9 @@ exports.handler = async (event, context) => {
       _forIn(event.queryStringParameters || {}, (v, k) => {
         if (k.includes('.')) {
           const fieldArray = k.split('.')
-          const field = fieldArray[0]
-          const type = fieldArray[1]
-          const operator = fieldArray[2]
+          const field = fieldArray.at(0)
+          const type = fieldArray.at(1)
+          const operator = fieldArray.at(2)
           let value
 
           switch (type) {
@@ -86,7 +86,7 @@ exports.handler = async (event, context) => {
               break
             default:
               if (operator === 'regex' && v.includes('/')) {
-                value = new RegExp(v.split('/')[1], v.split('/')[2])
+                value = new RegExp(v.split('/').at(1), v.split('/').at(2))
               } else if (operator === 'exists') {
                 value = v.toLowerCase() === 'true'
               } else {
@@ -143,7 +143,7 @@ exports.handler = async (event, context) => {
 
         group.forEach((g) => {
           groupIds[g.replaceAll('.', '#')] = `$private.${g}`
-          unwinds.push({ $unwind: { path: `$private.${g.split('.')[0]}`, preserveNullAndEmptyArrays: true } })
+          unwinds.push({ $unwind: { path: `$private.${g.split('.').at(0)}`, preserveNullAndEmptyArrays: true } })
         })
 
         Object.keys(fields).forEach((g) => {
@@ -204,8 +204,8 @@ const claenupEntity = async (entity, user, _thumbnail) => {
     return
   }
 
-  if (_thumbnail && result.photo?.[0]?.s3) {
-    result._thumbnail = await _h.getSignedDownloadUrl(result.photo[0].s3)
+  if (_thumbnail && result.photo?.at(0)?.s3) {
+    result._thumbnail = await _h.getSignedDownloadUrl(result.photo.at(0).s3)
   }
 
   if (result.entu_api_key) {

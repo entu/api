@@ -53,7 +53,7 @@ exports.handler = async (event, context) => {
 
         accounts[account] = {
           _id: person._id.toString(),
-          name: person.private?.name?.[0]?.string,
+          name: person.private?.name?.at(0)?.string,
           account,
           token
         }

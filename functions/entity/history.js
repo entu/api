@@ -7,7 +7,7 @@ exports.handler = async (event, context) => {
 
   try {
     const user = await _h.user(event)
-    const eId = event.pathParameters && event.pathParameters._id ? _h.strToId(event.pathParameters._id) : null
+    const eId = event.pathParameters?._id ? _h.strToId(event.pathParameters._id) : null
 
     const entity = await user.db.collection('entity').findOne({
       _id: eId

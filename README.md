@@ -157,7 +157,7 @@ Content-Length: 151
 [
   { "type": "_type", "string": "book" },
   { "type": "title", "string": "Hobbit" },
-  { "type": "photo", "filename": "cover.jpg", "filesize": 1937 }
+  { "type": "photo", "filename": "cover.jpg", "filesize": 1937, "filetype": "image/jpeg" }
 ]
 ```
 

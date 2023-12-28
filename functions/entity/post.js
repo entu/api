@@ -33,7 +33,7 @@ exports.handler = async (event, context) => {
 
     if (body && !Array.isArray(body)) return _h.error([400, 'Data must be array'])
 
-    let eId = event.pathParameters && event.pathParameters._id ? _h.strToId(event.pathParameters._id) : null
+    let eId = event.pathParameters?._id ? _h.strToId(event.pathParameters._id) : null
 
     if (eId) {
       if (!body || (Array.isArray(body) && body.length === 0)) {
@@ -121,7 +121,7 @@ exports.handler = async (event, context) => {
       delete newProperty.entity
       delete newProperty.created
 
-      if (property.filename && property.filesize) {
+      if (property.filename && property.filesize && property.filetype) {
         newProperty.upload = {
           url: await _h.getSignedUploadUrl(`${user.account}/${newProperty._id}`, property.filename, property.filetype),
           method: 'PUT',
@@ -130,15 +130,15 @@ exports.handler = async (event, context) => {
             ACL: 'private'
           }
         }
-      }
 
-      await user.db.collection('property').updateOne({
-        _id: newProperty._id
-      }, {
-        $set: {
-          s3: `${user.account}/${newProperty._id}`
-        }
-      })
+        await user.db.collection('property').updateOne({
+          _id: newProperty._id
+        }, {
+          $set: {
+            s3: `${user.account}/${newProperty._id}`
+          }
+        })
+      }
 
       pIds.push(newProperty)
     }

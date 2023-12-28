@@ -225,12 +225,12 @@ exports.error = (err) => {
   console.error(err)
 
   if (Array.isArray(err)) {
-    code = err[0]
-    message = err[1]
+    code = err.at(0)
+    message = err.at(1)
 
     console.error(code.toString(), message)
-  } else if (parseInt(err.toString().split(':')[1])) {
-    code = parseInt(err.toString().split(':')[1])
+  } else if (parseInt(err.toString().split(':').at(1))) {
+    code = parseInt(err.toString().split(':').at(1))
     message = err.toString()
   }
 

@@ -110,7 +110,7 @@ async function aggregate (context, account, entityId, date) {
     const definition = await database.collection('entity').aggregate([
       {
         $match: {
-          'private._parent.reference': newEntity.private._type[0].reference,
+          'private._parent.reference': newEntity.private._type.at(0).reference,
           'private._type.string': 'property',
           'private.name.string': { $exists: true }
         }
@@ -214,7 +214,7 @@ async function formula (str, eId, db) {
     case 'SUM':
       return { number: valueArray.reduce((a, b) => a + b, 0) }
     case 'SUBTRACT':
-      return { number: valueArray.reduce((a, b) => a - b, 0) + (valueArray[0] * 2) }
+      return { number: valueArray.reduce((a, b) => a - b, 0) + (valueArray.at(0) * 2) }
     case 'AVERAGE':
       return { number: valueArray.reduce((a, b) => a + b, 0) / valueArray.length }
     case 'MIN':

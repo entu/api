@@ -50,7 +50,7 @@ exports.handler = async (event, context) => {
 
     return _h.json({
       entities,
-      deletedEntities: deletedEntities?.[0]?.count || 0,
+      deletedEntities: deletedEntities?.at(0)?.count || 0,
       properties: properties.find((e) => e._id === false)?.count || 0,
       deletedProperties: properties.find((e) => e._id === true)?.count || 0,
       files: files.find((e) => e._id === false)?.count || 0,
