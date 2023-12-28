@@ -160,6 +160,8 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - SQSSendMessagePolicy:
+            QueueName: !Sub "${AWS::StackName}-*"
         - S3WritePolicy:
             BucketName: "*"
       Events:
@@ -200,6 +202,8 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - SQSSendMessagePolicy:
+            QueueName: !Sub "${AWS::StackName}-*"
         - S3WritePolicy:
             BucketName: "*"
       Events:
@@ -220,6 +224,8 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - SQSSendMessagePolicy:
+            QueueName: !Sub "${AWS::StackName}-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -238,10 +244,6 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
-        - SQSPollerPolicy:
-            QueueName: !Sub "${AWS::StackName}-*"
-        - SQSSendMessagePolicy:
-            QueueName: !Sub "${AWS::StackName}-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -302,6 +304,8 @@ Resources:
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${AWS::StackName}-*"
+        - SQSSendMessagePolicy:
+            QueueName: !Sub "${AWS::StackName}-*"
       Events:
         HttpApiEvent:
           Type: HttpApi
