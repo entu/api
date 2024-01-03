@@ -121,11 +121,11 @@ exports.handler = async (event, context) => {
       delete newProperty.entity
       delete newProperty.created
 
-      if (property.filename && property.filesize && property.filetype) {
+      if (property.filename && property.filesize) {
         const contentDisposition = `inline;filename="${property.filename.replace('"', '\"')}"`
 
         newProperty.upload = {
-          url: await _h.getSignedUploadUrl(`${user.account}/${newProperty._id}`, property.filename, property.filetype, contentDisposition),
+          url: await _h.getSignedUploadUrl(`${user.account}/${newProperty._id}`, property.filename, property.filetype || undefined, contentDisposition),
           method: 'PUT',
           headers: {
             ACL: 'private',
