@@ -61,8 +61,8 @@ exports.getSignedDownloadUrl = async (key) => {
   return url
 }
 
-exports.getSignedUploadUrl = async (key, filename, filetype) => {
   const s3Region = await this.ssmParameter('files-s3-region')
+exports.getSignedUploadUrl = async (key, filename, filetype, contentDisposition) => {
   const s3Bucket = await this.ssmParameter('files-s3-bucket')
 
   const config = {
@@ -76,9 +76,8 @@ exports.getSignedUploadUrl = async (key, filename, filetype) => {
     Bucket: s3Bucket,
     Key: key,
     ContentType: filetype,
-    ContentDisposition: `inline;filename="${filename.replace('"', '\"')}"`
-    // ACL: 'private',
-    // ServerSideEncryption: 'AES256'
+    ContentDisposition: contentDisposition,
+    ACL: 'private'
   })
   const url = await getSignedUrl(s3, command, { expiresIn: 60 })
 
