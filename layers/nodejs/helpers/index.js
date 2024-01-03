@@ -49,9 +49,9 @@ exports.getSignedDownloadUrl = async (key) => {
   const s3Bucket = await this.ssmParameter('files-s3-bucket')
 
   const config = {
-    region: s3Region,
-    s3BucketEndpoint: true,
-    endpoint: `https://s3.${s3Region}.amazonaws.com`
+    region: s3Region
+    // s3BucketEndpoint: true,
+    // endpoint: `https://s3.${s3Region}.amazonaws.com`
   }
 
   const s3 = new S3Client(config)
@@ -61,8 +61,8 @@ exports.getSignedDownloadUrl = async (key) => {
   return url
 }
 
-  const s3Region = await this.ssmParameter('files-s3-region')
 exports.getSignedUploadUrl = async (key, filename, filetype, contentDisposition) => {
+  const s3Region = await this.ssmParameter('files-s3-region')
   const s3Bucket = await this.ssmParameter('files-s3-bucket')
 
   const config = {
