@@ -122,7 +122,7 @@ exports.handler = async (event, context) => {
       delete newProperty.created
 
       if (property.filename && property.filesize) {
-        const contentDisposition = `inline;filename="${property.filename.replace('"', '\"')}"`
+        const contentDisposition = `inline;filename="${encodeURI(property.filename.replace('"', '\"'))}"`
 
         newProperty.upload = {
           url: await _h.getSignedUploadUrl(`${user.account}/${newProperty._id}`, property.filename, property.filetype || 'application/octet-stream', contentDisposition),
