@@ -123,13 +123,14 @@ exports.handler = async (event, context) => {
 
       if (property.filename && property.filesize && property.filetype) {
         const contentDisposition = `inline;filename="${property.filename.replace('"', '\"')}"`
+
         newProperty.upload = {
           url: await _h.getSignedUploadUrl(`${user.account}/${newProperty._id}`, property.filename, property.filetype, contentDisposition),
           method: 'PUT',
           headers: {
-            'Content-Type': property.filetype,
             ACL: 'private',
-            ContentDisposition: contentDisposition
+            'Content-Disposition': contentDisposition,
+            'Content-Type': property.filetype
           }
         }
 
