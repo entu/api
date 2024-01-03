@@ -125,7 +125,7 @@ exports.handler = async (event, context) => {
         const contentDisposition = `inline;filename="${property.filename.replace('"', '\"')}"`
 
         newProperty.upload = {
-          url: await _h.getSignedUploadUrl(`${user.account}/${newProperty._id}`, property.filename, property.filetype || undefined, contentDisposition),
+          url: await _h.getSignedUploadUrl(`${user.account}/${newProperty._id}`, property.filename, property.filetype || 'application/octet-stream', contentDisposition),
           method: 'PUT',
           headers: {
             ACL: 'private',
