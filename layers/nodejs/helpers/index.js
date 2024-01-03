@@ -75,8 +75,8 @@ exports.getSignedUploadUrl = async (key, filename, filetype) => {
   const command = new PutObjectCommand({
     Bucket: s3Bucket,
     Key: key,
-    ContentType: filetype
-    // ContentDisposition: `inline;filename="${filename.replace('"', '\"')}"`,
+    ContentType: filetype,
+    ContentDisposition: `inline;filename="${filename.replace('"', '\"')}"`
     // ACL: 'private',
     // ServerSideEncryption: 'AES256'
   })
