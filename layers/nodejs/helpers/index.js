@@ -66,19 +66,19 @@ exports.getSignedUploadUrl = async (key, filename, filetype) => {
   const s3Bucket = await this.ssmParameter('files-s3-bucket')
 
   const config = {
-    region: s3Region,
-    s3BucketEndpoint: true,
-    endpoint: `https://s3.${s3Region}.amazonaws.com`
+    region: s3Region
+    // s3BucketEndpoint: true,
+    // endpoint: `https://s3.${s3Region}.amazonaws.com`
   }
 
   const s3 = new S3Client(config)
   const command = new PutObjectCommand({
     Bucket: s3Bucket,
     Key: key,
-    ContentType: filetype,
-    ContentDisposition: `inline;filename="${filename.replace('"', '\"')}"`,
-    ACL: 'private',
-    ServerSideEncryption: 'AES256'
+    ContentType: filetype
+    // ContentDisposition: `inline;filename="${filename.replace('"', '\"')}"`,
+    // ACL: 'private',
+    // ServerSideEncryption: 'AES256'
   })
   const url = await getSignedUrl(s3, command, { expiresIn: 60 })
 
