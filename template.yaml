@@ -219,7 +219,7 @@ Resources:
     Properties:
       FunctionName: !Sub "${AWS::StackName}-entity-delete"
       CodeUri: functions/entity/
-      Handler: get.handler
+      Handler: delete.handler
       Description: Delete entity with given id
       Policies:
         - SSMParameterReadPolicy:
