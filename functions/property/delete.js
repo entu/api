@@ -2,6 +2,14 @@
 
 const _h = require('helpers')
 
+const rightTypes = [
+  '_viewer',
+  '_expander',
+  '_editor',
+  '_owner',
+  '_public'
+]
+
 exports.handler = async (event, context) => {
   if (event.source === 'aws.events') return _h.json({ message: 'OK' })
 
@@ -22,7 +30,7 @@ exports.handler = async (event, context) => {
     })
 
     if (!property) return _h.error([404, 'Property not found'])
-    if (property.type.startsWith('_')) return _h.error([403, 'Can\'t delete system property'])
+    if (property.type.startsWith('_') && !rightTypes.includes(property.type)) return _h.error([403, 'Can\'t delete system property'])
 
     const entity = await user.db.collection('entity').findOne({
       _id: property.entity
@@ -39,6 +47,10 @@ exports.handler = async (event, context) => {
     const access = [...(entity.private?._owner || []), ...(entity.private?._editor || [])].map((s) => s.reference.toString())
 
     if (!access.includes(user.id)) return _h.error([403, 'User not in _owner nor _editor property'])
+
+    const owners = (entity.private?._owner || []).map((s) => s.reference.toString())
+
+    if (rightTypes.includes(property.type) && !owners.includes(user.id)) return _h.error([403, 'User not in _owner property'])
 
     await user.db.collection('property').updateOne({
       _id: pId
