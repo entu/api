@@ -7,7 +7,8 @@ const rightTypes = [
   '_expander',
   '_editor',
   '_owner',
-  '_public'
+  '_public',
+  '_parent'
 ]
 
 exports.handler = async (event, context) => {
