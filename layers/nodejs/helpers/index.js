@@ -31,7 +31,7 @@ exports.db = async (dbName) => {
   if (dbConnection) return dbConnection.db(dbName)
 
   const mongoUrl = await this.ssmParameter('mongodb-url')
-  const dbClient = new MongoClient(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
+  const dbClient = new MongoClient(mongoUrl)
 
   dbConnection = await dbClient.connect()
   dbConnection.on('close', () => {
