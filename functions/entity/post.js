@@ -53,12 +53,12 @@ exports.handler = async (event, context) => {
 
       if (!entity) return _h.error([404, 'Entity not found'])
 
-      const access = [...(entity.private?._owner || []), ...(entity.private?._editor || [])].map((s) => s.reference.toString())
+      const access = [...(entity.private?._owner || []), ...(entity.private?._editor || [])].map((s) => s.reference?.toString())
 
       if (!access.includes(user.id)) return _h.error([403, 'User not in _owner nor _editor property'])
 
       const rigtsProperties = body.filter((property) => rightTypes.includes(property.type))
-      const owners = (entity.private?._owner || []).map((s) => s.reference.toString())
+      const owners = (entity.private?._owner || []).map((s) => s.reference?.toString())
 
       if (rigtsProperties.length > 0 && !owners.includes(user.id)) return _h.error([403, 'User not in _owner property'])
     }
@@ -87,7 +87,7 @@ exports.handler = async (event, context) => {
 
         if (!parent) return _h.error([400, 'Entity in _parent property not found'])
 
-        const parentAccess = [...(parent.private?._owner || []), ...(parent.private?._editor || []), ...(parent.private?._expander || [])].map((s) => s.reference.toString())
+        const parentAccess = [...(parent.private?._owner || []), ...(parent.private?._editor || []), ...(parent.private?._expander || [])].map((s) => s.reference?.toString())
 
         if (!parentAccess.includes(user.id)) return _h.error([403, 'User not in parent _owner, _editor nor _expander property'])
       }
