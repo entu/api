@@ -9,7 +9,8 @@ const allowedTypes = [
   '_viewer',
   '_expander',
   '_editor',
-  '_owner'
+  '_owner',
+  '_inheritrights'
 ]
 const rightTypes = [
   '_viewer',
