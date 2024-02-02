@@ -38,14 +38,13 @@ exports.handler = async (event, context) => {
     }, {
       projection: {
         _id: false,
-        'private._owner': true,
         'private._editor': true
       }
     })
 
     if (!entity) return _h.error([404, 'Entity not found'])
 
-    const access = [...(entity.private?._owner || []), ...(entity.private?._editor || [])].map((s) => s.reference?.toString())
+    const access = (entity.private?._editor || []).map((s) => s.reference?.toString())
 
     if (!access.includes(user.id)) return _h.error([403, 'User not in _owner nor _editor property'])
 

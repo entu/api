@@ -51,6 +51,7 @@ async function aggregate (context, account, entityId, date) {
     await database.collection('entity').deleteOne({ _id: eId })
 
     console.log(`DELETED ${eId.toString()}`)
+
     return {
       account,
       entity: eId,
@@ -147,6 +148,20 @@ async function aggregate (context, account, entityId, date) {
   } else {
     console.log(`NO_TYPE ${newEntity.private._type} ${eId.toString()}`)
   }
+
+  // combine rights
+  newEntity.private._editor = _.uniq([
+    ...(newEntity.private._editor || []),
+    ...(newEntity.private._owner || [])
+  ])
+  newEntity.private._expander = _.uniq([
+    ...(newEntity.private._expander || []),
+    ...(newEntity.private._editor || [])
+  ])
+  newEntity.private._viewer = _.uniq([
+    ...(newEntity.private._viewer || []),
+    ...(newEntity.private._expander || [])
+  ])
 
   if (Object.keys(newEntity.public).length === 0) {
     delete newEntity.public
