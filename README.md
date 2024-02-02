@@ -360,10 +360,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ## System properties
 
 Entu system properties begin with \_. Those properties are:
-- **_type** - Reference to object's type.
-- **_parent** - Reference to parent object.
-- **_public** - If set to *true*, object (only it's public properties) is visible without authentication.
-- **_viewer** - Reference to who can view this object.
-- **_expander** - Reference to who can add new objects under this object.
-- **_editor** - Reference to who can change this object's properties (except rights!).
-- **_owner** - Reference to who can do anything with this object (view, change, delete and manage rights).
+- **_type** - Reference to entity's type.
+- **_parent** - Reference to parent entity.
+- **_public** - If set to *true*, entity (only it's public properties) is visible without authentication.
+- **_viewer** - Reference to who can view this entity.
+- **_expander** - Reference to who can add new entitys under this entity.
+- **_editor** - Reference to who can change this entity's properties (except rights!).
+- **_owner** - Reference to who can do anything with this entity (view, change, delete and manage rights).
+- **_inheritrights** - Inherits rights from the parent entity. Entity-specific rights override inherited rights.
+
