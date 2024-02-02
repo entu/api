@@ -81,7 +81,9 @@ exports.handler = async (event, context) => {
         }, {
           projection: {
             _id: false,
-            'private._expander': true
+            'private._expander': true,
+            'private._public': true,
+            'private._inheritrights': true
           }
         })
 
@@ -90,6 +92,14 @@ exports.handler = async (event, context) => {
         const parentAccess = (parent.private?._expander || []).map((s) => s.reference?.toString())
 
         if (!parentAccess.includes(user.id)) return _h.error([403, 'User not in parent _owner, _editor nor _expander property'])
+
+        if (parent.private?._public?.at(0)?.boolean === true && !body.some((x) => x.type === '_public')) {
+          body.push({ entity: eId, type: '_public', boolean: true, created: { at: createdDt, by: userId } })
+        }
+
+        if (parent.private?._inheritrights?.at(0)?.boolean === true && !body.some((x) => x.type === '_inheritrights')) {
+          body.push({ entity: eId, type: '_inheritrights', boolean: true, created: { at: createdDt, by: userId } })
+        }
       }
     }
 
