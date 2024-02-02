@@ -46,7 +46,8 @@ exports.handler = async (event, context) => {
       }, {
         projection: {
           _id: false,
-          'private._editor': true
+          'private._editor': true,
+          'private._owner': true
         }
       })
 
