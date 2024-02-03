@@ -163,7 +163,7 @@ async function aggregate (context, account, entityId, date) {
     ...(newEntity.private._expander || [])
   ])
 
-  if (!newEntity.access.includes('public')) {
+  if (!newEntity.access.includes('public') || Object.keys(newEntity.public).length === 0) {
     delete newEntity.public
   }
 
