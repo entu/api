@@ -149,18 +149,26 @@ async function aggregate (context, account, entityId, date) {
     console.log(`NO_TYPE ${newEntity.private._type} ${eId.toString()}`)
   }
 
+  let parentRights = {}
+  if (newEntity.private._parent && newEntity.private._inheritrights) {
+    parentRights = getParentRights(account, newEntity.private._parent)
+  }
+
   // combine rights
   newEntity.private._editor = _.uniq([
     ...(newEntity.private._editor || []),
-    ...(newEntity.private._owner || [])
+    ...(newEntity.private._owner || []),
+    ...(parentRights._editor || [])
   ])
   newEntity.private._expander = _.uniq([
     ...(newEntity.private._expander || []),
-    ...(newEntity.private._editor || [])
+    ...(newEntity.private._editor || []),
+    ...(parentRights._expander || [])
   ])
   newEntity.private._viewer = _.uniq([
     ...(newEntity.private._viewer || []),
-    ...(newEntity.private._expander || [])
+    ...(newEntity.private._expander || []),
+    ...(parentRights._viewer || [])
   ])
 
   if (!newEntity.access.includes('public') || Object.keys(newEntity.public).length === 0) {
@@ -522,4 +530,46 @@ function getValueArray (values) {
   if (!values) return []
 
   return values.map(x => x.number || x.datetime || x.date || x.string || x._id)
+}
+
+async function getParentRights (account, parents) {
+  const database = await _h.db(account)
+
+  const rights = await database.collection('entity').find({
+    _id: { $in: parents.map(x => x.reference) }
+  }, {
+    projection: {
+      _id: false,
+      'private._viewer': true,
+      'private._expander': true,
+      'private._editor': true,
+      'private._owner': true
+    }
+  }).toArray()
+
+  return rights.reduce((acc, cur) => {
+    return {
+      _viewer: _.uniq([
+        ...acc._viewer,
+        ...cur.private?._viewer.map((x) => ({ ...x, inherited: true }))
+      ]),
+      _expander: _.uniq([
+        ...acc._expander,
+        ...cur.private?._expander.map((x) => ({ ...x, inherited: true }))
+      ]),
+      _editor: _.uniq([
+        ...acc._editor,
+        ...cur.private?._editor.map((x) => ({ ...x, inherited: true }))
+      ]),
+      _owner: _.uniq([
+        ...acc._owner,
+        ...cur.private?._owner.map((x) => ({ ...x, inherited: true }))
+      ])
+    }
+  }, {
+    _viewer: [],
+    _expander: [],
+    _editor: [],
+    _owner: []
+  })
 }
