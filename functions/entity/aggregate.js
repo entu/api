@@ -72,14 +72,6 @@ async function aggregate (context, account, entityId, date) {
     const prop = properties[n]
     let cleanProp = _.omit(prop, ['entity', 'type', 'created', 'search', 'public'])
 
-    if (prop.reference && ['_viewer', '_expander', '_editor', '_owner'].includes(prop.type)) {
-      newEntity.access.push(prop.reference)
-    }
-
-    if (prop.type === '_public' && prop.boolean === true) {
-      newEntity.access.push('public')
-    }
-
     if (!newEntity.private[prop.type]) {
       newEntity.private[prop.type] = []
     }
@@ -170,6 +162,8 @@ async function aggregate (context, account, entityId, date) {
     ...(newEntity.private._expander || []),
     ...(parentRights._viewer || [])
   ])
+
+  newEntity.access = getAccessArray(newEntity)
 
   if (!newEntity.access.includes('public') || Object.keys(newEntity.public).length === 0) {
     delete newEntity.public
@@ -571,5 +565,24 @@ async function getParentRights (account, parents) {
     _expander: [],
     _editor: [],
     _owner: []
+  })
+}
+
+function getAccessArray ({ private: entity }) {
+  const access = []
+  const noAccess = entity._noaccess?.map((x) => x.reference)
+
+  if (entity._public?.at(0)?.boolean === true) {
+    access.push('public')
+  }
+
+  ['_viewer', '_expander', '_editor', '_owner'].forEach((type) => {
+    if (!entity[type]) return
+
+    entity[type].forEach((x) => {
+      if (noAccess?.includes(x.reference)) return
+
+      access.push(x.reference)
+    })
   })
 }
