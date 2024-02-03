@@ -9,7 +9,7 @@ exports.handler = async (event, context) => {
   const results = []
 
   if (event.Records?.length > 0) {
-    console.log('SQS_RECORDS', JSON.stringify(event.Records.map(x => x.body), null, 2))
+    console.log('SQS_RECORDS', event.Records.length)
 
     for (let n = 0; n < event.Records.length; n++) {
       const body = JSON.parse(event.Records[n].body)
@@ -142,26 +142,33 @@ async function aggregate (context, account, entityId, date) {
   }
 
   let parentRights = {}
-  if (newEntity.private._parent && newEntity.private._inheritrights) {
-    parentRights = getParentRights(account, newEntity.private._parent)
+  if (newEntity.private._parent?.length > 0 && newEntity.private._inheritrights?.at(0)?.boolean === true) {
+    parentRights = await getParentRights(account, newEntity.private._parent)
   }
 
   // combine rights
-  newEntity.private._editor = _.uniq([
+  newEntity.private._owner = _.uniqBy([
+    ...(parentRights._owner || []),
+    ...(newEntity.private._owner || [])
+  ], (x) => [x.reference.toString(), x.inherited || false].join('-'))
+
+  newEntity.private._editor = _.uniqBy([
+    ...(parentRights._editor || []),
     ...(newEntity.private._editor || []),
-    ...(newEntity.private._owner || []),
-    ...(parentRights._editor || [])
-  ])
-  newEntity.private._expander = _.uniq([
+    ...(newEntity.private._owner || [])
+  ], (x) => [x.reference.toString(), x.inherited || false].join('-'))
+
+  newEntity.private._expander = _.uniqBy([
+    ...(parentRights._expander || []),
     ...(newEntity.private._expander || []),
-    ...(newEntity.private._editor || []),
-    ...(parentRights._expander || [])
-  ])
-  newEntity.private._viewer = _.uniq([
+    ...(newEntity.private._editor || [])
+  ], (x) => [x.reference.toString(), x.inherited || false].join('-'))
+
+  newEntity.private._viewer = _.uniqBy([
+    ...(parentRights._viewer || []),
     ...(newEntity.private._viewer || []),
-    ...(newEntity.private._expander || []),
-    ...(parentRights._viewer || [])
-  ])
+    ...(newEntity.private._expander || [])
+  ], (x) => [x.reference.toString(), x.inherited || false].join('-'))
 
   newEntity.access = getAccessArray(newEntity)
 
@@ -171,18 +178,19 @@ async function aggregate (context, account, entityId, date) {
 
   await database.collection('entity').replaceOne({ _id: eId }, newEntity, { upsert: true })
 
-  const name = (entity.private?.name || []).map(x => x.string || '')
-  const newName = (newEntity.private?.name || []).map(x => x.string || '')
+  // const name = (entity.private?.name || []).map(x => x.string || '')
+  // const newName = (newEntity.private?.name || []).map(x => x.string || '')
 
-  if (_.isEqual(_.sortBy(name), _.sortBy(newName))) {
-    console.log(`UPDATED ${eId.toString()}`)
-    return {
-      _id: eId,
-      account,
-      updated: true,
-      message: 'Entity updated'
-    }
-  }
+  // if (_.isEqual(_.sortBy(name), _.sortBy(newName))) {
+  //   console.log(`UPDATED ${eId.toString()}`)
+
+  //   return {
+  //     _id: eId,
+  //     account,
+  //     updated: true,
+  //     message: 'Entity updated'
+  //   }
+  // }
 
   const referrers = await database.collection('property').aggregate([
     { $match: { reference: eId, deleted: { $exists: false } } },
@@ -196,6 +204,7 @@ async function aggregate (context, account, entityId, date) {
   }
 
   console.log(`UPDATED_SQS ${eId.toString()}`)
+
   return {
     _id: eId,
     account,
@@ -541,26 +550,24 @@ async function getParentRights (account, parents) {
     }
   }).toArray()
 
-  return rights.reduce((acc, cur) => {
-    return {
-      _viewer: _.uniq([
-        ...acc._viewer,
-        ...cur.private?._viewer.map((x) => ({ ...x, inherited: true }))
-      ]),
-      _expander: _.uniq([
-        ...acc._expander,
-        ...cur.private?._expander.map((x) => ({ ...x, inherited: true }))
-      ]),
-      _editor: _.uniq([
-        ...acc._editor,
-        ...cur.private?._editor.map((x) => ({ ...x, inherited: true }))
-      ]),
-      _owner: _.uniq([
-        ...acc._owner,
-        ...cur.private?._owner.map((x) => ({ ...x, inherited: true }))
-      ])
-    }
-  }, {
+  return rights.reduce((acc, cur) => ({
+    _viewer: [
+      ...acc._viewer,
+      ...cur.private?._viewer.map((x) => ({ ...x, inherited: true }))
+    ],
+    _expander: [
+      ...acc._expander,
+      ...cur.private?._expander.map((x) => ({ ...x, inherited: true }))
+    ],
+    _editor: [
+      ...acc._editor,
+      ...cur.private?._editor.map((x) => ({ ...x, inherited: true }))
+    ],
+    _owner: [
+      ...acc._owner,
+      ...cur.private?._owner.map((x) => ({ ...x, inherited: true }))
+    ]
+  }), {
     _viewer: [],
     _expander: [],
     _editor: [],
@@ -585,4 +592,6 @@ function getAccessArray ({ private: entity }) {
       access.push(x.reference)
     })
   })
+
+  return _.uniqBy(access, (x) => x.toString())
 }
