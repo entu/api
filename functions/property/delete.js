@@ -3,6 +3,7 @@
 const _h = require('helpers')
 
 const rightTypes = [
+  '_noaccess',
   '_viewer',
   '_expander',
   '_editor',

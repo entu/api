@@ -5,14 +5,16 @@ const _h = require('helpers')
 const allowedTypes = [
   '_type',
   '_parent',
-  '_public',
+  '_noaccess',
   '_viewer',
   '_expander',
   '_editor',
   '_owner',
+  '_public',
   '_inheritrights'
 ]
 const rightTypes = [
+  '_noaccess',
   '_viewer',
   '_expander',
   '_editor',
