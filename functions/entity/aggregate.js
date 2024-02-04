@@ -141,6 +141,8 @@ async function aggregate (context, account, entityId, date) {
     console.log(`NO_TYPE ${newEntity.private._type} ${eId.toString()}`)
   }
 
+  const noRights = newEntity.private._noaccess?.map((x) => x.reference)
+
   let parentRights = {}
   if (newEntity.private._parent?.length > 0 && newEntity.private._inheritrights?.at(0)?.boolean === true) {
     parentRights = await getParentRights(account, newEntity.private._parent)
@@ -150,25 +152,25 @@ async function aggregate (context, account, entityId, date) {
   newEntity.private._owner = _.uniqBy([
     ...(parentRights._owner || []),
     ...(newEntity.private._owner || [])
-  ], (x) => [x.reference.toString(), x.inherited || false].join('-'))
+  ], (x) => [x.reference.toString(), x.inherited || false].join('-')).filter(x => !noRights?.includes(x.reference))
 
   newEntity.private._editor = _.uniqBy([
     ...(parentRights._editor || []),
     ...(newEntity.private._editor || []),
     ...(newEntity.private._owner || [])
-  ], (x) => [x.reference.toString(), x.inherited || false].join('-'))
+  ], (x) => [x.reference.toString(), x.inherited || false].join('-')).filter(x => !noRights?.includes(x.reference))
 
   newEntity.private._expander = _.uniqBy([
     ...(parentRights._expander || []),
     ...(newEntity.private._expander || []),
     ...(newEntity.private._editor || [])
-  ], (x) => [x.reference.toString(), x.inherited || false].join('-'))
+  ], (x) => [x.reference.toString(), x.inherited || false].join('-')).filter(x => !noRights?.includes(x.reference))
 
   newEntity.private._viewer = _.uniqBy([
     ...(parentRights._viewer || []),
     ...(newEntity.private._viewer || []),
     ...(newEntity.private._expander || [])
-  ], (x) => [x.reference.toString(), x.inherited || false].join('-'))
+  ], (x) => [x.reference.toString(), x.inherited || false].join('-')).filter(x => !noRights?.includes(x.reference))
 
   newEntity.access = getAccessArray(newEntity)
 
