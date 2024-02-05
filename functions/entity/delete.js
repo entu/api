@@ -59,6 +59,7 @@ exports.handler = async (event, context) => {
           }
         }
       })
+
       await _h.addEntityAggregateSqs(context, user.account, property.entity)
     }
 

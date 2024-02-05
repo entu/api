@@ -143,7 +143,8 @@ For file upload, add *filename*, *filesize* and *filetype* to property parameter
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
-- [ **string** \| **number** \| **boolean** \| **reference** \| **date** \| **datetime** \| **filename** \| **filesize** \| **filetype** ] - Property value
+- [ **string** \| **number** \| **boolean** \| **reference** \| **date** \| **datetime** \| **filename** \| **filesize** \| **filetype** ] - Property value.
+- **language** - Optional. Language code for multilingual properties.
 
 #### Example request
 ```http
@@ -225,8 +226,10 @@ Returns added properties.
 For file upload, add *filename*, *filesize* and *filetype* to property parameters. Response contains *upload* object with info (url, method and headers) where to upload file (as request body).
 
 #### Property object parameters
+- **_id** - Optional. If set property with given _id will be replaced by the new property.
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
-- [ **string** \| **number** \| **boolean** \| **reference** \| **date** \| **datetime** \| **filename** \| **filesize** \| **filetype** ] - Property value
+- [ **string** \| **number** \| **boolean** \| **reference** \| **date** \| **datetime** \| **filename** \| **filesize** \| **filetype** ] - Property value.
+- **language** - Optional. Language code for multilingual properties.
 
 #### Example request
 ```http
@@ -235,10 +238,10 @@ Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 Content-Type: application/json; charset=utf-8
-Content-Length: 109
+Content-Length: 164
 
 [
-  { "type": "title", "string": "Hobbit" },
+  { "_id": "65bcf278e0ef82d4b91f40d7", "type": "title", "string": "Hobbit", "language": "EN" },
   { "type": "photo", "filename": "cover.jpg", "filesize": 1937 }
 ]
 ```

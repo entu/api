@@ -114,9 +114,15 @@ exports.handler = async (event, context) => {
     }
 
     const pIds = []
+    const oldPIds = []
     for (let i = 0; i < body.length; i++) {
       const property = body[i]
 
+      if (property._id) {
+        oldPIds.push(_h.strToId(property._id))
+
+        delete property._id
+      }
       if (property.reference) { property.reference = _h.strToId(property.reference) }
       if (property.date) { property.date = new Date(property.date) }
       if (property.datetime) { property.datetime = new Date(property.datetime) }
@@ -156,6 +162,19 @@ exports.handler = async (event, context) => {
       }
 
       pIds.push(newProperty)
+    }
+
+    if (oldPIds.length > 0) {
+      await user.db.collection('property').updateMany({
+        _id: { $in: oldPIds }
+      }, {
+        $set: {
+          deleted: {
+            at: new Date(),
+            by: _h.strToId(user.id)
+          }
+        }
+      })
     }
 
     await _h.addEntityAggregateSqs(context, user.account, eId)
