@@ -166,7 +166,8 @@ exports.handler = async (event, context) => {
 
     if (oldPIds.length > 0) {
       await user.db.collection('property').updateMany({
-        _id: { $in: oldPIds }
+        _id: { $in: oldPIds },
+        deleted: { $exists: false }
       }, {
         $set: {
           deleted: {
