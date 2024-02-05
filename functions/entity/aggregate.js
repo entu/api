@@ -31,12 +31,25 @@ async function aggregate (context, account, entityId, date) {
   const database = await _h.db(account)
   const eId = _h.strToId(entityId)
 
-  const entity = await database.collection('entity').findOne({ _id: eId }, { projection: { _id: false, aggregated: true, 'private.name': true } })
+  const entity = await database.collection('entity').findOne({ _id: eId }, {
+    projection: {
+      aggregated: true,
+      'private.name': true,
+      'private._type': true,
+      'private._noaccess': true,
+      'private._viewer': true,
+      'private._expander': true,
+      'private._editor': true,
+      'private._owner': true
+    }
+  })
 
   if (!entity) return _h.error([404, 'Entity not found'])
 
+  // skip if already aggregated
   if (entity && entity.aggregated && date && entity.aggregated >= new Date(date)) {
     console.log(`SKIP ${eId.toString()}`)
+
     return {
       account,
       entity: eId,
@@ -47,7 +60,8 @@ async function aggregate (context, account, entityId, date) {
 
   const properties = await database.collection('property').find({ entity: eId, deleted: { $exists: false } }).toArray()
 
-  if (properties.find(x => x.type === '_deleted')) {
+  // delete entity
+  if (properties.some(x => x.type === '_deleted')) {
     await database.collection('entity').deleteOne({ _id: eId })
 
     console.log(`DELETED ${eId.toString()}`)
@@ -60,45 +74,9 @@ async function aggregate (context, account, entityId, date) {
     }
   }
 
-  const newEntity = {
-    aggregated: new Date(),
-    private: {},
-    public: {},
-    access: [],
-    search: {}
-  }
+  const newEntity = await propertiesToEntity(database, properties)
 
-  for (let n = 0; n < properties.length; n++) {
-    const prop = properties[n]
-    let cleanProp = _.omit(prop, ['entity', 'type', 'created', 'search', 'public'])
-
-    if (!newEntity.private[prop.type]) {
-      newEntity.private[prop.type] = []
-    }
-
-    if (prop.reference) {
-      const referenceEntity = await database.collection('entity').findOne({ _id: prop.reference }, { projection: { _id: false, 'private.name': true, 'private._type': true } })
-
-      if (referenceEntity) {
-        cleanProp = { ...cleanProp, property_type: prop.type, string: referenceEntity.private?.name?.[0].string, entity_type: referenceEntity.private?._type?.[0].string }
-      } else {
-        cleanProp = { ...cleanProp, property_type: prop.type, string: prop.reference.toString() }
-        console.log(`NO_REFERENCE ${prop.reference.toString()}`)
-      }
-
-      if (!prop.type.startsWith('_')) {
-        if (newEntity.private._reference) {
-          newEntity.private._reference = [...newEntity.private._reference, cleanProp]
-        } else {
-          newEntity.private._reference = [cleanProp]
-        }
-      }
-    }
-
-    newEntity.private[prop.type] = [...newEntity.private[prop.type], _.omit(cleanProp, ['property_type', 'entity_type'])
-    ]
-  }
-
+  // get info from type
   if (newEntity.private._type) {
     const definition = await database.collection('entity').aggregate([
       {
@@ -141,19 +119,19 @@ async function aggregate (context, account, entityId, date) {
     console.log(`NO_TYPE ${newEntity.private._type} ${eId.toString()}`)
   }
 
-  const noRights = newEntity.private._noaccess?.map((x) => x.reference.toString())
-
+  // get and set parent rights
   let parentRights = {}
   if (newEntity.private._parent?.length > 0 && newEntity.private._inheritrights?.at(0)?.boolean === true) {
     parentRights = await getParentRights(account, newEntity.private._parent)
+    if (parentRights._viewer) { newEntity.private._parent_viewer = _.uniqBy(parentRights._viewer, (x) => x.reference.toString()) }
+    if (parentRights._expander) { newEntity.private._parent_expander = _.uniqBy(parentRights._expander, (x) => x.reference.toString()) }
+    if (parentRights._editor) { newEntity.private._parent_editor = _.uniqBy(parentRights._editor, (x) => x.reference.toString()) }
+    if (parentRights._owner) { newEntity.private._parent_owner = _.uniqBy(parentRights._owner, (x) => x.reference.toString()) }
   }
 
-  if (parentRights._viewer) { newEntity.private._parent_viewer = _.uniqBy(parentRights._viewer, (x) => x.reference.toString()) }
-  if (parentRights._expander) { newEntity.private._parent_expander = _.uniqBy(parentRights._expander, (x) => x.reference.toString()) }
-  if (parentRights._editor) { newEntity.private._parent_editor = _.uniqBy(parentRights._editor, (x) => x.reference.toString()) }
-  if (parentRights._owner) { newEntity.private._parent_owner = _.uniqBy(parentRights._owner, (x) => x.reference.toString()) }
-
   // combine rights
+  const noRights = newEntity.private._noaccess?.map((x) => x.reference.toString())
+
   newEntity.private._owner = _.uniqBy([
     ...(parentRights._owner || []),
     ...(newEntity.private._owner || [])
@@ -199,30 +177,7 @@ async function aggregate (context, account, entityId, date) {
 
   await database.collection('entity').replaceOne({ _id: eId }, newEntity, { upsert: true })
 
-  // const name = (entity.private?.name || []).map(x => x.string || '')
-  // const newName = (newEntity.private?.name || []).map(x => x.string || '')
-
-  // if (_.isEqual(_.sortBy(name), _.sortBy(newName))) {
-  //   console.log(`UPDATED ${eId.toString()}`)
-
-  //   return {
-  //     _id: eId,
-  //     account,
-  //     updated: true,
-  //     message: 'Entity updated'
-  //   }
-  // }
-
-  const referrers = await database.collection('property').aggregate([
-    { $match: { reference: eId, deleted: { $exists: false } } },
-    { $group: { _id: '$entity' } }
-  ]).toArray()
-
-  const dt = date ? new Date(date) : newEntity.aggregated
-
-  for (let j = 0; j < referrers.length; j++) {
-    await _h.addEntityAggregateSqs(context, account, referrers[j]._id.toString(), dt)
-  }
+  const sqsLength = await startRelativeAggregation(context, account, database, entity, newEntity)
 
   console.log(`UPDATED_SQS ${eId.toString()}`)
 
@@ -230,9 +185,51 @@ async function aggregate (context, account, entityId, date) {
     _id: eId,
     account,
     updated: true,
-    sqsLength: referrers.length,
-    message: `Entity updated and added ${referrers.length} entities to SQS`
+    sqsLength,
+    message: `Entity updated and added ${sqsLength} entities to SQS`
   }
+}
+
+async function propertiesToEntity (database, properties) {
+  const entity = {
+    aggregated: new Date(),
+    private: {},
+    public: {},
+    access: [],
+    search: {}
+  }
+
+  for (let n = 0; n < properties.length; n++) {
+    const prop = properties[n]
+    let cleanProp = _.omit(prop, ['entity', 'type', 'created', 'search', 'public'])
+
+    if (!entity.private[prop.type]) {
+      entity.private[prop.type] = []
+    }
+
+    if (prop.reference) {
+      const referenceEntity = await database.collection('entity').findOne({ _id: prop.reference }, { projection: { _id: false, 'private.name': true, 'private._type': true } })
+
+      if (referenceEntity) {
+        cleanProp = { ...cleanProp, property_type: prop.type, string: referenceEntity.private?.name?.[0].string, entity_type: referenceEntity.private?._type?.[0].string }
+      } else {
+        cleanProp = { ...cleanProp, property_type: prop.type, string: prop.reference.toString() }
+        console.log(`NO_REFERENCE ${prop.reference.toString()}`)
+      }
+
+      if (!prop.type.startsWith('_')) {
+        if (entity.private._reference) {
+          entity.private._reference = [...entity.private._reference, cleanProp]
+        } else {
+          entity.private._reference = [cleanProp]
+        }
+      }
+    }
+
+    entity.private[prop.type] = [...entity.private[prop.type], _.omit(cleanProp, ['property_type', 'entity_type'])]
+  }
+
+  return entity
 }
 
 async function formula (str, eId, db) {
@@ -637,4 +634,33 @@ function getAccessArray ({ private: entity }) {
   })
 
   return _.uniqBy(access, (x) => x.toString())
+}
+
+async function startRelativeAggregation (context, account, database, entity, newEntity, date) {
+  let notEqual = false
+  const dt = date ? new Date(date) : newEntity.aggregated
+  const rights = ['_noaccess', '_viewer', '_expander', '_editor', '_owner']
+
+  const name = (entity.private?.name || []).map(x => x.string || '')
+  const newName = (newEntity.private?.name || []).map(x => x.string || '')
+  notEqual = notEqual || !_.isEqual(_.sortBy(name), _.sortBy(newName))
+
+  rights.forEach((type) => {
+    const oldRights = (entity.private[type] || []).map(x => x.reference?.toString())
+    const newRights = (newEntity.private[type] || []).map(x => x.reference?.toString())
+    notEqual = notEqual || !_.isEqual(_.sortBy(oldRights), _.sortBy(newRights))
+  })
+
+  if (!notEqual) return 0
+
+  const referrers = await database.collection('property').aggregate([
+    { $match: { reference: entity._id, deleted: { $exists: false } } },
+    { $group: { _id: '$entity' } }
+  ]).toArray()
+
+  for (let j = 0; j < referrers.length; j++) {
+    await _h.addEntityAggregateSqs(context, account, referrers[j]._id.toString(), dt)
+  }
+
+  return referrers.length
 }
