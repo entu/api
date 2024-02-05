@@ -148,6 +148,11 @@ async function aggregate (context, account, entityId, date) {
     parentRights = await getParentRights(account, newEntity.private._parent)
   }
 
+  if (parentRights._viewer) { newEntity.private._parent_viewer = _.uniqBy(parentRights._viewer, (x) => x.reference.toString()) }
+  if (parentRights._expander) { newEntity.private._parent_expander = _.uniqBy(parentRights._expander, (x) => x.reference.toString()) }
+  if (parentRights._editor) { newEntity.private._parent_editor = _.uniqBy(parentRights._editor, (x) => x.reference.toString()) }
+  if (parentRights._owner) { newEntity.private._parent_owner = _.uniqBy(parentRights._owner, (x) => x.reference.toString()) }
+
   // combine rights
   newEntity.private._owner = _.uniqBy([
     ...(parentRights._owner || []),
@@ -171,6 +176,20 @@ async function aggregate (context, account, entityId, date) {
     ...(newEntity.private._viewer || []),
     ...(newEntity.private._expander || [])
   ], (x) => [x.reference.toString(), x.inherited || false].join('-')).filter(x => !noRights?.includes(x.reference.toString()))
+
+  const { _noaccess, _viewer, _expander, _editor, _owner } = combineRights({
+    _noaccess: newEntity.private._noaccess,
+    _viewer: newEntity.private._viewer,
+    _expander: newEntity.private._expander,
+    _editor: newEntity.private._editor,
+    _owner: newEntity.private._owner
+  })
+
+  if (_noaccess) { newEntity.private._noaccess = _noaccess }
+  if (_viewer) { newEntity.private._viewer = _viewer }
+  if (_expander) { newEntity.private._expander = _expander }
+  if (_editor) { newEntity.private._editor = _editor }
+  if (_owner) { newEntity.private._owner = _owner }
 
   newEntity.access = getAccessArray(newEntity)
 
@@ -540,11 +559,12 @@ function getValueArray (values) {
 async function getParentRights (account, parents) {
   const database = await _h.db(account)
 
-  const rights = await database.collection('entity').find({
+  const parentRights = await database.collection('entity').find({
     _id: { $in: parents.map(x => x.reference) }
   }, {
     projection: {
       _id: false,
+      'private._noaccess': true,
       'private._viewer': true,
       'private._expander': true,
       'private._editor': true,
@@ -552,29 +572,50 @@ async function getParentRights (account, parents) {
     }
   }).toArray()
 
-  return rights.reduce((acc, cur) => ({
-    _viewer: [
-      ...acc._viewer,
-      ...cur.private?._viewer.map((x) => ({ ...x, inherited: true }))
-    ],
-    _expander: [
-      ...acc._expander,
-      ...cur.private?._expander.map((x) => ({ ...x, inherited: true }))
-    ],
-    _editor: [
-      ...acc._editor,
-      ...cur.private?._editor.map((x) => ({ ...x, inherited: true }))
-    ],
-    _owner: [
-      ...acc._owner,
-      ...cur.private?._owner.map((x) => ({ ...x, inherited: true }))
-    ]
+  const rights = combineRights(parentRights.reduce((acc, cur) => ({
+    _viewer: [...acc._viewer, ...cur.private?._viewer],
+    _expander: [...acc._expander, ...cur.private?._expander],
+    _editor: [...acc._editor, ...cur.private?._editor],
+    _owner: [...acc._owner, ...cur.private?._owner]
   }), {
     _viewer: [],
     _expander: [],
     _editor: [],
     _owner: []
-  })
+  }))
+
+  rights._noaccess = rights._noaccess?.map((x) => ({ ...x, inherited: true }))
+  rights._viewer = rights._viewer?.map((x) => ({ ...x, inherited: true }))
+  rights._expander = rights._expander?.map((x) => ({ ...x, inherited: true }))
+  rights._editor = rights._editor?.map((x) => ({ ...x, inherited: true }))
+  rights._owner = rights._owner?.map((x) => ({ ...x, inherited: true }))
+
+  return rights
+}
+
+function combineRights (rights) {
+  const directNoaccess = rights._noaccess?.filter((x) => x.inherited === undefined)?.map((x) => x.reference.toString()) || []
+  const directViewers = rights._viewer?.filter((x) => x.inherited === undefined)?.map((x) => x.reference.toString()) || []
+  const directExpanders = rights._expander?.filter((x) => x.inherited === undefined)?.map((x) => x.reference.toString()) || []
+  const directEditors = rights._editor?.filter((x) => x.inherited === undefined)?.map((x) => x.reference.toString()) || []
+  const directOwners = rights._owner?.filter((x) => x.inherited === undefined)?.map((x) => x.reference.toString()) || []
+
+  rights._noaccess = rights._noaccess?.filter((x) => x.inherited === undefined || (x.inherited === true && !directNoaccess.includes(x.reference.toString())))
+  rights._viewer = rights._viewer?.filter((x) => x.inherited === undefined || (x.inherited === true && !directViewers.includes(x.reference.toString())))
+  rights._expander = rights._expander?.filter((x) => x.inherited === undefined || (x.inherited === true && !directExpanders.includes(x.reference.toString())))
+  rights._editor = rights._editor?.filter((x) => x.inherited === undefined || (x.inherited === true && !directEditors.includes(x.reference.toString())))
+  rights._owner = rights._owner?.filter((x) => x.inherited === undefined || (x.inherited === true && !directOwners.includes(x.reference.toString())))
+
+  const noRights = rights._noaccess?.map((x) => x.reference.toString()) || []
+
+  if (noRights.length > 0) {
+    rights._viewer = rights._viewer?.filter((x) => !noRights.includes(x.reference.toString()))
+    rights._expander = rights._expander?.filter((x) => !noRights.includes(x.reference.toString()))
+    rights._editor = rights._editor?.filter((x) => !noRights.includes(x.reference.toString()))
+    rights._owner = rights._owner?.filter((x) => !noRights.includes(x.reference.toString()))
+  }
+
+  return rights
 }
 
 function getAccessArray ({ private: entity }) {
