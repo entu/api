@@ -10,8 +10,6 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') return _h.json({ message: 'OK' })
 
   try {
-    await _h.addStats(event, context.functionName)
-
     const jwtSecret = await _h.ssmParameter('jwt-secret')
     const key = _h.getHeader(event, 'authorization').replace('Bearer ', '')
 
