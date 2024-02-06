@@ -189,17 +189,17 @@ exports.addStats = async (event, functionName) => {
 
   await Promise.all([
     user.db.collection('stats').updateOne(
-      { date: date.substring(0, 10) },
+      { date: date.substring(0, 10), function: 'ALL' },
       { $inc: { count: 1 } },
       { upsert: true }
     ),
     user.db.collection('stats').updateOne(
-      { date: date.substring(0, 7) },
+      { date: date.substring(0, 7), function: 'ALL' },
       { $inc: { count: 1 } },
       { upsert: true }
     ),
     user.db.collection('stats').updateOne(
-      { date: date.substring(0, 4) },
+      { date: date.substring(0, 4), function: 'ALL' },
       { $inc: { count: 1 } },
       { upsert: true }
     ),
