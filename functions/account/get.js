@@ -50,6 +50,9 @@ exports.handler = async (event, context) => {
       }
     ]).toArray()
 
+    const date = new Date().toISOString()
+    const requests = await user.db.collection('stats').findOne({ date: date.substring(0, 7), function: 'ALL' })
+
     return _h.json({
       entities,
       deletedEntities: deletedEntities?.at(0)?.count || 0,
@@ -59,7 +62,8 @@ exports.handler = async (event, context) => {
       filesSize: files.find((e) => e._id === false)?.filesize || 0,
       deletedFiles: files.find((e) => e._id === true)?.count || 0,
       deletedFilesSize: files.find((e) => e._id === true)?.filesize || 0,
-      dbSize: stats.dataSize + stats.indexSize
+      dbSize: stats.dataSize + stats.indexSize,
+      requestsMonth: requests?.count || 0
     })
   } catch (e) {
     return _h.error(e)
