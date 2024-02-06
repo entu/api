@@ -183,6 +183,47 @@ exports.strToId = (str) => {
   }
 }
 
+exports.addStats = async (event, functionName) => {
+  const user = await this.user(event)
+  const date = new Date().toISOString()
+
+  user.db.collection('stats').updateOne(
+    { date: date.substring(0, 10) },
+    { $inc: { count: 1 } },
+    { upsert: true }
+  )
+
+  user.db.collection('stats').updateOne(
+    { date: date.substring(0, 7) },
+    { $inc: { count: 1 } },
+    { upsert: true }
+  )
+
+  user.db.collection('stats').updateOne(
+    { date: date.substring(0, 4) },
+    { $inc: { count: 1 } },
+    { upsert: true }
+  )
+
+  user.db.collection('stats').updateOne(
+    { date: date.substring(0, 10), function: functionName },
+    { $inc: { count: 1 } },
+    { upsert: true }
+  )
+
+  user.db.collection('stats').updateOne(
+    { date: date.substring(0, 7), function: functionName },
+    { $inc: { count: 1 } },
+    { upsert: true }
+  )
+
+  user.db.collection('stats').updateOne(
+    { date: date.substring(0, 4), function: functionName },
+    { $inc: { count: 1 } },
+    { upsert: true }
+  )
+}
+
 exports.getHeader = (event, headerKey) => {
   const headers = Object.fromEntries(
     Object.entries(event.headers).map(([k, v]) => [k.toLowerCase(), v])

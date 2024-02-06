@@ -10,6 +10,8 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') return _h.json({ message: 'OK' })
 
   try {
+    _h.addStats(event, context.functionName)
+
     const user = await _h.user(event)
     const eId = event.pathParameters?._id ? _h.strToId(event.pathParameters._id) : null
     const props = (event.queryStringParameters?.props || '').split(',').filter((x) => !!x)

@@ -6,6 +6,8 @@ exports.handler = async (event, context) => {
   if (event.source === 'aws.events') return _h.json({ message: 'OK' })
 
   try {
+    _h.addStats(event, context.functionName)
+
     const user = await _h.user(event)
     const property = await user.db.collection('property').findOne({
       _id: _h.strToId(event.pathParameters._id),
