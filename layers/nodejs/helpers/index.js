@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken')
 const { SSMClient, GetParameterCommand } = require('@aws-sdk/client-ssm')
 const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
 const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs')
+const { LambdaClient, InvokeCommand } = require('@aws-sdk/client-lambda')
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 const { MongoClient, ObjectId } = require('mongodb')
 
@@ -173,6 +174,23 @@ exports.addEntityAggregateSqs = async (context, account, entity, dt) => {
   console.log(`Entity ${entity} added to SQS`)
 
   return sqsResponse
+}
+
+exports.executeAggregateLambda = async (account, entity) => {
+  const lambdaClient = new LambdaClient()
+  const command = new InvokeCommand({
+    FunctionName: `${process.env.STACK_NAME}-entity-aggregate-get`,
+    Payload: JSON.stringify({
+      account,
+      entity,
+      timestamp: new Date().getTime()
+    })
+  })
+  const lambdaResponse = await lambdaClient.send(command)
+
+  console.log(`Entity ${entity} aggregation started`)
+
+  return lambdaResponse
 }
 
 exports.strToId = (str) => {

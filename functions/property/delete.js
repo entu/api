@@ -68,7 +68,7 @@ exports.handler = async (event, context) => {
       }
     })
 
-    await _h.addEntityAggregateSqs(context, user.account, property.entity)
+    await _h.executeAggregateLambda(user.account, property.entity)
 
     return _h.json({ deleted: true })
   } catch (e) {

@@ -164,6 +164,8 @@ Resources:
             QueueName: !Sub "${AWS::StackName}-*"
         - S3WritePolicy:
             BucketName: "*"
+        - LambdaInvokePolicy:
+            FunctionName: !Sub "${AWS::StackName}-entity-aggregate-get"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -206,6 +208,8 @@ Resources:
             QueueName: !Sub "${AWS::StackName}-*"
         - S3WritePolicy:
             BucketName: "*"
+        - LambdaInvokePolicy:
+            FunctionName: !Sub "${AWS::StackName}-entity-aggregate-get"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -226,6 +230,8 @@ Resources:
             ParameterName: !Sub "${AWS::StackName}-*"
         - SQSSendMessagePolicy:
             QueueName: !Sub "${AWS::StackName}-*"
+        - LambdaInvokePolicy:
+            FunctionName: !Sub "${AWS::StackName}-entity-aggregate-get"
       Events:
         HttpApiEvent:
           Type: HttpApi
@@ -306,6 +312,8 @@ Resources:
             ParameterName: !Sub "${AWS::StackName}-*"
         - SQSSendMessagePolicy:
             QueueName: !Sub "${AWS::StackName}-*"
+        - LambdaInvokePolicy:
+            FunctionName: !Sub "${AWS::StackName}-entity-aggregate-get"
       Events:
         HttpApiEvent:
           Type: HttpApi
