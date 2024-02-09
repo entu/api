@@ -43,7 +43,7 @@ exports.handler = async (event, context) => {
 
     if (eId) {
       if (!body || (Array.isArray(body) && body.length === 0)) {
-        await _h.executeAggregateLambda(user.account, eId)
+        _h.executeAggregateLambda(user.account, eId)
         return _h.json({ _id: eId })
       }
 
@@ -180,7 +180,7 @@ exports.handler = async (event, context) => {
       })
     }
 
-    await _h.executeAggregateLambda(user.account, eId)
+    _h.executeAggregateLambda(user.account, eId)
 
     return _h.json({ _id: eId, properties: pIds })
   } catch (e) {
