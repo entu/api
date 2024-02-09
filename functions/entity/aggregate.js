@@ -104,10 +104,16 @@ async function aggregate (context, account, entityId, date) {
       const dValue = newEntity.private[definition[d].name]
 
       if (definition[d].search && dValue) {
-        newEntity.search.private = [...(newEntity.search.private || []), ...getValueArray(dValue)]
+        newEntity.search.private = [...new Set([
+          ...(newEntity.search.private || []),
+          ...getValueArray(dValue)
+        ])].map((x) => x.toLowerCase())
 
         if (definition[d].public) {
-          newEntity.search.public = [...(newEntity.search.public || []), ...getValueArray(dValue)]
+          newEntity.search.public = [...new Set([
+            ...(newEntity.search.public || []),
+            ...getValueArray(dValue)
+          ])].map((x) => x.toLowerCase())
         }
       }
 
