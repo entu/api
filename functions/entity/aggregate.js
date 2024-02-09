@@ -9,14 +9,20 @@ exports.handler = async (event, context) => {
   const results = []
 
   if (event.Records?.length > 0) {
-    console.log('SQS_RECORDS', event.Records.length)
+    console.log('SQS', event.Records.length)
 
     for (let n = 0; n < event.Records.length; n++) {
       const body = JSON.parse(event.Records[n].body)
 
       results.push(await aggregate(context, body.account, body.entity, body.dt))
     }
+  } else if (event.entity) {
+    console.log('DIRECT')
+
+    results.push(await aggregate(context, event.account, event.entity, event.dt))
   } else {
+    console.log('API')
+
     const user = await _h.user(event)
 
     results.push(await aggregate(context, user.account, event.pathParameters._id, event.queryStringParameters?.date))
@@ -107,13 +113,13 @@ async function aggregate (context, account, entityId, date) {
         newEntity.search.private = [...new Set([
           ...(newEntity.search.private || []),
           ...getValueArray(dValue)
-        ])].map((x) => x.toLowerCase())
+        ])].filter((x) => x !== undefined && x !== null).map((x) => `${x}`.toLowerCase())
 
         if (definition[d].public) {
           newEntity.search.public = [...new Set([
             ...(newEntity.search.public || []),
             ...getValueArray(dValue)
-          ])].map((x) => x.toLowerCase())
+          ])].filter((x) => x !== undefined && x !== null).map((x) => `${x}`.toLowerCase())
         }
       }
 
