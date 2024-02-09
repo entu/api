@@ -36,7 +36,7 @@ exports.handler = async (event, context) => {
         by: _h.strToId(user.id)
       }
     })
-    _h.executeAggregateLambda(user.account, eId)
+    await _h.executeAggregateLambda(user.account, eId)
 
     const properties = await user.db.collection('property').find({
       reference: eId,
@@ -62,7 +62,7 @@ exports.handler = async (event, context) => {
         }
       })
 
-      _h.executeAggregateLambda(user.account, property.entity)
+      await _h.executeAggregateLambda(user.account, property.entity)
     }
 
     return _h.json({ deleted: true })
