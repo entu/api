@@ -331,79 +331,79 @@ Resources:
   LogGroupHttpApi:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/apigateway/${AWS::StackName}-2"
+      LogGroupName: !Sub "/aws/apigateway/${AWS::StackName}"
       RetentionInDays: 365
 
   LogGroupAccountGet:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-account-get-2"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-account-get"
       RetentionInDays: 365
 
   LogGroupAuthGet:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-get-2"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-get"
       RetentionInDays: 365
 
   LogGroupAuthOauthGet:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-oauth-get-2"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-oauth-get"
       RetentionInDays: 365
 
   LogGroupAuthOauthPost:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-oauth-post-2"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-oauth-post"
       RetentionInDays: 365
 
   LogGroupEntityListGet:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-list-get-2"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-list-get"
       RetentionInDays: 365
 
   LogGroupEntityListPost:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-list-post-2"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-list-post"
       RetentionInDays: 365
 
   LogGroupEntityGet:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-get-2"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-get"
       RetentionInDays: 365
 
   LogGroupEntityPost:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-post-2"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-post"
       RetentionInDays: 365
 
   LogGroupEntityDelete:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-delete-2"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-delete"
       RetentionInDays: 365
 
   LogGroupEntityAggregate:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-aggregate-2"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-aggregate"
       RetentionInDays: 365
 
   LogGroupPropertyGet:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-property-get-2"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-property-get"
       RetentionInDays: 365
 
   LogGroupPropertyDelete:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-property-delete-2"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-property-delete"
       RetentionInDays: 365
 
 Outputs:
