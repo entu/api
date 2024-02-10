@@ -65,7 +65,7 @@ Resources:
           - "*"
       AccessLogSettings:
         DestinationArn: !GetAtt ApiLogGroup.Arn
-        Format: '{"requestId":"$context.requestId", "ip":"$context.identity.sourceIp", "caller":"$context.identity.caller", "user":"$context.identity.user","requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","resourcePath":"$context.routeKey", "status":$context.status,"protocol":"$context.protocol", "responseLength":$context.responseLength}'
+        Format: '{"requestId":"$context.requestId", "ip":"$context.identity.sourceIp","requestTime":"$context.requestTime", "routeKey":"$context.routeKey", "status":$context.status,"protocol":"$context.protocol", "responseLength":$context.responseLength, "integrationRequestId":"$context.integration.requestId", "functionResponseStatus":"$context.integration.status", "integrationLatency":"$context.integration.latency", "integrationServiceStatus":"$context.integration.integrationStatus"}'
 
   LambdaLayer:
     Type: AWS::Serverless::LayerVersion
