@@ -391,7 +391,7 @@ Resources:
   LogGroupEntityAggregate:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-aggregate"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-aggregate-get"
       RetentionInDays: 365
 
   LogGroupPropertyGet:
