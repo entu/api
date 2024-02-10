@@ -180,6 +180,7 @@ exports.executeAggregateLambda = async (account, entity) => {
   const lambdaClient = new LambdaClient()
   const command = new InvokeCommand({
     FunctionName: `${process.env.STACK_NAME}-entity-aggregate-get`,
+    InvocationType: 'Event',
     Payload: JSON.stringify({
       account,
       entity,
