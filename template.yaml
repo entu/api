@@ -63,6 +63,9 @@ Resources:
           - "*"
         AllowOrigins:
           - "*"
+      AccessLogSetting:
+        DestinationArn: !GetAtt ApiLogGroup.Arn
+        Format: '{"requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "caller":"$context.identity.caller", "user":"$context.identity.user","requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath", "status":"$context.status","protocol":"$context.protocol", "responseLength":"$context.responseLength"}'
 
   LambdaLayer:
     Type: AWS::Serverless::LayerVersion
@@ -321,6 +324,12 @@ Resources:
             Path: /property/{_id}
             Method: DELETE
             ApiId: !Ref HttpApi
+
+  ApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/apigateway/${AWS::StackName}"
+      RetentionInDays: 365
 
   LogGroup:
     Type: AWS::Logs::LogGroup
