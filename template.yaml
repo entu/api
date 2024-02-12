@@ -18,16 +18,16 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<String>
     Default: entu-api-hosted-zone-id
   VpcSecurityGroup:
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::SecurityGroup::Id>
+    Type: AWS::SSM::Parameter::Value<String>
     Default: entu-api-vpc-security-group-1
   VpcSubnet1:
-    Type: AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>
+    Type: AWS::SSM::Parameter::Value<String>
     Default: entu-api-vpc-subnet-1
   VpcSubnet2:
-    Type: AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>
+    Type: AWS::SSM::Parameter::Value<String>
     Default: entu-api-vpc-subnet-2
   VpcSubnet3:
-    Type: AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>
+    Type: AWS::SSM::Parameter::Value<String>
     Default: entu-api-vpc-subnet-3
 
 Globals:
