@@ -64,6 +64,8 @@ Resources:
         AllowHeaders:
           - "Accept-Encoding"
           - "Authorization"
+          - "Content-Length"
+          - "Content-Type"
         AllowOrigins:
           - "*"
       AccessLogSettings:
