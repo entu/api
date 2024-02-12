@@ -207,14 +207,10 @@ exports.handler = async (event, context) => {
       }
 
       result = {
-        count: count?.at(0)?._count,
-        filter,
-        props,
-        group,
-        sort,
+        entities: cleanedEntities,
+        count: count?.at(0)?._count || 0,
         limit,
-        skip,
-        entities: cleanedEntities
+        skip
       }
     }
 
