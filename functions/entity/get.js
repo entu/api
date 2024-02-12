@@ -111,6 +111,18 @@ exports.handler = async (event, context) => {
         filter.access = 'public'
       }
 
+      if (sort.length > 0) {
+        sort.forEach((f) => {
+          if (f.startsWith('-')) {
+            sortFields[`private.${f.substring(1)}`] = -1
+          } else {
+            sortFields[`private.${f}`] = 1
+          }
+        })
+      } else {
+        sortFields = { _id: 1 }
+      }
+
       if (query.length > 0) {
         search = {
           compound: {
@@ -126,18 +138,6 @@ exports.handler = async (event, context) => {
             path: user.id ? 'search.private' : 'search.public'
           }
         }))
-      }
-
-      if (sort.length > 0) {
-        sort.forEach((f) => {
-          if (f.startsWith('-')) {
-            sortFields[`private.${f.substring(1)}`] = -1
-          } else {
-            sortFields[`private.${f}`] = 1
-          }
-        })
-      } else {
-        sortFields = { _id: 1 }
       }
 
       const cleanedEntities = []
