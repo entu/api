@@ -58,6 +58,7 @@ exports.handler = async (event, context) => {
       const query = (event.queryStringParameters?.q || '').split(' ').filter(x => !!x)
       let sortFields = {}
       const filter = {}
+      let search
 
       _forIn(event.queryStringParameters || {}, (v, k) => {
         if (k.includes('.')) {
@@ -111,14 +112,17 @@ exports.handler = async (event, context) => {
       }
 
       if (query.length > 0) {
-        const queries = query.map((q) => {
-          if (user.id) {
-            return { 'search.private': new RegExp(q.toLowerCase()) }
-          } else {
-            return { 'search.public': new RegExp(q.toLowerCase()) }
+        search = {
+          compound: {
+            filter: query.map(q => ({
+              wildcard: {
+                allowAnalyzedField: true,
+                query: `*${q}*`,
+                path: user.id ? 'search.private' : 'search.public'
+              }
+            }))
           }
-        })
-        filter.$and = queries
+        }
       }
 
       if (sort.length > 0) {
@@ -136,12 +140,18 @@ exports.handler = async (event, context) => {
       const cleanedEntities = []
       let entities = 0
       let count = 0
+      let pipeline = []
 
       if (group.length > 0) {
         const groupIds = {}
         const unwinds = []
         const groupFields = { access: { $first: '$access' } }
-        const projectIds = { 'public._count': '$_count', 'private._count': '$_count', access: true, _id: false }
+        const projectIds = {
+          'public._count': '$_count',
+          'private._count': '$_count',
+          access: true,
+          _id: false
+        }
 
         group.forEach((g) => {
           groupIds[g.replaceAll('.', '#')] = `$private.${g}`
@@ -153,18 +163,42 @@ exports.handler = async (event, context) => {
           projectIds[g] = `$${g.replaceAll('.', '#')}`
         })
 
-        entities = await user.db.collection('entity').aggregate([
+        pipeline = [
           { $match: filter },
           ...unwinds,
           { $group: { ...groupFields, _id: groupIds, _count: { $count: {} } } },
           { $project: projectIds },
           { $sort: sortFields }
-        ]).toArray()
-        count = entities.length
+        ]
       } else {
-        entities = await user.db.collection('entity').find(filter, { projection: fields }).sort(sortFields).skip(skip).limit(limit).toArray()
-        count = await user.db.collection('entity').countDocuments(filter)
+        const projectIds = {
+          access: true
+        }
+
+        Object.keys(fields).forEach((g) => {
+          projectIds[g] = true
+        })
+
+        pipeline = [
+          { $match: filter },
+          { $project: projectIds },
+          { $sort: sortFields },
+          { $skip: skip },
+          { $limit: limit }
+        ]
       }
+
+      if (search) {
+        pipeline = [{ $search: search }, ...pipeline]
+      }
+
+      const countPipeline = [
+        ...pipeline.filter((x) => !Object.keys(x).includes('$sort') && !Object.keys(x).includes('$skip') && !Object.keys(x).includes('$limit')),
+        { $count: '_count' }
+      ]
+
+      entities = await user.db.collection('entity').aggregate(pipeline).toArray()
+      count = await user.db.collection('entity').aggregate(countPipeline).toArray()
 
       for (let i = 0; i < entities.length; i++) {
         const entity = await claenupEntity(entities[i], user, getThumbnail)
@@ -173,7 +207,7 @@ exports.handler = async (event, context) => {
       }
 
       result = {
-        count,
+        count: count?.at(0)?._count,
         filter,
         props,
         group,
