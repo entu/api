@@ -17,14 +17,18 @@ Parameters:
   HostedZoneId:
     Type: AWS::SSM::Parameter::Value<String>
     Default: entu-api-hosted-zone-id
-  # VpcSubnet:
-  #   Type: AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>
-  #   Description: SSM Parameter store key of type StringList with the list of VPC Subnet to be used by Lambda function
-  #   Default: /MyVpcSubnet
-  # VpcSecurityGroup:
-  #   Type: AWS::SSM::Parameter::Value<AWS::EC2::SecurityGroup::Id>
-  #   Description: SSM Parameter store key of type String with the VPC Security Group to be used by Lambda function
-  #   Default: /MyVpcSecurityGroup
+  VpcSecurityGroup:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::SecurityGroup::Id>
+    Default: entu-api-vpc-security-group-1
+  VpcSubnet1:
+    Type: AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>
+    Default: entu-api-vpc-subnet-1
+  VpcSubnet2:
+    Type: AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>
+    Default: entu-api-vpc-subnet-2
+  VpcSubnet3:
+    Type: AWS::SSM::Parameter::Value<List<AWS::EC2::Subnet::Id>>
+    Default: entu-api-vpc-subnet-3
 
 Globals:
   Function:
@@ -40,11 +44,14 @@ Globals:
     Timeout: 30
     Layers:
       - !Ref LambdaLayer
-    # Properties:
-    #   VpcConfig:
-    #     SubnetIds: !Ref VpcSubnet
-    #     SecurityGroupIds:
-    #       - !Ref VpcSecurityGroup
+    Properties:
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref VpcSecurityGroup
+        SubnetIds:
+          - !Ref VpcSubnet1
+          - !Ref VpcSubnet2
+          - !Ref VpcSubnet3
 
 Resources:
   HttpApi:
