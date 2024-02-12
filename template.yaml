@@ -44,14 +44,13 @@ Globals:
     Timeout: 30
     Layers:
       - !Ref LambdaLayer
-    Properties:
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref VpcSecurityGroup
-        SubnetIds:
-          - !Ref VpcSubnet1
-          - !Ref VpcSubnet2
-          - !Ref VpcSubnet3
+    VpcConfig:
+      SecurityGroupIds:
+        - !Ref VpcSecurityGroup
+      SubnetIds:
+        - !Ref VpcSubnet1
+        - !Ref VpcSubnet2
+        - !Ref VpcSubnet3
 
 Resources:
   HttpApi:
