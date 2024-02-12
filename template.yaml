@@ -19,7 +19,7 @@ Parameters:
     Default: entu-api-hosted-zone-id
   VpcSecurityGroup:
     Type: AWS::SSM::Parameter::Value<String>
-    Default: entu-api-vpc-security-group-1
+    Default: entu-api-vpc-security-group
   VpcSubnet1:
     Type: AWS::SSM::Parameter::Value<String>
     Default: entu-api-vpc-subnet-1
@@ -46,11 +46,11 @@ Globals:
       - !Ref LambdaLayer
     VpcConfig:
       SecurityGroupIds:
-        - !Ref VpcSecurityGroup
+        - !Sub "${VpcSecurityGroup}"
       SubnetIds:
-        - !Ref VpcSubnet1
-        - !Ref VpcSubnet2
-        - !Ref VpcSubnet3
+        - !Sub "${VpcSubnet1}"
+        - !Sub "${VpcSubnet2}"
+        - !Sub "${VpcSubnet3}"
 
 Resources:
   HttpApi:
