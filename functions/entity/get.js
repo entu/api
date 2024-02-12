@@ -59,6 +59,7 @@ exports.handler = async (event, context) => {
       let sortFields = {}
       const filter = {}
       let search
+      const equalSearch = []
 
       _forIn(event.queryStringParameters || {}, (v, k) => {
         if (k.includes('.')) {
@@ -101,6 +102,7 @@ exports.handler = async (event, context) => {
             _set(filter, [`private.${field}.${type}`, `$${operator}`], value)
           } else {
             filter[`private.${field}.${type}`] = value
+            equalSearch.push({ text: { path: `private.${field}.${type}`, query: value } })
           }
         }
       })
@@ -126,24 +128,28 @@ exports.handler = async (event, context) => {
       if (query.length > 0) {
         search = {
           compound: {
-            filter: []
+            filter: query.map(q => ({
+              wildcard: {
+                allowAnalyzedField: true,
+                query: `*${q}*`,
+                path: user.id ? 'search.private' : 'search.public'
+              }
+            }))
           },
           sort: sortFields
         }
-
-        search.compound.filter = query.map(q => ({
-          wildcard: {
-            allowAnalyzedField: true,
-            query: `*${q}*`,
-            path: user.id ? 'search.private' : 'search.public'
-          }
-        }))
       }
 
       const cleanedEntities = []
       let entities = 0
       let count = 0
       let pipeline = []
+
+      if (search) {
+        pipeline.push({ $search: search })
+      }
+
+      pipeline.push({ $match: filter })
 
       if (group.length > 0) {
         const groupIds = {}
@@ -167,43 +173,37 @@ exports.handler = async (event, context) => {
         })
 
         pipeline = [
-          { $match: filter },
+          ...pipeline,
           ...unwinds,
           { $group: { ...groupFields, _id: groupIds, _count: { $count: {} } } },
           { $project: projectIds }
         ]
 
         if (!search) {
-          pipeline = [...pipeline, { $sort: sortFields }]
+          pipeline.push({ $sort: sortFields })
         }
       } else {
-        const projectIds = {
-          access: true
-        }
-
-        Object.keys(fields).forEach((g) => {
-          projectIds[g] = true
-        })
-
-        pipeline = [
-          { $match: filter }
-        ]
-
         if (!search) {
-          pipeline = [...pipeline, { $sort: sortFields }]
+          pipeline.push({ $sort: sortFields })
         }
 
-        pipeline = [
-          ...pipeline,
-          { $skip: skip },
-          { $limit: limit },
-          { $project: projectIds }
-        ]
+        pipeline.push({ $skip: skip })
+        pipeline.push({ $limit: limit })
+
+        if (props.length > 0) {
+          const projectIds = { access: true }
+
+          Object.keys(fields).forEach((g) => {
+            projectIds[g] = true
+          })
+
+          pipeline.push({ $project: projectIds })
+        }
       }
 
-      if (search) {
-        pipeline = [{ $search: search }, ...pipeline]
-      }
+      // if (JSON.stringify(pipeline).includes('compound')) {
+      //   console.log(JSON.stringify(pipeline))
+      // }
 
       const countPipeline = [
         ...pipeline.filter((x) => !Object.keys(x).includes('$sort') && !Object.keys(x).includes('$skip') && !Object.keys(x).includes('$limit')),
