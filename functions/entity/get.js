@@ -114,15 +114,18 @@ exports.handler = async (event, context) => {
       if (query.length > 0) {
         search = {
           compound: {
-            filter: query.map(q => ({
-              wildcard: {
-                allowAnalyzedField: true,
-                query: `*${q}*`,
-                path: user.id ? 'search.private' : 'search.public'
-              }
-            }))
-          }
+            filter: []
+          },
+          sort: sortFields
         }
+
+        search.compound.filter = query.map(q => ({
+          wildcard: {
+            allowAnalyzedField: true,
+            query: `*${q}*`,
+            path: user.id ? 'search.private' : 'search.public'
+          }
+        }))
       }
 
       if (sort.length > 0) {
@@ -167,9 +170,12 @@ exports.handler = async (event, context) => {
           { $match: filter },
           ...unwinds,
           { $group: { ...groupFields, _id: groupIds, _count: { $count: {} } } },
-          { $project: projectIds },
-          { $sort: sortFields }
+          { $project: projectIds }
         ]
+
+        if (!search) {
+          pipeline = [...pipeline, { $sort: sortFields }]
+        }
       } else {
         const projectIds = {
           access: true
@@ -180,11 +186,18 @@ exports.handler = async (event, context) => {
         })
 
         pipeline = [
-          { $match: filter },
-          { $project: projectIds },
-          { $sort: sortFields },
+          { $match: filter }
+        ]
+
+        if (!search) {
+          pipeline = [...pipeline, { $sort: sortFields }]
+        }
+
+        pipeline = [
+          ...pipeline,
           { $skip: skip },
-          { $limit: limit }
+          { $limit: limit },
+          { $project: projectIds }
         ]
       }
 
