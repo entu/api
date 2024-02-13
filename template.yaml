@@ -147,18 +147,18 @@ Resources:
     Properties:
       AllocationId: !GetAtt NatGatewayEIP.AllocationId
       SubnetId: !Ref PublicSubnet
-    Tags:
-      - Key: Name
-        Value: !Sub "${AWS::StackName}-nat-gateway"
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-nat-gateway"
 
   NatGatewayEIP:
     Type: AWS::EC2::EIP
     DependsOn: VPCGatewayAttachment
     Properties:
       Domain: vpc
-    Tags:
-      - Key: Name
-        Value: !Sub "${AWS::StackName}-nat-gateway-eip"
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-nat-gateway-eip"
 
   PublicSubnet:
     Type: AWS::EC2::Subnet
@@ -185,18 +185,12 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: '0.0.0.0/0'
       NatGatewayId: !Ref NatGateway
-    Tags:
-      - Key: Name
-        Value: !Sub "${AWS::StackName}-public-route"
 
   PublicSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnet
       RouteTableId: !Ref PublicRouteTable
-    Tags:
-      - Key: Name
-        Value: !Sub "${AWS::StackName}-public-subnet-route-association"
 
   HttpApi:
     Type: AWS::Serverless::HttpApi
