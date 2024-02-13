@@ -76,9 +76,6 @@ Resources:
       RouteTableId: !Ref Subnet1RouteTable
       DestinationCidrBlock: '0.0.0.0/0'
       GatewayId: !Ref InternetGateway
-    Tags:
-      - Key: Name
-        Value: !Sub "${AWS::StackName}-subnet-1-route"
 
   Subnet2:
     Type: AWS::EC2::Subnet
@@ -105,9 +102,6 @@ Resources:
       RouteTableId: !Ref Subnet2RouteTable
       DestinationCidrBlock: '0.0.0.0/0'
       GatewayId: !Ref InternetGateway
-    Tags:
-      - Key: Name
-        Value: !Sub "${AWS::StackName}-subnet-2-route"
 
   Subnet3:
     Type: AWS::EC2::Subnet
@@ -134,9 +128,6 @@ Resources:
       RouteTableId: !Ref Subnet3RouteTable
       DestinationCidrBlock: '0.0.0.0/0'
       GatewayId: !Ref InternetGateway
-    Tags:
-      - Key: Name
-        Value: !Sub "${AWS::StackName}-subnet-3-route"
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
