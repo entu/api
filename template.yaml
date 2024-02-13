@@ -51,14 +51,23 @@ Resources:
         - Key: Name
           Value: !Sub "${AWS::StackName}-vpc"
 
-  SecurityGroup:
+  EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub "${AWS::StackName}-security-group"
-      GroupDescription: !Sub "${AWS::StackName}-security-group"
-      SecurityGroupEgress:
-        - IpProtocol: '-1'
-          CidrIp: '0.0.0.0/0'
+      GroupName: !Sub "${AWS::StackName}-security-group-endpoint"
+      GroupDescription: "Security group for VPC Endpoint"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !GetAtt LambdaSecurityGroup.GroupId
+      VpcId: !Ref Vpc
+
+  LambdaSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Sub "${AWS::StackName}-security-group-lambda"
+      GroupDescription: "Security group for VPC Endpoint Lambda"
       VpcId: !Ref Vpc
 
   Subnet1:
