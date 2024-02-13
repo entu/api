@@ -32,13 +32,13 @@ Globals:
     Timeout: 30
     Layers:
       - !Ref LambdaLayer
-    # VpcConfig:
-    #     SecurityGroupIds:
-    #       - !Ref SecurityGroup
-    #     SubnetIds:
-    #       - !Ref Subnet1
-    #       - !Ref Subnet2
-    #       - !Ref Subnet3
+    VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds:
+          - !Ref Subnet1
+          - !Ref Subnet2
+          - !Ref Subnet3
 
 Resources:
   Vpc:
