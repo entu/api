@@ -391,16 +391,10 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-get"
       RetentionInDays: 365
 
-  LogGroupAuthOauthGet:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-oauth-get"
-      RetentionInDays: 365
-
   LogGroupAuthOauthPost:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-oauth-post"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-oauth"
       RetentionInDays: 365
 
   LogGroupEntityListGet:
