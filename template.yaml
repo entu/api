@@ -34,7 +34,7 @@ Globals:
       - !Ref LambdaLayer
     VpcConfig:
         SecurityGroupIds:
-          - !Ref SecurityGroup
+          - !Ref LambdaSecurityGroup
         SubnetIds:
           - !Ref Subnet1
           - !Ref Subnet2
