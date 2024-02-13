@@ -51,6 +51,12 @@ Resources:
         - Key: Name
           Value: !Sub "${AWS::StackName}-vpc"
 
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${AWS::StackName}-security-group"
+      VpcId: !Ref Vpc
+
   Subnet1:
     Type: AWS::EC2::Subnet
     Properties:
