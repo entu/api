@@ -56,6 +56,9 @@ Resources:
     Properties:
       GroupName: !Sub "${AWS::StackName}-security-group"
       GroupDescription: !Sub "${AWS::StackName}-security-group"
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          CidrIp: '0.0.0.0/0'
       VpcId: !Ref Vpc
 
   Subnet1:
