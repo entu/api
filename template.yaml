@@ -17,6 +17,9 @@ Parameters:
   HostedZoneId:
     Type: AWS::SSM::Parameter::Value<String>
     Default: entu-api-hosted-zone-id
+  VpcCidrBlock:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: entu-api-vpc-cidr-block
 
 Globals:
   Function:
@@ -44,7 +47,7 @@ Resources:
   Vpc:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: '10.0.0.0/16'
+      CidrBlock: 10.0.0.0/16
       EnableDnsSupport: true
       EnableDnsHostnames: true
       Tags:
@@ -88,8 +91,8 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref Vpc
-      CidrBlock: '10.0.1.0/24'
-      AvailabilityZone: 'eu-central-1a'
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: eu-central-1a
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-subnet-1"
@@ -98,8 +101,8 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref Vpc
-      CidrBlock: '10.0.2.0/24'
-      AvailabilityZone: 'eu-central-1b'
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: eu-central-1b
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-subnet-2"
@@ -108,8 +111,8 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref Vpc
-      CidrBlock: '10.0.3.0/24'
-      AvailabilityZone: 'eu-central-1c'
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: eu-central-1c
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-subnet-3"
