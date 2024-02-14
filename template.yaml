@@ -63,6 +63,20 @@ Resources:
           SourceSecurityGroupId: !GetAtt LambdaSecurityGroup.GroupId
       VpcId: !Ref Vpc
 
+  SSMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !GetAtt EndpointSecurityGroup.GroupId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
+      SubnetIds:
+        - !Ref Subnet1
+        - !Ref Subnet2
+        - !Ref Subnet3
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc
+
   LambdaSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
@@ -80,22 +94,6 @@ Resources:
         - Key: Name
           Value: !Sub "${AWS::StackName}-subnet-1"
 
-  # Subnet1RouteTable:
-  #   Type: AWS::EC2::RouteTable
-  #   Properties:
-  #     VpcId: !Ref Vpc
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub "${AWS::StackName}-subnet-1-route-table"
-
-  # Subnet1Route:
-  #   Type: AWS::EC2::Route
-  #   DependsOn: Vpc
-  #   Properties:
-  #     RouteTableId: !Ref Subnet1RouteTable
-  #     DestinationCidrBlock: '0.0.0.0/0'
-  #     GatewayId: !Ref InternetGateway
-
   Subnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -106,22 +104,6 @@ Resources:
         - Key: Name
           Value: !Sub "${AWS::StackName}-subnet-2"
 
-  # Subnet2RouteTable:
-  #   Type: AWS::EC2::RouteTable
-  #   Properties:
-  #     VpcId: !Ref Vpc
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub "${AWS::StackName}-subnet-2-route-table"
-
-  # Subnet2Route:
-  #   Type: AWS::EC2::Route
-  #   DependsOn: Vpc
-  #   Properties:
-  #     RouteTableId: !Ref Subnet2RouteTable
-  #     DestinationCidrBlock: '0.0.0.0/0'
-  #     GatewayId: !Ref InternetGateway
-
   Subnet3:
     Type: AWS::EC2::Subnet
     Properties:
@@ -131,85 +113,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-subnet-3"
-
-  # Subnet3RouteTable:
-  #   Type: AWS::EC2::RouteTable
-  #   Properties:
-  #     VpcId: !Ref Vpc
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub "${AWS::StackName}-subnet-3-route-table"
-
-  # Subnet3Route:
-  #   Type: AWS::EC2::Route
-  #   DependsOn: Vpc
-  #   Properties:
-  #     RouteTableId: !Ref Subnet3RouteTable
-  #     DestinationCidrBlock: '0.0.0.0/0'
-  #     GatewayId: !Ref InternetGateway
-
-  # InternetGateway:
-  #   Type: AWS::EC2::InternetGateway
-  #   Properties:
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub "${AWS::StackName}-internet-gateway"
-
-  # VPCGatewayAttachment:
-  #   Type: AWS::EC2::VPCGatewayAttachment
-  #   Properties:
-  #     VpcId: !Ref Vpc
-  #     InternetGatewayId: !Ref InternetGateway
-
-  # NatGateway:
-  #   Type: AWS::EC2::NatGateway
-  #   Properties:
-  #     AllocationId: !GetAtt NatGatewayEIP.AllocationId
-  #     SubnetId: !Ref PublicSubnet
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub "${AWS::StackName}-nat-gateway"
-
-  # NatGatewayEIP:
-  #   Type: AWS::EC2::EIP
-  #   DependsOn: VPCGatewayAttachment
-  #   Properties:
-  #     Domain: vpc
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub "${AWS::StackName}-nat-gateway-eip"
-
-  # PublicSubnet:
-  #   Type: AWS::EC2::Subnet
-  #   Properties:
-  #     VpcId: !Ref Vpc
-  #     CidrBlock: '10.0.4.0/24'
-  #     AvailabilityZone: 'eu-central-1a'
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub "${AWS::StackName}-public-subnet"
-
-  # PublicRouteTable:
-  #   Type: AWS::EC2::RouteTable
-  #   Properties:
-  #     VpcId: !Ref Vpc
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub "${AWS::StackName}-public-route-table"
-
-  # PublicRoute:
-  #   Type: AWS::EC2::Route
-  #   DependsOn: NatGateway
-  #   Properties:
-  #     RouteTableId: !Ref PublicRouteTable
-  #     DestinationCidrBlock: '0.0.0.0/0'
-  #     NatGatewayId: !Ref NatGateway
-
-  # PublicSubnetRouteTableAssociation:
-  #   Type: AWS::EC2::SubnetRouteTableAssociation
-  #   Properties:
-  #     SubnetId: !Ref PublicSubnet
-  #     RouteTableId: !Ref PublicRouteTable
 
   HttpApi:
     Type: AWS::Serverless::HttpApi
