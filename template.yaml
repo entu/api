@@ -66,6 +66,20 @@ Resources:
           SourceSecurityGroupId: !GetAtt LambdaSecurityGroup.GroupId
       VpcId: !Ref Vpc
 
+  SQSEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !GetAtt EndpointSecurityGroup.GroupId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.sqs"
+      SubnetIds:
+        - !Ref Subnet1
+        - !Ref Subnet2
+        - !Ref Subnet3
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc
+
   SSMEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
