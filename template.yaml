@@ -17,9 +17,9 @@ Parameters:
   HostedZoneId:
     Type: AWS::SSM::Parameter::Value<String>
     Default: entu-api-hosted-zone-id
-  VpcCidrBlock:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: entu-api-vpc-cidr-block
+  # VpcCidrBlock:
+  #   Type: AWS::SSM::Parameter::Value<String>
+  #   Default: entu-api-vpc-cidr-block
 
 Globals:
   Function:
