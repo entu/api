@@ -17,18 +17,6 @@ Parameters:
   HostedZoneId:
     Type: AWS::SSM::Parameter::Value<String>
     Default: entu-api-hosted-zone-id
-  VpcSecurityGroup:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: entu-api-vpc-security-group
-  VpcSubnet1:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: entu-api-vpc-subnet-1
-  VpcSubnet2:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: entu-api-vpc-subnet-2
-  VpcSubnet3:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: entu-api-vpc-subnet-3
 
 Globals:
   Function:
@@ -44,15 +32,88 @@ Globals:
     Timeout: 30
     Layers:
       - !Ref LambdaLayer
-    # VpcConfig:
-    #   SecurityGroupIds:
-    #     - !Sub "${VpcSecurityGroup}"
-    #   SubnetIds:
-    #     - !Sub "${VpcSubnet1}"
-    #     - !Sub "${VpcSubnet2}"
-    #     - !Sub "${VpcSubnet3}"
+    VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - !Ref Subnet1
+          - !Ref Subnet2
+          - !Ref Subnet3
 
 Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: '10.0.0.0/16'
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-vpc"
+
+  EndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${AWS::StackName}-security-group-endpoint"
+      GroupDescription: "Security group for VPC Endpoint"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !GetAtt LambdaSecurityGroup.GroupId
+      VpcId: !Ref Vpc
+
+  SSMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !GetAtt EndpointSecurityGroup.GroupId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
+      SubnetIds:
+        - !Ref Subnet1
+        - !Ref Subnet2
+        - !Ref Subnet3
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc
+
+  LambdaSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Sub "${AWS::StackName}-security-group-lambda"
+      GroupDescription: "Security group for VPC Endpoint Lambda"
+      VpcId: !Ref Vpc
+
+  Subnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: '10.0.1.0/24'
+      AvailabilityZone: 'eu-central-1a'
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-subnet-1"
+
+  Subnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: '10.0.2.0/24'
+      AvailabilityZone: 'eu-central-1b'
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-subnet-2"
+
+  Subnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: '10.0.3.0/24'
+      AvailabilityZone: 'eu-central-1c'
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-subnet-3"
+
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -354,16 +415,10 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-get"
       RetentionInDays: 365
 
-  LogGroupAuthOauthGet:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-oauth-get"
-      RetentionInDays: 365
-
   LogGroupAuthOauthPost:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-oauth-post"
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-oauth"
       RetentionInDays: 365
 
   LogGroupEntityListGet:
