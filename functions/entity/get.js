@@ -126,7 +126,7 @@ exports.handler = async (event, context) => {
       }
 
       if (query.length > 0) {
-        _set(filter, ['$text', '$search'], query.join(' '))
+        _set(filter, ['$text', '$search'], query.map(x => `"${x}"`).join(' '))
         _set(filter, [user.id ? 'search.private' : 'search.public', '$all'], query.map(x => new RegExp(x)))
       }
 
