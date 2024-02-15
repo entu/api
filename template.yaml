@@ -39,7 +39,7 @@ Globals:
         SecurityGroupIds:
           - !Ref LambdaSecurityGroup
         SubnetIds:
-          - !Ref SubnetAPrivate
+          - !Ref PrivateSubnet
 
 Resources:
   VPC:
@@ -59,75 +59,6 @@ Resources:
       GroupName: !Sub "${AWS::StackName}-nat-gateway-lambda"
       GroupDescription: 'Security group for Lambda'
 
-  InternetGateway:
-    Type: AWS::EC2::InternetGateway
-    Properties:
-      Tags:
-      - Key: Name
-        Value: !Sub "${AWS::StackName}-internet-gateway"
-
-  VPCGatewayAttachment:
-    Type: AWS::EC2::VPCGatewayAttachment
-    Properties:
-      VpcId: !Ref VPC
-      InternetGatewayId: !Ref InternetGateway
-
-  SubnetAPublic:
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone: !Select [0, !GetAZs '']
-      CidrBlock: 10.0.0.0/20
-      MapPublicIpOnLaunch: true
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: !Sub "${AWS::StackName}-subnet-a-public"
-
-  SubnetAPrivate:
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone: !Select [0, !GetAZs '']
-      CidrBlock: 10.0.128.0/20
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: !Sub "${AWS::StackName}-subnet-a-private"
-
-  RouteTableAPublic:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: !Sub "${AWS::StackName}-route-table-a-public"
-
-  RouteTableAPrivate:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: !Sub "${AWS::StackName}-route-table-a-private"
-
-  RouteTableAssociationAPublic:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref SubnetAPublic
-      RouteTableId: !Ref RouteTableAPublic
-
-  RouteTableAssociationAPrivate:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref SubnetAPrivate
-      RouteTableId: !Ref RouteTableAPrivate
-
-  RouteTablePublicAInternetRoute:
-    Type: AWS::EC2::Route
-    DependsOn: VPCGatewayAttachment
-    Properties:
-      RouteTableId: !Ref RouteTableAPublic
-      DestinationCidrBlock: '0.0.0.0/0'
-      GatewayId: !Ref InternetGateway
 
   EIP:
     Type: AWS::EC2::EIP
@@ -141,17 +72,89 @@ Resources:
     Type: AWS::EC2::NatGateway
     Properties:
       AllocationId: !GetAtt 'EIP.AllocationId'
-      SubnetId: !Ref SubnetAPublic
+      SubnetId: !Ref PublicSubnet
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-nat-gateway"
 
-  RouteNatGatewayAPrivate:
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: 10.0.128.0/20
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-private-subnet"
+
+  PrivateRoute:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref RouteTableAPrivate
+      RouteTableId: !Ref PrivateRouteTable
       DestinationCidrBlock: '0.0.0.0/0'
       NatGatewayId: !Ref NatGateway
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-private-route-table"
+
+  PrivateRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet
+      RouteTableId: !Ref PrivateRouteTable
+
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: !Sub "${AWS::StackName}-internet-gateway"
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: 10.0.0.0/20
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-public-subnet"
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-public-route-table"
+
+  PublicRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
 
   HttpApi:
     Type: AWS::Serverless::HttpApi
@@ -211,7 +214,6 @@ Resources:
             Method: GET
             ApiId: !Ref HttpApi
 
-
   FunctionAuthGet:
     Type: AWS::Serverless::Function
     Properties:
@@ -231,7 +233,6 @@ Resources:
             Method: GET
             ApiId: !Ref HttpApi
 
-
   FunctionAuthOauth:
     Type: AWS::Serverless::Function
     Properties:
@@ -250,7 +251,6 @@ Resources:
             Path: /auth/{provider}
             Method: GET
             ApiId: !Ref HttpApi
-
 
   FunctionEntityListGet:
     Type: AWS::Serverless::Function
@@ -272,7 +272,6 @@ Resources:
             Path: /entity
             Method: GET
             ApiId: !Ref HttpApi
-
 
   FunctionEntityListPost:
     Type: AWS::Serverless::Function
@@ -299,7 +298,6 @@ Resources:
             Method: POST
             ApiId: !Ref HttpApi
 
-
   FunctionEntityGet:
     Type: AWS::Serverless::Function
     Properties:
@@ -320,7 +318,6 @@ Resources:
             Path: /entity/{_id}
             Method: GET
             ApiId: !Ref HttpApi
-
 
   FunctionEntityPost:
     Type: AWS::Serverless::Function
@@ -347,7 +344,6 @@ Resources:
             Method: POST
             ApiId: !Ref HttpApi
 
-
   FunctionEntityDelete:
     Type: AWS::Serverless::Function
     Properties:
@@ -371,7 +367,6 @@ Resources:
             Method: DELETE
             ApiId: !Ref HttpApi
 
-
   FunctionEntityHistoryGet:
     Type: AWS::Serverless::Function
     Properties:
@@ -390,7 +385,6 @@ Resources:
             Path: /entity/{_id}/history
             Method: GET
             ApiId: !Ref HttpApi
-
 
   FunctionEntityAggregateGet:
     Type: AWS::Serverless::Function
@@ -415,7 +409,6 @@ Resources:
             Method: GET
             ApiId: !Ref HttpApi
 
-
   FunctionPropertyGet:
     Type: AWS::Serverless::Function
     Properties:
@@ -436,7 +429,6 @@ Resources:
             Path: /property/{_id}
             Method: GET
             ApiId: !Ref HttpApi
-
 
   FunctionPropertyDelete:
     Type: AWS::Serverless::Function
@@ -468,13 +460,11 @@ Resources:
       LogGroupName: !Sub "/aws/apigateway/${AWS::StackName}"
       RetentionInDays: 365
 
-
   LogGroupAccountGet:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-account-get"
       RetentionInDays: 365
-
 
   LogGroupAuthGet:
     Type: AWS::Logs::LogGroup
@@ -482,13 +472,11 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-get"
       RetentionInDays: 365
 
-
   LogGroupAuthOauthPost:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-auth-oauth"
       RetentionInDays: 365
-
 
   LogGroupEntityListGet:
     Type: AWS::Logs::LogGroup
@@ -496,13 +484,11 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-list-get"
       RetentionInDays: 365
 
-
   LogGroupEntityListPost:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-list-post"
       RetentionInDays: 365
-
 
   LogGroupEntityGet:
     Type: AWS::Logs::LogGroup
@@ -510,13 +496,11 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-get"
       RetentionInDays: 365
 
-
   LogGroupEntityPost:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-post"
       RetentionInDays: 365
-
 
   LogGroupEntityDelete:
     Type: AWS::Logs::LogGroup
@@ -524,13 +508,11 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-delete"
       RetentionInDays: 365
 
-
   LogGroupEntityAggregate:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-entity-aggregate-get"
       RetentionInDays: 365
-
 
   LogGroupPropertyGet:
     Type: AWS::Logs::LogGroup
@@ -538,12 +520,13 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-property-get"
       RetentionInDays: 365
 
-
   LogGroupPropertyDelete:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-property-delete"
       RetentionInDays: 365
+
+
 
 Outputs:
   HttpApiUrl:
