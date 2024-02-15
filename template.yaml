@@ -37,11 +37,9 @@ Globals:
       - !Ref LambdaLayer
     VpcConfig:
         SecurityGroupIds:
-          - !Ref LambdaSecurityGroup
+          - !Ref PrivateSecurityGroup
         SubnetIds:
-          - !Ref Subnet1
-          - !Ref Subnet2
-          - !Ref Subnet3
+          - !Ref PrivateSubnet
 
 Resources:
   Vpc:
@@ -54,82 +52,92 @@ Resources:
         - Key: Name
           Value: !Sub "${AWS::StackName}-vpc"
 
-  EndpointSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub "${AWS::StackName}-security-group-endpoint"
-      GroupDescription: "Security group for VPC Endpoint"
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          SourceSecurityGroupId: !GetAtt LambdaSecurityGroup.GroupId
-      VpcId: !Ref Vpc
-
-  SQSEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      PrivateDnsEnabled: True
-      SecurityGroupIds:
-        - !GetAtt EndpointSecurityGroup.GroupId
-      ServiceName: !Sub "com.amazonaws.${AWS::Region}.sqs"
-      SubnetIds:
-        - !Ref Subnet1
-        - !Ref Subnet2
-        - !Ref Subnet3
-      VpcEndpointType: Interface
-      VpcId: !Ref Vpc
-
-  SSMEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      PrivateDnsEnabled: True
-      SecurityGroupIds:
-        - !GetAtt EndpointSecurityGroup.GroupId
-      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
-      SubnetIds:
-        - !Ref Subnet1
-        - !Ref Subnet2
-        - !Ref Subnet3
-      VpcEndpointType: Interface
-      VpcId: !Ref Vpc
-
-  LambdaSecurityGroup:
+  PublicSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
-      GroupName: !Sub "${AWS::StackName}-security-group-lambda"
-      GroupDescription: "Security group for VPC Endpoint Lambda"
       VpcId: !Ref Vpc
-
-  Subnet1:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref Vpc
-      CidrBlock: 10.0.1.0/24
-      AvailabilityZone: eu-central-1a
+      SecurityGroupIngress:
+        - CidrBlock: "10.0.0.0/16" # Internal VPC traffic
+          FromPort: 0
+          ToPort: 65535
+          IpProtocol: -1
+      SecurityGroupEgress:
+        - CidrBlock: "0.0.0.0/0"
+          FromPort: 0
+          ToPort: 65535
+          IpProtocol: -1
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-subnet-1"
+          Value: !Sub "${AWS::StackName}-public-security-group"
 
-  Subnet2:
-    Type: AWS::EC2::Subnet
+  PrivateSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - CidrBlock: "10.0.0.0/16" # Internal VPC traffic
+          FromPort: 0
+          ToPort: 65535
+          IpProtocol: -1
+      SecurityGroupEgress:
+        - CidrBlock: "0.0.0.0/0"
+          FromPort: 0
+          ToPort: 65535
+          IpProtocol: -1
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-private-security-group"
+
+  InternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-internet-gateway"
+
+  NatGateway:
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      AllocationId: !GetAtt PublicSubnet.AllocationId
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-nat-gateway"
+
+  PrivateSubnet:
+    Type: "AWS::EC2::Subnet"
     Properties:
       VpcId: !Ref Vpc
       CidrBlock: 10.0.2.0/24
-      AvailabilityZone: eu-central-1b
+      AvailabilityZone: !Select [0, !GetAZs '']
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-subnet-2"
+          Value: !Sub "${AWS::StackName}-private-subnet"
 
-  Subnet3:
-    Type: AWS::EC2::Subnet
+  PrivateSubnetRouteTable:
+    Type: "AWS::EC2::RouteTable"
     Properties:
       VpcId: !Ref Vpc
-      CidrBlock: 10.0.3.0/24
-      AvailabilityZone: eu-central-1c
+      Routes:
+        - CidrBlock: "0.0.0.0/0"
+          NatGatewayId: !Ref NatGateway
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-subnet-3"
+          Value: !Sub "${AWS::StackName}-private-subnet-route-table"
+
+  PrivateSubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PrivateSubnet
+      RouteTableId: !Ref PrivateSubnetRouteTable
+
+  PublicSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      VpcId: !Ref Vpc
 
   HttpApi:
     Type: AWS::Serverless::HttpApi
