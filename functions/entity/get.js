@@ -55,7 +55,7 @@ exports.handler = async (event, context) => {
       const sort = (event.queryStringParameters?.sort || '').split(',').filter(x => !!x)
       const limit = _toSafeInteger(event.queryStringParameters?.limit) || 100
       const skip = _toSafeInteger(event.queryStringParameters?.skip) || 0
-      const query = (event.queryStringParameters?.q || '').split(' ').filter(x => !!x)
+      const query = (event.queryStringParameters?.q || '').toLowerCase().split(' ').filter(x => !!x)
       let sortFields = {}
       const filter = {}
       let search
@@ -126,30 +126,14 @@ exports.handler = async (event, context) => {
       }
 
       if (query.length > 0) {
-        search = {
-          compound: {
-            filter: query.map(q => ({
-              wildcard: {
-                allowAnalyzedField: true,
-                query: `*${q}*`,
-                path: user.id ? 'search.private' : 'search.public'
-              }
-            }))
-          },
-          sort: sortFields
-        }
+        _set(filter, ['$text', '$search'], query.join(' '))
+        _set(filter, [user.id ? 'search.private' : 'search.public', '$all'], query.map(x => new RegExp(x)))
       }
 
       const cleanedEntities = []
       let entities = 0
       let count = 0
-      let pipeline = []
-
-      if (search) {
-        pipeline.push({ $search: search })
-      }
-
-      pipeline.push({ $match: filter })
+      let pipeline = [{ $match: filter }]
 
       if (group.length > 0) {
         const groupIds = {}
@@ -176,17 +160,15 @@ exports.handler = async (event, context) => {
           ...pipeline,
           ...unwinds,
           { $group: { ...groupFields, _id: groupIds, _count: { $count: {} } } },
-          { $project: projectIds }
+          { $project: projectIds },
+          { $sort: sortFields }
         ]
 
         if (!search) {
           pipeline.push({ $sort: sortFields })
         }
       } else {
-        if (!search) {
-          pipeline.push({ $sort: sortFields })
-        }
-
+        pipeline.push({ $sort: sortFields })
         pipeline.push({ $skip: skip })
         pipeline.push({ $limit: limit })
 
@@ -200,10 +182,6 @@ exports.handler = async (event, context) => {
           pipeline.push({ $project: projectIds })
         }
       }
-
-      // if (JSON.stringify(pipeline).includes('compound')) {
-      //   console.log(JSON.stringify(pipeline))
-      // }
 
       const countPipeline = [
         ...pipeline.filter((x) => !Object.keys(x).includes('$sort') && !Object.keys(x).includes('$skip') && !Object.keys(x).includes('$limit')),
