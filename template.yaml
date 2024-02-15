@@ -57,13 +57,11 @@ Resources:
     Properties:
       VpcId: !Ref Vpc
       SecurityGroupIngress:
-        - CidrBlock: "10.0.0.0/16" # Internal VPC traffic
-          FromPort: 0
+        - FromPort: 0
           ToPort: 65535
           IpProtocol: -1
       SecurityGroupEgress:
-        - CidrBlock: "0.0.0.0/0"
-          FromPort: 0
+        - FromPort: 0
           ToPort: 65535
           IpProtocol: -1
       Tags:
