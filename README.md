@@ -1,41 +1,5 @@
 # Entu API Documentation
 
-## Account
-
-### GET /account
-Returns account info and usage statistics
-
-#### Query parameters
-- **account** - Account key. Required.
-
-#### Example request
-```http
-GET /account?account=account1 HTTP/1.1
-Host: api.entu.app
-Accept-Encoding: deflate
-Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
-```
-
-#### Example response
-```json
-{
-  "account": "account1",
-  "stats": {
-    "entities": 531,
-    "deletedEntities": 85,
-    "properties": 7446,
-    "deletedProperties": 1547,
-    "files": 70,
-    "filesSize": 16240263,
-    "deletedFiles": 9,
-    "deletedFilesSize": 1392158
-  }
-}
-```
-
-
-
-
 ## Authentication
 
 ### GET /auth
@@ -103,13 +67,50 @@ Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key c
 
 
 
+## Account
+
+### GET /{ account }/account
+Returns account info and usage statistics
+
+#### Path parameters
+- **account** - Account key.
+
+#### Example request
+```http
+GET /account1/account HTTP/1.1
+Host: api.entu.app
+Accept-Encoding: deflate
+Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
+```
+
+#### Example response
+```json
+{
+  "stats": {
+    "entities": 531,
+    "deletedEntities": 85,
+    "properties": 7446,
+    "deletedProperties": 1547,
+    "files": 70,
+    "filesSize": 16240263,
+    "deletedFiles": 9,
+    "deletedFilesSize": 1392158
+  }
+}
+```
+
+
+
+
 ## Entity
 
-### GET /entity
+### GET /{ account }/entity
 Get list of entities.
 
+#### Path parameters
+- **account** - Account key.
+
 #### Query parameters
-- **account** - Account key. Required.
 - **q** - Search string. Will search only from searchable fields.
 - **props** - Comma separated list of properties to get. If not set all properties are returned (except on group request).
 - **group** - Comma separated list of properties to group by. If set, then parameters limit and skip are ignored. Will return only group's count and properties set in props parameter.
@@ -128,7 +129,7 @@ To filter entities by property value. Use dot separated list of *property key*, 
 
 #### Example request
 ```http
-GET /entity?account=account1&forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12 HTTP/1.1
+GET /account1/entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12 HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -145,15 +146,15 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 
 
-### POST /entity
+### POST /{ account }/entity
 Create new entity. Data must be sent as JSON list containing property object(s).
 
 Returns created entity \_id and added properties.
 
 For file upload, add *filename*, *filesize* and *filetype* to property parameters. Response contains *upload* object with info (url, method and headers) where to upload file (as request body).
 
-#### Query parameters
-- **account** - Account key. Required.
+#### Path parameters
+- **account** - Account key.
 
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
@@ -162,7 +163,7 @@ For file upload, add *filename*, *filesize* and *filetype* to property parameter
 
 #### Example request
 ```http
-POST /entity?account=account1 HTTP/1.1
+POST /account1/entity HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -209,16 +210,19 @@ Content-Length: 151
 
 
 
-### GET /entity/{ \_id }
+### GET /{ account }/entity/{ \_id }
 Get one entity with given id.
 
+#### Path parameters
+- **account** - Account key.
+- **_id** - Entity _id.
+
 #### Query parameters
-- **account** - Account key. Required.
 - **props** - Comma separated list of properties to get. If not set all properties are returned.
 
 #### Example request
 ```http
-GET /entity/59abac1bb5684200016be61e?account=account1 HTTP/1.1
+GET /account1/entity/59abac1bb5684200016be61e HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -232,15 +236,16 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 
 
-### POST /entity/{ \_id }
+### POST /{ account }/entity/{ \_id }
 Add new properties to existing entity. Data must be sent as JSON list containing property object(s).
 
 Returns added properties.
 
 For file upload, add *filename*, *filesize* and *filetype* to property parameters. Response contains *upload* object with info (url, method and headers) where to upload file (as request body).
 
-#### Query parameters
-- **account** - Account key. Required.
+#### Path parameters
+- **account** - Account key.
+- **_id** - Entity _id.
 
 #### Property object parameters
 - **_id** - Optional. If set, then property with given _id will be replaced by the new property.
@@ -250,7 +255,7 @@ For file upload, add *filename*, *filesize* and *filetype* to property parameter
 
 #### Example request
 ```http
-POST /entity/hAazguCezHwDfLe2geyKKpqj?account=account1 HTTP/1.1
+POST /account1/entity/hAazguCezHwDfLe2geyKKpqj HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -291,15 +296,16 @@ Content-Length: 164
 
 
 
-### DELETE /entity/{ \_id }
+### DELETE /{ account }/entity/{ \_id }
 Delete entity with given id.
 
-#### Query parameters
-- **account** - Account key. Required.
+#### Path parameters
+- **account** - Account key.
+- **_id** - Entity _id.
 
 #### Example request
 ```http
-DELETE /entity/59abac1bb5684200016be61e?account=account1 HTTP/1.1
+DELETE /account1/entity/59abac1bb5684200016be61e HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -315,15 +321,16 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 
 
-### GET /entity/{ \_id }/history
+### GET /{ account }/entity/{ \_id }/history
 Get entity history (changelog).
 
-#### Query parameters
-- **account** - Account key. Required.
+#### Path parameters
+- **account** - Account key.
+- **_id** - Entity _id.
 
 #### Example request
 ```http
-GET /entity/59abac1bb5684200016be61e/history?account=account1 HTTP/1.1
+GET /account1/entity/59abac1bb5684200016be61e/history HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -339,16 +346,19 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 ## Property
 
-### GET /property/{ \_id }
+### GET /{ account }/property/{ \_id }
 Get property with given id.
 
+#### Path parameters
+- **account** - Account key.
+- **_id** - Property _id.
+
 #### Query parameters
-- **account** - Account key. Required.
 - **download** - If set and it's file property, redirects to file url.
 
 #### Example request
 ```http
-GET /property/5b9648dd2e5c91011f9a42b5?account=account1 HTTP/1.1
+GET /account1/property/5b9648dd2e5c91011f9a42b5 HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -362,15 +372,16 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 
 
-### DELETE /property/{ \_id }
+### DELETE /{ account }/property/{ \_id }
 Delete property with given id.
 
-#### Query parameters
-- **account** - Account key. Required.
+#### Path parameters
+- **account** - Account key.
+- **_id** - Property _id.
 
 #### Example request
 ```http
-DELETE /property/5b9648dd2e5c9100459a4157?account=account1 HTTP/1.1
+DELETE /account1/property/5b9648dd2e5c9100459a4157 HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
