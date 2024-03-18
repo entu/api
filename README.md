@@ -10,8 +10,8 @@ Authenticates user by API key. API key must be sent in Bearer authorization head
 
 #### Example request
 ```http
-GET /auth HTTP/1.1
-Host: api.entu.app
+GET /api/auth HTTP/1.1
+Host: entu.app
 Accept-Encoding: deflate
 Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF
 ```
@@ -77,8 +77,8 @@ Returns account info and usage statistics
 
 #### Example request
 ```http
-GET /account1 HTTP/1.1
-Host: api.entu.app
+GET /api/account1 HTTP/1.1
+Host: entu.app
 Accept-Encoding: deflate
 Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
 ```
@@ -127,8 +127,8 @@ To filter entities by property value. Use dot separated list of *property key*, 
 
 #### Example request
 ```http
-GET /account1/entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12 HTTP/1.1
-Host: api.entu.app
+GET /api/account1/entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12 HTTP/1.1
+Host: entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ```
@@ -161,8 +161,8 @@ For file upload, add *filename*, *filesize* and *filetype* to property parameter
 
 #### Example request
 ```http
-POST /account1/entity HTTP/1.1
-Host: api.entu.app
+POST /api/account1/entity HTTP/1.1
+Host: entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 Content-Type: application/json; charset=utf-8
@@ -220,8 +220,8 @@ Get one entity with given id.
 
 #### Example request
 ```http
-GET /account1/entity/59abac1bb5684200016be61e HTTP/1.1
-Host: api.entu.app
+GET /api/account1/entity/59abac1bb5684200016be61e HTTP/1.1
+Host: entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ```
@@ -253,8 +253,8 @@ For file upload, add *filename*, *filesize* and *filetype* to property parameter
 
 #### Example request
 ```http
-POST /account1/entity/hAazguCezHwDfLe2geyKKpqj HTTP/1.1
-Host: api.entu.app
+POST /api/account1/entity/hAazguCezHwDfLe2geyKKpqj HTTP/1.1
+Host: entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 Content-Type: application/json; charset=utf-8
@@ -303,8 +303,8 @@ Delete entity with given id.
 
 #### Example request
 ```http
-DELETE /account1/entity/59abac1bb5684200016be61e HTTP/1.1
-Host: api.entu.app
+DELETE /api/account1/entity/59abac1bb5684200016be61e HTTP/1.1
+Host: entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ```
@@ -328,8 +328,8 @@ Get entity history (changelog).
 
 #### Example request
 ```http
-GET /account1/entity/59abac1bb5684200016be61e/history HTTP/1.1
-Host: api.entu.app
+GET /api/account1/entity/59abac1bb5684200016be61e/history HTTP/1.1
+Host: entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ```
@@ -356,8 +356,8 @@ Get property with given id.
 
 #### Example request
 ```http
-GET /account1/property/5b9648dd2e5c91011f9a42b5 HTTP/1.1
-Host: api.entu.app
+GET /api/account1/property/5b9648dd2e5c91011f9a42b5 HTTP/1.1
+Host: entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ```
@@ -379,8 +379,8 @@ Delete property with given id.
 
 #### Example request
 ```http
-DELETE /account1/property/5b9648dd2e5c9100459a4157 HTTP/1.1
-Host: api.entu.app
+DELETE /api/account1/property/5b9648dd2e5c9100459a4157 HTTP/1.1
+Host: entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ```
