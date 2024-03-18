@@ -6,11 +6,11 @@
 Returns account info and usage statistics
 
 #### Query parameters
-- **account** - Account key. Required to get public info without authorization. Optional if Bearer authorization header is set.
+- **account** - Account key. Required.
 
 #### Example request
 ```http
-GET /account HTTP/1.1
+GET /account?account=account1 HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
@@ -42,7 +42,7 @@ Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
 Authenticates user by API key. API key must be sent in Bearer authorization header. Returns array of objects containing JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /account,  /entity and /property requests.
 
 #### Query parameters
-- **account** - Account key. If set, authentication is done only for this account.
+- **account** - Account key. Oprional. If set, authentication is done only for this account.
 
 #### Example request
 ```http
@@ -54,18 +54,27 @@ Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF
 
 #### Example response
 ```json
-[
-  {
-    "_id": "3g5tee54fp36hssntqm4rasd",
-    "account": "account1",
-    "token": "hNGcQgaeKh7ptWF5FVPbfKgpR5ZHCzT5cbA4BQWtmWGkfdQHg5HLDMCB8GwKw8gG"
-  },
-  {
-    "_id": "dpjhnc8zq6u33xtnz7u75ydf",
-    "account": "account1",
-    "token": "7RnGfkM7fayzDx7F8E2f65aTuuE5P7PEmYHVYNngKbDVx92bk2FVZBkfFBAPgpsT"
-  }
-]
+{
+  "accounts": [
+    {
+      "_id": "account1",
+      "name": "account1",
+      "user": {
+        "_id": "npfwb8fv4ku7tzpq5yjarncc",
+        "name": "User 1"
+      }
+    },
+    {
+      "_id": "account2",
+      "name": "account2",
+      "user": {
+        "_id": "sgkjlrq2evnmc3awmgnhfbb9",
+        "name": "User 2"
+      }
+    }
+  ],
+  "token": "hNGcQgaeKh7ptWF5FVPbfKgpR5ZHCzT5cbA4BQWtmWGkfdQHg5HLDMCB8GwKw8gG"
+}
 ```
 
 
@@ -97,7 +106,18 @@ Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key c
 ## Entity
 
 ### GET /entity
-Get list of entities. To filter entities by property value. Use dot separated list of *property key*, *data type* and *operator* as query parameter(s). Operator is optional, but must be one of following:
+Get list of entities.
+
+#### Query parameters
+- **account** - Account key. Required.
+- **q** - Search string. Will search only from searchable fields.
+- **props** - Comma separated list of properties to get. If not set all properties are returned (except on group request).
+- **group** - Comma separated list of properties to group by. If set, then parameters limit and skip are ignored. Will return only group's count and properties set in props parameter.
+- **sort** - Comma separated list of properties to use for sorting. Use - (minus) sign before property name for descending sort. If not set sorts by \_id.
+- **limit** - How many entities to return.
+- **skip** - How many entities to skip in result.
+
+To filter entities by property value. Use dot separated list of *property key*, *data type* and *operator* as query parameter(s). Operator is optional, but must be one of following:
 - **gt** - Matches values that are greater than a specified value.
 - **gte** - Matches values that are greater than or equal to a specified value.
 - **lt** - Matches values that are less than a specified value.
@@ -106,18 +126,9 @@ Get list of entities. To filter entities by property value. Use dot separated li
 - **regex** - Provides regular expression capabilities for pattern matching strings in queries.
 - **exists** - Value must be true or false. When value is true, returns entities that contain the property, including entities where the property value is *null*. If value is false, the query returns only the entities that do not contain the property.
 
-#### Query (other) parameters
-- **q** - Search string. Will search only from searchable fields.
-- **props** - Comma separated list of properties to get. If not set all properties are returned (except on group request).
-- **group** - Comma separated list of properties to group by. If set, then parameters limit and skip are ignored. Will return only group's count and properties set in props parameter.
-- **sort** - Comma separated list of properties to use for sorting. Use - (minus) sign before property name for descending sort. If not set sorts by \_id.
-- **limit** - How many entities to return.
-- **skip** - How many entities to skip in result.
-- **account** - Account key. Required to get public info without authorization. Optional if Bearer authorization header is set.
-
 #### Example request
 ```http
-GET /entity?forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12 HTTP/1.1
+GET /entity?account=account1&forename.string=John&file.size.gte=1024&surname.string.regex=/^Apple/i&photo._id.exists=false&sort=-file.size&limit=12 HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -141,6 +152,9 @@ Returns created entity \_id and added properties.
 
 For file upload, add *filename*, *filesize* and *filetype* to property parameters. Response contains *upload* object with info (url, method and headers) where to upload file (as request body).
 
+#### Query parameters
+- **account** - Account key. Required.
+
 #### Property object parameters
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
 - [ **string** \| **number** \| **boolean** \| **reference** \| **date** \| **datetime** \| **filename** \| **filesize** \| **filetype** ] - Property value.
@@ -148,7 +162,7 @@ For file upload, add *filename*, *filesize* and *filetype* to property parameter
 
 #### Example request
 ```http
-POST /entity HTTP/1.1
+POST /entity?account=account1 HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -199,12 +213,12 @@ Content-Length: 151
 Get one entity with given id.
 
 #### Query parameters
+- **account** - Account key. Required.
 - **props** - Comma separated list of properties to get. If not set all properties are returned.
-- **account** - Account key. Required to get public info without authorization. Optional if Bearer authorization header is set.
 
 #### Example request
 ```http
-GET /entity/59abac1bb5684200016be61e HTTP/1.1
+GET /entity/59abac1bb5684200016be61e?account=account1 HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -225,6 +239,9 @@ Returns added properties.
 
 For file upload, add *filename*, *filesize* and *filetype* to property parameters. Response contains *upload* object with info (url, method and headers) where to upload file (as request body).
 
+#### Query parameters
+- **account** - Account key. Required.
+
 #### Property object parameters
 - **_id** - Optional. If set, then property with given _id will be replaced by the new property.
 - **type** - Property type. It's mandatory parameter. Must be alphanumeric. Can contain \_, but not begin with one (except [system properties](#system-properties)).
@@ -233,7 +250,7 @@ For file upload, add *filename*, *filesize* and *filetype* to property parameter
 
 #### Example request
 ```http
-POST /entity/hAazguCezHwDfLe2geyKKpqj HTTP/1.1
+POST /entity/hAazguCezHwDfLe2geyKKpqj?account=account1 HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -277,9 +294,12 @@ Content-Length: 164
 ### DELETE /entity/{ \_id }
 Delete entity with given id.
 
+#### Query parameters
+- **account** - Account key. Required.
+
 #### Example request
 ```http
-DELETE /entity/59abac1bb5684200016be61e HTTP/1.1
+DELETE /entity/59abac1bb5684200016be61e?account=account1 HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -298,9 +318,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ### GET /entity/{ \_id }/history
 Get entity history (changelog).
 
+#### Query parameters
+- **account** - Account key. Required.
+
 #### Example request
 ```http
-GET /entity/59abac1bb5684200016be61e/history HTTP/1.1
+GET /entity/59abac1bb5684200016be61e/history?account=account1 HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -320,12 +343,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 Get property with given id.
 
 #### Query parameters
+- **account** - Account key. Required.
 - **download** - If set and it's file property, redirects to file url.
-- **account** - Account key. Required to get public info without authorization. Optional if Bearer authorization header is set.
 
 #### Example request
 ```http
-GET /property/5b9648dd2e5c91011f9a42b5 HTTP/1.1
+GET /property/5b9648dd2e5c91011f9a42b5?account=account1 HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
@@ -342,9 +365,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 ### DELETE /property/{ \_id }
 Delete property with given id.
 
+#### Query parameters
+- **account** - Account key. Required.
+
 #### Example request
 ```http
-DELETE /property/5b9648dd2e5c9100459a4157 HTTP/1.1
+DELETE /property/5b9648dd2e5c9100459a4157?account=account1 HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
