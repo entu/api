@@ -69,7 +69,7 @@ Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key c
 
 ## Account
 
-### GET /{ account }/account
+### GET /{ account }
 Returns account info and usage statistics
 
 #### Path parameters
@@ -77,7 +77,7 @@ Returns account info and usage statistics
 
 #### Example request
 ```http
-GET /account1/account HTTP/1.1
+GET /account1 HTTP/1.1
 Host: api.entu.app
 Accept-Encoding: deflate
 Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
@@ -86,16 +86,14 @@ Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
 #### Example response
 ```json
 {
-  "stats": {
-    "entities": 531,
-    "deletedEntities": 85,
-    "properties": 7446,
-    "deletedProperties": 1547,
-    "files": 70,
-    "filesSize": 16240263,
-    "deletedFiles": 9,
-    "deletedFilesSize": 1392158
-  }
+  "entities": 531,
+  "deletedEntities": 85,
+  "properties": 7446,
+  "deletedProperties": 1547,
+  "files": 70,
+  "filesSize": 16240263,
+  "deletedFiles": 9,
+  "deletedFilesSize": 1392158
 }
 ```
 
