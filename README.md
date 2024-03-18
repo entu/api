@@ -2,7 +2,7 @@
 
 ## Authentication
 
-### GET /auth
+### GET /api/auth
 Authenticates user by API key. API key must be sent in Bearer authorization header. Returns array of objects containing JWT tokens for accessing databases where user exists. Use this token (in Bearer authorization header) for /account,  /entity and /property requests.
 
 #### Query parameters
@@ -44,7 +44,7 @@ Authorization: Bearer nEkPYET5fYjJqktNz9yfLxPF
 
 
 
-### GET /auth/{ provider }
+### GET /api/auth/{ provider }
 Redirects user to OAuth.ee for authentication. After successful authentication:
 - If query parameter *next* is set, user is redirected to given url. Temporary API key is added to url end.
 - If next is not set returns temporary API key.
@@ -69,7 +69,7 @@ Use this temporary API key to get JWT tokens from [/auth](#get-auth). This key c
 
 ## Account
 
-### GET /{ account }
+### GET /api/{ account }
 Returns account info and usage statistics
 
 #### Path parameters
@@ -102,7 +102,7 @@ Authorization: Bearer c3H8gHLk9hjf6323n8dPHzXb
 
 ## Entity
 
-### GET /{ account }/entity
+### GET /api/{ account }/entity
 Get list of entities.
 
 #### Path parameters
@@ -144,7 +144,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 
 
-### POST /{ account }/entity
+### POST /api/{ account }/entity
 Create new entity. Data must be sent as JSON list containing property object(s).
 
 Returns created entity \_id and added properties.
@@ -208,7 +208,7 @@ Content-Length: 151
 
 
 
-### GET /{ account }/entity/{ \_id }
+### GET /api/{ account }/entity/{ \_id }
 Get one entity with given id.
 
 #### Path parameters
@@ -234,7 +234,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 
 
-### POST /{ account }/entity/{ \_id }
+### POST /api/{ account }/entity/{ \_id }
 Add new properties to existing entity. Data must be sent as JSON list containing property object(s).
 
 Returns added properties.
@@ -294,7 +294,7 @@ Content-Length: 164
 
 
 
-### DELETE /{ account }/entity/{ \_id }
+### DELETE /api/{ account }/entity/{ \_id }
 Delete entity with given id.
 
 #### Path parameters
@@ -319,7 +319,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 
 
-### GET /{ account }/entity/{ \_id }/history
+### GET /api/{ account }/entity/{ \_id }/history
 Get entity history (changelog).
 
 #### Path parameters
@@ -344,7 +344,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 ## Property
 
-### GET /{ account }/property/{ \_id }
+### GET /api/{ account }/property/{ \_id }
 Get property with given id.
 
 #### Path parameters
@@ -370,7 +370,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 
 
-### DELETE /{ account }/property/{ \_id }
+### DELETE /api/{ account }/property/{ \_id }
 Delete property with given id.
 
 #### Path parameters
