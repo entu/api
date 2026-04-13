@@ -4,6 +4,7 @@ export default defineNitroConfig({
   serverDir: './',
   imports: {},
   runtimeConfig: {
+    commitHash: '',
     graphqlBasePath: '',
     jwtSecret: '',
     mongodbUrl: '',
