@@ -1,0 +1,6 @@
+You've been invited{{inviterPlainText}} to join the Entu database "{{account}}".
+
+Click the link below to choose your preferred sign-in method and accept the invitation:
+{{inviteUrl}}
+
+The link will expire in 7 days. If you did not expect this invitation, you can safely ignore this email.

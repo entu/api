@@ -1,21 +1,34 @@
 {
   "name": "entu-api",
-  "version": "3.0.0",
   "private": true,
   "description": "Entu API",
   "author": "Argo Roots <argo@roots.ee>",
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "dev": "npm ci --quiet --production --prefix layers/nodejs && sam local start-api --env-vars env.json --warm-containers LAZY --parameter-overrides Architecture=x86_64",
-    "lint": "eslint ./ --fix --ignore-path .gitignore --ext .js",
-    "build:docs": "entu-ssg build docs/entu-ssg.yaml full"
+    "lint": "eslint . --fix --config .config/eslint.config.js",
+    "dev": "nitro dev",
+    "build": "nitro build",
+    "start": "node .output/server/index.mjs"
+  },
+  "engines": {
+    "node": "22.x"
   },
   "devDependencies": {
-    "entu-ssg": "5.6.13",
-    "eslint": "8.56.0",
-    "eslint-config-standard": "17.1.0",
-    "eslint-plugin-import": "2.29.1",
-    "eslint-plugin-n": "16.6.2",
-    "eslint-plugin-promise": "6.1.1"
+    "@aws-sdk/client-s3": "3.1029.0",
+    "@aws-sdk/client-ses": "3.1029.0",
+    "@aws-sdk/s3-request-presigner": "3.1029.0",
+    "@simplewebauthn/server": "13.3.0",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "eslint": "^10.2.0",
+    "eslint-plugin-unicorn": "^64.0.0",
+    "graphql-yoga": "5.21.0",
+    "jsonwebtoken": "9.0.3",
+    "mongodb": "7.1.1",
+    "nitro": "3.0.0",
+    "stripe": "22.0.1"
+  },
+  "dependencies": {
+    "unstorage": "1.17.5"
   }
 }
