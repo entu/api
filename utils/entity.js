@@ -225,13 +225,11 @@ async function validatePropertyTypes (entu, properties, allowedTypes) {
       }
     }
 
-    if (property.language !== undefined) {
-      if (typeof property.language !== 'string' || property.language.trim() === '') {
-        throw createError({
-          statusCode: 400,
-          statusMessage: 'Property language must be a non-empty string'
-        })
-      }
+    if (property.language !== undefined && (typeof property.language !== 'string' || property.language.trim() === '')) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Property language must be a non-empty string'
+      })
     }
 
     if (property.type === '_parent' && property.reference) {
@@ -263,13 +261,11 @@ async function validatePropertyTypes (entu, properties, allowedTypes) {
       }
     }
 
-    if (refCheckedTypes.includes(property.type) && property.reference) {
-      if (!existingRefIds.has(getObjectId(property.reference).toString())) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: `Entity in ${property.type} property not found`
-        })
-      }
+    if (refCheckedTypes.includes(property.type) && property.reference && !existingRefIds.has(getObjectId(property.reference).toString())) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: `Entity in ${property.type} property not found`
+      })
     }
   }
 }

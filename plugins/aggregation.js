@@ -1,7 +1,7 @@
 export default defineNitroPlugin(async () => {
   const { runAggregation } = useRuntimeConfig()
 
-  while (runAggregation) {  
+  while (runAggregation) {
     await aggregate()
     await new Promise((resolve) => setTimeout(resolve, 2000))
   }
