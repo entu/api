@@ -106,7 +106,7 @@ export default defineEventHandler(async (event) => {
       { $match: { $or: [{ entities: { $size: 0 } }, { deleted: { $exists: true } }] } },
       { $group: { _id: null, count: { $sum: 1 }, filesize: { $sum: '$filesize' } } }
     ]).toArray(),
-    entu.db.collection('stats').findOne({ date: date.substring(0, 7), function: 'ALL' })
+    entu.db.collection('stats').findOne({ date: date.slice(0, 7), function: 'ALL' })
   ])
 
   return {

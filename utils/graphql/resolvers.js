@@ -24,7 +24,7 @@ export function buildResolvers (entityTypes, propsByTypeId) {
         Object.assign(filter, mongoFilter)
 
         if (args.filter._search) {
-          const terms = args.filter._search.toLowerCase().split(' ').filter(Boolean).map((t) => t.substring(0, 20))
+          const terms = args.filter._search.toLowerCase().split(' ').filter(Boolean).map((t) => t.slice(0, 20))
           filter[entu.user ? 'search.private' : 'search.public'] = { $all: terms }
         }
       }

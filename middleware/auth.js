@@ -1,6 +1,8 @@
 import jwt from 'jsonwebtoken'
 
 export default defineEventHandler((event) => {
+  if (event.path === '/')
+    return
   if (event.path === '/docs' || event.path.startsWith('/docs/'))
     return
   if (event.path.startsWith('/_openapi'))

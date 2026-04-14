@@ -482,7 +482,7 @@ export default defineEventHandler(async (event) => {
   const fields = {}
 
   if (props.length > 0) {
-    props.forEach((f) => {
+    for (const f of props) {
       if (f === '_thumbnail' && !props.includes('photo')) {
         fields['private.photo'] = true
         fields['public.photo'] = true
@@ -492,14 +492,14 @@ export default defineEventHandler(async (event) => {
         fields[`public.${f}`] = true
         fields[`domain.${f}`] = true
       }
-    })
+    }
     fields.access = true
   }
 
   const sort = (query.sort || '').split(',').filter((x) => !!x)
   const limit = Number.parseInt(query.limit) || 100
   const skip = Number.parseInt(query.skip) || 0
-  const q = (query.q || '').toLowerCase().split(' ').filter((x) => x.length > 0).map((term) => term.substring(0, 20)) // Truncate search terms to match index limit
+  const q = (query.q || '').toLowerCase().split(' ').filter((x) => x.length > 0).map((term) => term.slice(0, 20)) // Truncate search terms to match index limit
   let sortFields = {}
   const filter = {}
 
@@ -574,14 +574,14 @@ export default defineEventHandler(async (event) => {
   }
 
   if (sort.length > 0) {
-    sort.forEach((f) => {
+    for (const f of sort) {
       if (f.startsWith('-')) {
-        sortFields[`private.${f.substring(1)}`] = -1
+        sortFields[`private.${f.slice(1)}`] = -1
       }
       else {
         sortFields[`private.${f}`] = 1
       }
-    })
+    }
   }
   else {
     sortFields = { _id: 1 }
@@ -610,14 +610,14 @@ export default defineEventHandler(async (event) => {
       _id: false
     }
 
-    group.forEach((g) => {
+    for (const g of group) {
       groupIds[g.replaceAll('.', '#')] = `$private.${g}`
-    })
+    }
 
-    Object.keys(fields).forEach((g) => {
+    for (const g of Object.keys(fields)) {
       groupFields[g.replaceAll('.', '#')] = { $first: `$${g}` }
       projectIds[g] = `$${g.replaceAll('.', '#')}`
-    })
+    }
 
     pipeline = [
       ...pipeline,
@@ -634,9 +634,9 @@ export default defineEventHandler(async (event) => {
     if (props.length > 0) {
       const projectIds = { access: true }
 
-      Object.keys(fields).forEach((g) => {
+      for (const g of Object.keys(fields)) {
         projectIds[g] = true
-      })
+      }
 
       pipeline.push({ $project: projectIds })
     }

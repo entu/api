@@ -70,7 +70,7 @@ export default defineEventHandler(async (event) => {
   let getThumbnail = props.length === 0
 
   if (props.length > 0) {
-    props.forEach((f) => {
+    for (const f of props) {
       if (f === '_thumbnail') {
         fields['private.photo'] = true
         fields['public.photo'] = true
@@ -81,7 +81,7 @@ export default defineEventHandler(async (event) => {
         fields[`public.${f}`] = true
         fields[`domain.${f}`] = true
       }
-    })
+    }
     fields.access = true
   }
 

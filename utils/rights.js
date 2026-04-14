@@ -81,17 +81,17 @@ export function getAccessArray ({ private: entity }) {
     access.push(entity._sharing?.at(0)?.string.toLowerCase())
   }
 
-  ['_viewer', '_expander', '_editor', '_owner'].forEach((type) => {
+  for (const type of ['_viewer', '_expander', '_editor', '_owner']) {
     if (!entity[type])
-      return
+      continue
 
-    entity[type].forEach((x) => {
+    for (const x of entity[type]) {
       if (noAccess?.includes(x.reference))
-        return
+        continue
 
       access.push(x.reference)
-    })
-  })
+    }
+  }
 
   return uniqBy(access, (x) => x.toString())
 }

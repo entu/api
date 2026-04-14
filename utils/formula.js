@@ -38,7 +38,7 @@ export async function formula (entu, str, entityId, localValues = {}) {
   valueArray = await getValueArray(entu, valueArray)
 
   if (valueArray.length === 0 && !['COUNT', 'SUM', 'MULTIPLY'].includes(func)) {
-    return undefined
+    return
   }
 
   switch (func) {
@@ -52,7 +52,7 @@ export async function formula (entu, str, entityId, localValues = {}) {
       return { number: valueArray.reduce((a, b) => a * b, 1) }
     case 'DIVIDE':
       if (valueArray.slice(1).includes(0)) {
-        return undefined
+        return
       }
       return { number: valueArray.slice(1).reduce((a, b) => a / b, valueArray.at(0)) }
     case 'AVERAGE':
@@ -120,7 +120,7 @@ async function parseFormulaTokens (entu, str, entityId, localValues = {}) {
       parenDepth--
 
       if (parenDepth === 0) {
-        const nestedFormula = str.substring(parenStart + 1, i)
+        const nestedFormula = str.slice(parenStart + 1, i)
         const result = await formula(entu, nestedFormula, entityId, localValues)
 
         if (result?.number !== undefined) {
@@ -164,7 +164,7 @@ async function formulaField (entu, str, entityId, localValues = {}) {
 
   if ((str.startsWith('\'') || str.startsWith('"')) && (str.endsWith('\'') || str.endsWith('"'))) {
     return [{
-      string: str.substring(1, str.length - 1)
+      string: str.slice(1, -1)
     }]
   }
 
@@ -473,7 +473,7 @@ export async function getValueArray (entu, values) {
       if (x.datetime !== undefined && x.datetime !== null)
         return x.datetime?.toISOString()
       if (x.date !== undefined && x.date !== null)
-        return x.date?.toISOString().substring(0, 10)
+        return x.date?.toISOString().slice(0, 10)
       if (x.string !== undefined && x.string !== null)
         return x.string
       if (x.reference !== undefined && x.reference !== null) {

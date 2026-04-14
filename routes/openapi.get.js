@@ -240,22 +240,22 @@ export default defineEventHandler(async () => {
   // Update API paths to reference the new schemas
   if (openapi.paths) {
     // Update error responses across all endpoints
-    Object.keys(openapi.paths).forEach((path) => {
-      Object.keys(openapi.paths[path]).forEach((method) => {
+    for (const path of Object.keys(openapi.paths)) {
+      for (const method of Object.keys(openapi.paths[path])) {
         const operation = openapi.paths[path][method]
 
         if (operation.responses) {
           // Update common error responses
-          ['400', '401', '403', '404', '500'].forEach((statusCode) => {
+          for (const statusCode of ['400', '401', '403', '404', '500']) {
             if (operation.responses[statusCode]?.content?.['application/json']?.schema) {
               operation.responses[statusCode].content['application/json'].schema = {
                 $ref: '#/components/schemas/Error'
               }
             }
-          })
+          }
         }
-      })
-    })
+      }
+    }
   }
 
   return openapi

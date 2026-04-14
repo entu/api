@@ -501,8 +501,8 @@ async function startRelativeAggregation (entu, oldEntity, newEntity) {
 
   // Check if rights have changed → queue children with _inheritrights
   const rightProperties = ['_noaccess', '_viewer', '_expander', '_editor', '_owner']
-  const oldRights = rightProperties.map((type) => oldEntity.private?.[type]?.map((x) => `${type}:${x.reference}`) || []).flat()
-  const newRights = rightProperties.map((type) => newEntity.private?.[type]?.map((x) => `${type}:${x.reference}`) || []).flat()
+  const oldRights = rightProperties.flatMap((type) => oldEntity.private?.[type]?.map((x) => `${type}:${x.reference}`) || [])
+  const newRights = rightProperties.flatMap((type) => newEntity.private?.[type]?.map((x) => `${type}:${x.reference}`) || [])
   oldRights.sort()
   newRights.sort()
 
