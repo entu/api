@@ -287,13 +287,13 @@ async function applyDefaultParents (entu, properties, createdDt) {
   )
 
   if (defaultParents) {
-    defaultParents.private.default_parent.forEach((parent) => {
+    for (const parent of defaultParents.private.default_parent) {
       properties.push({
         type: '_parent',
         reference: parent.reference,
         created: { at: createdDt, by: entu.user || 'entu' }
       })
-    })
+    }
   }
 }
 
@@ -594,26 +594,26 @@ export async function cleanupEntity (entu, entity, _thumbnail) {
   }
 
   if (result.entu_api_key) {
-    result.entu_api_key.forEach((k) => {
+    for (const k of result.entu_api_key) {
       k.string = '***'
-    })
+    }
   }
 
   if (result.entu_user) {
-    result.entu_user.forEach((u) => {
+    for (const u of result.entu_user) {
       if (u.invite) {
         u.invite = '***'
       }
       else if (u.email?.endsWith('@eesti.ee')) {
         u.email = u.email.replace('@eesti.ee', '')
       }
-    })
+    }
   }
 
   if (result.entu_passkey) {
-    result.entu_passkey.forEach((k) => {
+    for (const k of result.entu_passkey) {
       k.string = `${k.passkey_device || ''} ${k._id.toString().slice(-4).toUpperCase()}`.trim()
-    })
+    }
   }
 
   if (!result._thumbnail) {

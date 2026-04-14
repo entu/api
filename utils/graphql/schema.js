@@ -33,7 +33,9 @@ function makeFilterScalar (name, coerce, description) {
       }
       return coerce(parseLiteralValue(ast))
     },
-    serialize (value) { return value }
+    serialize (value) {
+      return value 
+    }
   })
 }
 

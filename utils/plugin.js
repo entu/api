@@ -57,7 +57,7 @@ export async function triggerWebhooks (entu, entityId, pluginType) {
   })
 
   // Make POST requests to each webhook without waiting
-  webhooks.forEach((webhookUrl) => {
+  for (const webhookUrl of webhooks) {
     logger(`Triggering webhook ${webhookUrl}`, entu, [`entity:${entityId}`])
 
     fetch(webhookUrl, {
@@ -76,5 +76,5 @@ export async function triggerWebhooks (entu, entityId, pluginType) {
     }).catch((error) => {
       console.error(`Webhook request failed for ${entityId} ${webhookUrl}:`, error)
     })
-  })
+  }
 }

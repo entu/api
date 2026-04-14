@@ -3,7 +3,7 @@ import unicorn from 'eslint-plugin-unicorn'
 
 export default [
   {
-    ignores: ['.nitro/', '.output/', 'node_modules/']
+    ignores: ['.nitro/', '.output/']
   },
   {
     plugins: {
@@ -64,14 +64,19 @@ export default [
     },
     rules: {
       '@stylistic/arrow-parens': ['error', 'always'],
+      '@stylistic/brace-style': ['error', 'stroustrup'],
       '@stylistic/comma-dangle': ['error', 'never'],
+      '@stylistic/indent': ['error', 2],
       '@stylistic/quote-props': ['error', 'as-needed'],
       '@stylistic/quotes': ['error', 'single'],
       '@stylistic/semi': ['error', 'never'],
       '@stylistic/space-before-function-paren': ['error', 'always'],
+      'unicorn/no-array-for-each': 'error',
+      'unicorn/no-useless-undefined': 'error',
       'unicorn/prefer-at': 'error',
       'unicorn/prefer-date-now': 'error',
-      'unicorn/prefer-number-properties': 'error'
+      'unicorn/prefer-number-properties': 'error',
+      'unicorn/prefer-string-slice': 'error'
     }
   }
 ]

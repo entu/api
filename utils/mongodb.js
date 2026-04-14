@@ -52,7 +52,7 @@ export function getObjectId (_id) {
 
 export function formatDatabaseName (name) {
   if (typeof name !== 'string' || !name)
-    return undefined
+    return
 
   if (!/^[a-z][a-z0-9_]*$/.test(name)) {
     throw createError({ statusCode: 400, statusMessage: `Invalid database name: ${name}` })
