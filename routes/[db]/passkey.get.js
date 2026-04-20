@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
       rpName: 'Entu',
       rpID: passkeyRpId,
       userID: Buffer.from(entu.userStr, 'utf8'),
-      userName: `${userName} - ${entu.userStr}@${entu.account}`,
+      userName: `${userName} - ${entu.account}`,
       authenticatorSelection: {
         userVerification: 'preferred',
         residentKey: 'preferred'
