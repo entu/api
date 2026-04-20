@@ -19,7 +19,7 @@ export default defineEventHandler(async () => {
   // Add additional OpenAPI metadata that Nitro config doesn't support
   openapi.servers = [
     {
-      url: 'https://entu.app'
+      url: 'https://api.entu.app'
     }
   ]
 
@@ -111,7 +111,7 @@ export default defineEventHandler(async () => {
         type: 'string',
         description: 'Thumbnail URL',
         format: 'uri',
-        example: 'https://entu.app/api/entity/thumbnail/6798938432faaba00f8fc72f'
+        example: 'https://api.entu.app/entity/thumbnail/6798938432faaba00f8fc72f'
       }
     },
     additionalProperties: {
