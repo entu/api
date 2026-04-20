@@ -3,10 +3,10 @@ import { generateAuthenticationOptions } from '@simplewebauthn/server'
 defineRouteMeta({ openAPI: { hidden: true } })
 
 export default defineEventHandler(async (event) => {
-  const { hostname } = getRequestURL(event)
+  const { passkeyRpId } = useRuntimeConfig(event)
 
   const options = await generateAuthenticationOptions({
-    rpID: hostname,
+    rpID: passkeyRpId,
     userVerification: 'preferred',
     allowCredentials: []
   })

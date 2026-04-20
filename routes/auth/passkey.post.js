@@ -5,8 +5,7 @@ defineRouteMeta({ openAPI: { hidden: true } })
 
 export default defineEventHandler(async (event) => {
   const body = await event.req.json()
-  const { origin, hostname } = getRequestURL(event)
-  const { jwtSecret } = useRuntimeConfig(event)
+  const { jwtSecret, passkeyRpId, passkeyOrigin } = useRuntimeConfig(event)
   const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
 
   const entuDb = await connectDb('entu')
@@ -66,8 +65,8 @@ export default defineEventHandler(async (event) => {
       type: body.type
     },
     expectedChallenge: body.expectedChallenge,
-    expectedOrigin: origin,
-    expectedRPID: hostname,
+    expectedOrigin: passkeyOrigin,
+    expectedRPID: passkeyRpId,
     credential: {
       id: authenticatorData.credentialID,
       publicKey: authenticatorData.credentialPublicKey,

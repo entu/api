@@ -37,11 +37,11 @@ export default defineEventHandler(async (event) => {
     // Use email if available, otherwise fall back to user ID
     const userName = user?.private?.name?.at(0)?.string || user?.private?.email?.at(0)?.string || entu.userStr
 
-    const { hostname } = getRequestURL(event)
+    const { passkeyRpId } = useRuntimeConfig(event)
 
     const options = await generateRegistrationOptions({
       rpName: 'Entu',
-      rpID: hostname,
+      rpID: passkeyRpId,
       userID: Buffer.from(entu.userStr, 'utf8'),
       userName: `${userName} - ${entu.userStr}@${entu.account}`,
       authenticatorSelection: {

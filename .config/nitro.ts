@@ -10,6 +10,8 @@ export default defineNitroConfig({
     mongodbUrl: '',
     oauthId: '',
     oauthSecret: '',
+    passkeyRpId: 'entu.app',
+    passkeyOrigin: 'https://entu.app',
     runAggregation: false,
     s3Region: '',
     s3Endpoint: '',

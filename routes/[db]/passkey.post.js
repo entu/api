@@ -20,14 +20,14 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { origin, hostname } = getRequestURL(event)
+  const { passkeyRpId, passkeyOrigin } = useRuntimeConfig(event)
 
   try {
     const verification = await verifyRegistrationResponse({
       response: body,
       expectedChallenge: body.expectedChallenge,
-      expectedOrigin: origin,
-      expectedRPID: hostname
+      expectedOrigin: passkeyOrigin,
+      expectedRPID: passkeyRpId
     })
 
     if (!verification.verified) {
