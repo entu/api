@@ -1,5 +1,5 @@
 export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook('afterResponse', async (event) => {
+  nitroApp.hooks.hook('response', async (res, event) => {
     const date = new Date().toISOString()
     const entu = event.context.entu
 
