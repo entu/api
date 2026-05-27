@@ -1,7 +1,7 @@
 export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook('response', async (res, event) => {
     const date = new Date().toISOString()
-    const entu = event.context.entu
+    const entu = event.req.context?.entu
 
     // const path = event.path.split('?').at(0).replace('/api', '').replace(`/${entu.account}`, '')
     // const query = getQuery(event)
