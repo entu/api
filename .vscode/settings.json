@@ -1,0 +1,12 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.options": {
+    "overrideConfigFile": "./.config/eslint.config.js"
+  },
+  "eslint.validate": [
+    "javascript",
+    "typescpript"
+  ]
+}
