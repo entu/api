@@ -9,6 +9,8 @@ export default defineEventHandler(async (event) => {
     return
   if (event.path.startsWith('/openapi'))
     return
+  if (event.path.startsWith('/graphql'))
+    return
   if (event.path.startsWith('/stripe'))
     return
 

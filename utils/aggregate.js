@@ -103,7 +103,7 @@ export async function aggregateEntity (entu, entityId) {
           const formulaValue = await formula(entu, definition[d].formula, entityId, newEntity.private)
 
           if (formulaValue) {
-            newEntity.private[definition[d].name] = [formulaValue]
+            newEntity.private[definition[d].name] = Array.isArray(formulaValue) ? formulaValue : [formulaValue]
           }
         }
       }
