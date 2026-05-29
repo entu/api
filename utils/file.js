@@ -45,8 +45,9 @@ export async function getSignedUploadUrl (account, entityId, property, contentDi
   return await getSignedUrl(getS3Client(), command, { expiresIn: 60 })
 }
 
-// Downloads an original file from the files bucket as a Buffer. Throws if the
-// object exceeds maxBytes (authoritative size check on the actual object).
+// Downloads an original file from the files bucket. Returns the bytes as a
+// Buffer plus the object's stored S3 ContentType. Throws if the object exceeds
+// maxBytes (authoritative size check on the actual object).
 export async function getFileBuffer (account, entityId, property, maxBytes) {
   const { s3BucketFiles } = useRuntimeConfig()
 
@@ -62,7 +63,10 @@ export async function getFileBuffer (account, entityId, property, maxBytes) {
     })
   }
 
-  return Buffer.from(await response.Body.transformToByteArray())
+  return {
+    buffer: Buffer.from(await response.Body.transformToByteArray()),
+    contentType: response.ContentType
+  }
 }
 
 // Returns true if a thumbnail object already exists in the thumbnails bucket.

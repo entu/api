@@ -15,20 +15,10 @@ export async function getThumbnail (account, entityId, photo, size) {
     return await getSignedThumbnailUrl(thumbnailKey)
   }
 
-  const filetype = photo.filetype || ''
-  const isImage = filetype.startsWith('image/') && filetype !== 'image/svg+xml'
-  const isPdf = filetype === 'application/pdf'
-
-  if (!isImage && !isPdf) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: `Unsupported file type for thumbnail: ${filetype || 'unknown'}`
-    })
-  }
-
   let source
+  let contentType
   try {
-    source = await getFileBuffer(account, entityId, photo, MAX_SOURCE_BYTES)
+    ({ buffer: source, contentType } = await getFileBuffer(account, entityId, photo, MAX_SOURCE_BYTES))
   }
   catch (error) {
     if (error.statusCode) {
@@ -40,6 +30,12 @@ export async function getThumbnail (account, entityId, photo, size) {
       statusMessage: 'File not found in storage'
     })
   }
+
+  // Route on the actual bytes / S3 ContentType rather than DB metadata, which
+  // legacy files may lack. PDFs start with the `%PDF-` magic; everything else
+  // goes to Jimp, which validates real image bytes and rejects anything else.
+  const isPdf = (contentType || '').toLowerCase() === 'application/pdf'
+    || source.subarray(0, 5).toString('latin1') === '%PDF-'
 
   const thumbnail = await renderThumbnail(source, isPdf, size)
 

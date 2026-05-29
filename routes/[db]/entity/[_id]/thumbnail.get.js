@@ -86,11 +86,8 @@ export default defineEventHandler(async (event) => {
       _id: true,
       access: true,
       'public.photo._id': true,
-      'public.photo.filetype': true,
       'domain.photo._id': true,
-      'domain.photo.filetype': true,
-      'private.photo._id': true,
-      'private.photo.filetype': true
+      'private.photo._id': true
     }
   })
 
