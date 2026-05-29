@@ -86,7 +86,9 @@ export async function thumbnailExists (key) {
   }
 }
 
-// Uploads a generated thumbnail to the thumbnails bucket.
+// Uploads a generated thumbnail to the thumbnails bucket. The object is
+// immutable for its key (keyed by file property _id + size), so it carries a
+// long immutable Cache-Control for browsers/CDNs fetching the signed URL.
 export async function putThumbnail (key, body, contentType) {
   const { s3BucketThumbnails } = useRuntimeConfig()
 
@@ -95,6 +97,7 @@ export async function putThumbnail (key, body, contentType) {
     Key: key,
     ACL: 'private',
     ContentType: contentType,
+    CacheControl: 'public, max-age=31536000, immutable',
     Body: body
   }))
 }
