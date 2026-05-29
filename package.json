@@ -23,8 +23,10 @@
     "eslint": "10.4.0",
     "eslint-plugin-unicorn": "64.0.0",
     "graphql-yoga": "5.21.0",
+    "jimp": "1.6.1",
     "jsonwebtoken": "9.0.3",
     "mongodb": "7.2.0",
+    "mupdf": "1.27.0",
     "nitro": "3.0.0",
     "stripe": "22.1.1"
   },

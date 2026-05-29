@@ -36,7 +36,7 @@ export function buildResolvers (entityTypes, propsByTypeId) {
         .limit(args.limit || 100)
         .toArray()
 
-      const cleaned = await Promise.all(entities.map((e) => cleanupEntity(entu, e, false)))
+      const cleaned = await Promise.all(entities.map((e) => cleanupEntity(entu, e)))
       return cleaned.filter(Boolean).map((e) => remapEntityForGraphQL(e, propDefs))
     }
 
@@ -97,7 +97,7 @@ export function buildResolvers (entityTypes, propsByTypeId) {
       await triggerWebhooks(entu, _id, 'entity-add-webhook')
 
       const entity = await entu.db.collection('entity').findOne({ _id })
-      const cleaned = await cleanupEntity(entu, entity, false)
+      const cleaned = await cleanupEntity(entu, entity)
       return remapEntityForGraphQL(cleaned, propDefs)
     }
 
@@ -151,7 +151,7 @@ export function buildResolvers (entityTypes, propsByTypeId) {
       await triggerWebhooks(entu, entityId, 'entity-edit-webhook')
 
       const entity = await entu.db.collection('entity').findOne({ _id: entityId })
-      const cleaned = await cleanupEntity(entu, entity, false)
+      const cleaned = await cleanupEntity(entu, entity)
       return remapEntityForGraphQL(cleaned, propDefs)
     }
 

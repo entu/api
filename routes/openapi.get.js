@@ -106,12 +106,6 @@ export default defineEventHandler(async () => {
         items: {
           $ref: '#/components/schemas/Property'
         }
-      },
-      _thumbnail: {
-        type: 'string',
-        description: 'Thumbnail URL',
-        format: 'uri',
-        example: 'https://api.entu.app/entity/thumbnail/6798938432faaba00f8fc72f'
       }
     },
     additionalProperties: {

@@ -566,7 +566,7 @@ async function markPropertiesDeleted (entu, entityId, oldPIds) {
 }
 
 // Returns the public, domain, or private view of an entity based on user access rights
-export async function cleanupEntity (entu, entity, _thumbnail) {
+export async function cleanupEntity (entu, entity) {
   if (!entity)
     return
 
@@ -583,10 +583,6 @@ export async function cleanupEntity (entu, entity, _thumbnail) {
   }
   else {
     return
-  }
-
-  if (_thumbnail && result.photo?.at(0)) {
-    result._thumbnail = await getSignedDownloadUrl(entu.account, result._id, result.photo.at(0))
   }
 
   if (result.entu_api_key) {
@@ -610,10 +606,6 @@ export async function cleanupEntity (entu, entity, _thumbnail) {
     for (const k of result.entu_passkey) {
       k.string = `${k.passkey_device || ''} ${k._id.toString().slice(-4).toUpperCase()}`.trim()
     }
-  }
-
-  if (!result._thumbnail) {
-    delete result._thumbnail
   }
 
   return result
