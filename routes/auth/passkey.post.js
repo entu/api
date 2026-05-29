@@ -94,6 +94,9 @@ export default defineEventHandler(async (event) => {
 
   const accountUsersIds = Object.fromEntries(dbMatches.map(({ dbName, user }) => [dbName, user._id.toString()]))
 
+  const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000)
+  const authAt = Math.floor(Date.now() / 1000) // original authentication time — carried unchanged through refreshes
+
   return {
     accounts: dbMatches.map(({ dbName, user }) => ({
       _id: dbName,
@@ -103,6 +106,7 @@ export default defineEventHandler(async (event) => {
         name: user.private?.name?.at(0)?.string || user._id.toString()
       }
     })),
-    token: jwt.sign({ accounts: accountUsersIds }, jwtSecret, { audience, expiresIn: '48h' })
+    token: jwt.sign({ accounts: accountUsersIds, exp: Math.floor(expiresAt.getTime() / 1000), authAt }, jwtSecret, { audience }),
+    expires: expiresAt.toISOString()
   }
 })

@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Exchange API key or session token for a 48-hour JWT. Accepts permanent API keys (SHA-256 hashed) or temporary tokens from OAuth/passkey flows. Returns JWT with accounts list and user profile. Optional `db` limits auth to one database.',
+    description: 'Exchange API key or session token for a 12-hour JWT. Accepts permanent API keys (SHA-256 hashed) or temporary tokens from OAuth/passkey flows. Returns JWT with accounts list and user profile. Optional `db` limits auth to one database.',
     security: [], // Uses API key, not JWT
     parameters: [
       {
@@ -75,7 +75,8 @@ defineRouteMeta({
                     email: { type: 'string' }
                   }
                 },
-                token: { type: 'string', description: '48-hour JWT' },
+                token: { type: 'string', description: '12-hour JWT' },
+                expires: { type: 'string', format: 'date-time', description: 'Token expiry as ISO 8601 datetime' },
                 conflict: { type: 'string', description: 'Set to `invite` if invite targets an entity already linked to another user' }
               }
             }
@@ -253,10 +254,15 @@ export default defineEventHandler(async (event) => {
     tokenData.accounts = accountUsersIds
   }
 
+  const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000)
+  tokenData.exp = Math.floor(expiresAt.getTime() / 1000)
+  tokenData.authAt = Math.floor(Date.now() / 1000) // original authentication time — carried unchanged through refreshes
+
   return {
     accounts,
     user: userData,
-    token: jwt.sign(tokenData, jwtSecret, { audience, expiresIn: '48h' }),
+    token: jwt.sign(tokenData, jwtSecret, { audience }),
+    expires: expiresAt.toISOString(),
     ...(inviteConflict ? { conflict: 'invite' } : {})
   }
 })
