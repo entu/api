@@ -26,7 +26,7 @@ defineRouteMeta({
       },
       {
         name: 'size',
-        in: 'query',
+        in: 'path',
         required: true,
         schema: {
           type: 'integer',
@@ -68,7 +68,7 @@ defineRouteMeta({
 export default defineEventHandler(async (event) => {
   const entu = event.context.entu
 
-  const size = Number.parseInt(getQuery(event).size, 10)
+  const size = Number.parseInt(getRouterParam(event, 'size'), 10)
 
   if (!ALLOWED_SIZES.includes(size)) {
     throw createError({
