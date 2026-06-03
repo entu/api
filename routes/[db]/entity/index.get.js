@@ -506,6 +506,9 @@ export default defineEventHandler(async (event) => {
     const field = fieldArray.at(0)
     const type = fieldArray.at(1)
     const operator = fieldArray.at(2)
+
+    if (!/^\w+$/.test(field) || !/^\w+$/.test(type)) continue
+
     let value
 
     switch (type) {
