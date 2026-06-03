@@ -9,7 +9,7 @@
     "lint": "eslint . --fix --config .config/eslint.config.js",
     "dev": "nitro dev",
     "build": "nitro build",
-    "start": "node .output/server/index.mjs"
+    "start": "node --import ./.config/sentry.mjs .output/server/index.mjs"
   },
   "engines": {
     "node": "22.x"
@@ -31,6 +31,7 @@
     "stripe": "22.1.1"
   },
   "dependencies": {
+    "@sentry/node": "10.56.0",
     "unstorage": "1.17.5"
   }
 }
