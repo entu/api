@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken'
-import logger from './logger.js'
 
 export async function triggerWebhooks (entu, entityId, pluginType) {
   // Get all plugins of the specified type
@@ -106,7 +105,7 @@ export async function triggerWebhooks (entu, entityId, pluginType) {
         token
       })
     }).catch((error) => {
-      console.error(`Webhook request failed for ${entityId} ${webhookUrl}:`, error)
+      loggerError(`Webhook failed for ${entityId}: ${error.message}`, entu, [`entity:${entityId}`])
     })
   }
 }

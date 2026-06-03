@@ -1,4 +1,4 @@
-export default function logger (message, entu, messageTags) {
+export function logger (message, entu, messageTags) {
   const messageArray = []
   const db = entu?.account
   const user = !entu?.systemUser && entu?.userStr ? entu?.userStr : undefined
