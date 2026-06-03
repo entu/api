@@ -8,6 +8,14 @@ export default defineEventHandler(async (event) => {
   const { jwtSecret, passkeyRpId, passkeyOrigin } = useRuntimeConfig(event)
   const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
 
+  let decoded
+  try {
+    decoded = jwt.verify(body.challengeToken, jwtSecret)
+  }
+  catch {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid or expired challenge' })
+  }
+
   const entuDb = await connectDb('entu')
   const dbs = await entuDb.admin().listDatabases()
   const credentialId = body.id
@@ -64,7 +72,7 @@ export default defineEventHandler(async (event) => {
       response: body.response,
       type: body.type
     },
-    expectedChallenge: body.expectedChallenge,
+    expectedChallenge: decoded.challenge,
     expectedOrigin: passkeyOrigin,
     expectedRPID: passkeyRpId,
     credential: {

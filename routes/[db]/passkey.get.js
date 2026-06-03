@@ -1,4 +1,5 @@
 import { generateRegistrationOptions } from '@simplewebauthn/server'
+import jwt from 'jsonwebtoken'
 
 defineRouteMeta({ openAPI: { hidden: true } })
 
@@ -26,37 +27,31 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  try {
-    // Fetch user entity to get email/name
-    const db = await connectDb(entu.account)
-    const user = await db.collection('entity').findOne(
-      { _id: entu.user },
-      { projection: { 'private.email.string': 1, 'private.name.string': 1 } }
-    )
+  // Fetch user entity to get email/name
+  const db = await connectDb(entu.account)
+  const user = await db.collection('entity').findOne(
+    { _id: entu.user },
+    { projection: { 'private.email.string': 1, 'private.name.string': 1 } }
+  )
 
-    // Use email if available, otherwise fall back to user ID
-    const userName = user?.private?.name?.at(0)?.string || user?.private?.email?.at(0)?.string || entu.userStr
+  // Use email if available, otherwise fall back to user ID
+  const userName = user?.private?.name?.at(0)?.string || user?.private?.email?.at(0)?.string || entu.userStr
 
-    const { passkeyRpId } = useRuntimeConfig(event)
+  const { passkeyRpId, jwtSecret } = useRuntimeConfig(event)
 
-    const options = await generateRegistrationOptions({
-      rpName: 'Entu',
-      rpID: passkeyRpId,
-      userID: Buffer.from(entu.userStr, 'utf8'),
-      userName: `${userName} - ${entu.account}`,
-      authenticatorSelection: {
-        userVerification: 'preferred',
-        residentKey: 'preferred'
-      },
-      supportedAlgorithmIDs: [-7, -257] // ES256, RS256
-    })
+  const options = await generateRegistrationOptions({
+    rpName: 'Entu',
+    rpID: passkeyRpId,
+    userID: Buffer.from(entu.userStr, 'utf8'),
+    userName: `${userName} - ${entu.account}`,
+    authenticatorSelection: {
+      userVerification: 'preferred',
+      residentKey: 'preferred'
+    },
+    supportedAlgorithmIDs: [-7, -257] // ES256, RS256
+  })
 
-    return options
-  }
-  catch (error) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: error.message || 'Failed to generate registration options'
-    })
-  }
+  const challengeToken = jwt.sign({ challenge: options.challenge }, jwtSecret, { expiresIn: '5m' })
+
+  return { ...options, challengeToken }
 })
