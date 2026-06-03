@@ -64,6 +64,9 @@ defineRouteMeta({
 
 export default defineEventHandler(async (event) => {
   const entu = event.context.entu
+
+  if (!entu.user) throw createError({ statusCode: 403, statusMessage: 'No user' })
+
   const date = new Date().toISOString()
 
   const [

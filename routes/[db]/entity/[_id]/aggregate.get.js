@@ -51,6 +51,8 @@ defineRouteMeta({
 export default defineEventHandler(async (event) => {
   const entu = event.context.entu
 
+  if (!entu.user) throw createError({ statusCode: 403, statusMessage: 'No user' })
+
   const entityId = getObjectId(getRouterParam(event, '_id'))
 
   return await aggregateEntity(entu, entityId)
