@@ -58,6 +58,38 @@ export async function triggerWebhooks (entu, entityId, pluginType) {
 
   // Make POST requests to each webhook without waiting
   for (const webhookUrl of webhooks) {
+    let parsedUrl
+
+    try {
+      parsedUrl = new URL(webhookUrl)
+    }
+    catch {
+      logger('Skipping webhook with invalid URL', entu, [`entity:${entityId}`])
+      continue
+    }
+
+    if (parsedUrl.protocol !== 'https:') {
+      logger('Skipping webhook with non-https URL', entu, [`entity:${entityId}`])
+      continue
+    }
+
+    const hostname = parsedUrl.hostname
+
+    if (
+      hostname === 'localhost'
+      || hostname.endsWith('.local')
+      || /^127\./.test(hostname)
+      || /^10\./.test(hostname)
+      || /^192\.168\./.test(hostname)
+      || /^172\.(1[6-9]|2\d|3[01])\./.test(hostname)
+      || hostname === '169.254.169.254'
+      || hostname === '::1'
+      || hostname === '0.0.0.0'
+    ) {
+      logger('Skipping webhook targeting private/internal host', entu, [`entity:${entityId}`])
+      continue
+    }
+
     logger(`Triggering webhook ${webhookUrl}`, entu, [`entity:${entityId}`])
 
     fetch(webhookUrl, {

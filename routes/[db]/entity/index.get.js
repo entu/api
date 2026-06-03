@@ -673,8 +673,6 @@ function parseDate (dateValue) {
     }
   }
   catch {
-    console.error('Error parsing date:', dateValue)
-
     return null
   }
 }
