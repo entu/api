@@ -1,4 +1,4 @@
-import stripe from 'stripe'
+import Stripe from 'stripe'
 
 defineRouteMeta({ openAPI: { hidden: true } })
 
@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   const stripeSignature = event.req.headers.get('stripe-signature')
   const body = Buffer.from(await event.req.arrayBuffer())
 
-  const { webhooks } = stripe(stripeKey)
+  const { webhooks } = new Stripe(stripeKey)
 
   const stripeEvent = webhooks.constructEvent(body, stripeSignature, stripeEndpointSecret)
 

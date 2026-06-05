@@ -1,4 +1,4 @@
-import stripe from 'stripe'
+import Stripe from 'stripe'
 
 defineRouteMeta({ openAPI: { hidden: true } })
 
@@ -27,10 +27,11 @@ export default defineEventHandler(async (event) => {
   }
 
   // Retrieve and validate Stripe session
+  const { checkout } = new Stripe(stripeKey)
   let session
 
   try {
-    session = await stripe(stripeKey).checkout.sessions.retrieve(body.sessionId, {
+    session = await checkout.sessions.retrieve(body.sessionId, {
       expand: ['line_items']
     })
   }

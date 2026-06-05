@@ -1,4 +1,4 @@
-import stripe from 'stripe'
+import Stripe from 'stripe'
 
 defineRouteMeta({
   openAPI: {
@@ -82,7 +82,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { billingPortal } = stripe(stripeKey)
+  const { billingPortal } = new Stripe(stripeKey)
 
   const { url } = await billingPortal.sessions.create({
     customer: customerId,
