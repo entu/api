@@ -66,7 +66,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const { locale } = getQuery(event)
-  const { stripeKey, public: { apiUrl } } = useRuntimeConfig()
+  const { stripeKey, appUrl } = useRuntimeConfig()
 
   const database = await entu.db.collection('entity').findOne({
     'private._type.string': 'database',
@@ -87,7 +87,7 @@ export default defineEventHandler(async (event) => {
   const { url } = await billingPortal.sessions.create({
     customer: customerId,
     locale,
-    return_url: apiUrl.replace('/api', `/${entu.account}`)
+    return_url: `${appUrl}/${entu.account}`
   })
 
   return { billingUrl: url }
