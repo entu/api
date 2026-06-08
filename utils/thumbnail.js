@@ -9,6 +9,13 @@ const MAX_PIXELS = 40000000
 // the given size, generating and caching it in the thumbnails bucket on first
 // request. Throws on unsupported or undecodable source files.
 export async function getThumbnail (account, entityId, photo, size) {
+  if (!isPreviewableFile(photo)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'File is not a previewable file'
+    })
+  }
+
   const thumbnailKey = getThumbnailKey(account, entityId, photo, size)
 
   if (await thumbnailExists(thumbnailKey)) {

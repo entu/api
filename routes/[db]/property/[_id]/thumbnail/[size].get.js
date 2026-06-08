@@ -126,15 +126,5 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const isImage = property.filetype?.startsWith('image/')
-  const isPdf = property.filetype === 'application/pdf'
-
-  if (!property.filename || !(isImage || isPdf)) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Property is not a previewable file'
-    })
-  }
-
   return { url: await getThumbnail(entu.account, property.entity, property, size) }
 })

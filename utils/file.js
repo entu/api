@@ -121,3 +121,23 @@ export function getFileKey (account, entityId, property) {
 export function getThumbnailKey (account, entityId, property, size) {
   return `${account}/${entityId}/${property._id}_${size}.jpg`
 }
+
+const PREVIEWABLE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'tif', 'avif', 'heic', 'heif', 'pdf']
+
+// Cheap pre-filter so obviously non-previewable files are rejected before any
+// S3 download. Trust the DB filetype when present; legacy uploads may lack it,
+// so fall back to the filename extension. getThumbnail remains the
+// authoritative byte-level guard for genuinely undecodable sources.
+export function isPreviewableFile (property) {
+  if (!property?.filename) {
+    return false
+  }
+
+  if (property.filetype) {
+    return property.filetype.startsWith('image/') || property.filetype === 'application/pdf'
+  }
+
+  const extension = property.filename.split('.').pop()?.toLowerCase()
+
+  return PREVIEWABLE_EXTENSIONS.includes(extension)
+}
