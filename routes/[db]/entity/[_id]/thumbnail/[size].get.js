@@ -1,4 +1,4 @@
-const ALLOWED_SIZES = [200, 400, 800]
+const ALLOWED_SIZES = [50, 200, 400, 800]
 
 defineRouteMeta({
   openAPI: {
