@@ -1,3 +1,5 @@
+const ALLOWED_SIZES = [50, 200, 400]
+
 defineRouteMeta({
   openAPI: {
     tags: ['Entity'],
@@ -66,7 +68,14 @@ defineRouteMeta({
 export default defineEventHandler(async (event) => {
   const entu = event.context.entu
 
-  const size = parseThumbnailSize(event)
+  const size = Number.parseInt(getRouterParam(event, 'size'), 10)
+
+  if (!ALLOWED_SIZES.includes(size)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Invalid size. Allowed sizes: ${ALLOWED_SIZES.join(', ')}`
+    })
+  }
 
   const entityId = getObjectId(getRouterParam(event, '_id'))
 
