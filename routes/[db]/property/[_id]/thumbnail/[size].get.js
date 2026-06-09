@@ -1,5 +1,3 @@
-const ALLOWED_SIZES = [50, 200, 400, 800]
-
 defineRouteMeta({
   openAPI: {
     tags: ['Property'],
@@ -68,14 +66,7 @@ defineRouteMeta({
 export default defineEventHandler(async (event) => {
   const entu = event.context.entu
 
-  const size = Number.parseInt(getRouterParam(event, 'size'), 10)
-
-  if (!ALLOWED_SIZES.includes(size)) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: `Invalid size. Allowed sizes: ${ALLOWED_SIZES.join(', ')}`
-    })
-  }
+  const size = parseThumbnailSize(event)
 
   const propertyId = getObjectId(getRouterParam(event, '_id'))
 
