@@ -69,10 +69,21 @@ defineRouteMeta({
   }
 })
 
+// Account-level usage stats change slowly, so cache the computed result per
+// account to avoid the heavy aggregations on every request. In-memory with a
+// short TTL keeps staleness bounded (per server instance).
+const STATS_CACHE_TTL = 5 * 60 * 1000
+const statsCache = new Map()
+
 export default defineEventHandler(async (event) => {
   const entu = event.context.entu
 
   if (!entu.user) throw createError({ statusCode: 403, statusMessage: 'No user' })
+
+  const cached = statsCache.get(entu.account)
+  if (cached && cached.expires > Date.now()) {
+    return cached.data
+  }
 
   const date = new Date().toISOString()
 
@@ -83,8 +94,7 @@ export default defineEventHandler(async (event) => {
     deletedEntities,
     properties,
     deletedProperties,
-    files,
-    deletedFiles,
+    fileUsage,
     requests,
     tokensUsage
   ] = await Promise.all([
@@ -98,7 +108,7 @@ export default defineEventHandler(async (event) => {
         'private.billing_tokens_limit.number': true
       }
     }),
-    entu.db.collection('entity').countDocuments(),
+    entu.db.collection('entity').estimatedDocumentCount(),
     entu.db.collection('property').aggregate([
       { $match: { type: '_deleted' } },
       { $group: { _id: '$entity' } },
@@ -106,17 +116,17 @@ export default defineEventHandler(async (event) => {
     ]).toArray(),
     entu.db.collection('property').countDocuments({ deleted: { $exists: false } }),
     entu.db.collection('property').countDocuments({ deleted: { $exists: true } }),
-    entu.db.collection('property').aggregate([
-      { $match: { deleted: { $exists: false }, filesize: { $exists: true } } },
-      { $lookup: { from: 'entity', localField: 'entity', foreignField: '_id', as: 'entities' } },
-      { $match: { entities: { $not: { $size: 0 } } } },
-      { $group: { _id: null, count: { $sum: 1 }, filesize: { $sum: '$filesize' } } }
-    ]).toArray(),
+    // Single pass over all file properties: a file counts as used when it is not
+    // deleted and its parent entity still exists, otherwise it is reclaimable
+    // (deleted). Projecting only _id in the lookup avoids loading full entity docs.
     entu.db.collection('property').aggregate([
       { $match: { filesize: { $exists: true } } },
-      { $lookup: { from: 'entity', localField: 'entity', foreignField: '_id', as: 'entities' } },
-      { $match: { $or: [{ entities: { $size: 0 } }, { deleted: { $exists: true } }] } },
-      { $group: { _id: null, count: { $sum: 1 }, filesize: { $sum: '$filesize' } } }
+      { $lookup: { from: 'entity', localField: 'entity', foreignField: '_id', as: 'entities', pipeline: [{ $project: { _id: 1 } }] } },
+      { $group: {
+        _id: null,
+        usageFilesize: { $sum: { $cond: [{ $and: [{ $eq: [{ $type: '$deleted' }, 'missing'] }, { $gt: [{ $size: '$entities' }, 0] }] }, '$filesize', 0] } },
+        deletedFilesize: { $sum: { $cond: [{ $or: [{ $eq: [{ $size: '$entities' }, 0] }, { $ne: [{ $type: '$deleted' }, 'missing'] }] }, '$filesize', 0] } }
+      } }
     ]).toArray(),
     entu.db.collection('stats').findOne({ date: date.slice(0, 7), function: 'ALL' }),
     entu.db.collection('stats').findOne({ date: date.slice(0, 7), function: 'AI' })
@@ -124,7 +134,7 @@ export default defineEventHandler(async (event) => {
 
   const tokens = (tokensUsage?.promptTokens || 0) + (tokensUsage?.completionTokens || 0)
 
-  return {
+  const result = {
     entities: {
       usage: entities,
       deleted: deletedEntities?.at(0)?.count || 0,
@@ -144,10 +154,14 @@ export default defineEventHandler(async (event) => {
       limit: database?.private?.billing_tokens_limit?.at(0)?.number || aiTokensLimitDefault
     },
     files: {
-      usage: files?.at(0)?.filesize || 0,
-      deleted: deletedFiles?.at(0)?.filesize || 0,
+      usage: fileUsage?.at(0)?.usageFilesize || 0,
+      deleted: fileUsage?.at(0)?.deletedFilesize || 0,
       limit: (database?.private?.billing_data_limit?.at(0)?.number || 0) * 1e9
     },
     dbSize: stats.dataSize + stats.indexSize
   }
+
+  statsCache.set(entu.account, { expires: Date.now() + STATS_CACHE_TTL, data: result })
+
+  return result
 })
