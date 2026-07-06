@@ -77,7 +77,7 @@ export async function aiChatCompletion ({ entu, messages, tools }) {
   return response
 }
 
-// Accumulates per-db AI usage into the stats collection at day/month/year granularity - same pattern as plugins/stats.js
+recordUsage// Accumulates per-db AI usage into the stats collection at day/month/year granularity - same pattern as plugins/stats.js
 async function recordUsage (entu, response) {
   const usage = response?.usage
 

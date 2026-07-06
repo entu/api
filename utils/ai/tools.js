@@ -5,6 +5,7 @@ const propertyValueSchema = {
   type: 'object',
   properties: {
     type: { type: 'string', description: 'Property name (snake_case, no leading underscore)' },
+    valueId: { type: 'string', description: 'To CHANGE an existing value: the _id of the exact value to replace, taken from that value object inside get_entity output (e.g. name: [{ _id: "...", string: "John" }] -> use that _id). This is a value _id, NOT an entity _id and NOT a property definition _id. Omit to ADD a new value.' },
     string: { type: 'string', description: 'String/text value' },
     number: { type: 'number', description: 'Number value' },
     boolean: { type: 'boolean', description: 'Boolean value' },
@@ -155,14 +156,14 @@ export const aiToolDefinitions = [
     type: 'function',
     function: {
       name: 'update_entity',
-      description: 'Queue adding property values to an existing entity (does not remove existing values). Not executed until the user confirms. _id may be a tempId ("$1", ...) of an earlier queued operation; reference values may be tempIds too.',
+      description: 'Queue changing an existing entity. Each property ADDS a new value, unless it includes valueId (an existing value _id from get_entity), in which case it REPLACES that value. Not executed until the user confirms. _id may be a tempId ("$1", ...) of an earlier queued operation; reference values may be tempIds too.',
       parameters: {
         type: 'object',
         properties: {
           _id: { type: 'string', description: 'Entity id, or tempId of an earlier queued operation' },
           properties: {
             type: 'array',
-            description: 'Properties to add',
+            description: 'Properties to add or replace',
             items: propertyValueSchema
           }
         },

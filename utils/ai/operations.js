@@ -86,20 +86,36 @@ export function aiDescribeOperation (operation) {
 
       const suffix = flags.length > 0 ? ` (${flags.join(', ')})` : ''
 
-      return `Add ${params.type} property "${params.name}" to entity type ${params.entityType}${suffix}`
+      return `Add new ${params.type} property definition "${params.name}" to type "${params.entityType}"${suffix}`
     }
     case 'create_entity': {
       const parent = params.parent ? ` under parent ${params.parent}` : ''
+      const values = describePropertyValues(params.properties)
 
-      return `Create a new ${params.type} entity${parent} with ${params.properties.length} ${params.properties.length === 1 ? 'property' : 'properties'}`
+      return `Create a new ${params.type} entity${parent}${values ? ` with ${values}` : ''}`
     }
     case 'update_entity':
-      return `Set ${params.properties.length} ${params.properties.length === 1 ? 'property' : 'properties'} on entity ${params._id}`
+      return `Update entity ${params._id}: ${describePropertyValues(params.properties)}`
     case 'delete_property':
-      return `Delete property ${params._id}`
+      return `Delete property value ${params._id}`
     default:
       return `Unknown operation ${operation.op}`
   }
+}
+
+// Renders operation property values as "name: value" pairs for the human-readable description
+function describePropertyValues (properties) {
+  if (!Array.isArray(properties) || properties.length === 0) {
+    return ''
+  }
+
+  return properties.map((property) => {
+    const value = property.string ?? property.number ?? property.boolean ?? property.reference ?? property.date ?? property.datetime
+    const language = property.language ? ` (${property.language})` : ''
+    const action = property.valueId ? 'change ' : ''
+
+    return `${action}${property.type}${language}: ${value}`
+  }).join(', ')
 }
 
 // Executes validated operations sequentially, resolving tempIds. Stops on first failure and returns partial results.
@@ -348,6 +364,10 @@ function validateProperties (properties, index, operations, { allowEmpty }) {
 
     validateString(property.type, 'property type', index, { required: true, max: 100, pattern: namePattern })
 
+    if (property.valueId !== undefined) {
+      validateObjectIdString(property.valueId, `property ${property.type} valueId`, index)
+    }
+
     const valueFields = propertyValueFields.filter((field) => property[field] !== undefined)
 
     if (valueFields.length !== 1) {
@@ -562,6 +582,7 @@ async function executeUpdateEntity (entu, params, tempIdMap) {
   const entityId = resolveEntityId(params._id, tempIdMap)
 
   await rejectSystemTypeDefinition(entu, entityId)
+  await assertReplaceableValues(entu, entityId, params.properties)
 
   const properties = await buildOperationProperties({ op: 'update_entity', params }, executionResolvers(entu, tempIdMap))
 
@@ -692,6 +713,9 @@ export async function aiPreviewOperationProperties (operation) {
 async function buildProperty (property, resolve) {
   const result = { type: property.type }
 
+  if (property.valueId !== undefined) {
+    result._id = property.valueId
+  }
   if (property.string !== undefined) {
     result.string = property.string
   }
@@ -715,6 +739,44 @@ async function buildProperty (property, resolve) {
   }
 
   return result
+}
+
+// Queue-time check so a wrong valueId fails during the chat loop (letting the model self-correct) rather than at apply.
+// Only concrete entity ids can be checked - tempId targets don't exist yet and have no values to replace.
+export async function aiCheckUpdatableValues (entu, operation) {
+  if (operation.op !== 'update_entity' || tempIdPattern.test(operation.params._id)) {
+    return
+  }
+
+  await assertReplaceableValues(entu, getObjectId(operation.params._id), operation.params.properties)
+}
+
+// Verifies each replaced value belongs to the entity and is not a system property - the AI never sees system value ids, this is defence in depth
+async function assertReplaceableValues (entu, entityId, properties) {
+  const valueIds = properties.filter((property) => property.valueId).map((property) => getObjectId(property.valueId))
+
+  if (valueIds.length === 0) {
+    return
+  }
+
+  const records = await entu.db.collection('property').find(
+    { _id: { $in: valueIds }, entity: entityId, deleted: { $exists: false } },
+    { projection: { type: true } }
+  ).toArray()
+
+  const typeById = new Map(records.map((record) => [record._id.toString(), record.type]))
+
+  for (const valueId of valueIds) {
+    const type = typeById.get(valueId.toString())
+
+    if (!type) {
+      throw createError({ statusCode: 400, statusMessage: `Property value ${valueId} not found on this entity` })
+    }
+
+    if (type.startsWith('_')) {
+      throw createError({ statusCode: 403, statusMessage: 'System property values can\'t be replaced' })
+    }
+  }
 }
 
 // Soft-deletes a property with the same rights checks as the property delete route, but never system properties

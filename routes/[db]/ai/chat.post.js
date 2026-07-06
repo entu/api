@@ -239,6 +239,7 @@ async function executeToolCall (entu, toolCall, operations) {
 
   try {
     aiValidateOperations([...operations, operation])
+    await aiCheckUpdatableValues(entu, operation)
   }
   catch (error) {
     return { error: error.statusMessage || 'Invalid operation' }
