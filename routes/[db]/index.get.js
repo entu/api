@@ -44,6 +44,13 @@ defineRouteMeta({
                     limit: { type: 'number', description: 'Request limit for account' }
                   }
                 },
+                tokens: {
+                  type: 'object',
+                  properties: {
+                    usage: { type: 'number', description: 'AI tokens used this month (prompt + completion)' },
+                    limit: { type: 'number', description: 'AI token limit for account' }
+                  }
+                },
                 files: {
                   type: 'object',
                   properties: {
@@ -78,7 +85,8 @@ export default defineEventHandler(async (event) => {
     deletedProperties,
     files,
     deletedFiles,
-    requests
+    requests,
+    tokensUsage
   ] = await Promise.all([
     entu.db.stats(),
     entu.db.collection('entity').findOne({ 'private._type.string': 'database' }, {
@@ -86,7 +94,8 @@ export default defineEventHandler(async (event) => {
         'private.name.string': true,
         'private.billing_entities_limit.number': true,
         'private.billing_data_limit.number': true,
-        'private.billing_requests_limit.number': true
+        'private.billing_requests_limit.number': true,
+        'private.billing_tokens_limit.number': true
       }
     }),
     entu.db.collection('entity').countDocuments(),
@@ -109,8 +118,11 @@ export default defineEventHandler(async (event) => {
       { $match: { $or: [{ entities: { $size: 0 } }, { deleted: { $exists: true } }] } },
       { $group: { _id: null, count: { $sum: 1 }, filesize: { $sum: '$filesize' } } }
     ]).toArray(),
-    entu.db.collection('stats').findOne({ date: date.slice(0, 7), function: 'ALL' })
+    entu.db.collection('stats').findOne({ date: date.slice(0, 7), function: 'ALL' }),
+    entu.db.collection('stats').findOne({ date: date.slice(0, 7), function: 'AI' })
   ])
+
+  const tokens = (tokensUsage?.promptTokens || 0) + (tokensUsage?.completionTokens || 0)
 
   return {
     entities: {
@@ -126,6 +138,10 @@ export default defineEventHandler(async (event) => {
       usage: requests?.count || 0,
       // limit: database?.private?.billing_requests_limit?.at(0)?.number || 0
       limit: Math.ceil(requests?.count / 10 ** (requests?.count.toString().length - 1)) * 10 ** (requests?.count.toString().length - 1) || 0
+    },
+    tokens: {
+      usage: tokens,
+      limit: database?.private?.billing_tokens_limit?.at(0)?.number || aiTokensLimitDefault
     },
     files: {
       usage: files?.at(0)?.filesize || 0,

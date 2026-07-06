@@ -904,6 +904,12 @@ const OPERATORS = {
   WHEN: { arity: 2, fn: opWhen }
 }
 
+// Returns all valid formula operator tokens mapped to their arity ('all' for variadic reducers) —
+// the source of truth for consumers documenting or validating operator tokens.
+export function getFormulaOperators () {
+  return Object.fromEntries(Object.entries(OPERATORS).map(([token, op]) => [token, op.arity]))
+}
+
 // Safe registry lookup — own properties only, so tokens like `__proto__` or `constructor` don't
 // resolve to inherited Object.prototype members.
 function lookupOperator (token) {

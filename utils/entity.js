@@ -3,6 +3,9 @@ import jwt from 'jsonwebtoken'
 
 const charsForKey = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*-_=+'
 
+// All property value types available in property definitions — the source of truth for schemas and validation
+export const entityPropertyTypes = ['string', 'text', 'number', 'boolean', 'reference', 'date', 'datetime', 'file', 'counter', 'formula']
+
 // Validates, processes, and persists properties to a new or existing entity.
 // options.skipTypeRequired: if true, skips the _type required check (for system bootstrap only)
 export async function setEntity (entu, entityId, properties, options = {}) {
@@ -563,6 +566,129 @@ async function markPropertiesDeleted (entu, entityId, oldPIds) {
       }
     }
   })
+}
+
+// Queries entities with access filtering, full-text search, sorting, grouping and pagination.
+// The shared read flow behind the entity list API and the AI search tool - filter keys are
+// ready-made MongoDB conditions on private.<property>.<valuetype> fields.
+export async function queryEntities (entu, { filter = {}, search = [], props = [], group = [], sort = [], limit = 100, skip = 0 } = {}) {
+  const match = { ...filter }
+  const fields = {}
+
+  if (props.length > 0) {
+    for (const f of props) {
+      fields[`private.${f}`] = true
+      fields[`public.${f}`] = true
+      fields[`domain.${f}`] = true
+    }
+    fields.access = true
+  }
+
+  if (entu.user) {
+    match.access = { $in: [entu.user, 'domain', 'public'] }
+  }
+  else {
+    match.access = 'public'
+  }
+
+  // Truncate search terms to match index limit
+  const terms = search.map((term) => term.toLowerCase().slice(0, 20)).filter((x) => x.length > 0)
+
+  if (terms.length > 0) {
+    if (entu.user) {
+      match['search.private'] = { $all: terms }
+    }
+    else {
+      match['search.public'] = { $all: terms }
+    }
+  }
+
+  let sortFields = {}
+
+  if (sort.length > 0) {
+    for (const f of sort) {
+      if (f.startsWith('-')) {
+        sortFields[`private.${f.slice(1)}`] = -1
+      }
+      else {
+        sortFields[`private.${f}`] = 1
+      }
+    }
+  }
+  else {
+    sortFields = { _id: 1 }
+  }
+
+  let pipeline = [{ $match: match }]
+
+  if (group.length > 0) {
+    const groupIds = {}
+    const groupFields = { access: { $first: '$access' } }
+    const projectIds = {
+      'public._count': '$_count',
+      'private._count': '$_count',
+      'domain._count': '$_count',
+      access: true,
+      _id: false
+    }
+
+    for (const g of group) {
+      groupIds[g.replaceAll('.', '#')] = `$private.${g}`
+    }
+
+    for (const g of Object.keys(fields)) {
+      groupFields[g.replaceAll('.', '#')] = { $first: `$${g}` }
+      projectIds[g] = `$${g.replaceAll('.', '#')}`
+    }
+
+    pipeline = [
+      ...pipeline,
+      { $group: { ...groupFields, _id: groupIds, _count: { $count: {} } } },
+      { $project: projectIds },
+      { $sort: sortFields }
+    ]
+  }
+  else {
+    pipeline.push({ $sort: sortFields })
+    pipeline.push({ $skip: skip })
+    pipeline.push({ $limit: limit })
+
+    if (props.length > 0) {
+      const projectIds = { access: true }
+
+      for (const g of Object.keys(fields)) {
+        projectIds[g] = true
+      }
+
+      pipeline.push({ $project: projectIds })
+    }
+  }
+
+  const countPipeline = [
+    ...pipeline.filter((x) => !Object.keys(x).includes('$sort') && !Object.keys(x).includes('$skip') && !Object.keys(x).includes('$limit')),
+    { $count: '_count' }
+  ]
+
+  const [entities, count] = await Promise.all([
+    entu.db.collection('entity').aggregate(pipeline).toArray(),
+    entu.db.collection('entity').aggregate(countPipeline).toArray()
+  ])
+
+  const cleanedEntities = []
+
+  for (let i = 0; i < entities.length; i++) {
+    const entity = await cleanupEntity(entu, entities[i])
+
+    if (entity)
+      cleanedEntities.push(entity)
+  }
+
+  return {
+    entities: cleanedEntities,
+    count: count?.at(0)?._count || 0,
+    limit,
+    skip
+  }
 }
 
 // Returns the public, domain, or private view of an entity based on user access rights

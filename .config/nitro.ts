@@ -4,6 +4,9 @@ export default defineNitroConfig({
   serverDir: './',
   imports: {},
   runtimeConfig: {
+    aiKey: '',
+    aiModel: '',
+    aiUrl: '',
     appUrl: '',
     commitHash: '',
     graphqlBasePath: '',

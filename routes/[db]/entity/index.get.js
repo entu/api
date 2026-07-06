@@ -479,22 +479,11 @@ export default defineEventHandler(async (event) => {
 
   const props = (query.props || '').split(',').filter((x) => !!x)
   const group = (query.group || '').split(',').filter((x) => !!x)
-  const fields = {}
-
-  if (props.length > 0) {
-    for (const f of props) {
-      fields[`private.${f}`] = true
-      fields[`public.${f}`] = true
-      fields[`domain.${f}`] = true
-    }
-    fields.access = true
-  }
 
   const sort = (query.sort || '').split(',').filter((x) => !!x)
   const limit = Number.parseInt(query.limit) || 100
   const skip = Number.parseInt(query.skip) || 0
-  const q = (query.q || '').toLowerCase().split(' ').filter((x) => x.length > 0).map((term) => term.slice(0, 20)) // Truncate search terms to match index limit
-  let sortFields = {}
+  const search = (query.q || '').split(' ').filter((x) => x.length > 0)
   const filter = {}
 
   for (const k in query) {
@@ -563,105 +552,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  if (entu.user) {
-    filter.access = { $in: [entu.user, 'domain', 'public'] }
-  }
-  else {
-    filter.access = 'public'
-  }
-
-  if (sort.length > 0) {
-    for (const f of sort) {
-      if (f.startsWith('-')) {
-        sortFields[`private.${f.slice(1)}`] = -1
-      }
-      else {
-        sortFields[`private.${f}`] = 1
-      }
-    }
-  }
-  else {
-    sortFields = { _id: 1 }
-  }
-
-  if (q.length > 0) {
-    if (entu.user) {
-      filter['search.private'] = { $all: q }
-    }
-    else {
-      filter['search.public'] = { $all: q }
-    }
-  }
-
-  const cleanedEntities = []
-  let pipeline = [{ $match: filter }]
-
-  if (group.length > 0) {
-    const groupIds = {}
-    const groupFields = { access: { $first: '$access' } }
-    const projectIds = {
-      'public._count': '$_count',
-      'private._count': '$_count',
-      'domain._count': '$_count',
-      access: true,
-      _id: false
-    }
-
-    for (const g of group) {
-      groupIds[g.replaceAll('.', '#')] = `$private.${g}`
-    }
-
-    for (const g of Object.keys(fields)) {
-      groupFields[g.replaceAll('.', '#')] = { $first: `$${g}` }
-      projectIds[g] = `$${g.replaceAll('.', '#')}`
-    }
-
-    pipeline = [
-      ...pipeline,
-      { $group: { ...groupFields, _id: groupIds, _count: { $count: {} } } },
-      { $project: projectIds },
-      { $sort: sortFields }
-    ]
-  }
-  else {
-    pipeline.push({ $sort: sortFields })
-    pipeline.push({ $skip: skip })
-    pipeline.push({ $limit: limit })
-
-    if (props.length > 0) {
-      const projectIds = { access: true }
-
-      for (const g of Object.keys(fields)) {
-        projectIds[g] = true
-      }
-
-      pipeline.push({ $project: projectIds })
-    }
-  }
-
-  const countPipeline = [
-    ...pipeline.filter((x) => !Object.keys(x).includes('$sort') && !Object.keys(x).includes('$skip') && !Object.keys(x).includes('$limit')),
-    { $count: '_count' }
-  ]
-
-  const [entities, count] = await Promise.all([
-    entu.db.collection('entity').aggregate(pipeline).toArray(),
-    entu.db.collection('entity').aggregate(countPipeline).toArray()
-  ])
-
-  for (let i = 0; i < entities.length; i++) {
-    const entity = await cleanupEntity(entu, entities[i])
-
-    if (entity)
-      cleanedEntities.push(entity)
-  }
-
-  return {
-    entities: cleanedEntities,
-    count: count?.at(0)?._count || 0,
-    limit,
-    skip
-  }
+  return await queryEntities(entu, { filter, search, props, group, sort, limit, skip })
 })
 
 function parseDate (dateValue) {
