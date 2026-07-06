@@ -139,13 +139,26 @@ export async function aiExecuteOperations (entu, operations) {
 // Validation helpers
 // ---------------------------------------------------------------------------
 
-// Entity types managed by the platform - the AI must never create or modify them or their entities
-const systemEntityTypes = ['database', 'entity', 'menu', 'plugin', 'property']
+// Reserved type-definition names - the platform's base types, whose type definitions the AI must never create or change
+const reservedTypeNames = ['database', 'entity', 'menu', 'plugin', 'property']
 
-// Throws when a type name refers to a protected system entity type
-function rejectSystemType (value, index) {
-  if (systemEntityTypes.includes(value)) {
-    throw operationError(index, `Entity type ${value} is a system type and can't be changed`)
+// Throws when a type name refers to a reserved base type
+function rejectReservedTypeName (value, index) {
+  if (reservedTypeNames.includes(value)) {
+    throw operationError(index, `Entity type ${value} is reserved and can't be created or changed`)
+  }
+}
+
+// Throws when creating a type definition (an entity of type "entity") with a reserved name
+function rejectReservedTypeCreation (params, index) {
+  if (params.type !== 'entity') {
+    return
+  }
+
+  const name = params.properties?.find((property) => property?.type === 'name')?.string
+
+  if (reservedTypeNames.includes(name)) {
+    throw operationError(index, `Entity type ${name} is reserved and can't be created`)
   }
 }
 
@@ -231,7 +244,7 @@ function validateObjectIdString (value, field, index) {
 // Validates create_entity_type params
 function validateCreateEntityType (params, index) {
   validateString(params.name, 'name', index, { required: true, max: 100, pattern: namePattern })
-  rejectSystemType(params.name, index)
+  rejectReservedTypeName(params.name, index)
   validateString(params.label, 'label', index, { required: true })
   validateString(params.labelPlural, 'labelPlural', index)
   validateString(params.description, 'description', index, { max: 5000 })
@@ -248,9 +261,6 @@ function validateAddPropertyDefinition (params, index, operations) {
   }
   else if (!namePattern.test(params.entityType)) {
     throw operationError(index, 'entityType must be a type name or a tempId')
-  }
-  else {
-    rejectSystemType(params.entityType, index)
   }
 
   validateString(params.name, 'name', index, { required: true, max: 100, pattern: namePattern })
@@ -297,8 +307,8 @@ function validateCreateEntity (params, index, operations) {
   else if (!namePattern.test(params.type)) {
     throw operationError(index, 'type must be a type name or a tempId')
   }
-  else {
-    rejectSystemType(params.type, index)
+  else if (params.type === 'database') {
+    throw operationError(index, 'Entities of type database can\'t be created')
   }
 
   if (params.parent !== undefined) {
@@ -306,6 +316,8 @@ function validateCreateEntity (params, index, operations) {
   }
 
   validateProperties(params.properties, index, operations, { allowEmpty: true })
+
+  rejectReservedTypeCreation(params, index)
 }
 
 // Validates update_entity params
@@ -448,14 +460,18 @@ function resolveEntityId (value, tempIdMap) {
   return getObjectId(value)
 }
 
-// Throws when the target entity is of a protected system entity type
-async function rejectSystemEntity (entu, entityId) {
-  const entity = await entu.db.collection('entity').findOne({ _id: entityId }, { projection: { 'private._type.string': true } })
+// Throws when the entity is a system type definition - a type "entity" entity that carries a system property or has a reserved name
+async function rejectSystemTypeDefinition (entu, entityId) {
+  const entity = await entu.db.collection('entity').findOne({ _id: entityId }, { projection: { 'private._type.string': true, 'private.name.string': true, 'private.system': true } })
 
-  if (systemEntityTypes.includes(entity?.private?._type?.at(0)?.string)) {
+  const isTypeDefinition = entity?.private?._type?.at(0)?.string === 'entity'
+  const isSystem = (entity?.private?.system?.length || 0) > 0
+  const isReserved = reservedTypeNames.includes(entity?.private?.name?.at(0)?.string)
+
+  if (isTypeDefinition && (isSystem || isReserved)) {
     throw createError({
       statusCode: 403,
-      statusMessage: 'Can\'t change system entities'
+      statusMessage: 'System type definitions can\'t be changed'
     })
   }
 }
@@ -503,6 +519,8 @@ async function executeCreateEntityType (entu, params) {
 async function executeAddPropertyDefinition (entu, params, tempIdMap) {
   const typeId = await resolveTypeId(entu, params.entityType, tempIdMap)
 
+  await rejectSystemTypeDefinition(entu, typeId)
+
   const existing = await entu.db.collection('entity').findOne({
     'private._type.string': 'property',
     'private._parent.reference': typeId,
@@ -543,7 +561,7 @@ async function executeCreateEntity (entu, params, tempIdMap) {
 async function executeUpdateEntity (entu, params, tempIdMap) {
   const entityId = resolveEntityId(params._id, tempIdMap)
 
-  await rejectSystemEntity(entu, entityId)
+  await rejectSystemTypeDefinition(entu, entityId)
 
   const properties = await buildOperationProperties({ op: 'update_entity', params }, executionResolvers(entu, tempIdMap))
 
@@ -736,14 +754,16 @@ async function executeDeleteProperty (entu, params) {
       _id: false,
       'private._editor': true,
       'private._owner': true,
-      'private._type.string': true
+      'private._type.string': true,
+      'private.name.string': true,
+      'private.system': true
     }
   })
 
-  if (systemEntityTypes.includes(entity?.private?._type?.at(0)?.string)) {
+  if (entity?.private?._type?.at(0)?.string === 'entity' && ((entity?.private?.system?.length || 0) > 0 || reservedTypeNames.includes(entity?.private?.name?.at(0)?.string))) {
     throw createError({
       statusCode: 403,
-      statusMessage: 'Can\'t change system entities'
+      statusMessage: 'System type definitions can\'t be changed'
     })
   }
 
