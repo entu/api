@@ -111,8 +111,6 @@ export default defineEventHandler(async (event) => {
   const body = await event.req.json()
   const messages = validateMessages(body?.messages)
 
-  await aiCheckTokensLimit(entu)
-
   const systemPrompt = await aiBuildSystemPrompt(entu)
 
   // cache_control caches the system prompt prefix across loop iterations and follow-up messages (5m TTL)

@@ -26,6 +26,9 @@ export async function aiCheckTokensLimit (entu) {
 
 // Calls the configured OpenAI-compatible chat completions API, records usage stats and returns the parsed response
 export async function aiChatCompletion ({ entu, messages, tools }) {
+  // Enforce the monthly token limit before every AI request so a single chat cannot run far over the limit
+  await aiCheckTokensLimit(entu)
+
   const { aiKey, aiModel, aiUrl } = useRuntimeConfig()
 
   const body = {
@@ -72,7 +75,8 @@ export async function aiChatCompletion ({ entu, messages, tools }) {
     }
   }
 
-  recordUsage(entu, response).catch((error) => loggerError(`AI stats write failed: ${error.message || error}`, entu))
+  // Awaited so this call's tokens are committed before the next aiChatCompletion re-checks the limit
+  await recordUsage(entu, response).catch((error) => loggerError(`AI stats write failed: ${error.message || error}`, entu))
 
   return response
 }
