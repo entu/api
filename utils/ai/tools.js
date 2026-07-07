@@ -50,7 +50,7 @@ export const aiToolDefinitions = [
           },
           props: {
             type: 'array',
-            description: 'Property names to return. If omitted, all readable properties are returned.',
+            description: 'Property values to return for each match. If omitted, only the name is returned (enough to list and link). Request the specific properties whose values you need to show; use get_entity for a single entity in full.',
             items: { type: 'string' }
           },
           limit: { type: 'integer', description: 'Maximum number of entities to return (max 20)' },
@@ -334,7 +334,8 @@ async function searchEntitiesTool (entu, args) {
     }
   }
 
-  const props = validateToolProps(args?.props)
+  // Default to a lean result (name only) - the model requests specific props for values, or uses get_entity for full detail
+  const props = args?.props === undefined ? ['name'] : validateToolProps(args.props)
 
   const { entities, count } = await queryEntities(entu, { filter, search, props, limit, skip })
 
@@ -506,27 +507,19 @@ function parseToolObjectId (value) {
   }
 }
 
-const compactSkippedProperties = [
-  '_owner',
-  '_editor',
-  '_viewer',
-  '_expander',
-  '_noaccess',
-  '_parent_owner',
-  '_parent_editor',
-  '_parent_viewer',
-  '_parent_expander',
-  '_created',
-  '_inheritrights',
-  '_sharing'
-]
+// The only system (underscore) properties the AI is allowed to see - everything else, including all rights properties, is dropped
+const allowedSystemProperties = ['_type', '_parent']
 
 // Reduces a cleaned entity to a compact JSON shape for the model — drops rights properties and value metadata
 function compactEntity (entity) {
   const result = { _id: entity._id.toString() }
 
   for (const [key, values] of Object.entries(entity)) {
-    if (key === '_id' || compactSkippedProperties.includes(key) || !Array.isArray(values))
+    if (key === '_id' || !Array.isArray(values))
+      continue
+
+    // Drop every system property except the allowed ones - keeps all rights and internal properties away from the AI
+    if (key.startsWith('_') && !allowedSystemProperties.includes(key))
       continue
 
     result[key] = values.map(compactValue)
