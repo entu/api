@@ -48,6 +48,14 @@ defineRouteMeta({
               type: 'object',
               properties: {
                 message: { type: 'string', description: 'Assistant reply text' },
+                usage: {
+                  type: 'object',
+                  description: 'Token usage for this turn (may span several internal model calls)',
+                  properties: {
+                    total: { type: 'integer', description: 'Total tokens processed this turn — input (incl. cache reads/writes) + completion' },
+                    cached: { type: 'integer', description: 'Input tokens served from cache at the discounted rate (subset of total)' }
+                  }
+                },
                 proposal: {
                   type: 'object',
                   description: 'Present only when the assistant proposed write operations',
@@ -121,10 +129,14 @@ export default defineEventHandler(async (event) => {
 
   const loopMessages = [systemMessage, ...messages]
   const operations = []
+  const usage = { total: 0, cached: 0 }
   let finalText
+  let cachedTail
 
   for (let i = 0; i < maxIterations; i++) {
     const response = await aiChatCompletion({ entu, messages: loopMessages, tools: aiToolDefinitions })
+
+    accumulateUsage(usage, response)
 
     const message = response?.choices?.at(0)?.message
 
@@ -154,20 +166,63 @@ export default defineEventHandler(async (event) => {
         content: JSON.stringify(result)
       })
     }
+
+    // Roll the cache breakpoint onto the newest tool-result tail so the next iteration
+    // (and the final summary call) read it at ~0.1x instead of reprocessing at full price
+    cachedTail = moveCacheBreakpoint(loopMessages.at(-1), cachedTail)
   }
 
   // Iteration cap reached with tool calls still pending — force one final call without tools for a summary
   if (finalText === undefined) {
     const response = await aiChatCompletion({ entu, messages: loopMessages })
 
+    accumulateUsage(usage, response)
+
     finalText = response?.choices?.at(0)?.message?.content || ''
   }
 
   return {
     message: finalText,
-    proposal: operations.length > 0 ? { operations } : undefined
+    proposal: operations.length > 0 ? { operations } : undefined,
+    usage
   }
 })
+
+// Adds one AI response's token usage into the running per-turn totals returned to the client.
+// DO reports usage two ways: OpenAI/open-source models fold cached tokens into prompt_tokens
+// (surfaced as prompt_tokens_details.cached_tokens), while Anthropic models report prompt_tokens
+// as the uncached remainder with cache read/creation counted separately. Both are normalised to a
+// full token total; cached stays the discounted cache-read subset of it.
+function accumulateUsage (usage, response) {
+  const u = response?.usage
+
+  if (!u) {
+    return
+  }
+
+  const cacheRead = u.cache_read_input_tokens || u.prompt_tokens_details?.cached_tokens || 0
+  const cacheCreated = u.cache_created_input_tokens || 0
+
+  const inputTokens = u.prompt_tokens_details?.cached_tokens != null
+    ? (u.prompt_tokens || 0)
+    : (u.prompt_tokens || 0) + cacheRead + cacheCreated
+
+  usage.total += inputTokens + (u.completion_tokens || 0)
+  usage.cached += cacheRead
+}
+
+// Moves the single rolling cache breakpoint onto `message`, clearing it from `previous`.
+// Only one tail breakpoint exists at a time — the system prompt already holds one, and
+// Anthropic allows at most 4. Returns the newly marked message so the caller can track it.
+function moveCacheBreakpoint (message, previous) {
+  if (previous && previous !== message && Array.isArray(previous.content)) {
+    previous.content = previous.content.at(0).text
+  }
+
+  message.content = [{ type: 'text', text: message.content, cache_control: { type: 'ephemeral', ttl: '5m' } }]
+
+  return message
+}
 
 // Validates the client-provided conversation and strips it down to role/content only
 function validateMessages (messages) {
