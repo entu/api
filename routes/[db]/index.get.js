@@ -22,6 +22,17 @@ defineRouteMeta({
             schema: {
               type: 'object',
               properties: {
+                organization: {
+                  type: 'array',
+                  description: 'Organization name values (multilingual)',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      language: { type: 'string', description: 'Language code, absent for non-multilingual values' },
+                      string: { type: 'string', description: 'Organization name in the given language' }
+                    }
+                  }
+                },
                 entities: {
                   type: 'object',
                   properties: {
@@ -101,7 +112,8 @@ export default defineEventHandler(async (event) => {
     entu.db.stats(),
     entu.db.collection('entity').findOne({ 'private._type.string': 'database' }, {
       projection: {
-        'private.name.string': true,
+        'private.organization.string': true,
+        'private.organization.language': true,
         'private.billing_entities_limit.number': true,
         'private.billing_data_limit.number': true,
         'private.billing_requests_limit.number': true,
@@ -135,6 +147,7 @@ export default defineEventHandler(async (event) => {
   const tokens = (tokensUsage?.promptTokens || 0) + (tokensUsage?.completionTokens || 0)
 
   const result = {
+    organization: (database?.private?.organization || []).map((o) => ({ language: o.language, string: o.string })),
     entities: {
       usage: entities,
       deleted: deletedEntities?.at(0)?.count || 0,
