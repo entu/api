@@ -138,13 +138,13 @@ export default defineEventHandler(async (event) => {
   const { _id, properties } = await setEntity(entu, entityId, bodyWithEmail)
 
   if (isSendInvite) {
-    const { origin } = getRequestURL(event)
+    const { appUrl } = useRuntimeConfig()
 
     const inviteToken = properties.find((p) => p.type === 'entu_user')?.invite
     const inviterEntity = entu.user ? await entu.db.collection('entity').findOne({ _id: entu.user }, { projection: { 'private.name.string': true } }) : null
     const inviterName = inviterEntity?.private?.name?.at(0)?.string || entu.email
 
-    await sendInviteEmail({ to: email, inviteUrl: `${origin}/${entu.account}/invite?token=${inviteToken}`, account: entu.account, inviterName })
+    await sendInviteEmail({ to: email, inviteUrl: `${appUrl}/${entu.account}/invite?token=${inviteToken}`, account: entu.account, inviterName })
   }
 
   await triggerWebhooks(entu, _id, 'entity-edit-webhook')
