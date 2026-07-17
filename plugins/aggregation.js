@@ -28,8 +28,7 @@ async function aggregateDb (database) {
     .limit(100)
     .toArray()
 
-  if (entities.length === 0)
-    return
+  if (entities.length === 0) return
 
   const entu = {
     account: database,

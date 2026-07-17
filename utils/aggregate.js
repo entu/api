@@ -97,8 +97,7 @@ export async function aggregateEntity (entu, entityId) {
       // (e.g. formula A referencing formula B on the same entity — B must be computed before A reads it)
       for (let pass = 0; pass < 2; pass++) {
         for (let d = 0; d < definition.length; d++) {
-          if (!definition[d].formula)
-            continue
+          if (!definition[d].formula) continue
 
           const formulaValue = await formula(entu, definition[d].formula, entityId, newEntity.private)
 
@@ -372,8 +371,9 @@ async function propertiesToEntity (entu, properties) {
 
 // Generates all unique substrings of value strings for full-text search indexing
 function makeSearchArray (array) {
-  if (!array || array.length === 0)
+  if (!array || array.length === 0) {
     return []
+  }
 
   const result = new Set()
 
@@ -422,8 +422,9 @@ function getEntityHash (obj) {
 
 // Returns the subset of entityIds whose entity type has at least one formula property definition
 async function filterEntitiesWithFormulas (entu, entityIds) {
-  if (!entityIds || entityIds.length === 0)
+  if (!entityIds || entityIds.length === 0) {
     return []
+  }
 
   const result = await entu.db.collection('entity').aggregate([
     {
@@ -478,8 +479,9 @@ async function startRelativeAggregation (entu, oldEntity, newEntity) {
   let ids = []
 
   // Check if entity has changed — if not, nothing to propagate
-  if (Boolean(oldEntity.hash) && oldEntity.hash === newEntity.hash)
+  if (Boolean(oldEntity.hash) && oldEntity.hash === newEntity.hash) {
     return 0
+  }
 
   // Collect referrer IDs once (entities whose properties point to this entity).
   // Reused for both name-change propagation and formula Case 2 below.
@@ -544,8 +546,9 @@ async function startRelativeAggregation (entu, oldEntity, newEntity) {
 
   ids = uniqBy(ids, (x) => x.toString())
 
-  if (ids.length === 0)
+  if (ids.length === 0) {
     return 0
+  }
 
   await addAggregateQueue(entu, ids)
 

@@ -111,10 +111,12 @@ export default defineEventHandler(async (event) => {
       { $set: { deleted: new Date() } }
     )
 
-    if (!session)
+    if (!session) {
       throw createError({ statusCode: 400, statusMessage: 'No session' })
-    if (!session.user?.email)
+    }
+    if (!session.user?.email) {
       throw createError({ statusCode: 400, statusMessage: 'No user email' })
+    }
   }
   catch {
     apiKeyHash = createHash('sha256').update(key).digest('hex')
@@ -125,8 +127,9 @@ export default defineEventHandler(async (event) => {
 
   if (query.invite && !onlyForAccount) {
     const payload = jwt.decode(query.invite)
-    if (payload?.db)
+    if (payload?.db) {
       onlyForAccount = payload.db
+    }
   }
 
   const dbs = await connection.admin().listDatabases()
@@ -183,16 +186,18 @@ export default defineEventHandler(async (event) => {
           }
         }
 
-        if (!person)
+        if (!person) {
           return null
+        }
 
         return { account, userId: person._id, userName: person.private?.name?.at(0).string || person._id.toString() }
       })
   )
 
   for (const result of accountResults) {
-    if (result)
+    if (result) {
       addAccount(result.account, result.userId, result.userName)
+    }
   }
 
   // Invite acceptance: user arrived via invite link and completed OAuth
@@ -287,8 +292,7 @@ async function replaceInviteWithCredentials (entu, entityId, invitePropId, sessi
 }
 
 async function createUserForAccount (account, session) {
-  if (!account || !session)
-    return
+  if (!account || !session) return
 
   const entu = { account, db: await connectDb(account), systemUser: true }
 
@@ -299,16 +303,14 @@ async function createUserForAccount (account, session) {
 
   const parent = database?.private?.add_user?.at(0)?.reference
 
-  if (!parent)
-    return
+  if (!parent) return
 
   const type = await entu.db.collection('entity').findOne(
     { 'private._type.string': 'entity', 'private.name.string': 'person' },
     { projection: { _id: true } }
   )
 
-  if (!type?._id)
-    return
+  if (!type?._id) return
 
   const properties = [
     { type: '_type', reference: type._id },
@@ -324,8 +326,7 @@ async function createUserForAccount (account, session) {
 
   const person = await setEntity(entu, null, properties)
 
-  if (!person._id)
-    return
+  if (!person._id) return
 
   await setEntity(entu, person._id, [{ type: '_editor', reference: person._id }])
 

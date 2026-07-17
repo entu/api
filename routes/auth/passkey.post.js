@@ -32,12 +32,14 @@ export default defineEventHandler(async (event) => {
           { projection: { _id: true, 'private.name.string': true, 'private.entu_passkey': true } }
         )
 
-        if (!user?.private?.entu_passkey)
+        if (!user?.private?.entu_passkey) {
           return null
+        }
 
         const passkeyProp = user.private.entu_passkey.find((pk) => pk.passkey_id === credentialId)
-        if (!passkeyProp)
+        if (!passkeyProp) {
           return null
+        }
 
         return { dbName, db, user, passkeyProp }
       })

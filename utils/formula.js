@@ -21,9 +21,7 @@
 export async function formula (entu, str, entityId, localValues = {}) {
   const tokens = parseFormulaTokens(str)
 
-  if (tokens.length === 0) {
-    return
-  }
+  if (tokens.length === 0) return
 
   // Implicit CONCAT: append CONCAT if the formula doesn't end with a recognized operator.
   const lastToken = tokens.at(-1)
@@ -45,18 +43,14 @@ export async function formula (entu, str, entityId, localValues = {}) {
         args = stack.splice(0, stack.length)
       }
       else {
-        if (stack.length < op.arity) {
-          return // not enough operands on the stack
-        }
+        if (stack.length < op.arity) return // not enough operands on the stack
 
         args = stack.splice(stack.length - op.arity, op.arity)
       }
 
       const result = await op.fn(args, { entu, entityId, localValues })
 
-      if (result === undefined) {
-        return
-      }
+      if (result === undefined) return
 
       stack.push(result)
     }
@@ -68,18 +62,14 @@ export async function formula (entu, str, entityId, localValues = {}) {
     }
   }
 
-  if (stack.length !== 1) {
-    return
-  }
+  if (stack.length !== 1) return
 
   return wrapResult(stack.at(0))
 }
 
 // Wraps the final stack slot into property value object(s) or returns undefined.
 function wrapResult (slot) {
-  if (!slot || slot.length === 0) {
-    return
-  }
+  if (!slot || slot.length === 0) return
 
   if (slot.length === 1) {
     return wrapValue(slot.at(0))
@@ -88,17 +78,13 @@ function wrapResult (slot) {
   // Multi-value result — return an array of value objects.
   const wrapped = slot.map(wrapValue).filter((v) => v !== undefined)
 
-  if (wrapped.length === 0) {
-    return
-  }
+  if (wrapped.length === 0) return
 
   return wrapped
 }
 
 function wrapValue (value) {
-  if (value === undefined || value === null) {
-    return
-  }
+  if (value === undefined || value === null) return
 
   if (typeof value === 'number') {
     return { number: value }
@@ -438,8 +424,9 @@ async function formulaField (entu, str, entityId, localValues = {}) {
 
 // Converts a property value array into a flat array of primitive values
 export async function getValueArray (entu, values) {
-  if (!values)
+  if (!values) {
     return []
+  }
 
   // Batch-fetch all referenced entities in one query instead of one findOne() per value
   const refIds = values.filter((x) => x.reference != null).map((x) => x.reference)
@@ -458,16 +445,21 @@ export async function getValueArray (entu, values) {
 
   return values.map((x) => {
     try {
-      if (x.boolean !== undefined && x.boolean !== null)
+      if (x.boolean !== undefined && x.boolean !== null) {
         return x.boolean
-      if (x.number !== undefined && x.number !== null)
+      }
+      if (x.number !== undefined && x.number !== null) {
         return x.number
-      if (x.datetime !== undefined && x.datetime !== null)
+      }
+      if (x.datetime !== undefined && x.datetime !== null) {
         return x.datetime?.toISOString()
-      if (x.date !== undefined && x.date !== null)
+      }
+      if (x.date !== undefined && x.date !== null) {
         return x.date?.toISOString().slice(0, 10)
-      if (x.string !== undefined && x.string !== null)
+      }
+      if (x.string !== undefined && x.string !== null) {
         return x.string
+      }
       if (x.reference !== undefined && x.reference !== null) {
         const entity = refMap.get(x.reference.toString())
 
@@ -508,9 +500,7 @@ function flattenSlots (slots) {
 function opConcat (slots) {
   const values = flattenSlots(slots)
 
-  if (values.length === 0) {
-    return
-  }
+  if (values.length === 0) return
 
   return [values.join('')]
 }
@@ -520,13 +510,9 @@ function opConcat (slots) {
 function opConcatWs (slots) {
   const values = flattenSlots(slots)
 
-  if (values.length === 0) {
-    return // nothing on stack
-  }
+  if (values.length === 0) return // nothing on stack
 
-  if (values.length === 1) {
-    return // only a separator, nothing to join
-  }
+  if (values.length === 1) return // only a separator, nothing to join
 
   const rawSeparator = values.at(-1)
   const separator = rawSeparator === null || rawSeparator === undefined ? '' : String(rawSeparator)
@@ -538,13 +524,9 @@ function opConcatWs (slots) {
 function opSum (slots) {
   const values = flattenSlots(slots)
 
-  if (values.length === 0) {
-    return
-  }
+  if (values.length === 0) return
 
-  if (values.some((v) => typeof v !== 'number')) {
-    return
-  }
+  if (values.some((v) => typeof v !== 'number')) return
 
   return [values.reduce((a, b) => a + b, 0)]
 }
@@ -553,13 +535,9 @@ function opSum (slots) {
 function opSubtract (slots) {
   const values = flattenSlots(slots)
 
-  if (values.length === 0) {
-    return
-  }
+  if (values.length === 0) return
 
-  if (values.some((v) => typeof v !== 'number')) {
-    return
-  }
+  if (values.some((v) => typeof v !== 'number')) return
 
   return [values.slice(1).reduce((a, b) => a - b, values.at(0))]
 }
@@ -568,13 +546,9 @@ function opSubtract (slots) {
 function opMultiply (slots) {
   const values = flattenSlots(slots)
 
-  if (values.length === 0) {
-    return
-  }
+  if (values.length === 0) return
 
-  if (values.some((v) => typeof v !== 'number')) {
-    return
-  }
+  if (values.some((v) => typeof v !== 'number')) return
 
   return [values.reduce((a, b) => a * b, 1)]
 }
@@ -583,17 +557,11 @@ function opMultiply (slots) {
 function opDivide (slots) {
   const values = flattenSlots(slots)
 
-  if (values.length === 0) {
-    return
-  }
+  if (values.length === 0) return
 
-  if (values.some((v) => typeof v !== 'number')) {
-    return
-  }
+  if (values.some((v) => typeof v !== 'number')) return
 
-  if (values.slice(1).includes(0)) {
-    return
-  }
+  if (values.slice(1).includes(0)) return
 
   return [values.slice(1).reduce((a, b) => a / b, values.at(0))]
 }
@@ -609,13 +577,9 @@ function opCount (slots) {
 function opAverage (slots) {
   const values = flattenSlots(slots)
 
-  if (values.length === 0) {
-    return
-  }
+  if (values.length === 0) return
 
-  if (values.some((v) => typeof v !== 'number')) {
-    return
-  }
+  if (values.some((v) => typeof v !== 'number')) return
 
   return [values.reduce((a, b) => a + b, 0) / values.length]
 }
@@ -624,19 +588,16 @@ function opAverage (slots) {
 function opMin (slots) {
   const values = flattenSlots(slots)
 
-  if (values.length === 0) {
-    return
-  }
+  if (values.length === 0) return
 
-  if (!homogeneousComparable(values)) {
-    return
-  }
+  if (!homogeneousComparable(values)) return
 
   let min = values.at(0)
 
   for (const v of values.slice(1)) {
-    if (v < min)
+    if (v < min) {
       min = v
+    }
   }
 
   return [min]
@@ -646,19 +607,16 @@ function opMin (slots) {
 function opMax (slots) {
   const values = flattenSlots(slots)
 
-  if (values.length === 0) {
-    return
-  }
+  if (values.length === 0) return
 
-  if (!homogeneousComparable(values)) {
-    return
-  }
+  if (!homogeneousComparable(values)) return
 
   let max = values.at(0)
 
   for (const v of values.slice(1)) {
-    if (v > max)
+    if (v > max) {
       max = v
+    }
   }
 
   return [max]
@@ -676,9 +634,7 @@ function homogeneousComparable (values) {
 
 // All-stack reducer: first slot = needle, rest of slots = haystack. ANY semantics.
 function opIn (slots) {
-  if (slots.length === 0) {
-    return
-  }
+  if (slots.length === 0) return
 
   const needle = slots.at(0)
   const haystack = new Set(flattenSlots(slots.slice(1)))
@@ -695,9 +651,7 @@ function opIn (slots) {
 function opNin (slots) {
   const inResult = opIn(slots)
 
-  if (inResult === undefined) {
-    return
-  }
+  if (inResult === undefined) return
 
   return [!inResult.at(0)]
 }
@@ -708,9 +662,7 @@ function makeBinaryComparison (compare, requireSameOrderableType) {
     const left = slots.at(0)
     const right = slots.at(1)
 
-    if (left.length === 0 || right.length === 0) {
-      return
-    }
+    if (left.length === 0 || right.length === 0) return
 
     let comparable = false
 
@@ -720,9 +672,7 @@ function makeBinaryComparison (compare, requireSameOrderableType) {
           const bothNumber = typeof l === 'number' && typeof r === 'number'
           const bothString = typeof l === 'string' && typeof r === 'string'
 
-          if (!bothNumber && !bothString) {
-            continue
-          }
+          if (!bothNumber && !bothString) continue
         }
 
         comparable = true
@@ -733,9 +683,7 @@ function makeBinaryComparison (compare, requireSameOrderableType) {
       }
     }
 
-    if (!comparable) {
-      return
-    }
+    if (!comparable) return
 
     return [false]
   }
@@ -746,9 +694,7 @@ function opEq (slots) {
   const left = slots.at(0)
   const right = slots.at(1)
 
-  if (left.length === 0 || right.length === 0) {
-    return
-  }
+  if (left.length === 0 || right.length === 0) return
 
   const rightSet = new Set(right)
 
@@ -765,9 +711,7 @@ function opNe (slots) {
   const left = slots.at(0)
   const right = slots.at(1)
 
-  if (left.length === 0 || right.length === 0) {
-    return
-  }
+  if (left.length === 0 || right.length === 0) return
 
   const rightSet = new Set(right)
 
@@ -789,13 +733,9 @@ const opLte = makeBinaryComparison((l, r) => l <= r, true)
 function opAbs (slots) {
   const slot = slots.at(0)
 
-  if (slot.length === 0) {
-    return
-  }
+  if (slot.length === 0) return
 
-  if (slot.some((v) => typeof v !== 'number')) {
-    return
-  }
+  if (slot.some((v) => typeof v !== 'number')) return
 
   return slot.map((v) => Math.abs(v))
 }
@@ -805,20 +745,14 @@ function opRound (slots) {
   const value = slots.at(0)
   const decimals = slots.at(1)
 
-  if (value.length === 0 || decimals.length !== 1) {
-    return
-  }
+  if (value.length === 0 || decimals.length !== 1) return
 
   const d = decimals.at(0)
 
   // `toFixed` requires an integer in [0, 100]; anything outside throws RangeError.
-  if (typeof d !== 'number' || !Number.isFinite(d) || d < 0 || d > 100 || !Number.isInteger(d)) {
-    return
-  }
+  if (typeof d !== 'number' || !Number.isFinite(d) || d < 0 || d > 100 || !Number.isInteger(d)) return
 
-  if (value.some((v) => typeof v !== 'number')) {
-    return
-  }
+  if (value.some((v) => typeof v !== 'number')) return
 
   return value.map((v) => Number(v.toFixed(d)))
 }
@@ -834,15 +768,11 @@ function opIf (slots) {
   const thenSlot = slots.at(1)
   const elseSlot = slots.at(2)
 
-  if (cond.length !== 1 || typeof cond.at(0) !== 'boolean') {
-    return
-  }
+  if (cond.length !== 1 || typeof cond.at(0) !== 'boolean') return
 
   const chosen = cond.at(0) ? thenSlot : elseSlot
 
-  if (chosen.length === 0) {
-    return
-  }
+  if (chosen.length === 0) return
 
   return chosen
 }
@@ -852,17 +782,11 @@ function opWhen (slots) {
   const cond = slots.at(0)
   const thenSlot = slots.at(1)
 
-  if (cond.length !== 1 || typeof cond.at(0) !== 'boolean') {
-    return
-  }
+  if (cond.length !== 1 || typeof cond.at(0) !== 'boolean') return
 
-  if (!cond.at(0)) {
-    return
-  }
+  if (!cond.at(0)) return
 
-  if (thenSlot.length === 0) {
-    return
-  }
+  if (thenSlot.length === 0) return
 
   return thenSlot
 }
@@ -913,13 +837,9 @@ export function getFormulaOperators () {
 // Safe registry lookup — own properties only, so tokens like `__proto__` or `constructor` don't
 // resolve to inherited Object.prototype members.
 function lookupOperator (token) {
-  if (typeof token !== 'string') {
-    return
-  }
+  if (typeof token !== 'string') return
 
-  if (!Object.hasOwn(OPERATORS, token)) {
-    return
-  }
+  if (!Object.hasOwn(OPERATORS, token)) return
 
   return OPERATORS[token]
 }

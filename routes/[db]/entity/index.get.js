@@ -487,8 +487,7 @@ export default defineEventHandler(async (event) => {
   const filter = {}
 
   for (const k in query) {
-    if (!k.includes('.'))
-      continue
+    if (!k.includes('.')) continue
 
     const v = query[k]
     const fieldArray = k.split('.')

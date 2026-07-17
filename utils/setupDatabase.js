@@ -95,12 +95,14 @@ export async function initializeNewDatabase (entu, reservation, billingCustomerI
     const surname = nameParts.length > 1 ? nameParts.at(-1) : null
 
     personNonRefProps.push({ type: 'forename', string: forename })
-    if (surname)
+    if (surname) {
       personNonRefProps.push({ type: 'surname', string: surname })
+    }
   }
 
-  if (reservation.email)
+  if (reservation.email) {
     personNonRefProps.push({ type: 'email', string: reservation.email })
+  }
 
   const personEntry = { oldId: null, newId: null, key: 'person', nonRefProps: personNonRefProps, refProps: [] }
 
@@ -111,12 +113,15 @@ export async function initializeNewDatabase (entu, reservation, billingCustomerI
     { type: 'name', string: entu.account }
   ]
 
-  if (reservation.email)
+  if (reservation.email) {
     databaseNonRefProps.push({ type: 'email', string: reservation.email })
-  if (reservation.plan)
+  }
+  if (reservation.plan) {
     databaseNonRefProps.push({ type: 'plan', string: reservation.plan })
-  if (billingCustomerId)
+  }
+  if (billingCustomerId) {
     databaseNonRefProps.push({ type: 'billing_customer_id', string: billingCustomerId })
+  }
 
   const databaseEntry = { oldId: null, newId: null, key: 'database', nonRefProps: databaseNonRefProps, refProps: [] }
 
@@ -126,15 +131,15 @@ export async function initializeNewDatabase (entu, reservation, billingCustomerI
   const idMap = new Map()
 
   await Promise.all(entities.map(async (entry) => {
-    if (entry.nonRefProps.length === 0)
-      return
+    if (entry.nonRefProps.length === 0) return
 
     const { _id } = await setEntity(entu, null, entry.nonRefProps, { skipTypeRequired: true })
 
     entry.newId = _id
 
-    if (entry.oldId)
+    if (entry.oldId) {
       idMap.set(entry.oldId.toString(), _id)
+    }
   }))
 
   const personId = personEntry.newId
@@ -150,8 +155,7 @@ export async function initializeNewDatabase (entu, reservation, billingCustomerI
 
   // Pass 2: add reference properties (remapped via idMap) to template entities
   await Promise.all(entities.map(async (entry) => {
-    if (entry.refProps.length === 0 || !entry.newId)
-      return
+    if (entry.refProps.length === 0 || !entry.newId) return
 
     const remapped = entry.refProps
       .map((p) => ({ ...p, reference: idMap.get(p.reference.toString()) }))

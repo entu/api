@@ -176,9 +176,7 @@ function rejectReservedTypeName (value, index) {
 
 // Throws when creating a type definition (an entity of type "entity") with a reserved name
 function rejectReservedTypeCreation (params, index) {
-  if (params.type !== 'entity') {
-    return
-  }
+  if (params.type !== 'entity') return
 
   const name = params.properties?.find((property) => property?.type === 'name')?.string
 
@@ -801,9 +799,7 @@ async function buildProperty (property, resolve) {
 // Queue-time check so a wrong valueId fails during the chat loop (letting the model self-correct) rather than at apply.
 // Only concrete entity ids can be checked - tempId targets don't exist yet and have no values to replace.
 export async function aiCheckUpdatableValues (entu, operation) {
-  if (operation.op !== 'update_entity' || tempIdPattern.test(operation.params._id)) {
-    return
-  }
+  if (operation.op !== 'update_entity' || tempIdPattern.test(operation.params._id)) return
 
   await assertReplaceableValues(entu, getObjectId(operation.params._id), operation.params.properties)
 }
@@ -812,9 +808,7 @@ export async function aiCheckUpdatableValues (entu, operation) {
 async function assertReplaceableValues (entu, entityId, properties) {
   const valueIds = properties.filter((property) => property.valueId).map((property) => getObjectId(property.valueId))
 
-  if (valueIds.length === 0) {
-    return
-  }
+  if (valueIds.length === 0) return
 
   const records = await entu.db.collection('property').find(
     { _id: { $in: valueIds }, entity: entityId, deleted: { $exists: false } },

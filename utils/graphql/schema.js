@@ -160,8 +160,9 @@ async function computeSchemaHash (entu) {
     { $group: { _id: null, count: { $sum: 1 }, latestId: { $max: '$_id' } } }
   ]).toArray()
 
-  if (!result.length)
+  if (!result.length) {
     return '0:null'
+  }
   return `${result[0].count}:${result[0].latestId}`
 }
 
@@ -363,8 +364,7 @@ async function buildSchema (entu) {
   const propsByTypeId = {}
   for (const doc of propDocs) {
     const parentId = doc.private._parent?.at(0)?.reference?.toString()
-    if (!parentId)
-      continue
+    if (!parentId) continue
 
     const propDef = {
       _id: doc._id,
@@ -379,8 +379,9 @@ async function buildSchema (entu) {
       description: pickDescription(doc.private.description) || pickDescription(doc.private.label)
     }
 
-    if (!propsByTypeId[parentId])
+    if (!propsByTypeId[parentId]) {
       propsByTypeId[parentId] = []
+    }
     propsByTypeId[parentId].push(propDef)
   }
 
@@ -395,8 +396,7 @@ async function buildSchema (entu) {
   for (const entityType of entityTypes) {
     const rawTypeName = toGqlTypeName(entityType.name)
     // Deduplicate: skip if already used
-    if (usedTypeNames.has(rawTypeName))
-      continue
+    if (usedTypeNames.has(rawTypeName)) continue
     usedTypeNames.add(rawTypeName)
 
     const typeName = rawTypeName
@@ -436,8 +436,7 @@ async function buildSchema (entu) {
     // --- Input type (exclude formula, counter, file, readonly) ---
     const inputFields = []
     for (const p of propDefs) {
-      if (p.formula || p.readonly || p.type === 'counter' || p.type === 'file')
-        continue
+      if (p.formula || p.readonly || p.type === 'counter' || p.type === 'file') continue
       const gqlField = toGqlFieldName(p.name)
       const inputType = getInputType(p)
       inputFields.push(`  ${gqlField}: ${inputType}`)
@@ -484,8 +483,9 @@ async function buildSchema (entu) {
 
 // Picks the best description string: no language → EN → any other
 function pickDescription (values) {
-  if (!values || values.length === 0)
+  if (!values || values.length === 0) {
     return null
+  }
   return (
     values.find((v) => !v.language && v.string)?.string
     || values.find((v) => v.language === 'en' && v.string)?.string
@@ -496,8 +496,9 @@ function pickDescription (values) {
 
 // Formats a description string as a SDL block-string with optional indent
 function sdlDescription (text, indent = '') {
-  if (!text)
+  if (!text) {
     return ''
+  }
   return `${indent}"""${text.replace(/"""/g, '\\"\\"\\"')}"""\n`
 }
 
@@ -522,8 +523,9 @@ function getBaseOutputType (entuType, multilingual) {
 }
 
 function getInputType (propDef) {
-  if (propDef.multilingual)
+  if (propDef.multilingual) {
     return '[MultilingualStringInput]'
+  }
 
   const scalar = getScalarInputType(propDef.type)
   return propDef.list ? `[${scalar}]` : scalar

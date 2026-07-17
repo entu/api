@@ -237,34 +237,44 @@ export default defineEventHandler(async (event) => {
 
   const cleanChanges = raw.changes.map((x) => {
     if (x.type === 'entu_api_key') {
-      if (x.old.string)
+      if (x.old.string) {
         x.old.string = '***'
-      if (x.new.string)
+      }
+      if (x.new.string) {
         x.new.string = '***'
+      }
     }
 
     if (x.type === 'entu_passkey') {
-      if (x.old?.string)
+      if (x.old?.string) {
         x.old.string = `${x.old.passkey_device || ''} ${x.old._id.toString().slice(-4).toUpperCase()}`.trim()
-      if (x.new?.string)
+      }
+      if (x.new?.string) {
         x.new.string = `${x.new.passkey_device || ''} ${x.new._id.toString().slice(-4).toUpperCase()}`.trim()
+      }
     }
 
     if (x.type === 'entu_user') {
-      if (x.old?.string)
+      if (x.old?.string) {
         x.old.string = '***'
-      if (x.new?.string)
+      }
+      if (x.new?.string) {
         x.new.string = '***'
+      }
     }
 
-    if (x.at === null)
+    if (x.at === null) {
       delete x.at
-    if (x.by === null)
+    }
+    if (x.by === null) {
       delete x.by
-    if (x.old === null)
+    }
+    if (x.old === null) {
       delete x.old
-    if (x.new === null)
+    }
+    if (x.new === null) {
       delete x.new
+    }
 
     return x
   })

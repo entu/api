@@ -63,6 +63,49 @@ export default [
       }
     },
     rules: {
+      // Guard clauses stay inline and brace-less (`if (x) return` /
+      // `continue` / `break` — value-less only); every other if/else/loop
+      // body, including `return <value>`, must be a multiline braced
+      // block. Enforced by three rules together:
+      // - curly multi-line: anything spanning lines needs braces
+      // - nonblock-statement-body-position: a brace-less body sits on the
+      //   same line as its `if`
+      // - no-restricted-syntax: brace-less bodies may only be a bare
+      //   return/continue/break, and a block holding ONLY a bare
+      //   return/continue/break must be inlined instead
+      curly: ['error', 'multi-line'],
+      '@stylistic/nonblock-statement-body-position': ['error', 'beside'],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'IfStatement > .consequent:not(BlockStatement, ReturnStatement, ContinueStatement, BreakStatement)',
+          message: 'Only a bare return/continue/break may follow an if without braces — use a block.'
+        },
+        {
+          selector: 'IfStatement > ReturnStatement.consequent[argument]',
+          message: 'return with a value goes in a braced block — only a bare `if (x) return` stays inline.'
+        },
+        {
+          selector: 'IfStatement > .alternate:not(BlockStatement, IfStatement)',
+          message: 'An else body must be a braced block.'
+        },
+        {
+          selector: ':matches(ForStatement, ForInStatement, ForOfStatement, WhileStatement, DoWhileStatement) > .body:not(BlockStatement)',
+          message: 'A loop body must be a braced block.'
+        },
+        {
+          selector: 'IfStatement[alternate=null] > BlockStatement.consequent[body.length=1] > ReturnStatement[argument=null]',
+          message: 'A guard that only returns goes inline without braces: `if (x) return`.'
+        },
+        {
+          selector: 'IfStatement[alternate=null] > BlockStatement.consequent[body.length=1] > ContinueStatement',
+          message: '`if (x) continue` goes inline without braces.'
+        },
+        {
+          selector: 'IfStatement[alternate=null] > BlockStatement.consequent[body.length=1] > BreakStatement',
+          message: '`if (x) break` goes inline without braces.'
+        }
+      ],
       '@stylistic/arrow-parens': ['error', 'always'],
       '@stylistic/brace-style': ['error', 'stroustrup'],
       '@stylistic/comma-dangle': ['error', 'never'],

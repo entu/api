@@ -48,18 +48,21 @@ export function buildResolvers (entityTypes, propsByTypeId) {
     if (!hasWritableProps) {
       // Delete-only type
       Mutation[`${fieldName}Delete`] = async (_, { id }, { entu }) => {
-        if (!entu.user)
+        if (!entu.user) {
           throw new Error('Authentication required')
+        }
         const entityId = getObjectId(id)
         const entity = await entu.db.collection('entity').findOne(
           { _id: entityId },
           { projection: { _id: false, 'private._owner': true } }
         )
-        if (!entity)
+        if (!entity) {
           throw new Error(`Entity ${id} not found`)
+        }
         const owners = (entity.private?._owner || []).map((s) => s.reference?.toString())
-        if (!owners.includes(entu.userStr))
+        if (!owners.includes(entu.userStr)) {
           throw new Error('User not in _owner property')
+        }
         await entu.db.collection('property').insertOne({
           entity: entityId,
           type: '_deleted',
@@ -85,8 +88,9 @@ export function buildResolvers (entityTypes, propsByTypeId) {
 
     // Create mutation
     Mutation[`${fieldName}Create`] = async (_, { input }, { entu }) => {
-      if (!entu.user)
+      if (!entu.user) {
         throw new Error('Authentication required')
+      }
 
       const properties = [
         { type: '_type', reference: typeId.toString() },
@@ -103,14 +107,16 @@ export function buildResolvers (entityTypes, propsByTypeId) {
 
     // Update mutation
     Mutation[`${fieldName}Update`] = async (_, { id, input }, { entu }) => {
-      if (!entu.user)
+      if (!entu.user) {
         throw new Error('Authentication required')
+      }
 
       const entityId = getObjectId(id)
       const newProps = mapInputToProps(input, propDefs)
 
-      if (newProps.length === 0)
+      if (newProps.length === 0) {
         throw new Error('At least one non-null property value is required for update')
+      }
 
       // Find existing props for the types being updated, to enable full-replace semantics
       const inputPropNames = [...new Set(newProps.map((p) => p.type))]
@@ -123,8 +129,9 @@ export function buildResolvers (entityTypes, propsByTypeId) {
       // Group old _ids by type
       const oldIdsByType = {}
       for (const p of existingProps) {
-        if (!oldIdsByType[p.type])
+        if (!oldIdsByType[p.type]) {
           oldIdsByType[p.type] = []
+        }
         oldIdsByType[p.type].push(p._id)
       }
 
@@ -157,8 +164,9 @@ export function buildResolvers (entityTypes, propsByTypeId) {
 
     // Delete mutation
     Mutation[`${fieldName}Delete`] = async (_, { id }, { entu }) => {
-      if (!entu.user)
+      if (!entu.user) {
         throw new Error('Authentication required')
+      }
 
       const entityId = getObjectId(id)
 
@@ -167,12 +175,14 @@ export function buildResolvers (entityTypes, propsByTypeId) {
         { projection: { _id: false, 'private._owner': true } }
       )
 
-      if (!entity)
+      if (!entity) {
         throw new Error(`Entity ${id} not found`)
+      }
 
       const owners = (entity.private?._owner || []).map((s) => s.reference?.toString())
-      if (!owners.includes(entu.userStr))
+      if (!owners.includes(entu.userStr)) {
         throw new Error('User not in _owner property')
+      }
 
       await entu.db.collection('property').insertOne({
         entity: entityId,
@@ -203,8 +213,9 @@ export function buildResolvers (entityTypes, propsByTypeId) {
 
   const fileUrlResolver = {
     url: async (obj, _, { entu }) => {
-      if (!obj._entityId)
+      if (!obj._entityId) {
         return null
+      }
       return getSignedDownloadUrl(entu.account, obj._entityId, obj)
     }
   }
@@ -232,12 +243,10 @@ export function mapInputToProps (input, propDefs) {
   const props = []
 
   for (const [gqlField, value] of Object.entries(input)) {
-    if (value === undefined || value === null)
-      continue
+    if (value === undefined || value === null) continue
 
     const propDef = propDefs.find((p) => toGqlFieldName(p.name) === gqlField)
-    if (!propDef)
-      continue
+    if (!propDef) continue
 
     if (propDef.multilingual) {
       const arr = Array.isArray(value) ? value : [value]
@@ -302,15 +311,15 @@ const SYSTEM_PROP_SINGLES = new Set(['_inheritrights'])
 // list:true → array, list:false → single value (first element or null).
 // Stamps _entityId onto file value objects for signed URL generation.
 function remapEntityForGraphQL (entity, propDefs) {
-  if (!entity)
+  if (!entity) {
     return null
+  }
 
   const result = { _id: entity._id }
 
   // Map system properties
   for (const sp of SYSTEM_PROP_NAMES) {
-    if (entity[sp] === undefined)
-      continue
+    if (entity[sp] === undefined) continue
     if (sp === '_sharing') {
       result[sp] = entity[sp][0]?.string || null
     }
@@ -326,8 +335,7 @@ function remapEntityForGraphQL (entity, propDefs) {
     const gqlField = toGqlFieldName(propDef.name)
     const values = entity[propDef.name]
 
-    if (values === undefined)
-      continue
+    if (values === undefined) continue
 
     if (propDef.type === 'file') {
       const stamped = values.map((f) => ({ ...f, _entityId: entity._id }))

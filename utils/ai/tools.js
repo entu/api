@@ -264,8 +264,7 @@ async function getEntityTypeTool (entu, args) {
   for (const propertyEntity of propertyEntities) {
     const cleaned = await cleanupEntity(entu, propertyEntity)
 
-    if (!cleaned)
-      continue
+    if (!cleaned) continue
 
     properties.push({
       _id: cleaned._id.toString(),
@@ -451,33 +450,39 @@ function parseFilterValue (valueType, value, key) {
 
   switch (valueType) {
     case 'string':
-      if (typeof value !== 'string')
+      if (typeof value !== 'string') {
         throw invalidValueError
+      }
 
       return value
     case 'number':
-      if (typeof value !== 'number' || !Number.isFinite(value))
+      if (typeof value !== 'number' || !Number.isFinite(value)) {
         throw invalidValueError
+      }
 
       return value
     case 'boolean':
-      if (typeof value !== 'boolean')
+      if (typeof value !== 'boolean') {
         throw invalidValueError
+      }
 
       return value
     case 'reference':
-      if (typeof value !== 'string')
+      if (typeof value !== 'string') {
         throw invalidValueError
+      }
 
       return parseToolObjectId(value)
     default: { // date, datetime
-      if (typeof value !== 'string')
+      if (typeof value !== 'string') {
         throw invalidValueError
+      }
 
       const date = new Date(value)
 
-      if (Number.isNaN(date.getTime()))
+      if (Number.isNaN(date.getTime())) {
         throw invalidValueError
+      }
 
       return date
     }
@@ -486,9 +491,7 @@ function parseFilterValue (valueType, value, key) {
 
 // Builds a MongoDB projection from a props array — undefined projection when no props given
 function buildPropsProjection (props) {
-  if (props === undefined) {
-    return
-  }
+  if (props === undefined) return
 
   if (!Array.isArray(props) || props.some((p) => typeof p !== 'string' || !/^[a-z0-9_]+$/.test(p))) {
     throw createError({
@@ -497,9 +500,7 @@ function buildPropsProjection (props) {
     })
   }
 
-  if (props.length === 0) {
-    return
-  }
+  if (props.length === 0) return
 
   const projection = { access: true }
 
@@ -533,12 +534,10 @@ function compactEntity (entity) {
   const result = { _id: entity._id.toString() }
 
   for (const [key, values] of Object.entries(entity)) {
-    if (key === '_id' || !Array.isArray(values))
-      continue
+    if (key === '_id' || !Array.isArray(values)) continue
 
     // Drop every system property except the allowed ones - keeps all rights and internal properties away from the AI
-    if (key.startsWith('_') && !allowedSystemProperties.includes(key))
-      continue
+    if (key.startsWith('_') && !allowedSystemProperties.includes(key)) continue
 
     result[key] = values.map(compactValue)
   }
@@ -573,8 +572,7 @@ function definitionTextValue (values) {
     ?.filter((value) => value.string !== undefined)
     .map((value) => value.language ? { string: value.string, language: value.language } : { string: value.string })
 
-  if (!result?.length)
-    return
+  if (!result?.length) return
 
   return result
 }
@@ -583,8 +581,7 @@ function definitionTextValue (values) {
 function definitionValue (values) {
   const value = values?.at(0)
 
-  if (!value)
-    return
+  if (!value) return
 
   return value.string ?? value.number ?? value.boolean
 }

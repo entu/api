@@ -89,7 +89,9 @@ const statsCache = new Map()
 export default defineEventHandler(async (event) => {
   const entu = event.context.entu
 
-  if (!entu.user) throw createError({ statusCode: 403, statusMessage: 'No user' })
+  if (!entu.user) {
+    throw createError({ statusCode: 403, statusMessage: 'No user' })
+  }
 
   const cached = statsCache.get(entu.account)
   if (cached && cached.expires > Date.now()) {

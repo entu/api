@@ -19,12 +19,10 @@ export default defineNitroPlugin((nitroApp) => {
     //   browser: event.req.headers.get('user-agent')
     // })
 
-    if (!entu?.db)
-      return
+    if (!entu?.db) return
 
     const collections = await entu.db.listCollections({ name: 'entity' }).toArray()
-    if (collections.length === 0)
-      return
+    if (collections.length === 0) return
 
     await entu.db.collection('stats').bulkWrite([
       { updateOne: { filter: { date: date.slice(0, 10), function: 'ALL' }, update: { $inc: { count: 1 } }, upsert: true } },

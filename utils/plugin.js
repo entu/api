@@ -10,14 +10,12 @@ export async function triggerWebhooks (entu, entityId, pluginType) {
     projection: { 'private.url.string': true }
   }).toArray()
 
-  if (!plugins?.length)
-    return
+  if (!plugins?.length) return
 
   // Get the entity
   const entity = await entu.db.collection('entity').findOne({ _id: entityId }, { projection: { 'private._type.reference': true } })
 
-  if (!entity)
-    return
+  if (!entity) return
 
   // Get the entity type (only with plugins)
   const entityType = await entu.db.collection('entity').findOne({
@@ -29,8 +27,7 @@ export async function triggerWebhooks (entu, entityId, pluginType) {
     projection: { 'private.plugin': true }
   })
 
-  if (!entityType)
-    return
+  if (!entityType) return
 
   const webhooks = entityType.private.plugin.flatMap((x) => {
     return plugins.find((p) => p._id.toString() === x.reference.toString())?.private?.url?.map((url) => url.string)

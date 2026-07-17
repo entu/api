@@ -3,8 +3,9 @@ export function uniqBy (array, keyFn) {
   const seen = new Map()
   return array.filter((v) => {
     const k = keyFn(v)
-    if (seen.has(k))
+    if (seen.has(k)) {
       return false
+    }
     seen.set(k, true)
     return true
   })
@@ -82,12 +83,10 @@ export function getAccessArray ({ private: entity }) {
   }
 
   for (const type of ['_viewer', '_expander', '_editor', '_owner']) {
-    if (!entity[type])
-      continue
+    if (!entity[type]) continue
 
     for (const x of entity[type]) {
-      if (noAccess?.includes(x.reference))
-        continue
+      if (noAccess?.includes(x.reference)) continue
 
       access.push(x.reference)
     }

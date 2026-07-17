@@ -120,16 +120,18 @@ export default defineEventHandler(async (event) => {
         return null
       }
 
-      if (!person)
+      if (!person) {
         return null
+      }
 
       return { account, userId: person._id, userName: person.private?.name?.at(0)?.string || person._id.toString() }
     })
   )
 
   for (const result of accountResults) {
-    if (result)
+    if (result) {
       addAccount(result.account, result.userId, result.userName)
+    }
   }
 
   if (accounts.length === 0) {

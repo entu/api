@@ -189,8 +189,7 @@ function renderLabels (values) {
     ?.filter((value) => value.string)
     .map((value) => value.language ? `"${value.string}" (${value.language})` : `"${value.string}"`)
 
-  if (!rendered?.length)
-    return
+  if (!rendered?.length) return
 
   return rendered.join(', ')
 }

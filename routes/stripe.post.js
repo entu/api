@@ -22,14 +22,12 @@ export default defineEventHandler(async (event) => {
     }
 
     // No reference = new DB purchase (pricing table has no client-reference-id) — nothing to do
-    if (!reference)
-      return
+    if (!reference) return
 
     // Existing billing flow: update billing customer ID
     const [db, user] = reference.split('-')
 
-    if (!user)
-      return
+    if (!user) return
 
     const entu = {
       account: db,
