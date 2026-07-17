@@ -55,6 +55,7 @@ export async function setEntity (entu, entityId, properties, options = {}) {
   const { pIds, oldPIds } = await insertProperties(entu, entityId, properties, createdDt)
 
   await markPropertiesDeleted(entu, entityId, oldPIds)
+  await markReplacedUserRightsDeleted(entu, entityId, pIds)
   await aggregateEntity(entu, entityId)
 
   return { _id: entityId, properties: pIds }
@@ -84,8 +85,7 @@ function validateInput (properties) {
 
 // Verifies the user has editor or owner access to an existing entity
 async function checkEntityAccess (entu, entityId, properties, rightTypes) {
-  if (!entityId)
-    return
+  if (!entityId) return
 
   const entity = await entu.db.collection('entity').findOne({
     _id: entityId
@@ -152,7 +152,9 @@ async function validatePropertyTypes (entu, properties, allowedTypes) {
       .find({ _id: { $in: refCheckIds } }, { projection: { _id: true } })
       .toArray()
 
-    for (const doc of found) existingRefIds.add(doc._id.toString())
+    for (const doc of found) {
+      existingRefIds.add(doc._id.toString())
+    }
   }
 
   for (let i = 0; i < properties.length; i++) {
@@ -277,8 +279,7 @@ async function validatePropertyTypes (entu, properties, allowedTypes) {
 async function applyDefaultParents (entu, properties, createdDt) {
   const entityType = properties.find((x) => x.type === '_type' && x.reference)
 
-  if (!entityType)
-    return
+  if (!entityType) return
 
   const defaultParents = await entu.db.collection('entity').findOne(
     { _id: getObjectId(entityType.reference), 'private.default_parent': { $exists: true } },
@@ -300,8 +301,7 @@ async function applyDefaultParents (entu, properties, createdDt) {
 async function inheritParentProperties (entu, properties, createdDt) {
   const parentReferences = properties.filter((x) => x.type === '_parent' && x.reference).map((x) => x.reference)
 
-  if (parentReferences.length === 0)
-    return
+  if (parentReferences.length === 0) return
 
   const needsSharing = !properties.some((x) => x.type === '_sharing')
   const needsInheritRights = !properties.some((x) => x.type === '_inheritrights')
@@ -337,16 +337,21 @@ function resolveServerDate (defaultStr) {
     const n = Number.parseInt(match[2], 10) * (match[1] === '+' ? 1 : -1)
     const d = new Date()
 
-    if (match[3] === 'h')
+    if (match[3] === 'h') {
       d.setHours(d.getHours() + n)
-    else if (match[3] === 'd')
+    }
+    else if (match[3] === 'd') {
       d.setDate(d.getDate() + n)
-    else if (match[3] === 'w')
+    }
+    else if (match[3] === 'w') {
       d.setDate(d.getDate() + n * 7)
-    else if (match[3] === 'm')
+    }
+    else if (match[3] === 'm') {
       d.setMonth(d.getMonth() + n)
-    else if (match[3] === 'y')
+    }
+    else if (match[3] === 'y') {
       d.setFullYear(d.getFullYear() + n)
+    }
 
     return d
   }
@@ -358,8 +363,7 @@ function resolveServerDate (defaultStr) {
 async function applyPropertyDefaults (entu, properties) {
   const entityType = properties.find((x) => x.type === '_type' && x.reference)
 
-  if (!entityType)
-    return
+  if (!entityType) return
 
   const propDefs = await entu.db.collection('entity').find(
     {
@@ -374,26 +378,30 @@ async function applyPropertyDefaults (entu, properties) {
     const type = propDef.private?.type?.at(0)?.string
     const defaultStr = propDef.private?.default?.at(0)?.string
 
-    if (!name || !type || !defaultStr)
-      continue
-    if (['file', 'counter'].includes(type))
-      continue
-    if (properties.some((p) => p.type === name))
-      continue
+    if (!name || !type || !defaultStr) continue
+    if (['file', 'counter'].includes(type)) continue
+    if (properties.some((p) => p.type === name)) continue
 
     const prop = { type: name }
 
-    if (type === 'number')
+    if (type === 'number') {
       prop.number = Number(defaultStr)
-    else if (type === 'boolean')
+    }
+    else if (type === 'boolean') {
       prop.boolean = defaultStr.toLowerCase() === 'true'
-    else if (type === 'date')
+    }
+    else if (type === 'date') {
       prop.date = resolveServerDate(defaultStr)
-    else if (type === 'datetime')
+    }
+    else if (type === 'datetime') {
       prop.datetime = resolveServerDate(defaultStr)
-    else if (type === 'reference')
+    }
+    else if (type === 'reference') {
       prop.reference = defaultStr
-    else prop.string = String(defaultStr)
+    }
+    else {
+      prop.string = String(defaultStr)
+    }
 
     properties.push(prop)
   }
@@ -549,10 +557,38 @@ async function getNextCounterValue (entu, property) {
   }
 }
 
+// A user can hold only ONE right property per entity. When a right
+// (_noaccess/_viewer/_expander/_editor/_owner) is set for a user, soft-delete
+// every other live right property of that user on this entity. Without this,
+// a right left behind at another level (e.g. an old _editor under a new
+// _owner) stays live and resurfaces as the user's effective right after the
+// next aggregation — the entity document only ever shows the highest one.
+async function markReplacedUserRightsDeleted (entu, entityId, newProperties) {
+  const userRightTypes = ['_noaccess', '_viewer', '_expander', '_editor', '_owner']
+
+  const newRights = newProperties.filter((p) => userRightTypes.includes(p.type) && p.reference)
+
+  if (newRights.length === 0) return
+
+  await entu.db.collection('property').updateMany({
+    entity: entityId,
+    type: { $in: userRightTypes },
+    reference: { $in: newRights.map((p) => p.reference) },
+    _id: { $nin: newRights.map((p) => p._id) },
+    deleted: { $exists: false }
+  }, {
+    $set: {
+      deleted: {
+        at: new Date(),
+        by: entu.user || 'entu'
+      }
+    }
+  })
+}
+
 // Soft-deletes replaced properties by setting their deleted field
 async function markPropertiesDeleted (entu, entityId, oldPIds) {
-  if (oldPIds.length === 0)
-    return
+  if (oldPIds.length === 0) return
 
   await entu.db.collection('property').updateMany({
     _id: { $in: oldPIds },
@@ -679,8 +715,9 @@ export async function queryEntities (entu, { filter = {}, search = [], props = [
   for (let i = 0; i < entities.length; i++) {
     const entity = await cleanupEntity(entu, entities[i])
 
-    if (entity)
+    if (entity) {
       cleanedEntities.push(entity)
+    }
   }
 
   return {
@@ -693,8 +730,7 @@ export async function queryEntities (entu, { filter = {}, search = [], props = [
 
 // Returns the public, domain, or private view of an entity based on user access rights
 export async function cleanupEntity (entu, entity) {
-  if (!entity)
-    return
+  if (!entity) return
 
   let result = { _id: entity._id }
 
