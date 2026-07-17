@@ -6,8 +6,7 @@ const dbConnections = {}
 let dbConnection
 
 export async function connectDb (dbName, isNew) {
-  if (!dbName)
-    return
+  if (!dbName) return
 
   if (dbConnections[dbName]) {
     return dbConnections[dbName]
@@ -51,8 +50,7 @@ export function getObjectId (_id) {
 }
 
 export function formatDatabaseName (name) {
-  if (typeof name !== 'string' || !name)
-    return
+  if (typeof name !== 'string' || !name) return
 
   if (!/^[a-z][a-z0-9_]*$/.test(name)) {
     throw createError({ statusCode: 400, statusMessage: `Invalid database name: ${name}` })
