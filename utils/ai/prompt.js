@@ -5,7 +5,7 @@ const summarySizeLimit = 30000
 let cachedTemplate
 
 // Builds the system prompt: fills the per-request value placeholders in the cached template. All prose lives in ai/system-prompt.md
-export async function aiBuildSystemPrompt (entu) {
+export async function aiBuildSystemPrompt (entu, language) {
   const [template, types] = await Promise.all([
     getTemplate(),
     getTypeSummaries(entu)
@@ -17,6 +17,7 @@ export async function aiBuildSystemPrompt (entu) {
   return template
     .replaceAll('{{today}}', () => today)
     .replaceAll('{{account}}', () => entu.account)
+    .replaceAll('{{language}}', () => language || 'unknown')
     .replaceAll('{{configuration}}', () => renderConfiguration(types))
 }
 
@@ -85,6 +86,7 @@ async function getTypeSummaries (entu) {
               _id: false,
               name: { $arrayElemAt: ['$private.name.string', 0] },
               type: { $arrayElemAt: ['$private.type.string', 0] },
+              label: '$private.label',
               ordinal: { $arrayElemAt: ['$private.ordinal.number', 0] },
               mandatory: { $arrayElemAt: ['$private.mandatory.boolean', 0] },
               multilingual: { $arrayElemAt: ['$private.multilingual.boolean', 0] },
@@ -101,7 +103,7 @@ async function getTypeSummaries (entu) {
       $project: {
         _id: false,
         name: { $arrayElemAt: ['$private.name.string', 0] },
-        label: { $arrayElemAt: ['$private.label.string', 0] },
+        label: '$private.label',
         properties: true
       }
     }
@@ -148,7 +150,9 @@ function renderFullConfiguration (types) {
   const lines = ['Entity types and their property definitions currently in this database:']
 
   for (const type of types) {
-    lines.push('', type.label ? `### ${type.name} — "${type.label}"` : `### ${type.name}`)
+    const typeLabels = renderLabels(type.label)
+
+    lines.push('', typeLabels ? `### ${type.name} — ${typeLabels}` : `### ${type.name}`)
 
     for (const property of type.properties) {
       const flags = []
@@ -170,10 +174,23 @@ function renderFullConfiguration (types) {
       }
 
       const suffix = flags.length > 0 ? ` (${flags.join(', ')})` : ''
+      const labels = renderLabels(property.label)
 
-      lines.push(`- ${property.name}: ${property.type || 'string'}${suffix}`)
+      lines.push(`- ${property.name}: ${property.type || 'string'}${suffix}${labels ? ` — ${labels}` : ''}`)
     }
   }
 
   return lines.join('\n')
+}
+
+// Renders a label value array as all its language values, e.g. "Person" (en), "Isik" (et) — so the AI knows the account's terminology in every language
+function renderLabels (values) {
+  const rendered = values
+    ?.filter((value) => value.string)
+    .map((value) => value.language ? `"${value.string}" (${value.language})` : `"${value.string}"`)
+
+  if (!rendered?.length)
+    return
+
+  return rendered.join(', ')
 }

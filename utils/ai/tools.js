@@ -1,6 +1,22 @@
 // Tools executed immediately during the agent loop - everything else is queued as a proposal
 export const aiReadToolNames = ['get_entity_type', 'search_entities', 'get_entity']
 
+// Schema for multilingual definition texts (label, label_plural, description, group) - one item per language
+function multilingualTextSchema (description) {
+  return {
+    type: 'array',
+    description: `${description} One item per language; omit language for a language-neutral value.`,
+    items: {
+      type: 'object',
+      properties: {
+        string: { type: 'string', description: 'Text value' },
+        language: { type: 'string', description: 'Language code (en or et)' }
+      },
+      required: ['string']
+    }
+  }
+}
+
 const propertyValueSchema = {
   type: 'object',
   properties: {
@@ -87,9 +103,9 @@ export const aiToolDefinitions = [
         type: 'object',
         properties: {
           name: { type: 'string', description: 'Type name (snake_case identifier)' },
-          label: { type: 'string', description: 'Human-readable label' },
-          labelPlural: { type: 'string', description: 'Plural label' },
-          description: { type: 'string', description: 'Description of the type' }
+          label: multilingualTextSchema('Human-readable label.'),
+          labelPlural: multilingualTextSchema('Plural label.'),
+          description: multilingualTextSchema('Description of the type.')
         },
         required: ['name', 'label']
       }
@@ -110,8 +126,9 @@ export const aiToolDefinitions = [
             description: 'Property value type',
             enum: entityPropertyTypes
           },
-          label: { type: 'string', description: 'Human-readable label' },
-          description: { type: 'string', description: 'Description of the property' },
+          label: multilingualTextSchema('Human-readable label.'),
+          description: multilingualTextSchema('Description of the property.'),
+          group: multilingualTextSchema('Group name for visually grouping properties in the edit form.'),
           mandatory: { type: 'boolean', description: 'Value is required' },
           multilingual: { type: 'boolean', description: 'Separate value per language' },
           list: { type: 'boolean', description: 'Multiple values allowed' },
@@ -254,9 +271,10 @@ async function getEntityTypeTool (entu, args) {
       _id: cleaned._id.toString(),
       name: definitionValue(cleaned.name),
       type: definitionValue(cleaned.type),
-      label: definitionValue(cleaned.label),
-      labelPlural: definitionValue(cleaned.label_plural),
-      description: definitionValue(cleaned.description),
+      label: definitionTextValue(cleaned.label),
+      labelPlural: definitionTextValue(cleaned.label_plural),
+      description: definitionTextValue(cleaned.description),
+      group: definitionTextValue(cleaned.group),
       mandatory: definitionValue(cleaned.mandatory),
       multilingual: definitionValue(cleaned.multilingual),
       list: definitionValue(cleaned.list),
@@ -276,9 +294,9 @@ async function getEntityTypeTool (entu, args) {
   return {
     _id: cleanedType._id.toString(),
     name: definitionValue(cleanedType.name),
-    label: definitionValue(cleanedType.label),
-    labelPlural: definitionValue(cleanedType.label_plural),
-    description: definitionValue(cleanedType.description),
+    label: definitionTextValue(cleanedType.label),
+    labelPlural: definitionTextValue(cleanedType.label_plural),
+    description: definitionTextValue(cleanedType.description),
     properties
   }
 }
@@ -547,6 +565,18 @@ function compactValue (value) {
   }
 
   return compact
+}
+
+// Returns a definition text property with all language values - array of { string, language } matching the write tools' shape
+function definitionTextValue (values) {
+  const result = values
+    ?.filter((value) => value.string !== undefined)
+    .map((value) => value.language ? { string: value.string, language: value.language } : { string: value.string })
+
+  if (!result?.length)
+    return
+
+  return result
 }
 
 // Returns the first raw value of a definition property

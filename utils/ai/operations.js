@@ -64,7 +64,7 @@ export function aiDescribeOperation (operation) {
 
   switch (operation.op) {
     case 'create_entity_type':
-      return `Create entity type "${params.name}" labeled "${params.label}"`
+      return `Create entity type "${params.name}" labeled "${describeMultilingualText(params.label)}"`
     case 'add_property_definition': {
       const flags = []
 
@@ -101,6 +101,15 @@ export function aiDescribeOperation (operation) {
     default:
       return `Unknown operation ${operation.op}`
   }
+}
+
+// Renders a multilingual text param (array of { string, language }, or a plain legacy string) for the human-readable description
+function describeMultilingualText (value) {
+  if (typeof value === 'string') {
+    return value
+  }
+
+  return value?.map((item) => item.language ? `${item.string} (${item.language})` : item.string).join(', ')
 }
 
 // Renders operation property values as "name: value" pairs for the human-readable description
@@ -205,6 +214,41 @@ function validateString (value, field, index, { required = false, max = 1000, pa
   }
 }
 
+// Validates an optional/required multilingual text param - an array of { string, language } items (a plain string is accepted for backward compatibility)
+function validateMultilingualText (value, field, index, { required = false, max = 1000 } = {}) {
+  if (value === undefined) {
+    if (required) {
+      throw operationError(index, `${field} is required`)
+    }
+
+    return
+  }
+
+  if (typeof value === 'string') {
+    validateString(value, field, index, { max })
+
+    return
+  }
+
+  if (!Array.isArray(value) || value.length === 0 || value.length > 10) {
+    throw operationError(index, `${field} must be an array of 1 to 10 values`)
+  }
+
+  for (const item of value) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) {
+      throw operationError(index, `${field} values must be objects`)
+    }
+
+    if (typeof item.string !== 'string' || item.string.length === 0 || item.string.length > max) {
+      throw operationError(index, `${field} values must have a string of 1 to ${max} characters`)
+    }
+
+    if (item.language !== undefined && (typeof item.language !== 'string' || !/^[a-z]{2}$/.test(item.language))) {
+      throw operationError(index, `${field} language must be a two-letter code`)
+    }
+  }
+}
+
 // Validates an optional boolean param
 function validateBoolean (value, field, index) {
   if (value !== undefined && typeof value !== 'boolean') {
@@ -261,9 +305,9 @@ function validateObjectIdString (value, field, index) {
 function validateCreateEntityType (params, index) {
   validateString(params.name, 'name', index, { required: true, max: 100, pattern: namePattern })
   rejectReservedTypeName(params.name, index)
-  validateString(params.label, 'label', index, { required: true })
-  validateString(params.labelPlural, 'labelPlural', index)
-  validateString(params.description, 'description', index, { max: 5000 })
+  validateMultilingualText(params.label, 'label', index, { required: true })
+  validateMultilingualText(params.labelPlural, 'labelPlural', index)
+  validateMultilingualText(params.description, 'description', index, { max: 5000 })
 }
 
 // Validates add_property_definition params
@@ -285,8 +329,9 @@ function validateAddPropertyDefinition (params, index, operations) {
     throw operationError(index, `type must be one of ${entityPropertyTypes.join(', ')}`)
   }
 
-  validateString(params.label, 'label', index)
-  validateString(params.description, 'description', index, { max: 5000 })
+  validateMultilingualText(params.label, 'label', index)
+  validateMultilingualText(params.description, 'description', index, { max: 5000 })
+  validateMultilingualText(params.group, 'group', index)
   validateBoolean(params.mandatory, 'mandatory', index)
   validateBoolean(params.multilingual, 'multilingual', index)
   validateBoolean(params.list, 'list', index)
@@ -604,14 +649,14 @@ async function buildOperationProperties (operation, resolve) {
       const properties = [
         { type: '_type', reference: await resolve.baseType('entity') },
         { type: 'name', string: params.name },
-        { type: 'label', string: params.label }
+        ...multilingualTextProperties('label', params.label)
       ]
 
       if (params.labelPlural) {
-        properties.push({ type: 'label_plural', string: params.labelPlural })
+        properties.push(...multilingualTextProperties('label_plural', params.labelPlural))
       }
       if (params.description) {
-        properties.push({ type: 'description', string: params.description })
+        properties.push(...multilingualTextProperties('description', params.description))
       }
 
       return properties
@@ -625,10 +670,13 @@ async function buildOperationProperties (operation, resolve) {
       ]
 
       if (params.label) {
-        properties.push({ type: 'label', string: params.label })
+        properties.push(...multilingualTextProperties('label', params.label))
       }
       if (params.description) {
-        properties.push({ type: 'description', string: params.description })
+        properties.push(...multilingualTextProperties('description', params.description))
+      }
+      if (params.group) {
+        properties.push(...multilingualTextProperties('group', params.group))
       }
       if (params.mandatory !== undefined) {
         properties.push({ type: 'mandatory', boolean: params.mandatory })
@@ -691,6 +739,15 @@ async function buildOperationProperties (operation, resolve) {
       return properties
     }
   }
+}
+
+// Expands a multilingual text param (array of { string, language }, or a plain legacy string) into setEntity property records
+function multilingualTextProperties (type, value) {
+  if (typeof value === 'string') {
+    return [{ type, string: value }]
+  }
+
+  return value.map((item) => item.language ? { type, string: item.string, language: item.language } : { type, string: item.string })
 }
 
 // Resolvers used during execution - look up real entity ids from the database and the tempId map
