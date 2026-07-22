@@ -6,6 +6,9 @@ const charsForKey = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456
 // All property value types available in property definitions — the source of truth for schemas and validation
 export const entityPropertyTypes = ['string', 'text', 'number', 'boolean', 'reference', 'date', 'datetime', 'file', 'counter', 'formula']
 
+// Credential property types — writing any grants login access AS the entity.
+const credentialTypes = ['entu_user', 'entu_api_key', 'entu_passkey']
+
 // Validates, processes, and persists properties to a new or existing entity.
 // options.skipTypeRequired: if true, skips the _type required check (for system bootstrap only)
 export async function setEntity (entu, entityId, properties, options = {}) {
@@ -34,6 +37,7 @@ export async function setEntity (entu, entityId, properties, options = {}) {
   const createdDt = new Date()
 
   validateInput(properties)
+  validateCredentialProperties(entu, properties)
 
   if (!entityId && !options.skipTypeRequired && !properties.some((p) => p.type === '_type')) {
     throw createError({
@@ -83,6 +87,27 @@ function validateInput (properties) {
   }
 }
 
+// Clients may only trigger a server-generated invite/API key (string) — the login-match and
+// credential internals (uid, provider, invite, hash…) are server-set, so allowlist the request shape.
+function validateCredentialProperties (entu, properties) {
+  if (entu.systemUser) return
+
+  const allowedFields = ['type', '_id', 'language', 'string', 'email']
+
+  for (const property of properties) {
+    if (property.type !== 'entu_user' && property.type !== 'entu_api_key') continue
+
+    const extraField = Object.keys(property).find((key) => !allowedFields.includes(key))
+
+    if (extraField) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: `Property ${property.type} field ${extraField} can only be set by the server`
+      })
+    }
+  }
+}
+
 // Verifies the user has editor or owner access to an existing entity
 async function checkEntityAccess (entu, entityId, properties, rightTypes) {
   if (!entityId) return
@@ -117,6 +142,17 @@ async function checkEntityAccess (entu, entityId, properties, rightTypes) {
   const owners = entity.private?._owner?.map((s) => s.reference?.toString()) || []
 
   if (rigtsProperties.length > 0 && !owners.includes(entu.userStr) && !entu.systemUser) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'User not in _owner property'
+    })
+  }
+
+  // Credentials grant login AS the entity — only its _owner or the entity itself, never a plain _editor.
+  const credentialProperties = properties.filter((property) => credentialTypes.includes(property.type))
+  const isOwnEntity = entityId.toString() === entu.userStr
+
+  if (credentialProperties.length > 0 && !owners.includes(entu.userStr) && !isOwnEntity && !entu.systemUser) {
     throw createError({
       statusCode: 403,
       statusMessage: 'User not in _owner property'
@@ -473,7 +509,7 @@ async function insertProperties (entu, entityId, properties, createdDt) {
     if (property.type === 'entu_user' && property.string) {
       const { jwtSecret } = useRuntimeConfig()
 
-      property.invite = jwt.sign({ db: entu.account, entityId: entityId.toString() }, jwtSecret, { expiresIn: '7d' })
+      property.invite = jwt.sign({ db: entu.account, entityId: entityId.toString() }, jwtSecret, { expiresIn: '24h' })
 
       delete property.string
     }
