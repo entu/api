@@ -55,7 +55,12 @@ export async function connectDb (dbName, isNew) {
 }
 
 export function getObjectId (_id) {
-  return new ObjectId(_id)
+  try {
+    return new ObjectId(_id)
+  }
+  catch {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid ID' })
+  }
 }
 
 export function formatDatabaseName (name) {
