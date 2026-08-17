@@ -46,8 +46,10 @@ defineRouteMeta({
                 user: {
                   type: 'object',
                   properties: {
-                    name: { type: 'string' },
-                    email: { type: 'string' }
+                    uid: { type: 'string', description: 'OAuth provider user ID — absent for API key and passkey auth' },
+                    provider: { type: 'string', description: 'OAuth provider name — absent for API key and passkey auth' },
+                    email: { type: 'string' },
+                    name: { type: 'string' }
                   }
                 },
                 token: { type: 'string', description: '12-hour JWT' },
@@ -103,35 +105,45 @@ export default defineEventHandler(async (event) => {
     accounts.push({ _id: account, name: account, user: { _id: userId.toString(), name: userName } })
   }
 
-  // Re-validate account access: confirm each user entity still exists
-  const accountResults = await Promise.all(
-    Object.entries(decoded.accounts || {}).map(async ([account, userId]) => {
-      let person
+  let accountResults
 
-      try {
-        const accountCon = await connectDb(account)
-        person = await accountCon.collection('entity').findOne(
-          { _id: getObjectId(userId) },
-          { projection: { _id: true, 'private.name.string': true } }
-        )
-      }
-      catch {
-        // Malformed account/userId claim or unreachable db → drop this account
-        return null
-      }
-
-      if (!person) {
-        return null
-      }
-
-      return { account, userId: person._id, userName: person.private?.name?.at(0)?.string || person._id.toString() }
+  if (decoded.user?.uid && decoded.user?.provider) {
+    // OAuth session: rediscover accounts by a live identity scan that replaces the old claim, so revoked databases drop out and new ones appear
+    accountResults = await findUserAccounts({
+      uid: decoded.user.uid,
+      provider: decoded.user.provider,
+      email: decoded.user.email
     })
-  )
+  }
+  else {
+    // Passkey / API-key session: re-validate the existing accounts claim, dropping entities that no longer exist
+    accountResults = (await Promise.all(
+      Object.entries(decoded.accounts || {}).map(async ([account, userId]) => {
+        let person
+
+        try {
+          const accountCon = await connectDb(account)
+          person = await accountCon.collection('entity').findOne(
+            { _id: getObjectId(userId) },
+            { projection: { _id: true, 'private.name.string': true } }
+          )
+        }
+        catch {
+          // Malformed account/userId claim or unreachable db → drop this account
+          return null
+        }
+
+        if (!person) {
+          return null
+        }
+
+        return { account, userId: person._id, userName: person.private?.name?.at(0)?.string || person._id.toString() }
+      })
+    )).filter(Boolean)
+  }
 
   for (const result of accountResults) {
-    if (result) {
-      addAccount(result.account, result.userId, result.userName)
-    }
+    addAccount(result.account, result.userId, result.userName)
   }
 
   if (accounts.length === 0) {

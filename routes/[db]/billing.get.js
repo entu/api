@@ -3,7 +3,7 @@ import Stripe from 'stripe'
 defineRouteMeta({
   openAPI: {
     tags: ['Database'],
-    description: 'Returns a time-limited Stripe customer portal URL for managing subscriptions, payment methods, and invoices. Requires Stripe customer ID on the database.',
+    description: 'Returns a time-limited Stripe customer portal URL for managing subscriptions, payment methods, and invoices. If the database has no Stripe customer yet, one is created on the fly and stored before opening the portal.',
     security: [{ bearerAuth: [] }],
     parameters: [
       {
@@ -73,18 +73,42 @@ export default defineEventHandler(async (event) => {
     'private._editor.reference': entu.user
   }, { projection: { _id: true, 'private.billing_customer_id.string': true } })
 
-  const customerId = database?.private?.billing_customer_id?.at(0)?.string
-
-  if (!customerId) {
+  if (!database?._id) {
     throw createError({
       statusCode: 404,
       statusMessage: 'Database not found'
     })
   }
 
-  const { billingPortal } = new Stripe(stripeKey)
+  const stripe = new Stripe(stripeKey)
 
-  const { url } = await billingPortal.sessions.create({
+  let customerId = database.private?.billing_customer_id?.at(0)?.string
+
+  // Create and store a Stripe customer stub for databases that have no billing_customer_id yet
+  if (!customerId) {
+    const person = await entu.db.collection('entity').findOne({
+      _id: entu.user
+    }, { projection: { 'private.name.string': true, 'private.email.string': true } })
+
+    const name = person?.private?.name?.at(0)?.string
+    const email = person?.private?.email?.at(0)?.string || entu.email
+
+    const customer = await stripe.customers.create({
+      ...(name ? { name } : {}),
+      description: entu.account,
+      ...(email ? { email } : {})
+    })
+
+    customerId = customer.id
+
+    await setEntity(
+      { account: entu.account, db: entu.db, systemUser: true },
+      database._id,
+      [{ type: 'billing_customer_id', string: customerId }]
+    )
+  }
+
+  const { url } = await stripe.billingPortal.sessions.create({
     customer: customerId,
     locale,
     return_url: `${appUrl}/${entu.account}`

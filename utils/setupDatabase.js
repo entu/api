@@ -32,27 +32,32 @@ const defaultTypes = [
   'property'
 ]
 
-// Returns true if the name passes all rules (length, reserved list, entu_ prefix) and does not already exist as a MongoDB database
-export async function isAvailableDatabase (name, db) {
-  const sanitized = formatDatabaseName(name)
-
-  if (
-    !sanitized
-    || sanitized.length < 4
-    || sanitized.length > 12
-    || sanitized.startsWith('entu_')
-    || reservedDatabases.includes(sanitized)
-  ) {
-    return false
+// Checks database name availability and returns { available, reason? } where reason is 'format', 'length', 'reserved' or 'taken'
+export async function checkDatabaseName (name) {
+  if (typeof name !== 'string' || !/^[a-z][a-z0-9_]*$/.test(name)) {
+    return { available: false, reason: 'format' }
   }
 
+  if (name.length < 4 || name.length > 12) {
+    return { available: false, reason: 'length' }
+  }
+
+  if (name.startsWith('entu_') || reservedDatabases.includes(name) || mongoDbSystemDbs.includes(name)) {
+    return { available: false, reason: 'reserved' }
+  }
+
+  const db = await connectDb('entu')
   const { databases } = await db.admin().listDatabases()
 
-  return !databases.some((x) => x.name === sanitized)
+  if (databases.some((x) => x.name === name)) {
+    return { available: false, reason: 'taken' }
+  }
+
+  return { available: true }
 }
 
-// Sets up a brand new database: indexes, template entities (two-pass: non-ref then ref), person, database, rights and final aggregation
-export async function initializeNewDatabase (entu, reservation, billingCustomerId) {
+// Sets up a brand new database with indexes, template entities, owner person and database entity, and returns the owner's person entity _id
+export async function initializeNewDatabase (entu, owner) {
   await createDatabaseIndexes(entu.db)
 
   // Fetch all template entities
@@ -83,14 +88,20 @@ export async function initializeNewDatabase (entu, reservation, billingCustomerI
     }
   })
 
-  // Person entity (non-ref props; _type + _owner added in pass 2)
+  // Person entity with the owner's login credentials (non-ref props here; _type + _owner added in pass 2)
+  const entuUserProp = { type: 'entu_user', uid: owner.uid, provider: owner.provider }
+
+  if (owner.email) {
+    entuUserProp.email = owner.email
+  }
+
   const personNonRefProps = [
     { type: '_sharing', string: 'private' },
-    { type: 'entu_user', string: entu.account }
+    entuUserProp
   ]
 
-  if (reservation.name) {
-    const nameParts = reservation.name.trim().split(/\s+/)
+  if (owner.name) {
+    const nameParts = owner.name.trim().split(/\s+/)
     const forename = nameParts.slice(0, -1).join(' ') || nameParts.at(0)
     const surname = nameParts.length > 1 ? nameParts.at(-1) : null
 
@@ -100,11 +111,11 @@ export async function initializeNewDatabase (entu, reservation, billingCustomerI
     }
   }
 
-  if (reservation.email) {
-    personNonRefProps.push({ type: 'email', string: reservation.email })
+  if (owner.email) {
+    personNonRefProps.push({ type: 'email', string: owner.email })
   }
 
-  const personEntry = { oldId: null, newId: null, key: 'person', nonRefProps: personNonRefProps, refProps: [] }
+  const personEntry = { oldId: null, newId: null, nonRefProps: personNonRefProps, refProps: [] }
 
   // Database entity (non-ref props; _type + _editor added in pass 2)
   const databaseNonRefProps = [
@@ -113,17 +124,11 @@ export async function initializeNewDatabase (entu, reservation, billingCustomerI
     { type: 'name', string: entu.account }
   ]
 
-  if (reservation.email) {
-    databaseNonRefProps.push({ type: 'email', string: reservation.email })
-  }
-  if (reservation.plan) {
-    databaseNonRefProps.push({ type: 'plan', string: reservation.plan })
-  }
-  if (billingCustomerId) {
-    databaseNonRefProps.push({ type: 'billing_customer_id', string: billingCustomerId })
+  if (owner.email) {
+    databaseNonRefProps.push({ type: 'email', string: owner.email })
   }
 
-  const databaseEntry = { oldId: null, newId: null, key: 'database', nonRefProps: databaseNonRefProps, refProps: [] }
+  const databaseEntry = { oldId: null, newId: null, nonRefProps: databaseNonRefProps, refProps: [] }
 
   entities.push(personEntry, databaseEntry)
 
@@ -143,14 +148,6 @@ export async function initializeNewDatabase (entu, reservation, billingCustomerI
   }))
 
   const personId = personEntry.newId
-
-  // Read invite token — generated when entu_user was set in pass 1
-  const personDoc = await entu.db.collection('entity').findOne(
-    { _id: personId },
-    { projection: { 'private.entu_user.invite': true } }
-  )
-  const inviteToken = personDoc.private.entu_user.at(0).invite
-
   const databaseId = databaseEntry.newId
 
   // Pass 2: add reference properties (remapped via idMap) to template entities
@@ -215,7 +212,7 @@ export async function initializeNewDatabase (entu, reservation, billingCustomerI
 
   await Promise.all(allEntities.map((x) => aggregateEntity(entu, x._id)))
 
-  return inviteToken
+  return personId
 }
 
 // Creates all required indexes on entity, property and stats collections for a new database

@@ -31,8 +31,16 @@ export async function connectDb (dbName, isNew) {
     })
   }
 
-  if (!isNew && !dbNames.includes(dbName)) {
+  const dbExists = dbNames.includes(dbName)
+
+  // New database being created
+  if (!dbExists && isNew) {
+    return dbConnection.db(dbName)
+  }
+
+  if (!dbExists) {
     logger('Database not found', { account: dbName })
+
     throw createError({
       statusCode: 404,
       statusMessage: `Account ${dbName} not found`
@@ -40,6 +48,7 @@ export async function connectDb (dbName, isNew) {
   }
 
   dbConnections[dbName] = dbConnection.db(dbName)
+
   logger('Connected to database', { account: dbName })
 
   return dbConnections[dbName]

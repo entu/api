@@ -71,8 +71,10 @@ defineRouteMeta({
                 user: {
                   type: 'object',
                   properties: {
-                    name: { type: 'string' },
-                    email: { type: 'string' }
+                    uid: { type: 'string', description: 'OAuth provider user ID — absent for API key and passkey auth' },
+                    provider: { type: 'string', description: 'OAuth provider name — absent for API key and passkey auth' },
+                    email: { type: 'string' },
+                    name: { type: 'string' }
                   }
                 },
                 token: { type: 'string', description: '12-hour JWT' },
@@ -132,7 +134,6 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const dbs = await connection.admin().listDatabases()
   const accounts = []
   const accountUsersIds = {}
 
@@ -141,63 +142,14 @@ export default defineEventHandler(async (event) => {
     accounts.push({ _id: account, name: account, user: { _id: userId.toString(), name: userName, ...extra } })
   }
 
-  const accountResults = await Promise.all(
-    dbs.databases
-      .filter(({ name: account }) => !mongoDbSystemDbs.includes(account) && (!onlyForAccount || onlyForAccount === account))
-      .map(async ({ name: account }) => {
-        const accountCon = await connectDb(account)
-        let person
+  const identity = apiKeyHash
+    ? { apiKeyHash }
+    : { uid: session?.user?.id, provider: session?.user?.provider, email: session?.user?.email }
 
-        if (apiKeyHash) {
-          person = await accountCon.collection('entity').findOne(
-            { 'private.entu_api_key.string': apiKeyHash },
-            { projection: { _id: true, 'private.name.string': true } }
-          )
-        }
-        else if (session) {
-          // Step 1: new format — find by uid + provider
-          if (session.user?.id && session.user?.provider) {
-            person = await accountCon.collection('entity').findOne(
-              { 'private.entu_user.uid': session.user.id, 'private.entu_user.provider': session.user.provider },
-              { projection: { _id: true, 'private.name.string': true } }
-            )
-          }
-
-          // Step 2: old format — find by email string and migrate on first login
-          if (!person && session.user?.email) {
-            const oldPerson = await accountCon.collection('entity').findOne(
-              { 'private.entu_user.string': session.user.email },
-              { projection: { _id: true, 'private.name.string': true, 'private.entu_user': true } }
-            )
-
-            if (oldPerson) {
-              const oldProp = oldPerson.private?.entu_user?.find((u) => u.string === session.user.email)
-
-              if (oldProp && session.user?.id && session.user?.provider) {
-                await setEntity(
-                  { account, db: accountCon, systemUser: true },
-                  oldPerson._id,
-                  [{ type: 'entu_user', _id: oldProp._id, uid: session.user.id, email: session.user.email, provider: session.user.provider }]
-                )
-              }
-
-              person = oldPerson
-            }
-          }
-        }
-
-        if (!person) {
-          return null
-        }
-
-        return { account, userId: person._id, userName: person.private?.name?.at(0).string || person._id.toString() }
-      })
-  )
+  const accountResults = await findUserAccounts(identity, onlyForAccount)
 
   for (const result of accountResults) {
-    if (result) {
-      addAccount(result.account, result.userId, result.userName)
-    }
+    addAccount(result.account, result.userId, result.userName)
   }
 
   // Invite acceptance: user arrived via invite link and completed OAuth
@@ -252,6 +204,13 @@ export default defineEventHandler(async (event) => {
   if (session?.user?.email || session?.user?.name) {
     userData.email = session?.user?.email
     userData.name = session?.user?.name
+
+    // Provider identity — required for creating new databases (PUT /new)
+    if (session?.user?.id && session?.user?.provider) {
+      userData.uid = session.user.id
+      userData.provider = session.user.provider
+    }
+
     tokenData.user = userData
   }
 

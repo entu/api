@@ -4,17 +4,23 @@ export default defineEventHandler((event) => {
   if (event.path === '/') return
   if (event.path === '/docs' || event.path.startsWith('/docs/')) return
   if (event.path.startsWith('/_openapi')) return
-  if (event.path.startsWith('/new')) return
+
+  const isNewRoute = event.path === '/new' || event.path.startsWith('/new/')
+
+  if (isNewRoute && event.method !== 'PUT') return
   if (event.path.startsWith('/openapi')) return
   if (event.path.startsWith('/graphql')) return
   if (event.path.startsWith('/stripe')) return
 
+  // Routes without an account (database) path parameter — JWT is still verified when present
+  const accountless = event.path.startsWith('/auth') || isNewRoute
+
   const entu = {
     ip: (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1'),
-    account: event.path.startsWith('/auth') ? undefined : formatDatabaseName(event.path.split('/').at(1))
+    account: accountless ? undefined : formatDatabaseName(event.path.split('/').at(1))
   }
 
-  if (!event.path.startsWith('/auth') && !entu.account) {
+  if (!accountless && !entu.account) {
     throw createError({
       statusCode: 401,
       statusMessage: 'No account parameter'
