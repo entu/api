@@ -68,6 +68,10 @@ export default defineEventHandler(async (event) => {
   const { locale } = getQuery(event)
   const { stripeKey, appUrl } = useRuntimeConfig()
 
+  if (!stripeKey) {
+    throw createError({ statusCode: 500, statusMessage: 'Stripe is not configured' })
+  }
+
   const database = await entu.db.collection('entity').findOne({
     'private._type.string': 'database',
     'private._editor.reference': entu.user
