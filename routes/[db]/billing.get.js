@@ -1,59 +1,6 @@
 import Stripe from 'stripe'
 
-defineRouteMeta({
-  openAPI: {
-    tags: ['Database'],
-    description: 'Returns a time-limited Stripe customer portal URL for managing subscriptions, payment methods, and invoices. If the database has no Stripe customer yet, one is created on the fly and stored before opening the portal.',
-    security: [{ bearerAuth: [] }],
-    parameters: [
-      {
-        name: 'db',
-        in: 'path',
-        required: true,
-        schema: {
-          type: 'string',
-          description: 'Database name'
-        }
-      },
-      {
-        name: 'locale',
-        in: 'query',
-        schema: {
-          type: 'string',
-          description: 'Locale for billing portal (e.g., en, et)',
-          example: 'en'
-        }
-      }
-    ],
-    responses: {
-      200: {
-        description: 'Billing portal URL for Stripe customer portal',
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              properties: {
-                billingUrl: {
-                  type: 'string',
-                  description: 'Stripe billing portal URL',
-                  example: 'https://billing.stripe.com/p/session/...'
-                }
-              }
-            }
-          }
-        }
-      },
-      403: {
-        description: 'No user',
-        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
-      },
-      404: {
-        description: 'Database not found',
-        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
-      }
-    }
-  }
-})
+defineRouteMeta({ openAPI: { hidden: true } })
 
 export default defineEventHandler(async (event) => {
   const entu = event.context.entu
