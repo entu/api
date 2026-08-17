@@ -30,7 +30,7 @@ export async function findUserAccounts ({ apiKeyHash, uid, provider, email } = {
           // Step 1: new format — find by uid + provider
           if (uid && provider) {
             person = await accountCon.collection('entity').findOne(
-              { 'private.entu_user.uid': uid, 'private.entu_user.provider': provider },
+              { 'private.entu_user': { $elemMatch: { uid, provider } } },
               { projection: { _id: true, 'private.name.string': true } }
             )
           }
