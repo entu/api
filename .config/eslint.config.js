@@ -119,7 +119,7 @@ export default [
       '@stylistic/quotes': ['error', 'single'],
       '@stylistic/semi': ['error', 'never'],
       '@stylistic/space-before-function-paren': ['error', 'always'],
-      'unicorn/no-array-for-each': 'error',
+      'unicorn/no-for-each': 'error',
       'unicorn/no-lonely-if': 'error',
       'unicorn/no-useless-undefined': 'error',
       'unicorn/prefer-array-flat-map': 'error',

@@ -12,24 +12,24 @@
     "start": "node --import ./.config/sentry.mjs .output/server/index.mjs"
   },
   "engines": {
-    "node": "22.x"
+    "node": "24.x"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "3.1054.0",
-    "@aws-sdk/client-ses": "3.1054.0",
-    "@aws-sdk/s3-request-presigner": "3.1054.0",
-    "@sentry/node": "10.56.0",
-    "@simplewebauthn/server": "13.3.0",
+    "@aws-sdk/client-s3": "3.1111.0",
+    "@aws-sdk/client-ses": "3.1111.0",
+    "@aws-sdk/s3-request-presigner": "3.1111.0",
+    "@sentry/node": "10.70.0",
+    "@simplewebauthn/server": "13.3.2",
     "@stylistic/eslint-plugin": "5.10.0",
-    "eslint": "10.4.0",
-    "eslint-plugin-unicorn": "64.0.0",
-    "graphql-yoga": "5.21.0",
+    "eslint": "10.8.1",
+    "eslint-plugin-unicorn": "73.0.0",
+    "graphql-yoga": "5.21.3",
     "jimp": "1.6.1",
     "jsonwebtoken": "9.0.3",
-    "mongodb": "7.2.0",
-    "mupdf": "1.27.0",
+    "mongodb": "7.5.0",
+    "mupdf": "1.28.0",
     "nitro": "3.0.0",
-    "stripe": "22.1.1",
+    "stripe": "22.5.0",
     "unstorage": "1.17.5"
   }
 }
