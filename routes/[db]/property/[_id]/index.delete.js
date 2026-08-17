@@ -109,6 +109,13 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  if (serverOnlyTypes.includes(property.type)) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: `Can't delete server-managed property ${property.type}`
+    })
+  }
+
   const entity = await entu.db.collection('entity').findOne({
     _id: property.entity
   }, {

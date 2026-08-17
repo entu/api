@@ -9,6 +9,15 @@ export const entityPropertyTypes = ['string', 'text', 'number', 'boolean', 'refe
 // Credential property types — writing any grants login access AS the entity.
 const credentialTypes = ['entu_user', 'entu_api_key', 'entu_passkey']
 
+// Server-managed property types — set and deleted only by the server (Stripe billing and entitlements), never by clients.
+export const serverOnlyTypes = [
+  'billing_customer_id',
+  'billing_data_limit',
+  'billing_entities_limit',
+  'billing_requests_limit',
+  'billing_tokens_limit'
+]
+
 // Validates, processes, and persists properties to a new or existing entity.
 // options.skipTypeRequired: if true, skips the _type required check (for system bootstrap only)
 export async function setEntity (entu, entityId, properties, options = {}) {
@@ -91,6 +100,15 @@ function validateInput (properties) {
 // credential internals (uid, provider, invite, hash…) are server-set, so allowlist the request shape.
 function validateCredentialProperties (entu, properties) {
   if (entu.systemUser) return
+
+  const serverOnlyProperty = properties.find((property) => serverOnlyTypes.includes(property.type))
+
+  if (serverOnlyProperty) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: `Property ${serverOnlyProperty.type} can only be set by the server`
+    })
+  }
 
   const allowedFields = ['type', '_id', 'language', 'string', 'email']
 
