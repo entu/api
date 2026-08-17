@@ -13,9 +13,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Sign in with a provider to create a database' })
   }
 
-  const body = await event.req.json()
+  const body = await event.req.json().catch(() => ({}))
 
-  if (typeof body.database !== 'string' || !body.database) {
+  if (typeof body?.database !== 'string' || !body.database) {
     throw createError({ statusCode: 400, statusMessage: 'No database' })
   }
 
@@ -29,17 +29,32 @@ export default defineEventHandler(async (event) => {
   }
 
   const databaseName = body.database
-  const db = await connectDb(databaseName, true)
-  const newEntu = { account: databaseName, db, systemUser: true }
+
+  // Atomic reservation by unique _id so two concurrent creations of the same name cannot share a database
+  const entuDb = await connectDb('entu')
 
   try {
-    await initializeNewDatabase(newEntu, { name, email, uid, provider })
+    await entuDb.collection('reservation').insertOne({ _id: databaseName, created: new Date() })
   }
   catch (error) {
-    // Drop the half-created database so the name is not burned
-    await db.dropDatabase().catch(() => {})
+    throw error.code === 11000 ? createError({ statusCode: 400, statusMessage: 'Database name taken' }) : error
+  }
 
-    throw error
+  try {
+    // Re-check existence while holding the reservation to close the race between the earlier check and the insert
+    const recheck = await checkDatabaseName(databaseName)
+
+    if (!recheck.available) {
+      throw createError({ statusCode: 400, statusMessage: 'Database name taken' })
+    }
+
+    const db = await connectDb(databaseName, true)
+    const newEntu = { account: databaseName, db, systemUser: true }
+
+    await initializeNewDatabase(newEntu, { name, email, uid, provider })
+  }
+  finally {
+    await entuDb.collection('reservation').deleteOne({ _id: databaseName }).catch(() => {})
   }
 
   // Token issuance moved to /auth/refresh — the client refreshes to pick up the new database by identity scan.
