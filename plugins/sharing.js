@@ -3,7 +3,13 @@ export default defineNitroPlugin(async () => {
 
   // Rides the same single-worker flag as aggregation, so only one instance runs sweeps
   while (runAggregation) {
-    await share()
+    try {
+      await share()
+    }
+    catch (error) {
+      loggerError(`Sharing sweep failed: ${error.message}`, { account: 'entu' })
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 10000))
   }
 })

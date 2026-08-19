@@ -1,6 +1,9 @@
 // Ordered mirror visibility levels, most restrictive first
 const sharingLevels = ['private', 'domain', 'public']
 
+// Value fields allowed to cross into a mirror, everything else is stripped
+const valueFields = ['_id', 'string', 'number', 'boolean', 'reference', 'date', 'datetime', 'language', 'entity_type']
+
 // Maintains a database's incoming mirrors: maps the share config, removes stale mirrors, then syncs per type
 export async function syncMirrors (account) {
   const entu = { account, db: await connectDb(account), systemUser: true }
@@ -74,10 +77,15 @@ async function mapShares (entu) {
       sourceDb = await connectDb(formatDatabaseName(sourceAccount))
 
       if (!sourceDb) {
-        throw new Error('No database')
+        throw createError({ statusCode: 404, statusMessage: 'No database' })
       }
     }
-    catch {
+    catch (error) {
+      // Only a missing or invalid database means inactive — anything else aborts the sweep before removal
+      if (![400, 404].includes(error.statusCode)) {
+        throw error
+      }
+
       continue
     }
 
@@ -194,7 +202,10 @@ async function mapOffers (sourceDb, shareOuts, acceptance) {
 
       types.get(name).shareOutIds.push(shareOut._id)
     }
+  }
 
+  // Second pass, so a property counts even when its type is offered by another share_out
+  for (const shareOut of shareOuts) {
     for (const x of shareOut.private?.property || []) {
       const def = defMap.get(x.reference?.toString())
       const propName = def?.private?.name?.at(0)?.string
@@ -266,7 +277,9 @@ async function upsertMirror (entu, share, entityId, expectedHash, parents, exist
   for (const { name } of share.properties) {
     if (name.startsWith('_') || credentialTypes.includes(name) || serverOnlyTypes.includes(name)) continue
 
-    const values = (Object.hasOwn(source.private, name) ? source.private[name] : []).filter((x) => x.filename === undefined)
+    const values = (Object.hasOwn(source.private, name) ? source.private[name] : [])
+      .filter((x) => x.filename === undefined)
+      .map((x) => Object.fromEntries(valueFields.filter((f) => x[f] !== undefined).map((f) => [f, x[f]])))
 
     if (values.length > 0) {
       props[name] = values
