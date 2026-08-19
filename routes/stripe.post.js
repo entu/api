@@ -36,7 +36,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const { _id: databaseId } = await entu.db.collection('entity').findOne({
-      'private._type.string': 'database'
+      'private._type.string': 'database',
+      _origin_db: { $exists: false }
     }, { projection: { _id: true } })
 
     await setEntity(entu, databaseId, [

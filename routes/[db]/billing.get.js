@@ -21,7 +21,8 @@ export default defineEventHandler(async (event) => {
 
   const database = await entu.db.collection('entity').findOne({
     'private._type.string': 'database',
-    'private._editor.reference': entu.user
+    'private._editor.reference': entu.user,
+    _origin_db: { $exists: false }
   }, { projection: { _id: true, 'private.billing_customer_id.string': true } })
 
   if (!database?._id) {

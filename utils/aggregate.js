@@ -6,9 +6,12 @@ export async function aggregateEntity (entu, entityId) {
     projection: {
       aggregated: true,
       hash: true,
+      _origin_db: true,
       'private.name': true,
       'private._type': true,
       'private._parent': true,
+      'private._sharing': true,
+      'private._inheritrights': true,
       'private._reference': true,
       'private._noaccess': true,
       'private._viewer': true,
@@ -23,6 +26,30 @@ export async function aggregateEntity (entu, entityId) {
       statusCode: 404,
       statusMessage: `Entity ${entityId} not found`
     })
+  }
+
+  // Mirrors have no property documents — the sweep owns their content, only access is re-derived here
+  if (entity._origin_db) {
+    const parents = entity.private?._parent || []
+    const inherit = entity.private?._inheritrights?.at(0)?.boolean === true
+    const rights = inherit && parents.length > 0 ? await getParentRights(entu, parents) : {}
+    const access = getAccessArray({ private: { ...rights, _sharing: entity.private?._sharing } })
+    const update = { $unset: { queued: true } }
+
+    if (access.length > 0) {
+      update.$set = { access }
+    }
+    else {
+      update.$unset.access = true
+    }
+
+    await entu.db.collection('entity').updateOne({ _id: entityId, _origin_db: entity._origin_db }, update)
+
+    return {
+      account: entu.account,
+      entity: entityId,
+      message: 'Mirror access is updated'
+    }
   }
 
   // Check for deletion first — avoids fetching all properties when entity is being deleted
@@ -367,32 +394,6 @@ async function propertiesToEntity (entu, properties) {
   }
 
   return entity
-}
-
-// Generates all unique substrings of value strings for full-text search indexing
-function makeSearchArray (array) {
-  if (!array || array.length === 0) {
-    return []
-  }
-
-  const result = new Set()
-
-  for (const str of array) {
-    const words = `${str}`.toLowerCase().split(/[\s,;]+/).map((x) => x.trim()).filter(Boolean)
-
-    for (const word of words) {
-      // Generate all substrings up to 20 characters long
-      for (let startIndex = 0; startIndex < word.length; startIndex++) {
-        const maxEndIndex = Math.min(word.length, startIndex + 20)
-
-        for (let endIndex = startIndex + 1; endIndex <= maxEndIndex; endIndex++) {
-          result.add(word.slice(startIndex, endIndex))
-        }
-      }
-    }
-  }
-
-  return [...result].sort()
 }
 
 // Computes an MD5 hash of entity private properties to detect changes

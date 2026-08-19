@@ -234,7 +234,8 @@ async function createDatabaseIndexes (db) {
       { key: { 'search.private': 1 } },
       { key: { 'search.public': 1 } },
       { key: { access: 1 } },
-      { key: { queued: 1 }, sparse: true }
+      { key: { queued: 1 }, sparse: true },
+      { key: { _origin_db: 1 }, sparse: true }
     ]),
 
     db.collection('property').createIndexes([

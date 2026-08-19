@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "lint": "eslint . --fix --config .config/eslint.config.js",
-    "dev": "NODE_OPTIONS='--import ./.config/sentry.mjs' nitro dev",
+    "dev": "NODE_ENV=development NODE_OPTIONS='--import ./.config/sentry.mjs' nitro dev",
     "build": "nitro build",
     "start": "node --import ./.config/sentry.mjs .output/server/index.mjs"
   },

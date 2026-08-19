@@ -7,7 +7,7 @@ const charsForKey = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456
 export const entityPropertyTypes = ['string', 'text', 'number', 'boolean', 'reference', 'date', 'datetime', 'file', 'counter', 'formula']
 
 // Credential property types — writing any grants login access AS the entity.
-const credentialTypes = ['entu_user', 'entu_api_key', 'entu_passkey']
+export const credentialTypes = ['entu_user', 'entu_api_key', 'entu_passkey']
 
 // Server-managed property types — set and deleted only by the server (Stripe billing and entitlements), never by clients.
 export const serverOnlyTypes = [
@@ -825,4 +825,30 @@ export async function cleanupEntity (entu, entity) {
   }
 
   return result
+}
+
+// Generates all unique substrings of value strings for full-text search indexing
+export function makeSearchArray (array) {
+  if (!array || array.length === 0) {
+    return []
+  }
+
+  const result = new Set()
+
+  for (const str of array) {
+    const words = `${str}`.toLowerCase().split(/[\s,;]+/).map((x) => x.trim()).filter(Boolean)
+
+    for (const word of words) {
+      // Generate all substrings up to 20 characters long
+      for (let startIndex = 0; startIndex < word.length; startIndex++) {
+        const maxEndIndex = Math.min(word.length, startIndex + 20)
+
+        for (let endIndex = startIndex + 1; endIndex <= maxEndIndex; endIndex++) {
+          result.add(word.slice(startIndex, endIndex))
+        }
+      }
+    }
+  }
+
+  return [...result].sort()
 }

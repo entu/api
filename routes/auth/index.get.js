@@ -256,7 +256,7 @@ async function createUserForAccount (account, session) {
   const entu = { account, db: await connectDb(account), systemUser: true }
 
   const database = await entu.db.collection('entity').findOne(
-    { 'private._type.string': 'database', 'private.add_user.reference': { $exists: true } },
+    { 'private._type.string': 'database', 'private.add_user.reference': { $exists: true }, _origin_db: { $exists: false } },
     { projection: { 'private.add_user.reference': true } }
   )
 

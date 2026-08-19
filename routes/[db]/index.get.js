@@ -112,7 +112,7 @@ export default defineEventHandler(async (event) => {
     tokensUsage
   ] = await Promise.all([
     entu.db.stats(),
-    entu.db.collection('entity').findOne({ 'private._type.string': 'database' }, {
+    entu.db.collection('entity').findOne({ 'private._type.string': 'database', _origin_db: { $exists: false } }, {
       projection: {
         'private.organization.string': true,
         'private.organization.language': true,
