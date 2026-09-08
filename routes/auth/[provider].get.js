@@ -25,6 +25,15 @@ defineRouteMeta({
         }
       },
       {
+        name: 'lang',
+        in: 'query',
+        schema: {
+          type: 'string',
+          enum: ['en', 'et'],
+          description: 'Language for the OAuth.ee login page'
+        }
+      },
+      {
         name: 'code',
         in: 'query',
         schema: {
@@ -77,7 +86,7 @@ defineRouteMeta({
 export default defineEventHandler(async (event) => {
   const provider = getRouterParam(event, 'provider')
   const { jwtSecret, oauthId, oauthSecret } = useRuntimeConfig(event)
-  const { code, error, state } = getQuery(event)
+  const { code, error, state, lang } = getQuery(event)
   const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
 
   if (error) {
@@ -91,7 +100,9 @@ export default defineEventHandler(async (event) => {
     const decodedState = jwt.verify(state, jwtSecret, { audience })
 
     const accessToken = await getToken(code, oauthId, oauthSecret)
-    const profile = await $fetch(`https://oauth.ee/api/user?access_token=${accessToken}`)
+    const profile = await $fetch('https://oauth.ee/api/user', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    })
 
     const user = {
       ip: audience,
@@ -118,15 +129,21 @@ export default defineEventHandler(async (event) => {
 
     const { origin, pathname } = getRequestURL(event)
 
-    const url = new URL('https://oauth.ee')
-    url.pathname = `/auth/${provider}`
-    url.search = new URLSearchParams({
+    const params = new URLSearchParams({
       client_id: oauthId,
       redirect_uri: `${origin}${pathname}`,
       response_type: 'code',
       scope: 'openid',
       state
-    }).toString()
+    })
+
+    if (['en', 'et'].includes(lang)) {
+      params.set('lang', lang)
+    }
+
+    const url = new URL('https://oauth.ee')
+    url.pathname = `/auth/${provider}`
+    url.search = params.toString()
 
     return redirect(url.toString(), 302)
   }
