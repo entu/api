@@ -50,7 +50,7 @@ export default defineEventHandler(async () => {
   openapi.tags = [
     {
       name: 'Authentication',
-      description: 'Exchange API key, OAuth token, or passkey for a 48-hour JWT. Use `Authorization: Bearer <token>` on all subsequent requests. See [authentication docs](https://entu.ee/api/authentication).'
+      description: 'Exchange API key, OAuth token, or passkey for a 12-hour JWT. Use `Authorization: Bearer <token>` on all subsequent requests. Entu is also an OAuth 2.1 authorization server, so an app can sign users in without handling their credentials — register a client, send the user to `/auth/authorize`, exchange the code at `/auth/token`. See [authentication docs](https://entu.ee/api/authentication).'
     },
     {
       name: 'Database',

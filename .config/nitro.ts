@@ -7,6 +7,7 @@ export default defineNitroConfig({
     aiKey: '',
     aiModel: '',
     aiUrl: '',
+    apiUrl: '',
     appUrl: '',
     commitHash: '',
     graphqlBasePath: '',

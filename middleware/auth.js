@@ -5,6 +5,7 @@ export default defineEventHandler((event) => {
 
   if (path === '/') return
   if (path === '/_openapi.json') return
+  if (path.startsWith('/.well-known/')) return
   if (path === '/docs' || path.startsWith('/docs/')) return
   if (path === '/graphql' || path.startsWith('/graphql/')) return
   if (path === '/openapi' || path.startsWith('/openapi/')) return
