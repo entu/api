@@ -1,11 +1,5 @@
-defineRouteMeta({
-  openAPI: {
-    tags: ['Authentication'],
-    summary: 'OAuth authorization server metadata',
-    description: 'RFC 8414 discovery document for the Entu OAuth 2.1 authorization server.',
-    responses: { 200: { description: 'Authorization server metadata' } }
-  }
-})
+// RFC 8414 discovery document - fetched by OAuth clients, not called by hand, so kept out of the API docs
+defineRouteMeta({ openAPI: { hidden: true } })
 
 export default defineEventHandler((event) => {
   const base = oauthBaseUrl(event)
