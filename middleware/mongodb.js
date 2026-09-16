@@ -6,6 +6,7 @@ export default defineEventHandler(async (event) => {
   if (path.startsWith('/.well-known/')) return
   if (path === '/docs' || path.startsWith('/docs/')) return
   if (path === '/graphql' || path.startsWith('/graphql/')) return
+  if (path === '/mcp' || path.startsWith('/mcp/')) return
   if (path === '/new' || path.startsWith('/new/')) return
   if (path === '/openapi' || path.startsWith('/openapi/')) return
   if (path === '/stripe' || path.startsWith('/stripe/')) return

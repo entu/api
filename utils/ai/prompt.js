@@ -21,6 +21,11 @@ export async function aiBuildSystemPrompt (entu, language) {
     .replaceAll('{{configuration}}', () => renderConfiguration(types))
 }
 
+// Renders the account's entity types and property definitions - shared by the system prompt and the MCP schema resource
+export async function aiRenderConfiguration (entu) {
+  return renderConfiguration(await getTypeSummaries(entu))
+}
+
 // Loads the prompt template from server assets, strips the comment, fills the static operator list, and caches the result
 async function getTemplate () {
   if (cachedTemplate) {

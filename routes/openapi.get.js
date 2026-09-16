@@ -61,6 +61,10 @@ export default defineEventHandler(async () => {
       description: 'CRUD operations on [entities](https://entu.ee/overview/entities) — filtering, sorting, pagination, full-text search, change history, duplication, and aggregation of [computed properties](https://entu.ee/api/formulas).'
     },
     {
+      name: 'MCP',
+      description: 'Model Context Protocol endpoint, so an AI agent can read a database directly. One endpoint per database, served at `mcp.entu.app`. Without a token it reads public entities only; with one it reads everything that user may see.'
+    },
+    {
       name: 'Property',
       description: 'Read or delete individual [property](https://entu.ee/overview/properties) values. File properties return signed download URLs.'
     }
