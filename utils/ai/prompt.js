@@ -65,7 +65,7 @@ async function getTypeSummaries (entu) {
       $match: {
         'private._type.string': 'entity',
         'private.name.string': { $exists: true },
-        access: { $in: [entu.user, 'domain', 'public'] }
+        access: accessFilter(entu)
       }
     },
     {
@@ -77,7 +77,7 @@ async function getTypeSummaries (entu) {
             $match: {
               'private._type.string': 'property',
               'private.name.string': { $exists: true },
-              access: { $in: [entu.user, 'domain', 'public'] },
+              access: accessFilter(entu),
               $expr: { $in: ['$$typeId', { $ifNull: ['$private._parent.reference', []] }] }
             }
           },

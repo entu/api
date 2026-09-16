@@ -145,12 +145,10 @@ export async function getOrBuildSchema (entu) {
 }
 
 async function computeSchemaHash (entu) {
-  const accessFilter = entu.user ? { $in: [entu.user, 'domain', 'public'] } : 'public'
-
   const result = await entu.db.collection('entity').aggregate([
     {
       $match: {
-        access: accessFilter,
+        access: accessFilter(entu),
         $or: [
           { 'private._type.string': 'entity' },
           { 'private._type.string': 'property' }
@@ -309,11 +307,9 @@ input MultilingualStringInput { string: String!, language: String }
 `.trim()
 
 async function buildSchema (entu) {
-  const accessFilter = entu.user ? { $in: [entu.user, 'domain', 'public'] } : 'public'
-
   // Fetch entity type definitions
   const typeDocs = await entu.db.collection('entity').find({
-    access: accessFilter,
+    access: accessFilter(entu),
     'private._type.string': 'entity',
     'private.name.string': { $exists: true }
   }, {
@@ -331,7 +327,7 @@ async function buildSchema (entu) {
 
   // Fetch property definitions for those types
   const propDocs = await entu.db.collection('entity').find({
-    access: accessFilter,
+    access: accessFilter(entu),
     'private._type.string': 'property',
     'private._parent.reference': { $in: typeIds },
     'private.name.string': { $exists: true },

@@ -674,12 +674,7 @@ export async function queryEntities (entu, { filter = {}, search = [], props = [
     fields.access = true
   }
 
-  if (entu.user) {
-    match.access = { $in: [entu.user, 'domain', 'public'] }
-  }
-  else {
-    match.access = 'public'
-  }
+  match.access = accessFilter(entu)
 
   // Truncate search terms to match index limit
   const terms = search.map((term) => term.toLowerCase().slice(0, 20)).filter((x) => x.length > 0)
@@ -780,6 +775,36 @@ export async function queryEntities (entu, { filter = {}, search = [], props = [
     limit,
     skip
   }
+}
+
+// MongoDB filter limiting a query to entities the caller may read - never inline it, an undefined user in the $in serializes to null and matches 'domain'
+export function accessFilter (entu) {
+  if (!entu.user) {
+    return 'public'
+  }
+
+  return { $in: [entu.user, 'domain', 'public'] }
+}
+
+// Resolves whether the caller may read one property value, mirroring cleanupEntity's private/domain/public precedence
+export function canReadProperty (entu, entity, property) {
+  const access = entity.access?.map((x) => x.toString()) || []
+
+  if (entu.userStr && access.includes(entu.userStr)) {
+    return true
+  }
+
+  const propertyId = property._id.toString()
+
+  if (entu.userStr && access.includes('domain')) {
+    return entity.domain?.[property.type]?.some((x) => x._id.toString() === propertyId) === true
+  }
+
+  if (access.includes('public')) {
+    return entity.public?.[property.type]?.some((x) => x._id.toString() === propertyId) === true
+  }
+
+  return false
 }
 
 // Returns the public, domain, or private view of an entity based on user access rights

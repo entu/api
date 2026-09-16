@@ -499,7 +499,7 @@ async function resolveTypeId (entu, value, tempIdMap) {
   const typeEntity = await entu.db.collection('entity').findOne({
     'private._type.string': 'entity',
     'private.name.string': value,
-    access: { $in: [entu.user, 'domain', 'public'] }
+    access: accessFilter(entu)
   }, {
     projection: { _id: true }
   })

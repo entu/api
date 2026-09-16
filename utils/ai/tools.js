@@ -410,11 +410,6 @@ async function getEntityTool (entu, args) {
   return { entity: compactEntity(cleaned) }
 }
 
-// MongoDB filter limiting reads to entities the calling user may see
-function accessFilter (entu) {
-  return { $in: [entu.user, 'domain', 'public'] }
-}
-
 // Validates and converts a single scalar filter value to its MongoDB representation
 // Builds a MongoDB condition from a filter value - scalar for equality, gt/gte/lt/lte object for ranges
 function buildFilterCondition (valueType, value, key) {

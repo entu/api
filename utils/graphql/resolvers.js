@@ -12,7 +12,7 @@ export function buildResolvers (entityTypes, propsByTypeId) {
     Query[fieldName] = async (_, args, { entu }) => {
       const filter = {
         'private._type.reference': typeId,
-        access: entu.user ? { $in: [entu.user, 'domain', 'public'] } : 'public'
+        access: accessFilter(entu)
       }
 
       if (args.filter) {

@@ -97,6 +97,7 @@ export default defineEventHandler(async (event) => {
     projection: {
       _id: false,
       access: true,
+      [`domain.${property.type}._id`]: true,
       [`public.${property.type}._id`]: true
     }
   })
@@ -108,21 +109,10 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const publicProperty = entity.public?.[property.type]?.some((x) => x._id.toString() === propertyId.toString())
-  const access = entity.access?.map((s) => s.toString()) || []
-
-  if (publicProperty) {
-    if (!access.includes('public')) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'Not a public property'
-      })
-    }
-  }
-  else if (!access.includes(entu.userStr)) {
+  if (!canReadProperty(entu, entity, property)) {
     throw createError({
       statusCode: 403,
-      statusMessage: 'User not in any rights property'
+      statusMessage: 'No access to property'
     })
   }
 
