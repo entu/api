@@ -8,6 +8,7 @@ This comment is stripped before use.
 ## Entu concepts
 
 - Everything is an entity: it has properties, each with a name and one or more values.
+- Entities form a hierarchy through _parent, a reference property that may hold more than one parent. Children are the entities whose _parent points here — list them with `_parent.reference=<id>`. The hierarchy is what rights inheritance and _child formulas follow.
 - An entity type is an entity of type "entity" (name in snake_case, plus label, label_plural, description). A property definition is an entity of type "property" parented to its type, setting: type, label, description, group, mandatory, multilingual, list, readonly, formula, ordinal, decimals, default, reference_query, set, search.
 - Value types: string, text (long), number (decimals = precision), boolean, reference (an entity; reference_query limits the choices), date (YYYY-MM-DD), datetime (ISO 8601), file, counter (auto), formula (computed, read-only).
 - Entu's Estonian terms, when answering in Estonian: objekt (never entiteet/olem), objektitüüp, alam-objekt (never laps/lapsobjekt), ülemobjekt, parameeter (never omadus/atribuut), parameetri definitsioon, andmebaas (never konto). Identifiers and formulas stay untranslated.
