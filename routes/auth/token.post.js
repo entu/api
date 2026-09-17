@@ -1,5 +1,3 @@
-import jwt from 'jsonwebtoken'
-
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
@@ -71,17 +69,12 @@ export default defineEventHandler(async (event) => {
     throw oauthError('invalid_grant', 'PKCE verification failed')
   }
 
-  // The session token is bound to the browser's address, carried as its own audience, so /auth is called with that
-  // address forwarded - anything else fails verification. The session is single use, so a replayed code fails here.
-  const { jwtSecret } = useRuntimeConfig(event)
-  const ip = jwt.verify(code.session, jwtSecret).aud
-
-  const auth = await $fetch(`/auth?db=${encodeURIComponent(code.account)}`, {
-    baseURL: oauthBaseUrl(event),
-    headers: {
-      authorization: `Bearer ${code.session}`,
-      'x-forwarded-for': ip
-    }
+  // Called directly rather than over HTTP, so the address the session is bound to is read from the token itself and
+  // the issued JWT is simply not bound at all - an OAuth client calls from its own servers, never from the browser
+  const auth = await authExchange(event, {
+    account: code.account,
+    bindIp: false,
+    key: code.session
   }).catch(() => {})
 
   if (!auth?.token) {
@@ -92,14 +85,8 @@ export default defineEventHandler(async (event) => {
     throw oauthError('invalid_grant', `No access to database ${code.account}`)
   }
 
-  // An OAuth client calls the API from its own servers, never from the browser that authenticated, so the token is
-  // re-signed without the audience - every other claim is kept as /auth issued it
-  const payload = jwt.verify(auth.token, jwtSecret, { audience: ip })
-
-  delete payload.aud
-
   return {
-    access_token: jwt.sign(payload, jwtSecret),
+    access_token: auth.token,
     token_type: 'Bearer',
     expires_in: Math.max(0, Math.floor((new Date(auth.expires).getTime() - Date.now()) / 1000))
   }
