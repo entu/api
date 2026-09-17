@@ -4,11 +4,6 @@ import jwt from 'jsonwebtoken'
 
 const schemaResourceUri = 'entu://schema'
 
-// What a client needs that the shared prompt sections do not cover - the rest is read from assets/ai/system-prompt.md
-const preamble = `This server exposes one Entu database, read-only. Read the ${schemaResourceUri} resource before
-answering questions about what the database contains. Everything is filtered by the signed-in user's rights, so an
-entity you cannot find may exist but be invisible - an unauthenticated client sees public entities only.`
-
 // Creates an MCP server bound to one request's Entu context - every tool and resource runs as the calling user
 export async function createMcpServer (entu) {
   const { commitHash } = useRuntimeConfig()
@@ -18,7 +13,7 @@ export async function createMcpServer (entu) {
     version: commitHash || 'dev'
   }, {
     capabilities: { resources: {}, tools: {} },
-    instructions: `${preamble}\n\n${await aiPromptSections('Entu concepts', 'Formulas (RPN)', 'Safety')}`
+    instructions: await aiPrompt('mcp')
   })
 
   server.setRequestHandler(ListToolsRequestSchema, () => ({ tools: toolDefinitions() }))

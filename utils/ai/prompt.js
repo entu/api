@@ -1,13 +1,13 @@
 const summaryTypesLimit = 100
 const summarySizeLimit = 30000
 
-// Prompt template (comment stripped, static {{operators}} filled) read once from the bundled asset and cached for the process lifetime
-let cachedTemplate
+// Prompt files, comment stripped, read once from the bundled assets and cached for the process lifetime
+const cachedPrompts = new Map()
 
-// Builds the system prompt: fills the per-request value placeholders in the cached template. All prose lives in ai/system-prompt.md
+// Builds the assistant's system prompt: its own file plus the shared sections, with per-request values filled in
 export async function aiBuildSystemPrompt (entu, language) {
   const [template, types] = await Promise.all([
-    getTemplate(),
+    aiPrompt('assistant'),
     getTypeSummaries(entu)
   ])
 
@@ -21,44 +21,32 @@ export async function aiBuildSystemPrompt (entu, language) {
     .replaceAll('{{configuration}}', () => renderConfiguration(types))
 }
 
-// Returns the named `## ` sections of the prompt, so MCP can reuse the parts describing Entu itself rather than
-// restating them - the sections about being the assistant (How you work, Context) stay here
-export async function aiPromptSections (...names) {
-  const template = await getTemplate()
+// Reads a prompt file and splices in ai/shared.md wherever it writes {{shared}}, so the sections describing Entu
+// itself are written once and every consumer gets the same wording
+export async function aiPrompt (name) {
+  const [own, shared] = await Promise.all([loadPrompt(name), loadPrompt('shared')])
 
-  return names
-    .map((name) => template.split(`\n## ${name}\n`).at(1)?.split('\n## ').at(0)?.trim())
-    .filter(Boolean)
-    .map((section, index) => `## ${names.at(index)}\n\n${section}`)
-    .join('\n\n')
+  return own.replaceAll('{{shared}}', () => shared.replaceAll('{{operators}}', renderOperators()))
 }
 
-// Renders the account's entity types and property definitions - shared by the system prompt and the MCP schema resource
-export async function aiRenderConfiguration (entu) {
-  return renderConfiguration(await getTypeSummaries(entu))
-}
-
-// Loads the prompt template from server assets, strips the comment, fills the static operator list, and caches the result
-async function getTemplate () {
-  if (cachedTemplate) {
-    return cachedTemplate
+// Loads one prompt file from server assets and strips its editing comment
+async function loadPrompt (name) {
+  if (cachedPrompts.has(name)) {
+    return cachedPrompts.get(name)
   }
 
-  const template = await useStorage('assets:server').getItem('ai/system-prompt.md')
+  const template = await useStorage('assets:server').getItem(`ai/${name}.md`)
 
   if (typeof template !== 'string' || template.length === 0) {
     throw createError({
       statusCode: 500,
-      statusMessage: 'AI system prompt template not found'
+      statusMessage: `AI prompt ${name} not found`
     })
   }
 
-  cachedTemplate = template
-    .replace(/^<!--[\s\S]*?-->\s*/, '')
-    .replaceAll('{{operators}}', renderOperators())
-    .trim()
+  cachedPrompts.set(name, template.replace(/^<!--[\s\S]*?-->\s*/, '').trim())
 
-  return cachedTemplate
+  return cachedPrompts.get(name)
 }
 
 // Renders the operator list from the formula engine's registry, so new operators can't silently go missing from the prompt
