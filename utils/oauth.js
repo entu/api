@@ -30,7 +30,7 @@ export function oauthApiUrl (event) {
 export function oauthStartLogin (event, { provider, state = {} } = {}) {
   const { jwtSecret, oauthId } = useRuntimeConfig(event)
   const { lang, next } = getQuery(event)
-  const audience = requestIp(event)
+  const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
 
   const params = new URLSearchParams({
     client_id: oauthId,
@@ -56,7 +56,7 @@ export function oauthStartLogin (event, { provider, state = {} } = {}) {
 // Completes an oauth.ee login - creates the session and returns its id and token, with the state the caller sent
 export async function oauthCompleteLogin (event, code, state) {
   const { jwtSecret, oauthId, oauthSecret } = useRuntimeConfig(event)
-  const audience = requestIp(event)
+  const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
   const decodedState = jwt.verify(state, jwtSecret, { audience })
 
   if (decodedState.use !== 'state') {

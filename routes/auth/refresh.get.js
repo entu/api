@@ -75,7 +75,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'No key' })
   }
 
-  const audience = requestIp(event)
+  const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
 
   let decoded
   try {

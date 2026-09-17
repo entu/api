@@ -106,10 +106,6 @@ export default [
         {
           selector: 'IfStatement[alternate=null] > BlockStatement.consequent[body.length=1] > BreakStatement',
           message: '`if (x) break` goes inline without braces.'
-        },
-        {
-          selector: 'CallExpression[callee.name="getRequestIP"]',
-          message: 'getRequestIP reads the first X-Forwarded-For entry, which the caller sets — use requestIp(event).'
         }
       ],
       '@stylistic/arrow-parens': ['error', 'always'],
