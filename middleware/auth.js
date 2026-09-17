@@ -22,7 +22,7 @@ export default defineEventHandler((event) => {
   const accountless = isAuthRoute || isNewRoute
 
   const entu = {
-    ip: (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1'),
+    ip: requestIp(event),
     account: accountless ? undefined : formatDatabaseName(path.split('/').at(1))
   }
 

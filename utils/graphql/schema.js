@@ -93,7 +93,7 @@ export async function buildEntuContext (event) {
   }
 
   const entu = {
-    ip: getRequestIP(event, { xForwardedFor: true }),
+    ip: requestIp(event),
     account
   }
 

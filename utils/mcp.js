@@ -21,7 +21,7 @@ export async function buildMcpContext (event) {
   }
 
   const entu = {
-    ip: (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1'),
+    ip: requestIp(event),
     account
   }
 
