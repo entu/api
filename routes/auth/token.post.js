@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Exchange an authorization code for a token. Verifies the PKCE verifier and returns an ordinary 12-hour Entu JWT, scoped to the database the authorization was issued for. Codes are single use and expire after five minutes. The token is bound to the IP that calls this endpoint, so exchange the code from the same machine that will use the token.',
+    description: 'Exchange an authorization code for a token. Verifies the PKCE verifier and returns an ordinary 12-hour Entu JWT, scoped to the database the authorization was issued for. Codes are single use and expire after five minutes.\n\nUnlike tokens from `/auth`, this one is not tied to an IP address, so it works from wherever your application runs.',
     security: [], // The code and PKCE verifier authenticate this call, not a JWT
     requestBody: {
       required: true,

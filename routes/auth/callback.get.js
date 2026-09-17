@@ -1,31 +1,31 @@
-// Internal step of the authorization flow — only /auth/{provider} redirects here, so kept out of the API docs
+// Where OAuth.ee returns an authorization started at /auth/authorize - never called by hand, so kept out of the docs
 defineRouteMeta({ openAPI: { hidden: true } })
 
-export default defineEventHandler((event) => {
-  const query = getQuery(event)
+export default defineEventHandler(async (event) => {
+  const { code, error, state } = getQuery(event)
 
-  if (!query.token) {
-    throw oauthError('invalid_request', 'No session token')
+  if (error) {
+    throw oauthError('access_denied', error)
   }
 
-  const state = oauthVerify(event, 'state', query.state)
+  if (!code || !state) {
+    throw oauthError('invalid_request', 'No authorization to complete')
+  }
 
-  // The browser's address travels with the code because the session token is bound to it, and only the token
-  // endpoint - called later by the client, from a different address - can exchange it
-  const code = oauthSign(event, 'code', {
-    account: state.account,
-    codeChallenge: state.codeChallenge,
-    ip: (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1'),
-    redirectUri: state.redirectUri,
-    session: query.token
-  })
+  const login = await oauthCompleteLogin(event, code, state)
 
-  const url = new URL(state.redirectUri)
+  const url = new URL(login.state.redirectUri)
 
-  url.searchParams.set('code', code)
+  url.searchParams.set('code', oauthSign(event, 'code', {
+    account: login.state.account,
+    codeChallenge: login.state.codeChallenge,
+    ip: login.ip,
+    redirectUri: login.state.redirectUri,
+    session: login.sessionId
+  }))
 
-  if (state.clientState) {
-    url.searchParams.set('state', state.clientState)
+  if (login.state.clientState) {
+    url.searchParams.set('state', login.state.clientState)
   }
 
   return sendRedirect(event, url.toString(), 302)

@@ -7,8 +7,7 @@ const languages = ['en', 'et']
 // Lifetime per signed artifact - nothing is stored, so these are the only expiry there is
 const lifetimes = {
   client: '365d',
-  code: '5m',
-  state: '10m'
+  code: '5m'
 }
 
 // Public base URL this request arrived on, so redirects stay on the host the user is already using
@@ -26,20 +25,19 @@ export function oauthApiUrl (event) {
   return apiUrl || oauthBaseUrl(event)
 }
 
-// Sends the user to the oauth.ee login - without a provider oauth.ee shows its own provider list
-export function oauthStartLogin (event, provider) {
+// Sends the user to the oauth.ee login - without a provider oauth.ee shows its own provider list. `state` is carried
+// through the round trip and handed back by oauthCompleteLogin, so callers need no storage of their own.
+export function oauthStartLogin (event, { provider, redirectPath = '/auth', state = {} } = {}) {
   const { jwtSecret, oauthId } = useRuntimeConfig(event)
   const { lang, next } = getQuery(event)
   const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
-  const state = jwt.sign({ next }, jwtSecret, { audience, expiresIn: '5m' })
-  const { origin, pathname } = getRequestURL(event)
 
   const params = new URLSearchParams({
     client_id: oauthId,
-    redirect_uri: `${origin}${pathname}`,
+    redirect_uri: `${getRequestURL(event).origin}${redirectPath}`,
     response_type: 'code',
     scope: 'openid',
-    state
+    state: jwt.sign({ next, ...state }, jwtSecret, { audience, expiresIn: '5m' })
   })
 
   // Passed through when the caller set it; otherwise OAuth.ee picks the language itself
@@ -55,7 +53,7 @@ export function oauthStartLogin (event, provider) {
   return redirect(url.toString(), 302)
 }
 
-// Completes an oauth.ee login - creates the session and either returns the user to `next` or hands back the key
+// Completes an oauth.ee login - creates the session and returns its token together with the state the caller sent
 export async function oauthCompleteLogin (event, code, state) {
   const { jwtSecret, oauthId, oauthSecret } = useRuntimeConfig(event)
   const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
@@ -94,11 +92,7 @@ export async function oauthCompleteLogin (event, code, state) {
     expiresIn: '5m'
   })
 
-  if (decodedState.next) {
-    return redirect(`${decodedState.next}${sessionId}`, 302)
-  }
-
-  return { key: sessionId }
+  return { ip: audience, sessionId, state: decodedState }
 }
 
 // Signs an OAuth artifact - registrations, state and codes are self-contained JWTs, so the flow needs no storage

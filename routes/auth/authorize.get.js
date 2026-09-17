@@ -116,17 +116,16 @@ export default defineEventHandler((event) => {
     return redirectWithError(event, query, 'invalid_request', 'Missing database - add it as the resource or db parameter')
   }
 
-  const state = oauthSign(event, 'state', {
-    account,
-    clientState: query.state,
-    codeChallenge: query.code_challenge,
-    redirectUri: query.redirect_uri
+  // The authorization travels inside OAuth.ee's own state, so it comes straight back to /auth/callback
+  return oauthStartLogin(event, {
+    redirectPath: '/auth/callback',
+    state: {
+      account,
+      clientState: query.state,
+      codeChallenge: query.code_challenge,
+      redirectUri: query.redirect_uri
+    }
   })
-
-  // /auth starts the login and appends the session id to `next`, so `next` has to end with the parameter receiving it
-  const next = `${oauthBaseUrl(event)}/auth/callback?state=${state}&token=`
-
-  return sendRedirect(event, `${oauthBaseUrl(event)}/auth?next=${encodeURIComponent(next)}`, 302)
 })
 
 // Sends the user back to the client with an OAuth error, as required once the redirect_uri is validated

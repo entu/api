@@ -39,11 +39,52 @@ defineRouteMeta({
           type: 'string',
           description: 'Invite JWT token to accept during authentication'
         }
+      },
+      {
+        name: 'next',
+        in: 'query',
+        schema: {
+          type: 'string',
+          description: 'Starting a login: URL to return to afterwards — the session token is appended to it'
+        }
+      },
+      {
+        name: 'lang',
+        in: 'query',
+        schema: {
+          type: 'string',
+          enum: ['en', 'et'],
+          description: 'Starting a login: language for the OAuth.ee page. Omit to let OAuth.ee choose'
+        }
+      },
+      {
+        name: 'code',
+        in: 'query',
+        schema: {
+          type: 'string',
+          description: 'Set by OAuth.ee when it returns the user here'
+        }
+      },
+      {
+        name: 'state',
+        in: 'query',
+        schema: {
+          type: 'string',
+          description: 'Set by OAuth.ee when it returns the user here'
+        }
+      },
+      {
+        name: 'error',
+        in: 'query',
+        schema: {
+          type: 'string',
+          description: 'Set by OAuth.ee when the login failed'
+        }
       }
     ],
     responses: {
       200: {
-        description: 'JWT token with accessible accounts',
+        description: 'JWT token with accessible accounts. Completing a login without `next` returns `{ key }` — a temporary session token to exchange here for the JWT',
         content: {
           'application/json': {
             schema: {
@@ -84,7 +125,7 @@ defineRouteMeta({
           }
         }
       },
-      302: { description: 'Redirect to the OAuth.ee login, when called without an Authorization header' },
+      302: { description: 'Redirect to the OAuth.ee login, or to `next` once a login completes' },
       400: {
         description: 'Invalid session, missing user email, or an error reported by the provider',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
@@ -106,7 +147,13 @@ export default defineEventHandler(async (event) => {
     }
 
     if (code && state) {
-      return await oauthCompleteLogin(event, code, state)
+      const login = await oauthCompleteLogin(event, code, state)
+
+      if (login.state.next) {
+        return redirect(`${login.state.next}${login.sessionId}`, 302)
+      }
+
+      return { key: login.sessionId }
     }
 
     return oauthStartLogin(event)
