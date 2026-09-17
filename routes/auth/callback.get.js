@@ -17,19 +17,21 @@ export default defineEventHandler(async (event) => {
   // A plain login carries no authorization, so it hands the session token straight back
   if (!login.state.redirectUri) {
     if (login.state.next) {
-      return redirect(`${login.state.next}${login.sessionId}`, 302)
+      return redirect(`${login.state.next}${login.token}`, 302)
     }
 
-    return { key: login.sessionId }
+    return { key: login.token }
   }
 
   const url = new URL(login.state.redirectUri)
 
+  // The session id, never its token — a JWT is readable, so a code carrying the token would hand an interceptor a
+  // working credential and make PKCE pointless
   url.searchParams.set('code', oauthSign(event, 'code', {
     account: login.state.account,
     codeChallenge: login.state.codeChallenge,
     redirectUri: login.state.redirectUri,
-    session: login.sessionId
+    session: login.id
   }))
 
   if (login.state.clientState) {

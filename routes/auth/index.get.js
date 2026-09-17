@@ -102,6 +102,10 @@ defineRouteMeta({
       400: {
         description: 'Invalid session, missing user email, or an error reported by the provider',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      401: {
+        description: 'Credential is not valid, or grants access to no database',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }
   }

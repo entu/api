@@ -53,7 +53,7 @@ export function oauthStartLogin (event, { provider, state = {} } = {}) {
   return redirect(url.toString(), 302)
 }
 
-// Completes an oauth.ee login - creates the session and returns its token together with the state the caller sent
+// Completes an oauth.ee login - creates the session and returns its id and token, with the state the caller sent
 export async function oauthCompleteLogin (event, code, state) {
   const { jwtSecret, oauthId, oauthSecret } = useRuntimeConfig(event)
   const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
@@ -90,13 +90,13 @@ export async function oauthCompleteLogin (event, code, state) {
     }
   })
 
-  const sessionId = jwt.sign({ use: 'session' }, jwtSecret, {
+  const token = jwt.sign({ use: 'session' }, jwtSecret, {
     audience,
     subject: session.insertedId.toString(),
     expiresIn: '5m'
   })
 
-  return { sessionId, state: decodedState }
+  return { id: session.insertedId.toString(), state: decodedState, token }
 }
 
 // Signs an OAuth artifact - registrations, state and codes are self-contained JWTs, so the flow needs no storage

@@ -110,7 +110,7 @@ export default defineEventHandler((event) => {
     return redirectWithError(event, query, 'invalid_request', 'Missing code_challenge')
   }
 
-  const account = formatDatabaseName(query.db || parseResourceAccount(query.resource))
+  const account = formatDatabaseName(query.db || parseResourceAccount(event, query.resource))
 
   if (!account) {
     return redirectWithError(event, query, 'invalid_request', 'Missing database - add it as the resource or db parameter')
@@ -141,9 +141,16 @@ function redirectWithError (event, query, error, description) {
   return sendRedirect(event, url.toString(), 302)
 }
 
-// Reads the database name from an RFC 8707 resource indicator such as https://mcp.entu.app/mydatabase
-function parseResourceAccount (resource) {
+// Reads the database name from an RFC 8707 resource indicator such as https://mcp.entu.app/mydatabase. The resource
+// has to be one of ours - api and mcp are separate hosts in the same domain, so the domain is what gets compared.
+function parseResourceAccount (event, resource) {
   if (typeof resource !== 'string' || !URL.canParse(resource)) return
 
-  return new URL(resource).pathname.split('/').filter((x) => x).at(0)
+  const host = new URL(oauthApiUrl(event)).hostname
+  const domain = host.includes('.') ? host.slice(host.indexOf('.')) : undefined
+  const { hostname, pathname } = new URL(resource)
+
+  if (hostname !== host && !(domain && hostname.endsWith(domain))) return
+
+  return pathname.split('/').filter((x) => x).at(0)
 }

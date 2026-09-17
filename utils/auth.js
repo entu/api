@@ -4,35 +4,39 @@ import jwt from 'jsonwebtoken'
 // Exchanges a credential - an API key or a session token - for a 12-hour JWT. The shared body of GET /auth, also
 // called by the OAuth token endpoint. `ip` binds the issued token to that address; `bindIp: false` issues one usable
 // from anywhere, which an OAuth client needs since it calls from its own servers.
-export async function authExchange (event, { account, bindIp = true, invite, ip, key }) {
+export async function authExchange (event, { account, bindIp = true, invite, ip, key, sessionId }) {
   const { jwtSecret } = useRuntimeConfig(event)
   const connection = await connectDb('entu')
-  const audience = ip || jwt.decode(key)?.aud
   let session
   let apiKeyHash
 
-  try {
-    const decoded = jwt.verify(key, jwtSecret, { audience })
+  // The OAuth token endpoint has already authenticated the user and passes the session id straight in, so there is
+  // no bearer credential to verify - and nothing usable for anyone who intercepted the authorization code
+  if (sessionId) {
+    session = await consumeSession(connection, sessionId)
 
-    // Only a session token opens a session — any other Entu JWT falls through to the API key branch below
-    if (decoded.use !== 'session') {
-      throw createError({ statusCode: 400, statusMessage: 'Not a session token' })
-    }
-
-    session = await connection.collection('session').findOneAndUpdate(
-      { _id: getObjectId(decoded.sub), deleted: { $exists: false } },
-      { $set: { deleted: new Date() } }
-    )
-
-    if (!session) {
+    if (!session?.user?.email) {
       throw createError({ statusCode: 400, statusMessage: 'No session' })
     }
-    if (!session.user?.email) {
-      throw createError({ statusCode: 400, statusMessage: 'No user email' })
-    }
   }
-  catch {
-    apiKeyHash = createHash('sha256').update(key).digest('hex')
+  else {
+    try {
+      const decoded = jwt.verify(key, jwtSecret, { audience: ip })
+
+      // Only a session token opens a session — any other Entu JWT falls through to the API key branch below
+      if (decoded.use !== 'session') {
+        throw createError({ statusCode: 400, statusMessage: 'Not a session token' })
+      }
+
+      session = await consumeSession(connection, decoded.sub)
+
+      if (!session?.user?.email) {
+        throw createError({ statusCode: 400, statusMessage: 'No session' })
+      }
+    }
+    catch {
+      apiKeyHash = createHash('sha256').update(key).digest('hex')
+    }
   }
 
   let onlyForAccount = account
@@ -56,6 +60,12 @@ export async function authExchange (event, { account, bindIp = true, invite, ip,
 
   for (const result of accountResults) {
     addAccount(accounts, accountUsersIds, result.account, result.userId, result.userName)
+  }
+
+  // A session is proof on its own - a user with no databases yet still needs a token to create their first one.
+  // An API key is only proof if it matched something, so nothing matching means the credential was not valid.
+  if (!session && accounts.length === 0) {
+    throw createError({ statusCode: 401, statusMessage: 'Invalid credential' })
   }
 
   // Invite acceptance: user arrived via invite link and completed OAuth
@@ -131,10 +141,18 @@ export async function authExchange (event, { account, bindIp = true, invite, ip,
   return {
     accounts,
     user: userData,
-    token: jwt.sign(tokenData, jwtSecret, bindIp ? { audience } : {}),
+    token: jwt.sign(tokenData, jwtSecret, bindIp ? { audience: ip } : {}),
     expires: expiresAt.toISOString(),
     ...(inviteConflict ? { conflict: 'invite' } : {})
   }
+}
+
+// Marks a session as used and returns it - the update is the single-use guarantee, so a replay finds nothing
+async function consumeSession (connection, id) {
+  return await connection.collection('session').findOneAndUpdate(
+    { _id: getObjectId(id), deleted: { $exists: false } },
+    { $set: { deleted: new Date() } }
+  )
 }
 
 // Adds one database to both the response list and the token's accounts map

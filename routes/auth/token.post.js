@@ -69,12 +69,12 @@ export default defineEventHandler(async (event) => {
     throw oauthError('invalid_grant', 'PKCE verification failed')
   }
 
-  // Called directly rather than over HTTP, so the address the session is bound to is read from the token itself and
-  // the issued JWT is simply not bound at all - an OAuth client calls from its own servers, never from the browser
+  // The code carries only the session id, so nothing here is a credential an interceptor could have used. The issued
+  // JWT is not bound to an address - an OAuth client calls from its own servers, never from the browser
   const auth = await authExchange(event, {
     account: code.account,
     bindIp: false,
-    key: code.session
+    sessionId: code.session
   }).catch(() => {})
 
   if (!auth?.token) {
