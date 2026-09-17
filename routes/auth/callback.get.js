@@ -10,10 +10,12 @@ export default defineEventHandler((event) => {
 
   const state = oauthVerify(event, 'state', query.state)
 
-  // The session is not exchanged here - that happens at the token endpoint, so the JWT audience is the client's IP
+  // The browser's address travels with the code because the session token is bound to it, and only the token
+  // endpoint - called later by the client, from a different address - can exchange it
   const code = oauthSign(event, 'code', {
     account: state.account,
     codeChallenge: state.codeChallenge,
+    ip: (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1'),
     redirectUri: state.redirectUri,
     session: query.token
   })
