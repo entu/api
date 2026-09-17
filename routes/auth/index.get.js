@@ -4,16 +4,15 @@ import jwt from 'jsonwebtoken'
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Exchange API key or session token for a 12-hour JWT. Accepts permanent API keys (SHA-256 hashed) or temporary tokens from OAuth/passkey flows. Returns JWT with accounts list and user profile. Optional `db` limits auth to one database.',
+    description: 'Exchange API key or session token for a 12-hour JWT. Accepts permanent API keys (SHA-256 hashed) or temporary tokens from OAuth/passkey flows. Returns JWT with accounts list and user profile. Optional `db` limits auth to one database.\n\nCalled without an `Authorization` header this starts a login instead, redirecting to OAuth.ee and letting the user choose a provider there. Use `/auth/{provider}` to pick one up front, and `next` to come back to your own URL.',
     security: [], // Uses API key, not JWT
     parameters: [
       {
         name: 'authorization',
         in: 'header',
-        required: true,
         schema: {
           type: 'string',
-          description: 'Bearer token — permanent API key or temporary session token',
+          description: 'Bearer token — permanent API key or temporary session token. Omit to start a login instead',
           example: 'Bearer nEkPYET5fYjJqktNz9yfLxPF'
         }
       },
@@ -85,8 +84,9 @@ defineRouteMeta({
           }
         }
       },
+      302: { description: 'Redirect to the OAuth.ee login, when called without an Authorization header' },
       400: {
-        description: 'No key, invalid session, or missing user email',
+        description: 'Invalid session, missing user email, or an error reported by the provider',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }
@@ -97,8 +97,19 @@ export default defineEventHandler(async (event) => {
   const { jwtSecret } = useRuntimeConfig(event)
   const key = (event.req.headers.get('authorization') || '').replace('Bearer ', '').trim()
 
+  // A browser landing here without a credential starts a login instead, with the provider left to oauth.ee to ask
   if (!key) {
-    throw createError({ statusCode: 400, statusMessage: 'No key' })
+    const { code, error, state } = getQuery(event)
+
+    if (error) {
+      throw createError({ statusCode: 400, statusMessage: error })
+    }
+
+    if (code && state) {
+      return await oauthCompleteLogin(event, code, state)
+    }
+
+    return oauthStartLogin(event)
   }
 
   const connection = await connectDb('entu')

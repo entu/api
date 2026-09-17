@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Start the OAuth 2.1 authorization flow. Validates the client and PKCE challenge, then hands the user to the normal `/auth/{provider}` login. Without a `provider` parameter it renders a provider picker for the user to choose from. Open this in the user\'s browser, not from your server. Once the login completes, the client\'s `redirect_uri` receives `code` and `state`; exchange the code at `/auth/token`.',
+    description: 'Start the OAuth 2.1 authorization flow. Validates the client and PKCE challenge, then hands the user to the normal Entu login, where OAuth.ee asks which provider to use. Open this in the user\'s browser, not from your server. Once the login completes, the client\'s `redirect_uri` receives `code` and `state`; exchange the code at `/auth/token`.',
     security: [], // The user is not authenticated yet — that is what this flow does
     parameters: [
       {
@@ -77,32 +77,10 @@ defineRouteMeta({
           type: 'string',
           description: 'Opaque value returned unchanged to the redirect URI'
         }
-      },
-      {
-        name: 'provider',
-        in: 'query',
-        schema: {
-          type: 'string',
-          enum: ['e-mail', 'google', 'apple', 'smart-id', 'mobile-id', 'id-card'],
-          description: 'Login provider. Omit to let the user pick one'
-        }
-      },
-      {
-        name: 'ui_locales',
-        in: 'query',
-        schema: {
-          type: 'string',
-          enum: ['en', 'et'],
-          description: 'Preferred login language. Falls back to the browser\'s Accept-Language'
-        }
       }
     ],
     responses: {
-      200: {
-        description: 'Provider picker page, when no provider was given',
-        content: { 'text/html': { schema: { type: 'string' } } }
-      },
-      302: { description: 'Redirect to the provider login, or back to the client redirect URI with an OAuth error' },
+      302: { description: 'Redirect to the login, or back to the client redirect URI with an OAuth error' },
       400: {
         description: 'Unknown client_id, or a redirect_uri not registered for it',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
@@ -138,14 +116,6 @@ export default defineEventHandler((event) => {
     return redirectWithError(event, query, 'invalid_request', 'Missing database - add it as the resource or db parameter')
   }
 
-  if (!query.provider) {
-    return renderProviderPicker(event, query)
-  }
-
-  if (!oauthProviders().includes(query.provider)) {
-    return redirectWithError(event, query, 'invalid_request', 'Unknown provider')
-  }
-
   const state = oauthSign(event, 'state', {
     account,
     clientState: query.state,
@@ -153,24 +123,11 @@ export default defineEventHandler((event) => {
     redirectUri: query.redirect_uri
   })
 
-  // [provider].get.js appends the session id to `next`, so it has to end with the parameter that receives it
+  // /auth starts the login and appends the session id to `next`, so `next` has to end with the parameter receiving it
   const next = `${oauthBaseUrl(event)}/auth/callback?state=${state}&token=`
-  const lang = resolveLang(event, query)
-  const url = `${oauthBaseUrl(event)}/auth/${query.provider}?next=${encodeURIComponent(next)}${lang ? `&lang=${lang}` : ''}`
 
-  return sendRedirect(event, url, 302)
+  return sendRedirect(event, `${oauthBaseUrl(event)}/auth?next=${encodeURIComponent(next)}`, 302)
 })
-
-// Login language from the client's ui_locales hint, else the browser's Accept-Language of the user opening this page
-function resolveLang (event, query) {
-  const wanted = `${query.ui_locales || ''},${event.req.headers.get('accept-language') || ''}`.toLowerCase()
-
-  for (const part of wanted.split(/[\s,;]+/)) {
-    if (languages.includes(part.split('-').at(0))) {
-      return part.split('-').at(0)
-    }
-  }
-}
 
 // Sends the user back to the client with an OAuth error, as required once the redirect_uri is validated
 function redirectWithError (event, query, error, description) {
@@ -191,35 +148,4 @@ function parseResourceAccount (resource) {
   if (typeof resource !== 'string' || !URL.canParse(resource)) return
 
   return new URL(resource).pathname.split('/').filter((x) => x).at(0)
-}
-
-// Minimal provider picker - OAuth clients open this in a browser, so the choice has to be made here
-function renderProviderPicker (event, query) {
-  const links = oauthProviders().map((provider) => {
-    const url = new URL(`${oauthBaseUrl(event)}/auth/authorize`)
-
-    for (const [key, value] of Object.entries(query)) {
-      url.searchParams.set(key, value)
-    }
-
-    url.searchParams.set('provider', provider)
-
-    return `<li><a href="${escapeHtml(url.toString())}">${escapeHtml(provider)}</a></li>`
-  }).join('')
-
-  setResponseHeader(event, 'content-type', 'text/html; charset=utf-8')
-
-  return `<!doctype html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign in to Entu</title></head>
-<body style="font-family:system-ui,sans-serif;max-width:24rem;margin:4rem auto;padding:0 1rem">
-<h1 style="font-size:1.25rem">Sign in to Entu</h1>
-<ul style="line-height:2;list-style:none;padding:0">${links}</ul>
-</body>
-</html>`
-}
-
-// Escapes text interpolated into the picker markup
-function escapeHtml (value) {
-  return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')
 }

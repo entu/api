@@ -1,5 +1,3 @@
-import jwt from 'jsonwebtoken'
-
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
@@ -84,10 +82,7 @@ defineRouteMeta({
 })
 
 export default defineEventHandler(async (event) => {
-  const provider = getRouterParam(event, 'provider')
-  const { jwtSecret, oauthId, oauthSecret } = useRuntimeConfig(event)
-  const { code, error, state, lang } = getQuery(event)
-  const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
+  const { code, error, state } = getQuery(event)
 
   if (error) {
     throw createError({
@@ -97,83 +92,8 @@ export default defineEventHandler(async (event) => {
   }
 
   if (code && state) {
-    const decodedState = jwt.verify(state, jwtSecret, { audience })
-
-    const accessToken = await getToken(code, oauthId, oauthSecret)
-    const profile = await $fetch('https://oauth.ee/api/user', {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    })
-
-    const user = {
-      ip: audience,
-      provider: profile.provider,
-      id: profile.id,
-      name: profile.name,
-      email: profile.email
-    }
-
-    const sessionId = await addUserSession(user, jwtSecret)
-
-    if (decodedState.next) {
-      return redirect(`${decodedState.next}${sessionId}`, 302)
-    }
-    else {
-      return { key: sessionId }
-    }
+    return await oauthCompleteLogin(event, code, state)
   }
-  else {
-    const state = jwt.sign({ next: getQuery(event).next }, jwtSecret, {
-      audience,
-      expiresIn: '5m'
-    })
 
-    const { origin, pathname } = getRequestURL(event)
-
-    const params = new URLSearchParams({
-      client_id: oauthId,
-      redirect_uri: `${origin}${pathname}`,
-      response_type: 'code',
-      scope: 'openid',
-      state
-    })
-
-    if (['en', 'et'].includes(lang)) {
-      params.set('lang', lang)
-    }
-
-    const url = new URL('https://oauth.ee')
-    url.pathname = `/auth/${provider}`
-    url.search = params.toString()
-
-    return redirect(url.toString(), 302)
-  }
+  return oauthStartLogin(event, getRouterParam(event, 'provider'))
 })
-
-async function getToken (code, oauthId, oauthSecret) {
-  const tokenResponse = await $fetch('https://oauth.ee/api/token', {
-    method: 'POST',
-    body: {
-      client_id: oauthId,
-      client_secret: oauthSecret,
-      code,
-      grant_type: 'authorization_code'
-    }
-  })
-
-  return tokenResponse.access_token
-}
-
-async function addUserSession (user, jwtSecret) {
-  const connection = await connectDb('entu')
-
-  const session = await connection.collection('session').insertOne({
-    created: new Date(),
-    user
-  })
-
-  return jwt.sign({}, jwtSecret, {
-    audience: user.ip,
-    subject: session.insertedId.toString(),
-    expiresIn: '5m'
-  })
-}
