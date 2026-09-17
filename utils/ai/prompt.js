@@ -21,6 +21,18 @@ export async function aiBuildSystemPrompt (entu, language) {
     .replaceAll('{{configuration}}', () => renderConfiguration(types))
 }
 
+// Returns the named `## ` sections of the prompt, so MCP can reuse the parts describing Entu itself rather than
+// restating them - the sections about being the assistant (How you work, Context) stay here
+export async function aiPromptSections (...names) {
+  const template = await getTemplate()
+
+  return names
+    .map((name) => template.split(`\n## ${name}\n`).at(1)?.split('\n## ').at(0)?.trim())
+    .filter(Boolean)
+    .map((section, index) => `## ${names.at(index)}\n\n${section}`)
+    .join('\n\n')
+}
+
 // Renders the account's entity types and property definitions - shared by the system prompt and the MCP schema resource
 export async function aiRenderConfiguration (entu) {
   return renderConfiguration(await getTypeSummaries(entu))

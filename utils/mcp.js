@@ -4,57 +4,13 @@ import jwt from 'jsonwebtoken'
 
 const schemaResourceUri = 'entu://schema'
 
-const instructions = `This server exposes one Entu database. Entu is schema-less: entity types and their property
-definitions are themselves entities, stored in the database rather than in code. Read the ${schemaResourceUri}
-resource before answering questions about what the database contains - it lists every entity type and property
-definition the current user may see, with labels in every configured language. Property values are always arrays
-of typed value objects. Everything is filtered by the calling user's rights, so a missing entity may exist but be
-invisible rather than absent - an unauthenticated client sees public entities only.`
-
-// Builds the Entu context for MCP requests, which the auth and mongodb middleware skip - the token is optional, as on the REST API
-export async function buildMcpContext (event) {
-  const { jwtSecret } = useRuntimeConfig(event)
-  const account = formatDatabaseName(event.context.params?.db)
-
-  if (!account) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid account parameter' })
-  }
-
-  const entu = {
-    ip: (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1'),
-    account
-  }
-
-  const tokenStr = (event.req.headers.get('authorization') || '').replace('Bearer ', '').trim()
-
-  if (tokenStr) {
-    try {
-      entu.token = jwt.verify(tokenStr, jwtSecret)
-
-      // Only verify audience if token contains it (for IP-restricted tokens)
-      if (entu.token.aud && entu.token.aud !== entu.ip) {
-        throw new Error('Invalid JWT audience')
-      }
-      if (entu.token.accounts?.[account]) {
-        entu.user = getObjectId(entu.token.accounts[account])
-        entu.userStr = entu.token.accounts[account]
-      }
-      if (entu.token.user?.email) {
-        entu.email = entu.token.user.email
-      }
-    }
-    catch (e) {
-      throw createError({ statusCode: 401, statusMessage: e.message || String(e) })
-    }
-  }
-
-  entu.db = await connectDb(account)
-
-  return entu
-}
+// What a client needs that the shared prompt sections do not cover - the rest is read from assets/ai/system-prompt.md
+const preamble = `This server exposes one Entu database, read-only. Read the ${schemaResourceUri} resource before
+answering questions about what the database contains. Everything is filtered by the signed-in user's rights, so an
+entity you cannot find may exist but be invisible - an unauthenticated client sees public entities only.`
 
 // Creates an MCP server bound to one request's Entu context - every tool and resource runs as the calling user
-export function createMcpServer (entu) {
+export async function createMcpServer (entu) {
   const { commitHash } = useRuntimeConfig()
 
   const server = new Server({
@@ -62,7 +18,7 @@ export function createMcpServer (entu) {
     version: commitHash || 'dev'
   }, {
     capabilities: { resources: {}, tools: {} },
-    instructions
+    instructions: `${preamble}\n\n${await aiPromptSections('Entu concepts', 'Formulas (RPN)', 'Safety')}`
   })
 
   server.setRequestHandler(ListToolsRequestSchema, () => ({ tools: toolDefinitions() }))

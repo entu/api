@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     throw e
   }
 
-  const server = createMcpServer(entu)
+  const server = await createMcpServer(entu)
 
   // Stateless - each request carries its own credentials, so any API replica can serve any request
   const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true })
