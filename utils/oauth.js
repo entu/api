@@ -96,7 +96,7 @@ export async function oauthCompleteLogin (event, code, state) {
     expiresIn: '5m'
   })
 
-  return { ip: audience, sessionId, state: decodedState }
+  return { sessionId, state: decodedState }
 }
 
 // Signs an OAuth artifact - registrations, state and codes are self-contained JWTs, so the flow needs no storage

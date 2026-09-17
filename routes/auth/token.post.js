@@ -71,13 +71,16 @@ export default defineEventHandler(async (event) => {
     throw oauthError('invalid_grant', 'PKCE verification failed')
   }
 
-  // The session token is bound to the browser's address, so /auth is called with that address forwarded - anything
-  // else fails verification. The session is single use, so a replayed code fails here.
+  // The session token is bound to the browser's address, carried as its own audience, so /auth is called with that
+  // address forwarded - anything else fails verification. The session is single use, so a replayed code fails here.
+  const { jwtSecret } = useRuntimeConfig(event)
+  const ip = jwt.verify(code.session, jwtSecret).aud
+
   const auth = await $fetch(`/auth?db=${encodeURIComponent(code.account)}`, {
     baseURL: oauthBaseUrl(event),
     headers: {
       authorization: `Bearer ${code.session}`,
-      'x-forwarded-for': code.ip
+      'x-forwarded-for': ip
     }
   }).catch(() => {})
 
@@ -91,8 +94,7 @@ export default defineEventHandler(async (event) => {
 
   // An OAuth client calls the API from its own servers, never from the browser that authenticated, so the token is
   // re-signed without the audience - every other claim is kept as /auth issued it
-  const { jwtSecret } = useRuntimeConfig(event)
-  const payload = jwt.verify(auth.token, jwtSecret, { audience: code.ip })
+  const payload = jwt.verify(auth.token, jwtSecret, { audience: ip })
 
   delete payload.aud
 

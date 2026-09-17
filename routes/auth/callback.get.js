@@ -28,7 +28,6 @@ export default defineEventHandler(async (event) => {
   url.searchParams.set('code', oauthSign(event, 'code', {
     account: login.state.account,
     codeChallenge: login.state.codeChallenge,
-    ip: login.ip,
     redirectUri: login.state.redirectUri,
     session: login.sessionId
   }))
