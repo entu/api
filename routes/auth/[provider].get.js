@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Start a login with a chosen provider. Redirects to the OAuth.ee login for that provider. Once the user authenticates, they are sent to `next` with a temporary session token appended — exchange it at `/auth` for a JWT. Without `next` the session token is returned as `{ key }`. Use `/auth` with no provider to let OAuth.ee ask which one to use.',
+    description: 'Start a login with a chosen provider. The user returns to `next` with a session token appended — exchange it at `/auth` for a JWT. Without `next` the token comes back as `{ key }`. Use `/auth` to let OAuth.ee ask which provider to use.',
     security: [], // The user is not authenticated yet — that is what this starts
     parameters: [
       {
@@ -19,7 +19,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'URL to redirect to after successful authentication — the session token is appended to it'
+          description: 'URL to return to, with the session token appended'
         }
       },
       {
@@ -28,7 +28,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           enum: ['en', 'et'],
-          description: 'Language for the OAuth.ee login page. Omit to let OAuth.ee choose'
+          description: 'OAuth.ee page language. Omit to let OAuth.ee choose'
         }
       }
     ],

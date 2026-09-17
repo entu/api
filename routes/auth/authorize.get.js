@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Start the OAuth 2.1 authorization flow. Validates the client and PKCE challenge, then hands the user to the normal Entu login, where OAuth.ee asks which provider to use. Open this in the user\'s browser, not from your server. Once the login completes, the client\'s `redirect_uri` receives `code` and `state`; exchange the code at `/auth/token`.',
+    description: 'Start the OAuth 2.1 authorization flow. Open this in the user\'s browser, not from your server. On success the client\'s `redirect_uri` receives `code` and `state` — exchange the code at `/auth/token`.',
     security: [], // The user is not authenticated yet — that is what this flow does
     parameters: [
       {
@@ -19,7 +19,7 @@ defineRouteMeta({
         required: true,
         schema: {
           type: 'string',
-          description: 'Where to return the user — must be one of the URIs registered for this client',
+          description: 'Must be one of the URIs registered for this client',
           example: 'https://your-app.com/callback'
         }
       },
@@ -39,7 +39,7 @@ defineRouteMeta({
         required: true,
         schema: {
           type: 'string',
-          description: 'PKCE challenge — base64url SHA-256 of the code verifier, at least 43 characters'
+          description: 'base64url SHA-256 of the code verifier'
         }
       },
       {
@@ -49,7 +49,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           enum: ['S256'],
-          description: 'PKCE method — plain challenges are rejected'
+          description: 'Plain challenges are rejected'
         }
       },
       {
@@ -57,7 +57,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Database this authorization is scoped to. Required unless `resource` is given',
+          description: 'Database to scope the token to. Required unless `resource` is given',
           example: 'mydatabase'
         }
       },
@@ -66,7 +66,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'RFC 8707 resource indicator naming the database, as an alternative to `db`',
+          description: 'Resource indicator naming the database, instead of `db`',
           example: 'https://mcp.entu.app/mydatabase'
         }
       },
@@ -75,7 +75,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Opaque value returned unchanged to the redirect URI'
+          description: 'Returned unchanged to the redirect URI'
         }
       }
     ],

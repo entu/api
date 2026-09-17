@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Exchange an authorization code for a token. Verifies the PKCE verifier and returns an ordinary 12-hour Entu JWT, scoped to the database the authorization was issued for. Codes are single use and expire after five minutes.\n\nUnlike tokens from `/auth`, this one is not tied to an IP address, so it works from wherever your application runs.',
+    description: 'Exchange an authorization code for a 12-hour JWT, scoped to the authorized database. Codes are single use and expire in five minutes. Unlike tokens from `/auth`, this one is not tied to an IP address.',
     security: [], // The code and PKCE verifier authenticate this call, not a JWT
     requestBody: {
       required: true,
@@ -20,10 +20,10 @@ defineRouteMeta({
               code: { type: 'string', description: 'Code received at the redirect URI' },
               redirect_uri: {
                 type: 'string',
-                description: 'Must match the redirect_uri used at /auth/authorize',
+                description: 'Must match the one used at /auth/authorize',
                 example: 'https://your-app.com/callback'
               },
-              code_verifier: { type: 'string', description: 'PKCE verifier for the challenge sent at /auth/authorize' }
+              code_verifier: { type: 'string', description: 'Verifier for the challenge sent at /auth/authorize' }
             },
             required: ['grant_type', 'code', 'redirect_uri', 'code_verifier']
           }
@@ -38,7 +38,7 @@ defineRouteMeta({
             schema: {
               type: 'object',
               properties: {
-                access_token: { type: 'string', description: '12-hour Entu JWT — use as `Authorization: Bearer <token>`' },
+                access_token: { type: 'string', description: '12-hour JWT — send as `Authorization: Bearer <token>`' },
                 token_type: { type: 'string', example: 'Bearer' },
                 expires_in: { type: 'integer', description: 'Seconds until the token expires', example: 43200 }
               }

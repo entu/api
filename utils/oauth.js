@@ -37,7 +37,7 @@ export function oauthStartLogin (event, { provider, state = {} } = {}) {
     redirect_uri: `${getRequestURL(event).origin}/auth/callback`,
     response_type: 'code',
     scope: 'openid',
-    state: jwt.sign({ next, ...state }, jwtSecret, { audience, expiresIn: '5m' })
+    state: jwt.sign({ next, ...state, use: 'state' }, jwtSecret, { audience, expiresIn: '5m' })
   })
 
   // Passed through when the caller set it; otherwise OAuth.ee picks the language itself
@@ -58,6 +58,10 @@ export async function oauthCompleteLogin (event, code, state) {
   const { jwtSecret, oauthId, oauthSecret } = useRuntimeConfig(event)
   const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
   const decodedState = jwt.verify(state, jwtSecret, { audience })
+
+  if (decodedState.use !== 'state') {
+    throw createError({ statusCode: 400, statusMessage: 'Not a login state' })
+  }
 
   const tokenResponse = await $fetch('https://oauth.ee/api/token', {
     method: 'POST',
@@ -86,7 +90,7 @@ export async function oauthCompleteLogin (event, code, state) {
     }
   })
 
-  const sessionId = jwt.sign({}, jwtSecret, {
+  const sessionId = jwt.sign({ use: 'session' }, jwtSecret, {
     audience,
     subject: session.insertedId.toString(),
     expiresIn: '5m'
@@ -99,7 +103,7 @@ export async function oauthCompleteLogin (event, code, state) {
 export function oauthSign (event, type, payload) {
   const { jwtSecret } = useRuntimeConfig(event)
 
-  return jwt.sign({ ...payload, typ: type }, jwtSecret, { expiresIn: lifetimes[type] })
+  return jwt.sign({ ...payload, use: type }, jwtSecret, { expiresIn: lifetimes[type] })
 }
 
 // Verifies an OAuth artifact and rejects one of the wrong type, so a client registration can't be replayed as a code
@@ -114,7 +118,7 @@ export function oauthVerify (event, type, token) {
     throw oauthError('invalid_grant', `Invalid or expired ${type}`)
   }
 
-  if (payload.typ !== type) {
+  if (payload.use !== type) {
     throw oauthError('invalid_grant', `Not a valid ${type}`)
   }
 

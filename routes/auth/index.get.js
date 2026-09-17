@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Exchange API key or session token for a 12-hour JWT. Accepts permanent API keys (SHA-256 hashed) or temporary tokens from OAuth/passkey flows. Returns JWT with accounts list and user profile. Optional `db` limits auth to one database.\n\nCalled without an `Authorization` header this starts a login instead, redirecting to OAuth.ee and letting the user choose a provider there. Use `/auth/{provider}` to pick one up front, and `next` to come back to your own URL with a session token appended — exchange that token here for the JWT.',
+    description: 'Exchange an API key or a session token for a 12-hour JWT, with the databases that identity can reach. Use `db` to limit it to one.\n\nWithout an `Authorization` header it starts a login instead, letting OAuth.ee ask which provider to use. Passkey sign-in has its own endpoint and does not come through here.',
     security: [], // Uses API key, not JWT
     parameters: [
       {
@@ -12,7 +12,7 @@ defineRouteMeta({
         in: 'header',
         schema: {
           type: 'string',
-          description: 'Bearer token — permanent API key or temporary session token. Omit to start a login instead',
+          description: 'API key, or the session token from a login. Omit to start a login',
           example: 'Bearer nEkPYET5fYjJqktNz9yfLxPF'
         }
       },
@@ -37,7 +37,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Invite JWT token to accept during authentication'
+          description: 'Invite token to accept while authenticating'
         }
       },
       {
@@ -45,7 +45,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Starting a login: URL to return to afterwards — the session token is appended to it'
+          description: 'Starting a login: URL to return to, with the session token appended'
         }
       },
       {
@@ -54,7 +54,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           enum: ['en', 'et'],
-          description: 'Starting a login: language for the OAuth.ee page. Omit to let OAuth.ee choose'
+          description: 'Starting a login: OAuth.ee page language. Omit to let OAuth.ee choose'
         }
       }
     ],
@@ -87,8 +87,8 @@ defineRouteMeta({
                 user: {
                   type: 'object',
                   properties: {
-                    uid: { type: 'string', description: 'OAuth provider user ID — absent for API key and passkey auth' },
-                    provider: { type: 'string', description: 'OAuth provider name — absent for API key and passkey auth' },
+                    uid: { type: 'string', description: 'OAuth provider user ID — absent for API key auth' },
+                    provider: { type: 'string', description: 'OAuth provider name — absent for API key auth' },
                     email: { type: 'string' },
                     name: { type: 'string' }
                   }
@@ -126,6 +126,12 @@ export default defineEventHandler(async (event) => {
 
   try {
     const decoded = jwt.verify(key, jwtSecret, { audience })
+
+    // Only a session token opens a session — any other Entu JWT falls through to the API key branch below
+    if (decoded.use !== 'session') {
+      throw createError({ statusCode: 400, statusMessage: 'Not a session token' })
+    }
+
     session = await connection.collection('session').findOneAndUpdate(
       { _id: getObjectId(decoded.sub), deleted: { $exists: false } },
       { $set: { deleted: new Date() } }
