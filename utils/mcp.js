@@ -59,14 +59,21 @@ export async function createMcpServer (entu) {
   return server
 }
 
-// Read tools derived from the shared AI tool definitions, so the built-in assistant and MCP cannot drift apart
+// Read tools derived from the shared AI tool definitions, so the built-in assistant and MCP cannot drift apart.
+// Every one of them only reads, which the annotations say out loud - without them a client files the whole server
+// under "other tools" and cannot tell a caller that nothing here changes their data.
 function toolDefinitions () {
   return aiToolDefinitions
     .filter((tool) => aiReadToolNames.includes(tool.function.name))
     .map((tool) => ({
       name: tool.function.name,
       description: tool.function.description,
-      inputSchema: tool.function.parameters
+      inputSchema: tool.function.parameters,
+      annotations: {
+        readOnlyHint: true,
+        idempotentHint: true,
+        openWorldHint: false
+      }
     }))
 }
 
