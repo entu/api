@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Exchange API key or session token for a 12-hour JWT. Accepts permanent API keys (SHA-256 hashed) or temporary tokens from OAuth/passkey flows. Returns JWT with accounts list and user profile. Optional `db` limits auth to one database.\n\nCalled without an `Authorization` header this starts a login instead, redirecting to OAuth.ee and letting the user choose a provider there. Use `/auth/{provider}` to pick one up front, and `next` to come back to your own URL.',
+    description: 'Exchange API key or session token for a 12-hour JWT. Accepts permanent API keys (SHA-256 hashed) or temporary tokens from OAuth/passkey flows. Returns JWT with accounts list and user profile. Optional `db` limits auth to one database.\n\nCalled without an `Authorization` header this starts a login instead, redirecting to OAuth.ee and letting the user choose a provider there. Use `/auth/{provider}` to pick one up front, and `next` to come back to your own URL with a session token appended — exchange that token here for the JWT.',
     security: [], // Uses API key, not JWT
     parameters: [
       {
@@ -56,35 +56,11 @@ defineRouteMeta({
           enum: ['en', 'et'],
           description: 'Starting a login: language for the OAuth.ee page. Omit to let OAuth.ee choose'
         }
-      },
-      {
-        name: 'code',
-        in: 'query',
-        schema: {
-          type: 'string',
-          description: 'Set by OAuth.ee when it returns the user here'
-        }
-      },
-      {
-        name: 'state',
-        in: 'query',
-        schema: {
-          type: 'string',
-          description: 'Set by OAuth.ee when it returns the user here'
-        }
-      },
-      {
-        name: 'error',
-        in: 'query',
-        schema: {
-          type: 'string',
-          description: 'Set by OAuth.ee when the login failed'
-        }
       }
     ],
     responses: {
       200: {
-        description: 'JWT token with accessible accounts. Completing a login without `next` returns `{ key }` — a temporary session token to exchange here for the JWT',
+        description: 'JWT token with accessible accounts',
         content: {
           'application/json': {
             schema: {
@@ -125,7 +101,7 @@ defineRouteMeta({
           }
         }
       },
-      302: { description: 'Redirect to the OAuth.ee login, or to `next` once a login completes' },
+      302: { description: 'Redirect to the OAuth.ee login, when called without an Authorization header' },
       400: {
         description: 'Invalid session, missing user email, or an error reported by the provider',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
@@ -140,22 +116,6 @@ export default defineEventHandler(async (event) => {
 
   // A browser landing here without a credential starts a login instead, with the provider left to oauth.ee to ask
   if (!key) {
-    const { code, error, state } = getQuery(event)
-
-    if (error) {
-      throw createError({ statusCode: 400, statusMessage: error })
-    }
-
-    if (code && state) {
-      const login = await oauthCompleteLogin(event, code, state)
-
-      if (login.state.next) {
-        return redirect(`${login.state.next}${login.sessionId}`, 302)
-      }
-
-      return { key: login.sessionId }
-    }
-
     return oauthStartLogin(event)
   }
 

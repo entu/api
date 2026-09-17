@@ -14,6 +14,15 @@ export default defineEventHandler(async (event) => {
 
   const login = await oauthCompleteLogin(event, code, state)
 
+  // A plain login carries no authorization, so it hands the session token straight back
+  if (!login.state.redirectUri) {
+    if (login.state.next) {
+      return redirect(`${login.state.next}${login.sessionId}`, 302)
+    }
+
+    return { key: login.sessionId }
+  }
+
   const url = new URL(login.state.redirectUri)
 
   url.searchParams.set('code', oauthSign(event, 'code', {

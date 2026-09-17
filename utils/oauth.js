@@ -27,14 +27,14 @@ export function oauthApiUrl (event) {
 
 // Sends the user to the oauth.ee login - without a provider oauth.ee shows its own provider list. `state` is carried
 // through the round trip and handed back by oauthCompleteLogin, so callers need no storage of their own.
-export function oauthStartLogin (event, { provider, redirectPath = '/auth', state = {} } = {}) {
+export function oauthStartLogin (event, { provider, state = {} } = {}) {
   const { jwtSecret, oauthId } = useRuntimeConfig(event)
   const { lang, next } = getQuery(event)
   const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
 
   const params = new URLSearchParams({
     client_id: oauthId,
-    redirect_uri: `${getRequestURL(event).origin}${redirectPath}`,
+    redirect_uri: `${getRequestURL(event).origin}/auth/callback`,
     response_type: 'code',
     scope: 'openid',
     state: jwt.sign({ next, ...state }, jwtSecret, { audience, expiresIn: '5m' })

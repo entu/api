@@ -116,9 +116,8 @@ export default defineEventHandler((event) => {
     return redirectWithError(event, query, 'invalid_request', 'Missing database - add it as the resource or db parameter')
   }
 
-  // The authorization travels inside OAuth.ee's own state, so it comes straight back to /auth/callback
+  // The authorization travels inside OAuth.ee's own state and comes back to /auth/callback with the login
   return oauthStartLogin(event, {
-    redirectPath: '/auth/callback',
     state: {
       account,
       clientState: query.state,

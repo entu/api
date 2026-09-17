@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Start a login with a chosen provider. Redirects to the OAuth.ee login for that provider; OAuth.ee returns the user to `/auth`, which completes the login and hands back a temporary session token. Use `/auth` without a provider to let OAuth.ee ask which one to use.',
+    description: 'Start a login with a chosen provider. Redirects to the OAuth.ee login for that provider. Once the user authenticates, they are sent to `next` with a temporary session token appended — exchange it at `/auth` for a JWT. Without `next` the session token is returned as `{ key }`. Use `/auth` with no provider to let OAuth.ee ask which one to use.',
     security: [], // The user is not authenticated yet — that is what this starts
     parameters: [
       {
