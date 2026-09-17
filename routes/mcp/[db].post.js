@@ -1,26 +1,7 @@
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 
-defineRouteMeta({
-  openAPI: {
-    tags: ['MCP'],
-    summary: 'MCP endpoint',
-    description: 'Model Context Protocol (streamable HTTP) endpoint for one database. Exposes the read tools and the entu://schema resource to external AI agents. A JWT in the `Authorization: Bearer <token>` header is optional - without it only public entities are readable, with it everything that user may see.',
-    parameters: [
-      {
-        name: 'db',
-        in: 'path',
-        required: true,
-        schema: { type: 'string' },
-        description: 'Database name'
-      }
-    ],
-    responses: {
-      200: { description: 'JSON-RPC response' },
-      400: { description: 'Invalid account parameter' },
-      401: { description: 'Invalid token' }
-    }
-  }
-})
+// JSON-RPC over streamable HTTP, driven by MCP clients rather than called by hand, so kept out of the API docs
+defineRouteMeta({ openAPI: { hidden: true } })
 
 export default defineEventHandler(async (event) => {
   let entu

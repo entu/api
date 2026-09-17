@@ -1,11 +1,63 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    summary: 'Register an OAuth client',
-    description: 'RFC 7591 dynamic client registration. The returned client_id is a signed token carrying its own redirect URIs - nothing is stored server side.',
+    description: 'Register an OAuth client (RFC 7591). There is no application form and no client secret — the returned `client_id` is a signed token carrying its own redirect URIs, valid for a year. Store it rather than registering again on every start.',
+    security: [], // Registration is open — the client is not yet known
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              redirect_uris: {
+                type: 'array',
+                description: 'Where the user may be returned after login — 1 to 10 absolute URIs',
+                items: { type: 'string', example: 'https://your-app.com/callback' }
+              },
+              client_name: {
+                type: 'string',
+                description: 'Human-readable application name, up to 200 characters',
+                example: 'My App'
+              }
+            },
+            required: ['redirect_uris']
+          }
+        }
+      }
+    },
     responses: {
-      201: { description: 'Registered client' },
-      400: { description: 'Invalid redirect_uris' }
+      201: {
+        description: 'Registered client',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                client_id: { type: 'string', description: 'Client id to use at /auth/authorize' },
+                client_name: { type: 'string' },
+                redirect_uris: {
+                  type: 'array',
+                  items: { type: 'string' }
+                },
+                token_endpoint_auth_method: { type: 'string', example: 'none' },
+                grant_types: {
+                  type: 'array',
+                  items: { type: 'string', example: 'authorization_code' }
+                },
+                response_types: {
+                  type: 'array',
+                  items: { type: 'string', example: 'code' }
+                }
+              }
+            }
+          }
+        }
+      },
+      400: {
+        description: 'Missing redirect_uris, more than 10 of them, or one that is not a valid URI',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      }
     }
   }
 })

@@ -1,14 +1,5 @@
-defineRouteMeta({
-  openAPI: {
-    tags: ['Authentication'],
-    summary: 'OAuth provider callback',
-    description: 'Receives the temporary session token from the Entu provider login, wraps it into an authorization code and returns the user to the client.',
-    responses: {
-      302: { description: 'Redirect back to the client redirect_uri' },
-      400: { description: 'Invalid or expired authorization state' }
-    }
-  }
-})
+// Internal step of the authorization flow — only /auth/{provider} redirects here, so kept out of the API docs
+defineRouteMeta({ openAPI: { hidden: true } })
 
 export default defineEventHandler((event) => {
   const query = getQuery(event)

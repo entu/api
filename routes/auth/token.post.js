@@ -1,11 +1,53 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    summary: 'Exchange an authorization code for a token',
-    description: 'Verifies the PKCE verifier and exchanges the wrapped Entu session for a normal Entu JWT, scoped to the authorized database.',
+    description: 'Exchange an authorization code for a token. Verifies the PKCE verifier and returns an ordinary 12-hour Entu JWT, scoped to the database the authorization was issued for. Codes are single use and expire after five minutes. The token is bound to the IP that calls this endpoint, so exchange the code from the same machine that will use the token.',
+    security: [], // The code and PKCE verifier authenticate this call, not a JWT
+    requestBody: {
+      required: true,
+      content: {
+        'application/x-www-form-urlencoded': {
+          schema: {
+            type: 'object',
+            properties: {
+              grant_type: {
+                type: 'string',
+                enum: ['authorization_code'],
+                description: 'Only the authorization code grant is supported'
+              },
+              code: { type: 'string', description: 'Code received at the redirect URI' },
+              redirect_uri: {
+                type: 'string',
+                description: 'Must match the redirect_uri used at /auth/authorize',
+                example: 'https://your-app.com/callback'
+              },
+              code_verifier: { type: 'string', description: 'PKCE verifier for the challenge sent at /auth/authorize' }
+            },
+            required: ['grant_type', 'code', 'redirect_uri', 'code_verifier']
+          }
+        }
+      }
+    },
     responses: {
-      200: { description: 'Access token' },
-      400: { description: 'Invalid grant' }
+      200: {
+        description: 'Access token',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                access_token: { type: 'string', description: '12-hour Entu JWT — use as `Authorization: Bearer <token>`' },
+                token_type: { type: 'string', example: 'Bearer' },
+                expires_in: { type: 'integer', description: 'Seconds until the token expires', example: 43200 }
+              }
+            }
+          }
+        }
+      },
+      400: {
+        description: 'Unknown, expired or already used code, redirect_uri mismatch, failed PKCE verification, or no access to the authorized database',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      }
     }
   }
 })

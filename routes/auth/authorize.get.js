@@ -1,12 +1,112 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    summary: 'Start the OAuth authorization flow',
-    description: 'Validates the client and PKCE challenge, then hands the user to the normal Entu provider login. Without a `provider` parameter it renders the provider picker.',
+    description: 'Start the OAuth 2.1 authorization flow. Validates the client and PKCE challenge, then hands the user to the normal `/auth/{provider}` login. Without a `provider` parameter it renders a provider picker for the user to choose from. Open this in the user\'s browser, not from your server. Once the login completes, the client\'s `redirect_uri` receives `code` and `state`; exchange the code at `/auth/token`.',
+    security: [], // The user is not authenticated yet — that is what this flow does
+    parameters: [
+      {
+        name: 'client_id',
+        in: 'query',
+        required: true,
+        schema: {
+          type: 'string',
+          description: 'Client id issued by /auth/register'
+        }
+      },
+      {
+        name: 'redirect_uri',
+        in: 'query',
+        required: true,
+        schema: {
+          type: 'string',
+          description: 'Where to return the user — must be one of the URIs registered for this client',
+          example: 'https://your-app.com/callback'
+        }
+      },
+      {
+        name: 'response_type',
+        in: 'query',
+        required: true,
+        schema: {
+          type: 'string',
+          enum: ['code'],
+          description: 'Only the authorization code flow is supported'
+        }
+      },
+      {
+        name: 'code_challenge',
+        in: 'query',
+        required: true,
+        schema: {
+          type: 'string',
+          description: 'PKCE challenge — base64url SHA-256 of the code verifier, at least 43 characters'
+        }
+      },
+      {
+        name: 'code_challenge_method',
+        in: 'query',
+        required: true,
+        schema: {
+          type: 'string',
+          enum: ['S256'],
+          description: 'PKCE method — plain challenges are rejected'
+        }
+      },
+      {
+        name: 'db',
+        in: 'query',
+        schema: {
+          type: 'string',
+          description: 'Database this authorization is scoped to. Required unless `resource` is given',
+          example: 'mydatabase'
+        }
+      },
+      {
+        name: 'resource',
+        in: 'query',
+        schema: {
+          type: 'string',
+          description: 'RFC 8707 resource indicator naming the database, as an alternative to `db`',
+          example: 'https://mcp.entu.app/mydatabase'
+        }
+      },
+      {
+        name: 'state',
+        in: 'query',
+        schema: {
+          type: 'string',
+          description: 'Opaque value returned unchanged to the redirect URI'
+        }
+      },
+      {
+        name: 'provider',
+        in: 'query',
+        schema: {
+          type: 'string',
+          enum: ['e-mail', 'google', 'apple', 'smart-id', 'mobile-id', 'id-card'],
+          description: 'Login provider. Omit to let the user pick one'
+        }
+      },
+      {
+        name: 'ui_locales',
+        in: 'query',
+        schema: {
+          type: 'string',
+          enum: ['en', 'et'],
+          description: 'Preferred login language. Falls back to the browser\'s Accept-Language'
+        }
+      }
+    ],
     responses: {
-      200: { description: 'Provider picker' },
-      302: { description: 'Redirect to the provider login' },
-      400: { description: 'Invalid authorization request' }
+      200: {
+        description: 'Provider picker page, when no provider was given',
+        content: { 'text/html': { schema: { type: 'string' } } }
+      },
+      302: { description: 'Redirect to the provider login, or back to the client redirect URI with an OAuth error' },
+      400: {
+        description: 'Unknown client_id, or a redirect_uri not registered for it',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      }
     }
   }
 })
