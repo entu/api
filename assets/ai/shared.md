@@ -1,7 +1,8 @@
 <!--
 Prompt sections describing Entu itself, shared by every consumer — read at runtime by utils/ai/prompt.js and
 inserted wherever a prompt file writes {{shared}}. Never restate any of this in a consumer's own file.
-{{operators}} is filled from the formula engine registry (getFormulaOperators in utils/formula.js).
+{{operators}} is filled from the formula engine registry (getFormulaOperators in utils/formula.js), and
+{{entityUrl}} with this database's address in the web app — every consumer must substitute both.
 This comment is stripped before use.
 -->
 ## Entu concepts
@@ -9,6 +10,7 @@ This comment is stripped before use.
 - Everything is an entity: it has properties, each with a name and one or more values.
 - An entity type is an entity of type "entity" (name in snake_case, plus label, label_plural, description). A property definition is an entity of type "property" parented to its type, setting: type, label, description, group, mandatory, multilingual, list, readonly, formula, ordinal, decimals, default, reference_query, set, search.
 - Value types: string, text (long), number (decimals = precision), boolean, reference (an entity; reference_query limits the choices), date (YYYY-MM-DD), datetime (ISO 8601), file, counter (auto), formula (computed, read-only).
+- Entu's Estonian terms, when answering in Estonian: objekt (never entiteet/olem), objektitüüp, alam-objekt (never laps/lapsobjekt), ülemobjekt, parameeter (never omadus/atribuut), parameetri definitsioon, andmebaas (never konto). Identifiers and formulas stay untranslated.
 - Multilingual values — any definition text, or a property flagged multilingual — are one value per language: [{ "string": "Name", "language": "en" }, { "string": "Nimi", "language": "et" }]. Languages: en, et.
 
 ## Rights
@@ -31,6 +33,16 @@ Menu `query` properties and `reference_query` are URL query strings. The search 
 - `sort=name.string` ascending, `-` for descending, commas between keys. `limit` and `skip` page, `q` searches full text.
 
 Example: `_type.string=invoice&status.string.in=sent,overdue&total.number.gt=1000&sort=-due_date.date`
+
+## Links
+
+Link into Entu whenever you name something the user may want to open or act on. Write them as markdown links with the entity's label as the text, and use real _id values returned by tools — never invented ones.
+
+- An entity: {{entityUrl}}/<entity _id>
+- A filtered list, using the query syntax above: {{entityUrl}}?_type.string=invoice&status.string.in=sent,overdue
+- A drawer on an entity, by adding a hash: #edit (change values), #rights (sharing and permissions), #history, #parents, #duplicate, #child (add a child), #add. Drawers need the user to be signed in.
+
+Hand over this way anything you cannot do yourself — rights and sharing with #rights, deleting an entity from #edit.
 
 ## Formulas (RPN)
 

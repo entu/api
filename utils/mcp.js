@@ -6,14 +6,14 @@ const schemaResourceUri = 'entu://schema'
 
 // Creates an MCP server bound to one request's Entu context - every tool and resource runs as the calling user
 export async function createMcpServer (entu) {
-  const { commitHash } = useRuntimeConfig()
+  const { appUrl, commitHash } = useRuntimeConfig()
 
   const server = new Server({
     name: 'entu',
     version: commitHash || 'dev'
   }, {
     capabilities: { resources: {}, tools: {} },
-    instructions: await aiPrompt('mcp')
+    instructions: (await aiPrompt('mcp')).replaceAll('{{entityUrl}}', () => `${appUrl}/${entu.account}`)
   })
 
   server.setRequestHandler(ListToolsRequestSchema, () => ({ tools: toolDefinitions() }))

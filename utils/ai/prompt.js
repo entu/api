@@ -16,7 +16,7 @@ export async function aiBuildSystemPrompt (entu, language) {
   // Function replacers so `$` in user-entered configuration data is not treated as a replacement pattern
   return template
     .replaceAll('{{today}}', () => today)
-    .replaceAll('{{account}}', () => entu.account)
+    .replaceAll('{{entityUrl}}', () => `/${entu.account}`)
     .replaceAll('{{language}}', () => language || 'unknown')
     .replaceAll('{{configuration}}', () => renderConfiguration(types))
 }
