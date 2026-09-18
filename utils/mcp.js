@@ -4,6 +4,48 @@ import jwt from 'jsonwebtoken'
 
 const schemaResourceUri = 'entu://schema'
 
+// Builds the Entu context for MCP requests, which the auth and mongodb middleware skip - the token is optional, as on the REST API
+export async function buildMcpContext (event) {
+  const { jwtSecret } = useRuntimeConfig(event)
+  const account = formatDatabaseName(event.context.params?.db)
+
+  if (!account) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid account parameter' })
+  }
+
+  const entu = {
+    ip: (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1'),
+    account
+  }
+
+  const tokenStr = (event.req.headers.get('authorization') || '').replace('Bearer ', '').trim()
+
+  if (tokenStr) {
+    try {
+      entu.token = jwt.verify(tokenStr, jwtSecret)
+
+      // Only verify audience if token contains it (for IP-restricted tokens)
+      if (entu.token.aud && entu.token.aud !== entu.ip) {
+        throw new Error('Invalid JWT audience')
+      }
+      if (entu.token.accounts?.[account]) {
+        entu.user = getObjectId(entu.token.accounts[account])
+        entu.userStr = entu.token.accounts[account]
+      }
+      if (entu.token.user?.email) {
+        entu.email = entu.token.user.email
+      }
+    }
+    catch (e) {
+      throw createError({ statusCode: 401, statusMessage: e.message || String(e) })
+    }
+  }
+
+  entu.db = await connectDb(account)
+
+  return entu
+}
+
 // Creates an MCP server bound to one request's Entu context - every tool and resource runs as the calling user
 export async function createMcpServer (entu) {
   const { appUrl, commitHash } = useRuntimeConfig()
@@ -59,9 +101,7 @@ export async function createMcpServer (entu) {
   return server
 }
 
-// Read tools derived from the shared AI tool definitions, so the built-in assistant and MCP cannot drift apart.
-// Every one of them only reads, which the annotations say out loud - without them a client files the whole server
-// under "other tools" and cannot tell a caller that nothing here changes their data.
+// Read tools from the shared AI definitions, annotated read-only so clients know nothing here changes data
 function toolDefinitions () {
   return aiToolDefinitions
     .filter((tool) => aiReadToolNames.includes(tool.function.name))

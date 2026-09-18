@@ -21,6 +21,11 @@ export async function aiBuildSystemPrompt (entu, language) {
     .replaceAll('{{configuration}}', () => renderConfiguration(types))
 }
 
+// Renders the account's entity types and property definitions for the MCP schema resource
+export async function aiRenderConfiguration (entu) {
+  return renderConfiguration(await getTypeSummaries(entu))
+}
+
 // Reads a prompt file and splices in ai/shared.md wherever it writes {{shared}}, so the sections describing Entu
 // itself are written once and every consumer gets the same wording
 export async function aiPrompt (name) {
