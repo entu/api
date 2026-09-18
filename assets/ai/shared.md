@@ -37,7 +37,7 @@ Example: `_type.string=invoice&status.string.in=sent,overdue&total.number.gt=100
 
 ## Links
 
-Link into Entu whenever you name something the user may want to open or act on. Write them as markdown links with the entity's label as the text, and use real _id values returned by tools — never invented ones.
+Every entity you name MUST be a markdown link with its name as the text, and every answer about a set — search results, a count, a group — MUST also link the filtered list that produces it. For a large set, name only a few and let the list link carry the rest. Use real _id values returned by tools, never invented ones.
 
 - An entity: {{entityUrl}}/<entity _id>
 - A filtered list, using the query syntax above: {{entityUrl}}?_type.string=invoice&status.string.in=sent,overdue
