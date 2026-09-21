@@ -1,3 +1,34 @@
+import { Script } from 'node:vm'
+
+// REGEX operator limits — the vm timeout bounds CPU, the rest bound memory.
+const REGEX_TIMEOUT_MS = 25
+const REGEX_MAX_PER_FORMULA = 10
+const REGEX_MAX_VALUES = 1000
+const REGEX_MAX_PATTERN = 500
+const REGEX_MAX_LENGTH = 10000
+const REGEX_MAX_TOTAL = 1000000
+
+// Runs inside the vm; throws before replacing when the result could outgrow the caps, as each `$` reference may insert the whole input per match.
+const REGEX_SCRIPT = new Script(`
+  const regex = new RegExp(pattern, 'g')
+  const references = replacement.split('$').length - 1
+  let total = 0
+
+  JSON.stringify(JSON.parse(values).map((value) => {
+    const matches = value.match(regex)?.length || 0
+
+    if (value.length + matches * (replacement.length + references * value.length) > ${REGEX_MAX_TOTAL}) throw new RangeError()
+
+    const replaced = value.replace(regex, replacement)
+
+    total += replaced.length
+
+    if (replaced.length > ${REGEX_MAX_LENGTH} || total > ${REGEX_MAX_TOTAL}) throw new RangeError()
+
+    return replaced
+  }))
+`)
+
 // Strict-RPN formula engine.
 //
 // A formula is a whitespace-separated sequence of tokens evaluated left-to-right
@@ -22,6 +53,9 @@ export async function formula (entu, str, entityId, localValues = {}) {
   const tokens = parseFormulaTokens(str)
 
   if (tokens.length === 0) return
+
+  // Each REGEX call may block the event loop up to its timeout, so a formula gets a fixed number of them.
+  if (tokens.filter((t) => t === 'REGEX').length > REGEX_MAX_PER_FORMULA) return
 
   // Implicit CONCAT: append CONCAT if the formula doesn't end with a recognized operator.
   const lastToken = tokens.at(-1)
@@ -757,6 +791,39 @@ function opRound (slots) {
   return value.map((v) => Number(v.toFixed(d)))
 }
 
+// Per-value ternary: replace every match of the regex pattern in each string of the value slot.
+async function opRegex (slots, { entu, entityId }) {
+  const [values, patterns, replacements] = slots
+  const [pattern] = patterns
+  const [replacement] = replacements
+  const isShortString = (v, max) => typeof v === 'string' && v.length <= max
+
+  if (values.length === 0 || values.length > REGEX_MAX_VALUES) return
+
+  if (patterns.length !== 1 || !isShortString(pattern, REGEX_MAX_PATTERN)) return
+
+  if (replacements.length !== 1 || !isShortString(replacement, REGEX_MAX_PATTERN)) return
+
+  if (!values.every((v) => isShortString(v, REGEX_MAX_LENGTH))) return
+
+  if (values.reduce((sum, v) => sum + v.length, 0) > REGEX_MAX_TOTAL) return
+
+  // The pattern is user content, so it runs in a vm whose timeout stops catastrophic backtracking; only strings cross into it.
+  try {
+    const result = REGEX_SCRIPT.runInNewContext({ values: JSON.stringify(values), pattern, replacement }, { timeout: REGEX_TIMEOUT_MS })
+
+    return JSON.parse(result)
+  }
+  catch (error) {
+    // The error message echoes the user's pattern, so only its code or name is logged.
+    loggerError(`Formula REGEX failed: ${error?.code || error?.name}`, entu, [`entity:${entityId}`])
+  }
+  finally {
+    // Yield to the event loop so back-to-back REGEX calls slow other requests down instead of freezing them.
+    await new Promise((resolve) => setImmediate(resolve))
+  }
+}
+
 // Unary: true if the input slot is non-empty.
 function opExists (slots) {
   return [slots.at(0).length >= 1]
@@ -821,6 +888,7 @@ const OPERATORS = {
   // Per-value
   ABS: { arity: 1, fn: opAbs },
   ROUND: { arity: 2, fn: opRound },
+  REGEX: { arity: 3, fn: opRegex },
 
   // Other
   EXISTS: { arity: 1, fn: opExists },

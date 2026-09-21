@@ -54,7 +54,9 @@ Field references: propname (same entity), _id (own id), _child.<type>.<prop>, _r
 Operators (operand count in parentheses):
 {{operators}}
 
-Operand order: ROUND (value, decimals), IF (condition, then, else), WHEN (condition, then).
+Operand order: ROUND (value, decimals), REGEX (value, pattern, replacement), IF (condition, then, else), WHEN (condition, then).
+
+REGEX replaces every match of a JavaScript regex in each string value; `$1` in the replacement keeps a capture group, so `code '^([A-Z]+)-.*$' '$1' REGEX` extracts a substring. Non-matching values pass through unchanged.
 
 Example: `_child.row.total SUM` — sums total across child entities of type row.
 
