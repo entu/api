@@ -58,6 +58,8 @@ Operand order: ROUND (value, decimals), REGEX (value, pattern, replacement), IF 
 
 REGEX replaces every match of a JavaScript regex in each string value; `$1` in the replacement keeps a capture group, so `code '^([A-Z]+)-.*$' '$1' REGEX` extracts a substring. Non-matching values pass through unchanged.
 
+AND, OR and NOT take single booleans. NUMBER parses plain decimal strings ("12.5") into numbers. DATE and DATETIME turn ISO 8601 strings or epoch milliseconds into real date / datetime values — use them as the last step of a formula on a date or datetime property, after any comparison or MIN/MAX (dates inside a formula are ISO strings).
+
 Example: `_child.row.total SUM` — sums total across child entities of type row.
 
 ## Safety

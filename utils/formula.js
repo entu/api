@@ -8,6 +8,10 @@ const REGEX_MAX_PATTERN = 500
 const REGEX_MAX_LENGTH = 10000
 const REGEX_MAX_TOTAL = 1000000
 
+// NUMBER accepts plain decimals only; DATE and DATETIME accept strict ISO 8601 only, keeping engine-specific Date parsing out.
+const NUMBER_PATTERN = /^-?\d+(?:\.\d+)?$/
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}(?<time>T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?<zone>Z|[+-]\d{2}:\d{2})?)?$/
+
 // Runs inside the vm; throws before replacing when the result could outgrow the caps, as each `$` reference may insert the whole input per match.
 const REGEX_SCRIPT = new Script(`
   const regex = new RegExp(pattern, 'g')
@@ -47,7 +51,7 @@ const REGEX_SCRIPT = new Script(`
 // CONCAT is appended.
 
 // Evaluates a formula string and returns the computed property value(s).
-// Returns one of: { number }, { string }, { boolean }, an array of those objects
+// Returns one of: { number }, { string }, { boolean }, { date }, { datetime }, an array of those objects
 // (when the result is multi-value), or undefined (no property written).
 export async function formula (entu, str, entityId, localValues = {}) {
   const tokens = parseFormulaTokens(str)
@@ -126,6 +130,15 @@ function wrapValue (value) {
 
   if (typeof value === 'boolean') {
     return { boolean: value }
+  }
+
+  // DATE and DATETIME results are rebuilt, so no other key of a slot object can reach the entity document.
+  if (value.datetime instanceof Date) {
+    return { datetime: value.datetime }
+  }
+
+  if (value.date instanceof Date) {
+    return { date: value.date }
   }
 
   // Coerce anything else (ObjectId, etc.) into a real string so the property
@@ -791,6 +804,85 @@ function opRound (slots) {
   return value.map((v) => Number(v.toFixed(d)))
 }
 
+// Builds a per-value unary operator that accepts only values of one primitive type.
+function makePerValue (type, convert) {
+  return function (slots) {
+    const slot = slots.at(0)
+
+    if (slot.length === 0) return
+
+    if (slot.some((v) => typeof v !== type)) return
+
+    return slot.map((v) => convert(v))
+  }
+}
+
+const opFloor = makePerValue('number', (v) => Math.floor(v))
+const opCeil = makePerValue('number', (v) => Math.ceil(v))
+const opUpper = makePerValue('string', (v) => v.toUpperCase())
+const opLower = makePerValue('string', (v) => v.toLowerCase())
+
+// Per-value unary: parse every plain decimal string in the slot into a number; numbers pass through.
+function opNumber (slots) {
+  const slot = slots.at(0)
+
+  if (slot.length === 0) return
+
+  const numbers = slot.map((v) => {
+    if (typeof v === 'number') {
+      return v
+    }
+
+    if (typeof v !== 'string' || !NUMBER_PATTERN.test(v.trim())) return
+
+    return Number(v.trim())
+  })
+
+  if (numbers.some((v) => v === undefined || !Number.isFinite(v))) return
+
+  return numbers
+}
+
+// Converts an ISO 8601 string or epoch milliseconds into a valid Date, or undefined.
+function toDate (value) {
+  const iso = typeof value === 'string' ? ISO_DATE_PATTERN.exec(value)?.groups : undefined
+
+  if (typeof value !== 'number' && !iso) return
+
+  // A datetime string without a time zone is read as UTC, not in the server's zone.
+  const isZoneless = iso?.time && !iso.zone
+  const date = new Date(isZoneless ? `${value}Z` : value)
+
+  if (Number.isNaN(date.getTime())) return
+
+  return date
+}
+
+// Per-value unary: convert every value to a date property value, truncated to the UTC day.
+function opDate (slots) {
+  const dates = slots.at(0).map((v) => toDate(v))
+
+  if (dates.length === 0 || dates.includes(undefined)) return
+
+  // Date.UTC would remap years 0–99 to 1900–1999, so the time is cleared on a copy instead.
+  return dates.map((d) => {
+    const day = new Date(d)
+
+    day.setUTCHours(0, 0, 0, 0)
+
+    return { date: day }
+  })
+}
+
+// Per-value unary: convert every value to a datetime property value.
+function opDatetime (slots) {
+  const dates = slots.at(0).map((v) => toDate(v))
+
+  if (dates.length === 0 || dates.includes(undefined)) return
+
+  return dates.map((d) => ({ datetime: d }))
+}
+
 // Per-value ternary: replace every match of the regex pattern in each string of the value slot.
 async function opRegex (slots, { entu, entityId }) {
   const [values, patterns, replacements] = slots
@@ -827,6 +919,50 @@ async function opRegex (slots, { entu, entityId }) {
 // Unary: true if the input slot is non-empty.
 function opExists (slots) {
   return [slots.at(0).length >= 1]
+}
+
+// Unary: distinct values of the slot, in order of first occurrence.
+function opUnique (slots) {
+  const slot = slots.at(0)
+
+  if (slot.length === 0) return
+
+  return [...new Set(slot)]
+}
+
+// Returns the slot's value when it holds exactly one boolean, otherwise undefined.
+function singleBoolean (slot) {
+  if (slot.length !== 1 || typeof slot.at(0) !== 'boolean') return
+
+  return slot.at(0)
+}
+
+// Binary logical operators — each side must be exactly one boolean.
+function opAnd (slots) {
+  const left = singleBoolean(slots.at(0))
+  const right = singleBoolean(slots.at(1))
+
+  if (left === undefined || right === undefined) return
+
+  return [left && right]
+}
+
+function opOr (slots) {
+  const left = singleBoolean(slots.at(0))
+  const right = singleBoolean(slots.at(1))
+
+  if (left === undefined || right === undefined) return
+
+  return [left || right]
+}
+
+// Unary logical negation of exactly one boolean.
+function opNot (slots) {
+  const value = singleBoolean(slots.at(0))
+
+  if (value === undefined) return
+
+  return [!value]
 }
 
 // Ternary conditional with else.
@@ -888,10 +1024,23 @@ const OPERATORS = {
   // Per-value
   ABS: { arity: 1, fn: opAbs },
   ROUND: { arity: 2, fn: opRound },
+  FLOOR: { arity: 1, fn: opFloor },
+  CEIL: { arity: 1, fn: opCeil },
+  NUMBER: { arity: 1, fn: opNumber },
+  UPPER: { arity: 1, fn: opUpper },
+  LOWER: { arity: 1, fn: opLower },
   REGEX: { arity: 3, fn: opRegex },
+  DATE: { arity: 1, fn: opDate },
+  DATETIME: { arity: 1, fn: opDatetime },
+
+  // Logical
+  AND: { arity: 2, fn: opAnd },
+  OR: { arity: 2, fn: opOr },
+  NOT: { arity: 1, fn: opNot },
 
   // Other
   EXISTS: { arity: 1, fn: opExists },
+  UNIQUE: { arity: 1, fn: opUnique },
   IF: { arity: 3, fn: opIf },
   WHEN: { arity: 2, fn: opWhen }
 }
