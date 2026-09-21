@@ -97,9 +97,7 @@ export default defineEventHandler(async (event) => {
 function accumulateUsage (usage, response) {
   const u = response?.usage
 
-  if (!u) {
-    return
-  }
+  if (!u) return
 
   const cacheRead = u.cache_read_input_tokens || u.prompt_tokens_details?.cached_tokens || 0
   const cacheCreated = u.cache_created_input_tokens || 0

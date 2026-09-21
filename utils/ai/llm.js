@@ -85,8 +85,7 @@ recordUsage// Accumulates per-db AI usage into the stats collection at day/month
 async function recordUsage (entu, response) {
   const usage = response?.usage
 
-  if (!usage)
-    return
+  if (!usage) return
 
   const inc = {
     count: 1,
