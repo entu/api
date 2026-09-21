@@ -106,8 +106,7 @@ export default defineEventHandler(async (event) => {
   if (property.type === 'entu_api_key') {
     property.string = '***'
   }
-
-  if (property.type === 'entu_passkey') {
+  else if (property.type === 'entu_passkey') {
     property.string = `${property.passkey_device || ''} ${property._id.toString().slice(-4).toUpperCase()}`.trim()
   }
 

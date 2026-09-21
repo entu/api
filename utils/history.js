@@ -133,8 +133,7 @@ export async function entityHistory (entu, entityId, { limit = 100, skip = 0 } =
         x.new.string = '***'
       }
     }
-
-    if (x.type === 'entu_passkey') {
+    else if (x.type === 'entu_passkey') {
       if (x.old?.string) {
         x.old.string = `${x.old.passkey_device || ''} ${x.old._id.toString().slice(-4).toUpperCase()}`.trim()
       }
@@ -142,8 +141,7 @@ export async function entityHistory (entu, entityId, { limit = 100, skip = 0 } =
         x.new.string = `${x.new.passkey_device || ''} ${x.new._id.toString().slice(-4).toUpperCase()}`.trim()
       }
     }
-
-    if (x.type === 'entu_user') {
+    else if (x.type === 'entu_user') {
       if (x.old?.string) {
         x.old.string = '***'
       }

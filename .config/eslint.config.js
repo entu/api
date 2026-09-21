@@ -1,13 +1,16 @@
 import stylistic from '@stylistic/eslint-plugin'
 import unicorn from 'eslint-plugin-unicorn'
 
+import guardBraces from './eslint-guard-braces.js'
+
 export default [
   {
-    ignores: ['.nitro/', '.output/']
+    ignores: ['.claude/', '.nitro/', '.output/']
   },
   {
     plugins: {
       '@stylistic': stylistic,
+      entu: { rules: { 'guard-braces': guardBraces } },
       unicorn
     },
     languageOptions: {
@@ -72,42 +75,11 @@ export default [
       // - curly multi-line: anything spanning lines needs braces
       // - nonblock-statement-body-position: a brace-less body sits on the
       //   same line as its `if`
-      // - no-restricted-syntax: brace-less bodies may only be a bare
-      //   return/continue/break, and a block holding ONLY a bare
-      //   return/continue/break must be inlined instead
+      // - entu/guard-braces (local, auto-fixable): only a bare guard may
+      //   go brace-less, and a block holding ONLY a bare guard is inlined
       curly: ['error', 'multi-line'],
       '@stylistic/nonblock-statement-body-position': ['error', 'beside'],
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'IfStatement > .consequent:not(BlockStatement, ReturnStatement, ContinueStatement, BreakStatement)',
-          message: 'Only a bare return/continue/break may follow an if without braces — use a block.'
-        },
-        {
-          selector: 'IfStatement > ReturnStatement.consequent[argument]',
-          message: 'return with a value goes in a braced block — only a bare `if (x) return` stays inline.'
-        },
-        {
-          selector: 'IfStatement > .alternate:not(BlockStatement, IfStatement)',
-          message: 'An else body must be a braced block.'
-        },
-        {
-          selector: ':matches(ForStatement, ForInStatement, ForOfStatement, WhileStatement, DoWhileStatement) > .body:not(BlockStatement)',
-          message: 'A loop body must be a braced block.'
-        },
-        {
-          selector: 'IfStatement[alternate=null] > BlockStatement.consequent[body.length=1] > ReturnStatement[argument=null]',
-          message: 'A guard that only returns goes inline without braces: `if (x) return`.'
-        },
-        {
-          selector: 'IfStatement[alternate=null] > BlockStatement.consequent[body.length=1] > ContinueStatement',
-          message: '`if (x) continue` goes inline without braces.'
-        },
-        {
-          selector: 'IfStatement[alternate=null] > BlockStatement.consequent[body.length=1] > BreakStatement',
-          message: '`if (x) break` goes inline without braces.'
-        }
-      ],
+      'entu/guard-braces': 'error',
       '@stylistic/arrow-parens': ['error', 'always'],
       '@stylistic/brace-style': ['error', 'stroustrup'],
       '@stylistic/comma-dangle': ['error', 'never'],
@@ -121,14 +93,19 @@ export default [
       '@stylistic/quotes': ['error', 'single'],
       '@stylistic/semi': ['error', 'never'],
       '@stylistic/space-before-function-paren': ['error', 'always'],
+      'unicorn/no-duplicate-if-branches': 'error',
       'unicorn/no-for-each': 'error',
       'unicorn/no-lonely-if': 'error',
       'unicorn/no-useless-undefined': 'error',
       'unicorn/prefer-array-flat-map': 'error',
       'unicorn/prefer-at': 'error',
+      'unicorn/prefer-boolean-return': 'error',
       'unicorn/prefer-date-now': 'error',
+      'unicorn/prefer-early-return': 'error',
+      'unicorn/prefer-else-if': 'error',
       'unicorn/prefer-includes': 'error',
       'unicorn/prefer-number-properties': 'error',
+      'unicorn/prefer-simplified-conditions': 'error',
       'unicorn/prefer-string-slice': 'error'
     }
   }

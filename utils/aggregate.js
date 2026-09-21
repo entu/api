@@ -162,8 +162,7 @@ export async function aggregateEntity (entu, entityId) {
               ...valueArray
             ]
           }
-
-          if (sharing === 'public') {
+          else if (sharing === 'public') {
             newEntity.search.public = [
               ...(newEntity.search.public || []),
               ...valueArray

@@ -1,6 +1,7 @@
 export default defineEventHandler((event) => {
-  if (event.method === 'OPTIONS') {
-    setResponseStatus(event, 204)
-    return ''
-  }
+  if (event.method !== 'OPTIONS') return
+
+  setResponseStatus(event, 204)
+
+  return ''
 })
