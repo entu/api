@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Entity'],
-    description: 'Returns chronological audit log of all property changes — additions, modifications, and deletions with timestamps and authors.',
+    description: 'Returns the changes this entity (usually a person) has made to other entities, newest first — the first entry is its last activity. Only changes on entities the caller has direct rights on are returned. Writes only: logins and reads are not recorded.',
     security: [{ bearerAuth: [] }],
     parameters: [
       {
@@ -19,7 +19,7 @@ defineRouteMeta({
         required: true,
         schema: {
           type: 'string',
-          description: 'Entity ID'
+          description: 'ID of the entity whose activity is returned'
         }
       },
       {
@@ -28,7 +28,8 @@ defineRouteMeta({
         schema: {
           type: 'integer',
           default: 100,
-          description: 'Maximum number of history entries to return'
+          maximum: 1000,
+          description: 'Maximum number of activity entries to return'
         }
       },
       {
@@ -37,13 +38,13 @@ defineRouteMeta({
         schema: {
           type: 'integer',
           default: 0,
-          description: 'Number of history entries to skip'
+          description: 'Number of activity entries to skip'
         }
       }
     ],
     responses: {
       200: {
-        description: 'Entity change history',
+        description: 'Entity activity',
         content: {
           'application/json': {
             schema: {
@@ -51,26 +52,33 @@ defineRouteMeta({
               properties: {
                 changes: {
                   type: 'array',
-                  description: 'Array of history entries showing entity changes',
+                  description: 'Changes made by this entity, newest first',
                   items: {
                     type: 'object',
                     properties: {
+                      entity: {
+                        type: 'object',
+                        description: 'Entity that was changed',
+                        properties: {
+                          _id: { type: 'string', description: 'Entity ID' },
+                          name: { type: 'string', description: 'Entity name' }
+                        }
+                      },
                       type: { type: 'string', description: 'Property type that was changed' },
                       at: { type: 'string', format: 'date-time', description: 'When the change occurred' },
-                      by: { type: 'string', description: 'User ID who made the change' },
+                      by: { type: 'string', description: 'ID of the entity that made the change' },
                       old: { type: 'object', description: 'Property value before change' },
                       new: { type: 'object', description: 'Property value after change' }
                     }
                   }
-                },
-                count: { type: 'integer', description: 'Total number of history entries' }
+                }
               }
             }
           }
         }
       },
       403: {
-        description: 'Insufficient permissions',
+        description: 'No user',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       404: {
@@ -86,9 +94,7 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const entityId = getObjectId(getRouterParam(event, '_id'))
 
-  await requireDirectAccess(entu, entityId)
-
-  return await entityHistory(entu, entityId, {
+  return await entityActivity(entu, entityId, {
     limit: Number.parseInt(query.limit) || 100,
     skip: Number.parseInt(query.skip) || 0
   })

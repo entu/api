@@ -294,6 +294,60 @@ type FileValueLanguage {
   language: String
 }
 
+"A property value as it was before or after a change"
+type ChangeValue {
+  "Property record ID"
+  _id: ID
+  boolean: Boolean
+  "Date value (ISO 8601, e.g. 2024-01-31)"
+  date: String
+  "Datetime value (ISO 8601, e.g. 2024-01-31T12:00:00.000Z)"
+  datetime: String
+  filename: String
+  "File size in bytes"
+  filesize: Float
+  "Language code (e.g. en, et)"
+  language: String
+  md5: String
+  number: Float
+  "Referenced entity ID"
+  reference: ID
+  "Text value, or the display name of the referenced entity"
+  string: String
+}
+"The entity a change was made on"
+type ChangeEntity {
+  "Entity ID"
+  _id: ID!
+  "Entity name"
+  name: String
+}
+"One property change"
+type Change {
+  "Entity that was changed — set in activity only"
+  entity: ChangeEntity
+  "Property type that was changed"
+  type: String
+  "When the change occurred (ISO 8601)"
+  at: String
+  "ID of the entity that made the change"
+  by: ID
+  "Property value before the change"
+  old: ChangeValue
+  "Property value after the change"
+  new: ChangeValue
+}
+"Chronological change history of one entity"
+type EntityHistory {
+  changes: [Change!]!
+  "Total number of history entries"
+  count: Int!
+}
+"Changes one entity has made to other entities, newest first"
+type EntityActivity {
+  changes: [Change!]!
+}
+
 "Sharing level of an entity"
 enum Sharing { public domain private }
 
@@ -464,6 +518,13 @@ async function buildSchema (entu) {
   if (queryFields.length === 0) {
     queryFields.push('  _empty: String')
   }
+
+  queryFields.push(
+    '  "Change history of one entity — needs direct rights on it"',
+    '  _history(id: ID!, limit: Int, skip: Int): EntityHistory!',
+    '  "Changes this entity (usually a person) has made, newest first — only those on entities the caller has direct rights on"',
+    '  _activity(id: ID!, limit: Int, skip: Int): EntityActivity!'
+  )
   if (mutationFields.length === 0) {
     mutationFields.push('  _empty: String')
   }

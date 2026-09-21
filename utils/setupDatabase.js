@@ -239,8 +239,8 @@ async function createDatabaseIndexes (db) {
     ]),
 
     db.collection('property').createIndexes([
-      { key: { 'created.by': 1 } },
-      { key: { 'deleted.by': 1 } },
+      { key: { 'created.by': 1, 'created.at': -1 } },
+      { key: { 'deleted.by': 1, 'deleted.at': -1 } },
       { key: { deleted: 1 } },
       { key: { entity: 1, type: 1, deleted: 1 } },
       { key: { filesize: 1 } },

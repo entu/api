@@ -211,6 +211,9 @@ export function buildResolvers (entityTypes, propsByTypeId) {
     }
   }
 
+  Query._history = historyResolver
+  Query._activity = activityResolver
+
   const fileUrlResolver = {
     url: async (obj, _, { entu }) => {
       if (!obj._entityId) {
@@ -234,8 +237,26 @@ export function buildResolvers (entityTypes, propsByTypeId) {
     DateValue: dateResolver,
     DateValueLanguage: dateResolver,
     DatetimeValue: datetimeResolver,
-    DatetimeValueLanguage: datetimeResolver
+    DatetimeValueLanguage: datetimeResolver,
+    ChangeValue: { ...dateResolver, ...datetimeResolver },
+    Change: {
+      at: (obj) => (obj.at instanceof Date ? obj.at.toISOString() : obj.at)
+    }
   }
+}
+
+// Returns an entity's change history, with the same direct-rights check as the REST history route
+async function historyResolver (_, args, { entu }) {
+  const entityId = getObjectId(args.id)
+
+  await requireDirectAccess(entu, entityId)
+
+  return await entityHistory(entu, entityId, { limit: args.limit || 100, skip: args.skip || 0 })
+}
+
+// Returns the changes an entity has made - entityActivity applies the same rights rules as the REST activity route
+async function activityResolver (_, args, { entu }) {
+  return await entityActivity(entu, getObjectId(args.id), { limit: args.limit || 100, skip: args.skip || 0 })
 }
 
 // Maps GraphQL input object to an array of Entu property objects for setEntity
