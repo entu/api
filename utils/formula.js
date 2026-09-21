@@ -930,6 +930,27 @@ function opUnique (slots) {
   return [...new Set(slot)]
 }
 
+// Unary: values of the slot in ascending order (homogeneous type, compared like MIN and MAX).
+function opSort (slots) {
+  const slot = slots.at(0)
+
+  if (slot.length === 0) return
+
+  if (!homogeneousComparable(slot)) return
+
+  return slot.toSorted((a, b) => {
+    if (a < b) {
+      return -1
+    }
+
+    if (a > b) {
+      return 1
+    }
+
+    return 0
+  })
+}
+
 // Returns the slot's value when it holds exactly one boolean, otherwise undefined.
 function singleBoolean (slot) {
   if (slot.length !== 1 || typeof slot.at(0) !== 'boolean') return
@@ -998,49 +1019,53 @@ function opWhen (slots) {
 // Operator registry
 // ---------------------------------------------------------------------------
 
+// Grouped by purpose, in the same order as the docs; arity 'all' marks a variadic reducer that consumes the whole stack.
 const OPERATORS = {
-  // Variadic reducers — consume the whole stack
+  // Text
   CONCAT: { arity: 'all', fn: opConcat },
   CONCAT_WS: { arity: 'all', fn: opConcatWs },
+  UPPER: { arity: 1, fn: opUpper },
+  LOWER: { arity: 1, fn: opLower },
+  REGEX: { arity: 3, fn: opRegex },
+
+  // Math
   SUM: { arity: 'all', fn: opSum },
   SUBTRACT: { arity: 'all', fn: opSubtract },
   MULTIPLY: { arity: 'all', fn: opMultiply },
   DIVIDE: { arity: 'all', fn: opDivide },
+  ABS: { arity: 1, fn: opAbs },
+  ROUND: { arity: 2, fn: opRound },
+  FLOOR: { arity: 1, fn: opFloor },
+  CEIL: { arity: 1, fn: opCeil },
+
+  // Lists
   COUNT: { arity: 'all', fn: opCount },
   AVERAGE: { arity: 'all', fn: opAverage },
   MIN: { arity: 'all', fn: opMin },
   MAX: { arity: 'all', fn: opMax },
-  IN: { arity: 'all', fn: opIn },
-  NIN: { arity: 'all', fn: opNin },
+  UNIQUE: { arity: 1, fn: opUnique },
+  SORT: { arity: 1, fn: opSort },
 
-  // Binary comparisons
+  // Conversion
+  NUMBER: { arity: 1, fn: opNumber },
+  DATE: { arity: 1, fn: opDate },
+  DATETIME: { arity: 1, fn: opDatetime },
+
+  // Comparison
   EQ: { arity: 2, fn: opEq },
   NE: { arity: 2, fn: opNe },
   GT: { arity: 2, fn: opGt },
   GTE: { arity: 2, fn: opGte },
   LT: { arity: 2, fn: opLt },
   LTE: { arity: 2, fn: opLte },
+  IN: { arity: 'all', fn: opIn },
+  NIN: { arity: 'all', fn: opNin },
+  EXISTS: { arity: 1, fn: opExists },
 
-  // Per-value
-  ABS: { arity: 1, fn: opAbs },
-  ROUND: { arity: 2, fn: opRound },
-  FLOOR: { arity: 1, fn: opFloor },
-  CEIL: { arity: 1, fn: opCeil },
-  NUMBER: { arity: 1, fn: opNumber },
-  UPPER: { arity: 1, fn: opUpper },
-  LOWER: { arity: 1, fn: opLower },
-  REGEX: { arity: 3, fn: opRegex },
-  DATE: { arity: 1, fn: opDate },
-  DATETIME: { arity: 1, fn: opDatetime },
-
-  // Logical
+  // Logic and conditions
   AND: { arity: 2, fn: opAnd },
   OR: { arity: 2, fn: opOr },
   NOT: { arity: 1, fn: opNot },
-
-  // Other
-  EXISTS: { arity: 1, fn: opExists },
-  UNIQUE: { arity: 1, fn: opUnique },
   IF: { arity: 3, fn: opIf },
   WHEN: { arity: 2, fn: opWhen }
 }

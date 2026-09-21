@@ -51,6 +51,8 @@ Whitespace-separated tokens evaluated left to right on a value stack: literals (
 
 Field references: propname (same entity), _id (own id), _child.<type>.<prop>, _referrer.<type>.<prop> (entities referencing this), <reference_prop>.<type>.<prop>. Use * as a type wildcard.
 
+Values inside a formula are only numbers, strings or booleans: date is a "YYYY-MM-DD" string, datetime an ISO 8601 UTC string ("2026-01-31T12:30:00.000Z"), reference the referenced entity's name (use <reference_prop>.*._id for its id), counter its numeric part, and a multilingual property pushes the values of all languages. Math operators take numbers only; UPPER, LOWER and REGEX take strings only.
+
 Operators (operand count in parentheses):
 {{operators}}
 
@@ -58,7 +60,7 @@ Operand order: ROUND (value, decimals), REGEX (value, pattern, replacement), IF 
 
 REGEX replaces every match of a JavaScript regex in each string value; `$1` in the replacement keeps a capture group, so `code '^([A-Z]+)-.*$' '$1' REGEX` extracts a substring. Non-matching values pass through unchanged.
 
-AND, OR and NOT take single booleans. NUMBER parses plain decimal strings ("12.5") into numbers. DATE and DATETIME turn ISO 8601 strings or epoch milliseconds into real date / datetime values — use them as the last step of a formula on a date or datetime property, after any comparison or MIN/MAX (dates inside a formula are ISO strings).
+AND, OR and NOT take single booleans. UNIQUE drops duplicate values and SORT orders them ascending, e.g. `_child.*.author UNIQUE SORT ", " CONCAT_WS`. NUMBER parses plain decimal strings ("12.5") into numbers. DATE and DATETIME turn ISO 8601 strings or epoch milliseconds into real date / datetime values — use them as the last step of a formula on a date or datetime property, after any comparison or MIN/MAX (dates inside a formula are ISO strings).
 
 Example: `_child.row.total SUM` — sums total across child entities of type row.
 
