@@ -74,5 +74,13 @@ export function formatDatabaseName (name) {
     throw createError({ statusCode: 400, statusMessage: `Invalid database name: ${name}` })
   }
 
+  if (name === 'mcp') {
+    throw createError({ statusCode: 404, statusMessage: 'Not found - the MCP endpoint is POST /mcp/<database>' })
+  }
+
+  if (reservedDatabaseNames.includes(name)) {
+    throw createError({ statusCode: 404, statusMessage: 'Not found' })
+  }
+
   return name
 }

@@ -1,25 +1,15 @@
 import jwt from 'jsonwebtoken'
 
 export default defineEventHandler((event) => {
-  const path = event.path.split('?').at(0)
+  const path = getRoutePath(event)
 
-  if (path === '/') return
-  if (path === '/_openapi.json') return
-  if (path.startsWith('/.well-known/')) return
-  if (path === '/docs' || path.startsWith('/docs/')) return
-  if (path === '/graphql' || path.startsWith('/graphql/')) return
-  if (path === '/mcp' || path.startsWith('/mcp/')) return
-  if (path === '/openapi' || path.startsWith('/openapi/')) return
-  if (path === '/stripe' || path.startsWith('/stripe/')) return
+  if (isContextFreeRoute(event.method, path)) return
 
-  const isNewRoute = path === '/new' || path.startsWith('/new/')
-
-  if (isNewRoute && event.method !== 'PUT') return
-
-  const isAuthRoute = path === '/auth' || path.startsWith('/auth/')
+  const isNewRoute = event.method === 'PUT' && path === '/new'
+  const authRoute = isAuthRoute(event.method, path)
 
   // Routes without an account (database) path parameter — JWT is still verified when present
-  const accountless = isAuthRoute || isNewRoute
+  const accountless = authRoute || isNewRoute
 
   const entu = {
     ip: (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1'),
@@ -35,7 +25,7 @@ export default defineEventHandler((event) => {
 
   entu.tokenStr = (event.req.headers.get('authorization') || '').replace('Bearer ', '').trim()
 
-  if (!isAuthRoute && entu.tokenStr) {
+  if (!authRoute && entu.tokenStr) {
     try {
       const { jwtSecret } = useRuntimeConfig(event)
       entu.token = jwt.verify(entu.tokenStr, jwtSecret)

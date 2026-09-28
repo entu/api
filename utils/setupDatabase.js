@@ -1,24 +1,18 @@
 const reservedDatabases = [
-  'admin',
   'api',
   'argo',
   'argoroots',
   'arx_raamat',
   'arx',
-  'auth',
   'billing',
   'collection',
-  'config',
   'database',
   'dev',
   'develop',
   'eka',
   'entity',
-  'local',
-  'new',
   'property',
   'raamatukogu',
-  'stripe',
   'template',
   'test'
 ]
@@ -42,7 +36,7 @@ export async function checkDatabaseName (name) {
     return { available: false, reason: 'length' }
   }
 
-  if (name.startsWith('entu_') || reservedDatabases.includes(name) || mongoDbSystemDbs.includes(name)) {
+  if (name.startsWith('entu_') || reservedDatabases.includes(name) || reservedDatabaseNames.includes(name) || mongoDbSystemDbs.includes(name)) {
     return { available: false, reason: 'reserved' }
   }
 
