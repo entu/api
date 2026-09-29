@@ -59,10 +59,14 @@ export async function setEntity (entu, entityId, properties, options = {}) {
   await validatePropertyTypes(entu, properties, allowedTypes)
 
   if (!entityId) {
-    await applyDefaultParents(entu, properties, createdDt)
-    await inheritParentProperties(entu, properties, createdDt)
-    await applyPropertyDefaults(entu, properties)
-    entityId = await createEntityRecord(entu, properties, createdDt)
+    properties = [...properties, ...await getDefaultParents(entu, properties, createdDt)]
+    properties = [...properties, ...await getInheritedProperties(entu, properties, createdDt)]
+    properties = [...properties, ...await getPropertyDefaults(entu, properties)]
+
+    const record = await createEntityRecord(entu, createdDt)
+
+    entityId = record._id
+    properties = [...properties, ...record.properties]
   }
 
   const { pIds, oldPIds } = await insertProperties(entu, entityId, properties, createdDt)
@@ -329,36 +333,45 @@ async function validatePropertyTypes (entu, properties, allowedTypes) {
   }
 }
 
-// Pushes default _parent entries based on the entity's _type definition
-async function applyDefaultParents (entu, properties, createdDt) {
+// Returns default _parent properties based on the entity's _type definition
+async function getDefaultParents (entu, properties, createdDt) {
   const entityType = properties.find((x) => x.type === '_type' && x.reference)
 
-  if (!entityType) return
+  if (!entityType) {
+    return []
+  }
 
   const defaultParents = await entu.db.collection('entity').findOne(
     { _id: getObjectId(entityType.reference), 'private.default_parent': { $exists: true } },
     { projection: { 'private.default_parent': true } }
   )
 
+  const props = []
+
   if (defaultParents) {
     for (const parent of defaultParents.private.default_parent) {
-      properties.push({
+      props.push({
         type: '_parent',
         reference: parent.reference,
         created: { at: createdDt, by: entu.user || 'entu' }
       })
     }
   }
+
+  return props
 }
 
-// Inherits _sharing and _inheritrights from parent entities
-async function inheritParentProperties (entu, properties, createdDt) {
+// Returns _sharing and _inheritrights properties inherited from parent entities
+async function getInheritedProperties (entu, properties, createdDt) {
   const parentReferences = properties.filter((x) => x.type === '_parent' && x.reference).map((x) => x.reference)
 
-  if (parentReferences.length === 0) return
+  if (parentReferences.length === 0) {
+    return []
+  }
 
   const needsSharing = !properties.some((x) => x.type === '_sharing')
   const needsInheritRights = !properties.some((x) => x.type === '_inheritrights')
+  const props = []
 
   if (needsSharing || needsInheritRights) {
     const parents = await entu.db.collection('entity').find(
@@ -370,17 +383,19 @@ async function inheritParentProperties (entu, properties, createdDt) {
       const parentSharings = parents.map((p) => p.private?._sharing?.at(0)?.string).filter(Boolean)
 
       if (parentSharings.includes('public')) {
-        properties.push({ type: '_sharing', string: 'public', created: { at: createdDt, by: entu.user || 'entu' } })
+        props.push({ type: '_sharing', string: 'public', created: { at: createdDt, by: entu.user || 'entu' } })
       }
       else if (parentSharings.includes('domain')) {
-        properties.push({ type: '_sharing', string: 'domain', created: { at: createdDt, by: entu.user || 'entu' } })
+        props.push({ type: '_sharing', string: 'domain', created: { at: createdDt, by: entu.user || 'entu' } })
       }
     }
 
     if (needsInheritRights && parents.some((p) => p.private?._inheritrights?.at(0)?.boolean === true)) {
-      properties.push({ type: '_inheritrights', boolean: true, created: { at: createdDt, by: entu.user || 'entu' } })
+      props.push({ type: '_inheritrights', boolean: true, created: { at: createdDt, by: entu.user || 'entu' } })
     }
   }
+
+  return props
 }
 
 // Resolves a default value string to a Date — supports relative offsets like +1d, -2h, +1m
@@ -413,11 +428,13 @@ function resolveServerDate (defaultStr) {
   return new Date(defaultStr)
 }
 
-// Pushes default property values from the entity type definition for any property not already provided
-async function applyPropertyDefaults (entu, properties) {
+// Returns default property values from the entity type definition for any property not already provided
+async function getPropertyDefaults (entu, properties) {
   const entityType = properties.find((x) => x.type === '_type' && x.reference)
 
-  if (!entityType) return
+  if (!entityType) {
+    return []
+  }
 
   const propDefs = await entu.db.collection('entity').find(
     {
@@ -427,6 +444,8 @@ async function applyPropertyDefaults (entu, properties) {
     { projection: { 'private.name': 1, 'private.type': 1, 'private.default': 1 } }
   ).toArray()
 
+  const props = []
+
   for (const propDef of propDefs) {
     const name = propDef.private?.name?.at(0)?.string
     const type = propDef.private?.type?.at(0)?.string
@@ -434,7 +453,7 @@ async function applyPropertyDefaults (entu, properties) {
 
     if (!name || !type || !defaultStr) continue
     if (['file', 'counter'].includes(type)) continue
-    if (properties.some((p) => p.type === name)) continue
+    if (properties.some((p) => p.type === name) || props.some((p) => p.type === name)) continue
 
     const prop = { type: name }
 
@@ -457,40 +476,44 @@ async function applyPropertyDefaults (entu, properties) {
       prop.string = String(defaultStr)
     }
 
-    properties.push(prop)
+    props.push(prop)
   }
+
+  return props
 }
 
-// Inserts a new entity document and pushes _owner and _created system properties
-async function createEntityRecord (entu, properties, createdDt) {
+// Inserts a new entity document and returns its _id with the _owner and _created system properties
+async function createEntityRecord (entu, createdDt) {
   const entity = await entu.db.collection('entity').insertOne({})
   const entityId = entity.insertedId
 
   if (entu.user) {
-    properties.push({
-      entity: entityId,
-      type: '_owner',
-      reference: entu.user,
-      created: { at: createdDt, by: entu.user }
-    })
-    properties.push({
-      entity: entityId,
-      type: '_created',
-      reference: entu.user,
-      datetime: createdDt,
-      created: { at: createdDt, by: entu.user }
-    })
+    return {
+      _id: entityId,
+      properties: [{
+        entity: entityId,
+        type: '_owner',
+        reference: entu.user,
+        created: { at: createdDt, by: entu.user }
+      }, {
+        entity: entityId,
+        type: '_created',
+        reference: entu.user,
+        datetime: createdDt,
+        created: { at: createdDt, by: entu.user }
+      }]
+    }
   }
-  else {
-    properties.push({
+
+  return {
+    _id: entityId,
+    properties: [{
       entity: entityId,
       type: '_created',
       datetime: createdDt,
       created: { at: createdDt, by: 'entu' }
-    })
+    }]
   }
-
-  return entityId
 }
 
 // Processes and inserts all properties, returning inserted pIds and replaced oldPIds
@@ -499,7 +522,7 @@ async function insertProperties (entu, entityId, properties, createdDt) {
   const oldPIds = []
 
   for (let i = 0; i < properties.length; i++) {
-    const property = properties[i]
+    const property = { ...properties[i] }
     let apiKey
 
     if (property._id) {
@@ -827,26 +850,24 @@ export async function cleanupEntity (entu, entity) {
   }
 
   if (result.entu_api_key) {
-    for (const k of result.entu_api_key) {
-      k.string = '***'
-    }
+    result.entu_api_key = result.entu_api_key.map((k) => ({ ...k, string: '***' }))
   }
 
   if (result.entu_user) {
-    for (const u of result.entu_user) {
+    result.entu_user = result.entu_user.map((u) => {
       if (u.invite) {
-        u.invite = '***'
+        return { ...u, invite: '***' }
       }
-      else if (u.email?.endsWith('@eesti.ee')) {
-        u.email = u.email.replace('@eesti.ee', '')
+      if (u.email?.endsWith('@eesti.ee')) {
+        return { ...u, email: u.email.replace('@eesti.ee', '') }
       }
-    }
+
+      return u
+    })
   }
 
   if (result.entu_passkey) {
-    for (const k of result.entu_passkey) {
-      k.string = `${k.passkey_device || ''} ${k._id.toString().slice(-4).toUpperCase()}`.trim()
-    }
+    result.entu_passkey = result.entu_passkey.map((k) => ({ ...k, string: `${k.passkey_device || ''} ${k._id.toString().slice(-4).toUpperCase()}`.trim() }))
   }
 
   return result
