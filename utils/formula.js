@@ -8,6 +8,9 @@ const REGEX_MAX_PATTERN = 500
 const REGEX_MAX_LENGTH = 10000
 const REGEX_MAX_TOTAL = 1000000
 
+// Languages come from other users' values too, so a multilingual formula runs for at most this many before it falls back to one untagged run.
+const FORMULA_MAX_LANGUAGES = 10
+
 // NUMBER accepts plain decimals only; DATE and DATETIME accept strict ISO 8601 only, keeping engine-specific Date parsing out.
 const NUMBER_PATTERN = /^-?\d+(?:\.\d+)?$/
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}(?<time>T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?<zone>Z|[+-]\d{2}:\d{2})?)?$/
@@ -49,17 +52,22 @@ const REGEX_SCRIPT = new Script(`
 //
 // If a formula does not end with a recognized operator keyword, an implicit
 // CONCAT is appended.
+//
+// A multilingual formula runs once per language found in its inputs; each run reads
+// that language's values plus all untagged ones, and its results are tagged with it.
 
 // Evaluates a formula string and returns the computed property value(s).
 // Returns one of: { number }, { string }, { boolean }, { date }, { datetime }, an array of those objects
 // (when the result is multi-value), or undefined (no property written).
-export async function formula (entu, str, entityId, localValues = {}) {
+export async function formula (entu, str, entityId, localValues = {}, multilingual = false) {
   const tokens = parseFormulaTokens(str)
 
   if (tokens.length === 0) return
 
-  // Each REGEX call may block the event loop up to its timeout, so a formula gets a fixed number of them.
-  if (tokens.filter((t) => t === 'REGEX').length > REGEX_MAX_PER_FORMULA) return
+  // Each REGEX call may block the event loop up to its timeout, so a formula gets a fixed number of them across all runs.
+  const regexCount = tokens.filter((t) => t === 'REGEX').length
+
+  if (regexCount > REGEX_MAX_PER_FORMULA) return
 
   // Implicit CONCAT: append CONCAT if the formula doesn't end with a recognized operator.
   const lastToken = tokens.at(-1)
@@ -68,41 +76,105 @@ export async function formula (entu, str, entityId, localValues = {}) {
     tokens.push('CONCAT')
   }
 
+  // Operators never change what a field reads, so every field is resolved once and shared by all language runs.
+  const fields = new Map()
+
+  for (const token of tokens) {
+    if (lookupOperator(token) || fields.has(token)) continue
+
+    fields.set(token, await formulaField(entu, token, entityId, localValues) || [])
+  }
+
+  const references = await getReferenceMap(entu, [...fields.values()].flat())
+  const languages = multilingual ? getLanguages(fields, references) : []
+  const context = { entu, entityId, localValues }
+  const isOverLimit = languages.length > FORMULA_MAX_LANGUAGES || regexCount * languages.length > REGEX_MAX_PER_FORMULA
+
+  if (isOverLimit) {
+    loggerError(`Multilingual formula has ${languages.length} languages, evaluated without languages`, entu, [`entity:${entityId}`])
+  }
+
+  if (languages.length === 0 || isOverLimit) {
+    return wrapResult(await evaluateTokens(tokens, getSlots(entu, fields, references), context))
+  }
+
+  const results = []
+
+  for (const language of languages) {
+    const result = wrapResult(await evaluateTokens(tokens, getSlots(entu, fields, references, language), context))
+
+    if (!result) continue
+
+    results.push(...[result].flat().map((value) => ({ ...value, language })))
+  }
+
+  if (results.length === 0) return
+
+  return results.length === 1 ? results.at(0) : results
+}
+
+// Runs the token stack over pre-resolved field slots and returns the final slot, or undefined.
+async function evaluateTokens (tokens, slots, context) {
   const stack = []
 
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens.at(i)
+  for (const token of tokens) {
     const op = lookupOperator(token)
 
-    if (op) {
-      let args
+    if (!op) {
+      stack.push(slots.get(token))
 
-      if (op.arity === 'all') {
-        args = stack.splice(0, stack.length)
-      }
-      else {
-        if (stack.length < op.arity) return // not enough operands on the stack
+      continue
+    }
 
-        args = stack.splice(stack.length - op.arity, op.arity)
-      }
+    let args
 
-      const result = await op.fn(args, { entu, entityId, localValues })
-
-      if (result === undefined) return
-
-      stack.push(result)
+    if (op.arity === 'all') {
+      args = stack.splice(0, stack.length)
     }
     else {
-      // Push a value slot (literal or field reference)
-      const value = await formulaField(entu, token, entityId, localValues)
-      const slot = await getValueArray(entu, value)
-      stack.push(slot)
+      if (stack.length < op.arity) return // not enough operands on the stack
+
+      args = stack.splice(stack.length - op.arity, op.arity)
     }
+
+    const result = await op.fn(args, context)
+
+    if (result === undefined) return
+
+    stack.push(result)
   }
 
   if (stack.length !== 1) return
 
-  return wrapResult(stack.at(0))
+  return stack.at(0)
+}
+
+// Returns the sorted distinct languages of the field values and of the names of entities they reference.
+function getLanguages (fields, references) {
+  const languages = new Set()
+
+  for (const values of fields.values()) {
+    for (const value of values) {
+      const names = value.reference ? references.get(value.reference.toString())?.private?.name : undefined
+
+      for (const tagged of [value, ...names || []]) {
+        if (tagged.language) {
+          languages.add(tagged.language)
+        }
+      }
+    }
+  }
+
+  return [...languages].toSorted()
+}
+
+// Maps each field token to its primitive values, limited to one language plus untagged values when a language is given.
+function getSlots (entu, fields, references, language) {
+  return new Map([...fields].map(([token, values]) => {
+    const languageValues = language ? values.filter((x) => !x.language || x.language === language) : values
+
+    return [token, toPrimitives(entu, languageValues, references, language)]
+  }))
 }
 
 // Wraps the final stack slot into property value object(s) or returns undefined.
@@ -475,22 +547,44 @@ export async function getValueArray (entu, values) {
     return []
   }
 
-  // Batch-fetch all referenced entities in one query instead of one findOne() per value
+  return toPrimitives(entu, values, await getReferenceMap(entu, values))
+}
+
+// Batch-fetches the names of all referenced entities in one query instead of one findOne() per value.
+async function getReferenceMap (entu, values) {
   const refIds = values.filter((x) => x.reference != null).map((x) => x.reference)
   const refMap = new Map()
 
-  if (refIds.length > 0) {
-    const refDocs = await entu.db.collection('entity').find(
-      { _id: { $in: refIds } },
-      { projection: { 'private.name': true } }
-    ).toArray()
-
-    for (const doc of refDocs) {
-      refMap.set(doc._id.toString(), doc)
-    }
+  if (refIds.length === 0) {
+    return refMap
   }
 
-  return values.map((x) => {
+  const refDocs = await entu.db.collection('entity').find(
+    { _id: { $in: refIds } },
+    { projection: { 'private.name': true } }
+  ).toArray()
+
+  for (const doc of refDocs) {
+    refMap.set(doc._id.toString(), doc)
+  }
+
+  return refMap
+}
+
+// Returns a referenced entity's name — the first one, or with a language only that language's or an untagged one.
+function getReferenceName (entity, language) {
+  const names = entity?.private?.name
+
+  if (!language) {
+    return names?.at(0)?.string
+  }
+
+  return names?.find((x) => x.language === language)?.string ?? names?.find((x) => !x.language)?.string
+}
+
+// Converts value objects into primitives; with a language, a reference whose names are all in other languages is left out.
+function toPrimitives (entu, values, refMap, language) {
+  const primitives = values.map((x) => {
     try {
       if (x.boolean !== undefined && x.boolean !== null) {
         return x.boolean
@@ -509,8 +603,15 @@ export async function getValueArray (entu, values) {
       }
       if (x.reference !== undefined && x.reference !== null) {
         const entity = refMap.get(x.reference.toString())
+        const name = getReferenceName(entity, language)
 
-        return entity?.private?.name?.at(0)?.string || x.reference
+        if (name) {
+          return name
+        }
+
+        if (language && entity?.private?.name?.length > 0) return
+
+        return x.reference
       }
 
       return x._id
@@ -521,6 +622,8 @@ export async function getValueArray (entu, values) {
       return x._id
     }
   })
+
+  return language ? primitives.filter((x) => x !== undefined) : primitives
 }
 
 // ---------------------------------------------------------------------------

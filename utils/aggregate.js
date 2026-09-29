@@ -112,7 +112,8 @@ export async function aggregateEntity (entu, entityId) {
               name: { $arrayElemAt: ['$private.name.string', 0] },
               sharing: { $arrayElemAt: ['$private._sharing.string', 0] },
               search: { $arrayElemAt: ['$private.search.boolean', 0] },
-              formula: { $arrayElemAt: ['$private.formula.string', 0] }
+              formula: { $arrayElemAt: ['$private.formula.string', 0] },
+              multilingual: { $arrayElemAt: ['$private.multilingual.boolean', 0] }
             }
           }
         ]).toArray()
@@ -126,7 +127,7 @@ export async function aggregateEntity (entu, entityId) {
         for (let d = 0; d < definition.length; d++) {
           if (!definition[d].formula) continue
 
-          const formulaValue = await formula(entu, definition[d].formula, entityId, newEntity.private)
+          const formulaValue = await formula(entu, definition[d].formula, entityId, newEntity.private, definition[d].multilingual === true)
 
           if (formulaValue) {
             newEntity.private[definition[d].name] = Array.isArray(formulaValue) ? formulaValue : [formulaValue]
@@ -405,7 +406,9 @@ function getEntityHash (obj) {
         ids.push(item._id.toString())
       }
       else if (item.string) {
-        const hash = createHash('md5').update(`${key}: ${item.string}`).digest('hex')
+        // Tagged values hash their language unambiguously; untagged ones keep the old form so existing hashes stay unchanged.
+        const hashInput = item.language ? JSON.stringify([key, item.language, item.string]) : `${key}: ${item.string}`
+        const hash = createHash('md5').update(hashInput).digest('hex')
         ids.push(hash)
       }
       else {
