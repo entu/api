@@ -83,15 +83,9 @@ export async function initializeNewDatabase (entu, owner) {
   })
 
   // Person entity with the owner's login credentials (non-ref props here; _type + _owner added in pass 2)
-  const entuUserProp = { type: 'entu_user', uid: owner.uid, provider: owner.provider }
-
-  if (owner.email) {
-    entuUserProp.email = owner.email
-  }
-
   const personNonRefProps = [
     { type: '_sharing', string: 'private' },
-    entuUserProp
+    authCredentialProperty(owner)
   ]
 
   if (owner.name) {

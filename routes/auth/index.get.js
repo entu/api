@@ -84,8 +84,8 @@ defineRouteMeta({
                 user: {
                   type: 'object',
                   properties: {
-                    uid: { type: 'string', description: 'OAuth provider user ID — absent for API key auth' },
-                    provider: { type: 'string', description: 'OAuth provider name — absent for API key auth' },
+                    uid: { type: 'string', description: 'Provider user ID, or the credential ID for a passkey — absent for API key auth' },
+                    provider: { type: 'string', description: 'Provider name, `passkey` for a passkey — absent for API key auth' },
                     email: { type: 'string' },
                     name: { type: 'string' }
                   }

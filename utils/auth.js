@@ -15,7 +15,7 @@ export async function authExchange (event, { account, bindIp = true, invite, ip,
   if (sessionId) {
     session = await consumeSession(connection, sessionId)
 
-    if (!session?.user?.email) {
+    if (!hasIdentity(session)) {
       throw createError({ statusCode: 400, statusMessage: 'No session' })
     }
   }
@@ -30,7 +30,7 @@ export async function authExchange (event, { account, bindIp = true, invite, ip,
 
       session = await consumeSession(connection, decoded.sub)
 
-      if (!session?.user?.email) {
+      if (!hasIdentity(session)) {
         throw createError({ statusCode: 400, statusMessage: 'No session' })
       }
     }
@@ -54,7 +54,7 @@ export async function authExchange (event, { account, bindIp = true, invite, ip,
 
   const identity = apiKeyHash
     ? { apiKeyHash }
-    : { uid: session?.user?.id, provider: session?.user?.provider, email: session?.user?.email }
+    : { uid: session?.user?.id, provider: session?.user?.provider, email: session?.user?.email, passkeyPublic: session?.user?.publicKey }
 
   const accountResults = await findUserAccounts(identity, onlyForAccount)
 
@@ -72,7 +72,7 @@ export async function authExchange (event, { account, bindIp = true, invite, ip,
   const inviteAttempted = !!(onlyForAccount && session && invite)
   let inviteConflict = false
 
-  if (onlyForAccount && session && invite) {
+  if (inviteAttempted) {
     const existingEntry = accounts.find((a) => a._id === onlyForAccount)
 
     try {
@@ -117,7 +117,7 @@ export async function authExchange (event, { account, bindIp = true, invite, ip,
   const userData = {}
   const tokenData = {}
 
-  if (session?.user?.email || session?.user?.name) {
+  if (session?.user?.email || session?.user?.name || session?.user?.provider === 'passkey') {
     userData.email = session?.user?.email
     userData.name = session?.user?.name
 
@@ -125,6 +125,12 @@ export async function authExchange (event, { account, bindIp = true, invite, ip,
     if (session?.user?.id && session?.user?.provider) {
       userData.uid = session.user.id
       userData.provider = session.user.provider
+    }
+
+    // A passkey is stored as-is on every person it opens, so the identity carries the key it was verified with
+    if (session?.user?.provider === 'passkey') {
+      userData.passkeyPublic = session.user.publicKey
+      userData.device = session.user.device
     }
 
     tokenData.user = userData
@@ -147,12 +153,37 @@ export async function authExchange (event, { account, bindIp = true, invite, ip,
   }
 }
 
+// The credential property that links a person to a login identity - `entu_user` for oauth.ee, `entu_passkey` for a passkey
+export function authCredentialProperty ({ uid, provider, email, passkeyPublic, device }) {
+  if (provider === 'passkey') {
+    return { type: 'entu_passkey', passkey_id: uid, passkey_public: passkeyPublic, passkey_counter: 0, passkey_device: device || 'Unknown Device' }
+  }
+
+  return { type: 'entu_user', uid, provider, ...(email ? { email } : {}) }
+}
+
+// A session is usable when its login gave an e-mail (oauth.ee) or a verified passkey to find the person by
+function hasIdentity (session) {
+  return !!(session?.user?.email || (session?.user?.provider === 'passkey' && session.user.id && session.user.publicKey))
+}
+
 // Marks a session as used and returns it - the update is the single-use guarantee, so a replay finds nothing
 async function consumeSession (connection, id) {
   return await connection.collection('session').findOneAndUpdate(
-    { _id: getObjectId(id), deleted: { $exists: false } },
+    { _id: getObjectId(id), pending: { $exists: false }, deleted: { $exists: false } },
     { $set: { deleted: new Date() } }
   )
+}
+
+// The login identity of a session in the shape authCredentialProperty takes
+function sessionIdentity (session) {
+  return {
+    uid: session.user.id,
+    provider: session.user.provider,
+    email: session.user.email,
+    passkeyPublic: session.user.publicKey,
+    device: session.user.device
+  }
 }
 
 // Adds one database to both the response list and the token's accounts map
@@ -173,13 +204,7 @@ async function findStoredInvite (entu, entityId) {
 
 // Turns a pending invite property into real credentials for the authenticated user
 async function replaceInviteWithCredentials (entu, entityId, invitePropId, session) {
-  await setEntity(entu, getObjectId(entityId), [{
-    type: 'entu_user',
-    _id: invitePropId,
-    uid: session.user.id,
-    email: session.user.email,
-    provider: session.user.provider
-  }])
+  await setEntity(entu, getObjectId(entityId), [{ ...authCredentialProperty(sessionIdentity(session)), _id: invitePropId }])
 }
 
 // Creates a person entity on first login, when the database is configured to add users automatically
@@ -208,9 +233,12 @@ async function createUserForAccount (account, session) {
     { type: '_type', reference: type._id },
     { type: '_parent', reference: parent },
     { type: '_inheritrights', boolean: true },
-    { type: 'entu_user', uid: session.user.id, email: session.user.email, provider: session.user.provider },
-    { type: 'email', string: session.user.email }
+    authCredentialProperty(sessionIdentity(session))
   ]
+
+  if (session.user.email) {
+    properties.push({ type: 'email', string: session.user.email })
+  }
 
   if (session.user.name) {
     properties.push({ type: 'name', string: session.user.name })

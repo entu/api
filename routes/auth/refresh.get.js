@@ -46,8 +46,8 @@ defineRouteMeta({
                 user: {
                   type: 'object',
                   properties: {
-                    uid: { type: 'string', description: 'OAuth provider user ID — absent for API key and passkey auth' },
-                    provider: { type: 'string', description: 'OAuth provider name — absent for API key and passkey auth' },
+                    uid: { type: 'string', description: 'Provider user ID, or the credential ID for a passkey — absent for API key auth' },
+                    provider: { type: 'string', description: 'Provider name, `passkey` for a passkey — absent for API key auth' },
                     email: { type: 'string' },
                     name: { type: 'string' }
                   }
@@ -112,11 +112,12 @@ export default defineEventHandler(async (event) => {
     accountResults = await findUserAccounts({
       uid: decoded.user.uid,
       provider: decoded.user.provider,
-      email: decoded.user.email
+      email: decoded.user.email,
+      passkeyPublic: decoded.user.passkeyPublic
     })
   }
   else {
-    // Passkey / API-key session: re-validate the existing accounts claim, dropping entities that no longer exist
+    // API-key session (or a passkey token issued before passkeys carried an identity): re-validate the existing accounts claim, dropping entities that no longer exist
     accountResults = (await Promise.all(
       Object.entries(decoded.accounts || {}).map(async ([account, userId]) => {
         let person

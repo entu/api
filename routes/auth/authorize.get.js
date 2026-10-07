@@ -71,6 +71,15 @@ defineRouteMeta({
         }
       },
       {
+        name: 'provider',
+        in: 'query',
+        schema: {
+          type: 'string',
+          enum: ['e-mail', 'google', 'apple', 'smart-id', 'mobile-id', 'id-card', 'passkey'],
+          description: 'Sign the user in with this provider. Omit to let OAuth.ee ask which provider to use'
+        }
+      },
+      {
         name: 'state',
         in: 'query',
         schema: {
@@ -88,6 +97,9 @@ defineRouteMeta({
     }
   }
 })
+
+// Providers a client may ask for - the same list as /auth/{provider}, plus passkey
+const providers = ['e-mail', 'google', 'apple', 'smart-id', 'mobile-id', 'id-card', 'passkey']
 
 export default defineEventHandler((event) => {
   const query = getQuery(event)
@@ -116,8 +128,13 @@ export default defineEventHandler((event) => {
     return redirectWithError(event, query, 'invalid_request', 'Missing database - add it as the resource or db parameter')
   }
 
-  // The authorization travels inside OAuth.ee's own state and comes back to /auth/callback with the login
+  if (query.provider !== undefined && !providers.includes(query.provider)) {
+    return redirectWithError(event, query, 'invalid_request', `Unknown provider - use one of ${providers.join(', ')}`)
+  }
+
+  // The authorization travels inside the login state and comes back to /auth/callback with the login
   return oauthStartLogin(event, {
+    provider: query.provider,
     state: {
       account,
       clientState: query.state,

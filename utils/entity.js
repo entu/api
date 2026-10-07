@@ -114,12 +114,17 @@ function validateCredentialProperties (entu, properties) {
     })
   }
 
-  const allowedFields = ['type', '_id', 'language', 'string', 'email']
+  // Passkey values come only from a verified registration or login, so a client may not set any of them
+  const allowedFields = {
+    entu_user: ['type', '_id', 'language', 'string', 'email'],
+    entu_api_key: ['type', '_id', 'language', 'string', 'email'],
+    entu_passkey: ['type', '_id']
+  }
 
   for (const property of properties) {
-    if (property.type !== 'entu_user' && property.type !== 'entu_api_key') continue
+    if (!allowedFields[property.type]) continue
 
-    const extraField = Object.keys(property).find((key) => !allowedFields.includes(key))
+    const extraField = Object.keys(property).find((key) => !allowedFields[property.type].includes(key))
 
     if (extraField) {
       throw createError({

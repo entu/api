@@ -1,10 +1,16 @@
-// Scans all account databases for person entities matching the given identity (API key hash, or OAuth uid+provider with legacy email fallback) and returns the accessible accounts
-export async function findUserAccounts ({ apiKeyHash, uid, provider, email } = {}, onlyForAccount) {
+// Scans all account databases for person entities matching the given identity (API key hash, passkey id + key, or OAuth uid+provider with legacy email fallback) and returns the accessible accounts
+export async function findUserAccounts ({ apiKeyHash, uid, provider, email, passkeyPublic } = {}, onlyForAccount) {
   // Harden Mongo filters: only scalar strings may reach the queries — anything else counts as absent
   apiKeyHash = typeof apiKeyHash === 'string' ? apiKeyHash : undefined
   uid = typeof uid === 'string' ? uid : undefined
   provider = typeof provider === 'string' ? provider : undefined
   email = typeof email === 'string' ? email : undefined
+  passkeyPublic = typeof passkeyPublic === 'string' ? passkeyPublic : undefined
+
+  // A passkey is only its id together with the key it was verified with - the id alone can be registered by anyone
+  if (provider === 'passkey' && !(uid && passkeyPublic)) {
+    return []
+  }
 
   if (!apiKeyHash && !(uid && provider) && !email) {
     return []
@@ -23,6 +29,12 @@ export async function findUserAccounts ({ apiKeyHash, uid, provider, email } = {
         if (apiKeyHash) {
           person = await accountCon.collection('entity').findOne(
             { 'private.entu_api_key.string': apiKeyHash },
+            { projection: { _id: true, 'private.name.string': true } }
+          )
+        }
+        else if (provider === 'passkey') {
+          person = await accountCon.collection('entity').findOne(
+            { 'private.entu_passkey': { $elemMatch: { passkey_id: uid, passkey_public: passkeyPublic } } },
             { projection: { _id: true, 'private.name.string': true } }
           )
         }

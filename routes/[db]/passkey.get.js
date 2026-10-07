@@ -1,5 +1,4 @@
 import { generateRegistrationOptions } from '@simplewebauthn/server'
-import jwt from 'jsonwebtoken'
 
 defineRouteMeta({ openAPI: { hidden: true } })
 
@@ -27,23 +26,24 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Fetch user entity to get email/name
+  // Fetch user entity to get email/name and the passkeys it already has
   const db = await connectDb(entu.account)
   const user = await db.collection('entity').findOne(
     { _id: entu.user },
-    { projection: { 'private.email.string': 1, 'private.name.string': 1 } }
+    { projection: { 'private.email.string': 1, 'private.name.string': 1, 'private.entu_passkey.passkey_id': 1 } }
   )
 
-  // Use email if available, otherwise fall back to user ID
+  // A passkey signs in to all of Entu, so it is labelled with the person only - never the database
   const userName = user?.private?.name?.at(0)?.string || user?.private?.email?.at(0)?.string || entu.userStr
 
-  const { passkeyRpId, jwtSecret } = useRuntimeConfig(event)
+  const { passkeyRpId } = useRuntimeConfig(event)
 
   const options = await generateRegistrationOptions({
     rpName: 'Entu',
     rpID: passkeyRpId,
     userID: Buffer.from(entu.userStr, 'utf8'),
-    userName: `${userName} - ${entu.account}`,
+    userName,
+    excludeCredentials: (user?.private?.entu_passkey || []).filter((p) => p.passkey_id).map((p) => ({ id: p.passkey_id })),
     authenticatorSelection: {
       userVerification: 'preferred',
       residentKey: 'preferred'
@@ -51,7 +51,5 @@ export default defineEventHandler(async (event) => {
     supportedAlgorithmIDs: [-7, -257] // ES256, RS256
   })
 
-  const challengeToken = jwt.sign({ challenge: options.challenge }, jwtSecret, { expiresIn: '5m' })
-
-  return { ...options, challengeToken }
+  return { ...options, challengeToken: passkeySignChallenge(event, options.challenge) }
 })

@@ -7,10 +7,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'No token' })
   }
 
-  const { uid, provider, name, email } = entu.token.user || {}
+  const { uid, provider, name, email, passkeyPublic, device } = entu.token.user || {}
 
-  if (!uid || !provider) {
+  if (!uid || !provider || (provider === 'passkey' && !passkeyPublic)) {
     throw createError({ statusCode: 400, statusMessage: 'Sign in with a provider to create a database' })
+  }
+
+  // The new owner person gets this passkey, so it must still be one Entu knows
+  if (provider === 'passkey' && !await passkeyExists(uid, passkeyPublic)) {
+    throw createError({ statusCode: 400, statusMessage: 'Passkey is no longer registered - sign in again' })
   }
 
   const body = await event.req.json().catch(() => ({}))
@@ -51,7 +56,7 @@ export default defineEventHandler(async (event) => {
     const db = await connectDb(databaseName, true)
     const newEntu = { account: databaseName, db, systemUser: true }
 
-    await initializeNewDatabase(newEntu, { name, email, uid, provider })
+    await initializeNewDatabase(newEntu, { name, email, uid, provider, passkeyPublic, device })
   }
   finally {
     await entuDb.collection('reservation').deleteOne({ _id: databaseName }).catch(() => {})
