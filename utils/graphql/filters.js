@@ -1,3 +1,5 @@
+const CONTAINS_MAX_LENGTH = 200
+
 // Converts a raw DB entity/property name to a valid GraphQL field name (camelCase)
 export function toGqlFieldName (name) {
   const segments = name.split(/[\s_-]+/).map((s) => s.replace(/[^A-Z0-9]/gi, '')).filter(Boolean)
@@ -40,11 +42,21 @@ export function buildMongoFilter (filterArgs, propDefs) {
     for (const [op, opValue] of Object.entries(value)) {
       if (opValue === undefined || opValue === null) continue
 
+      // A variable can carry a nested object, which would reach MongoDB as a raw operator.
+      if (typeof opValue === 'object') {
+        throw new TypeError('Filter value must be a scalar')
+      }
+
       if (op === 'eq') {
         filter[mongoPath] = coerceValue(propDef.type, opValue)
       }
       else if (op === 'contains') {
-        filter[mongoPath] = { ...(filter[mongoPath] || {}), $regex: opValue, $options: 'i' }
+        if (typeof opValue !== 'string' || opValue.length > CONTAINS_MAX_LENGTH) {
+          throw new Error(`Filter contains must be a string of up to ${CONTAINS_MAX_LENGTH} characters`)
+        }
+
+        // Escaped so the value is matched as a plain substring, never run as a user-supplied pattern.
+        filter[mongoPath] = { ...(filter[mongoPath] || {}), $regex: opValue.replaceAll(/[$()*+.?[\\\]^{|}]/g, String.raw`\$&`), $options: 'i' }
       }
       else if (['gt', 'lt', 'gte', 'lte'].includes(op)) {
         filter[mongoPath] = { ...(filter[mongoPath] || {}), [`$${op}`]: coerceValue(propDef.type, opValue) }
