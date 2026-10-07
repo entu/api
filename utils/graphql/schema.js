@@ -393,7 +393,7 @@ async function buildSchema (entu) {
       list: doc.private.list?.at(0)?.boolean || false,
       multilingual: doc.private.multilingual?.at(0)?.boolean || false,
       mandatory: doc.private.mandatory?.at(0)?.boolean || false,
-      formula: doc.private.formula?.at(0)?.boolean || false,
+      formula: Boolean(doc.private.formula?.at(0)?.string),
       readonly: doc.private.readonly?.at(0)?.boolean || false,
       set: doc.private.set?.map((s) => s.string).filter(Boolean) || [],
       description: pickDescription(doc.private.description) || pickDescription(doc.private.label)
