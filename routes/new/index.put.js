@@ -1,3 +1,4 @@
+// Internal to the Entu webapp signup - creates a database owned by the signed-in provider or passkey identity
 defineRouteMeta({ openAPI: { hidden: true } })
 
 export default defineEventHandler(async (event) => {

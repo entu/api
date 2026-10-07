@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Refresh an existing JWT for a fresh 12-hour token. Verifies signature and IP, re-validates account access, and returns a new token. Refusal cases: the presented token has not been refreshed in over 14 days, or the original authentication is over 30 days old (both require full re-authentication).',
+    description: 'Exchange a JWT, also an expired one, for a fresh 12-hour token from the same IP; subject to 14-day idle and 30-day session limits. See [Refreshing a Token](https://entu.ee/api/authentication/#refreshing-a-token).',
     security: [], // Uses the existing JWT, not account scoping
     parameters: [
       {
@@ -10,14 +10,14 @@ defineRouteMeta({
         required: true,
         schema: {
           type: 'string',
-          description: 'Bearer token — the JWT to refresh',
+          description: 'JWT to refresh',
           example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
         }
       }
     ],
     responses: {
       200: {
-        description: 'Fresh JWT with accessible accounts',
+        description: 'Fresh JWT and accessible databases',
         content: {
           'application/json': {
             schema: {
@@ -25,17 +25,18 @@ defineRouteMeta({
               properties: {
                 accounts: {
                   type: 'array',
-                  description: 'Databases the user has access to',
+                  description: 'Accessible databases — never empty',
                   items: {
                     type: 'object',
                     properties: {
-                      _id: { type: 'string', example: 'mydatabase' },
-                      name: { type: 'string', example: 'mydatabase' },
+                      _id: { type: 'string', description: 'Database name', example: 'mydatabase' },
+                      name: { type: 'string', description: 'Database name', example: 'mydatabase' },
                       user: {
                         type: 'object',
+                        description: 'Person entity signed in as',
                         properties: {
-                          _id: { type: 'string', example: 'npfwb8fv4ku7tzpq5yjarncc' },
-                          name: { type: 'string', example: 'User 1' }
+                          _id: { type: 'string', description: 'Person entity ID', example: '6798938432faaba00f8fc72f' },
+                          name: { type: 'string', description: 'Person name, or ID', example: 'User 1' }
                         }
                       }
                     }
@@ -43,22 +44,30 @@ defineRouteMeta({
                 },
                 user: {
                   type: 'object',
+                  description: 'Login identity from the presented token — empty for an API key',
                   properties: {
-                    uid: { type: 'string', description: 'Provider user ID, or the credential ID for a passkey — absent for API key auth' },
-                    provider: { type: 'string', description: 'Provider name, `passkey` for a passkey — absent for API key auth' },
-                    email: { type: 'string' },
-                    name: { type: 'string' }
+                    uid: { type: 'string', description: 'Provider user ID or passkey credential ID' },
+                    provider: { type: 'string', description: 'Provider name' },
+                    email: { type: 'string', description: 'Provider e-mail — never for a passkey' },
+                    name: { type: 'string', description: 'Provider name; for a passkey the person name in the first database, by name, that has one' },
+                    passkeyPublic: { type: 'string', description: 'Passkey public key' },
+                    device: { type: 'string', description: 'Passkey device name' }
                   }
                 },
-                token: { type: 'string', description: '12-hour JWT' },
-                expires: { type: 'string', format: 'date-time', description: 'Token expiry as ISO 8601 datetime' }
-              }
+                token: { type: 'string', description: '12-hour JWT, bound to this IP' },
+                expires: { type: 'string', format: 'date-time', description: 'Token expiry' }
+              },
+              required: ['accounts', 'user', 'token', 'expires']
             }
           }
         }
       },
+      400: {
+        description: '`No key`',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
       401: {
-        description: 'Invalid token, IP mismatch, token not refreshed in over 14 days, original authentication over 30 days old, or no accessible accounts',
+        description: 'Bad signature, wrong or no IP binding, `Token too old, re-authenticate`, `Session expired, re-authenticate`, `No accessible accounts`',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }

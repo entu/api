@@ -1,5 +1,6 @@
 import Stripe from 'stripe'
 
+// Stripe webhook - called only by Stripe with a signed event, so kept out of the API docs
 defineRouteMeta({ openAPI: { hidden: true } })
 
 export default defineEventHandler(async (event) => {

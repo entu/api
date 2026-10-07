@@ -1,8 +1,8 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Entity'],
-    description: 'List entities with filtering, full-text search, sorting, grouping, and pagination. Properties are filtered by access rights. See [query reference](https://entu.ee/api/query-reference).',
-    security: [{ bearerAuth: [] }],
+    description: 'List entities with filters, full-text search, sorting, grouping and pagination; anonymous callers get public entities only. Filters are `{property}.{field}[.{operator}]=value` and all must match; an unknown operator matches exactly. See the [query reference](https://entu.ee/api/query-reference/#filters).',
+    security: [{}, { bearerAuth: [] }], // The token is optional; without it only public entities are listed
     parameters: [
       {
         name: 'db',
@@ -18,7 +18,8 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Comma-separated list of properties to include'
+          description: 'Comma-separated properties or `property.field` paths to return; `_id` is always returned. See [field selection](https://entu.ee/api/query-reference/#field-selection).',
+          example: 'name,_type,_created'
         }
       },
       {
@@ -26,7 +27,8 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Comma-separated list of grouping fields'
+          description: 'Comma-separated `property.field` paths to group by; grouped values appear only if also in `props`. See [grouping](https://entu.ee/api/query-reference/#grouping).',
+          example: 'status.string'
         }
       },
       {
@@ -34,7 +36,8 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Comma-separated list of sort fields'
+          description: 'Comma-separated `property.field` paths, `-` prefix for descending; default `_id` (creation order). See [sorting](https://entu.ee/api/query-reference/#sorting).',
+          example: 'name.string,-_created.datetime'
         }
       },
       {
@@ -43,7 +46,8 @@ defineRouteMeta({
         schema: {
           type: 'integer',
           default: 100,
-          description: 'Maximum number of results to return'
+          minimum: 1,
+          description: 'Maximum entities to return; `0` or non-numeric means 100, no upper bound. Ignored with `group`.'
         }
       },
       {
@@ -52,7 +56,8 @@ defineRouteMeta({
         schema: {
           type: 'integer',
           default: 0,
-          description: 'Number of results to skip'
+          minimum: 0,
+          description: 'Entities to skip. Ignored with `group`.'
         }
       },
       {
@@ -60,7 +65,8 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Search query string'
+          description: 'Full-text search. See [full-text search](https://entu.ee/api/query-reference/#full-text-search).',
+          example: 'acme corp'
         }
       },
       {
@@ -68,7 +74,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Filter by string property value (e.g., name.string=John)',
+          description: 'Exact match against any value; reference values carry the referenced entity\'s name here. `gt`, `gte`, `lt`, `lte`, `ne` also work.',
           example: 'name.string=John'
         }
       },
@@ -77,7 +83,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Filter by string property using regex (e.g., name.string.regex=/john/i)',
+          description: '`/pattern/flags` with flags i, m, s (others dropped, `x` returns 400); a value without `/` is the pattern as-is',
           example: 'name.string.regex=/john/i'
         }
       },
@@ -86,8 +92,26 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Filter by multiple string values (comma-separated, e.g., status.string.in=active,pending)',
+          description: 'Any of the comma-separated values',
           example: 'status.string.in=active,pending'
+        }
+      },
+      {
+        name: '{property}.string.ne',
+        in: 'query',
+        schema: {
+          type: 'string',
+          description: 'No value equals this; includes entities without the property',
+          example: 'status.string.ne=archived'
+        }
+      },
+      {
+        name: '{property}.{field}',
+        in: 'query',
+        schema: {
+          type: 'string',
+          description: 'Any other value field (`filename`, `filetype`, `language`, …), compared as a string with the `.string` operators',
+          example: 'photo.filetype=image/jpeg'
         }
       },
       {
@@ -95,8 +119,8 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Filter by reference property (entity ID, e.g., _type.reference=507f1f77bcf86cd799439011)',
-          example: '_type.reference=507f1f77bcf86cd799439011'
+          description: 'Referenced entity ID; an invalid ID returns 400',
+          example: '_parent.reference=507f1f77bcf86cd799439011'
         }
       },
       {
@@ -104,8 +128,17 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Filter by multiple reference values (comma-separated entity IDs)',
+          description: 'Any of the comma-separated entity IDs; an invalid ID returns 400',
           example: '_type.reference.in=507f1f77bcf86cd799439011,507f1f77bcf86cd799439012'
+        }
+      },
+      {
+        name: '{property}.reference.ne',
+        in: 'query',
+        schema: {
+          type: 'string',
+          description: 'Does not reference this ID; includes entities without the property',
+          example: '_parent.reference.ne=507f1f77bcf86cd799439011'
         }
       },
       {
@@ -113,7 +146,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'boolean',
-          description: 'Check if reference property exists (e.g., _parent.reference.exists=true)',
+          description: 'Value exists (`true`) or not (`false`)',
           example: '_parent.reference.exists=true'
         }
       },
@@ -122,7 +155,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'number',
-          description: 'Filter by exact number value (e.g., price.number=100)',
+          description: 'Exact number',
           example: 'price.number=100'
         }
       },
@@ -131,7 +164,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'number',
-          description: 'Filter by number greater than (e.g., price.number.gt=100)',
+          description: 'Greater than',
           example: 'price.number.gt=100'
         }
       },
@@ -140,7 +173,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'number',
-          description: 'Filter by number greater than or equal (e.g., price.number.gte=100)',
+          description: 'Greater than or equal',
           example: 'price.number.gte=100'
         }
       },
@@ -149,7 +182,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'number',
-          description: 'Filter by number less than (e.g., price.number.lt=100)',
+          description: 'Less than',
           example: 'price.number.lt=100'
         }
       },
@@ -158,7 +191,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'number',
-          description: 'Filter by number less than or equal (e.g., price.number.lte=100)',
+          description: 'Less than or equal',
           example: 'price.number.lte=100'
         }
       },
@@ -167,7 +200,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'number',
-          description: 'Filter by number not equal (e.g., price.number.ne=0)',
+          description: 'Not equal',
           example: 'price.number.ne=0'
         }
       },
@@ -176,7 +209,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Filter by multiple number values (comma-separated, e.g., quantity.number.in=10,20,30)',
+          description: 'Any of the comma-separated numbers',
           example: 'quantity.number.in=10,20,30'
         }
       },
@@ -185,7 +218,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'boolean',
-          description: 'Check if number property exists (e.g., price.number.exists=true)',
+          description: 'Value exists (`true`) or not (`false`)',
           example: 'price.number.exists=true'
         }
       },
@@ -194,7 +227,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'boolean',
-          description: 'Filter by boolean value (e.g., active.boolean=true)',
+          description: 'Boolean value; anything but `true` means `false`',
           example: 'active.boolean=true'
         }
       },
@@ -203,7 +236,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Filter by multiple boolean values (comma-separated, e.g., active.boolean.in=true,false)',
+          description: 'Any of the comma-separated booleans',
           example: 'active.boolean.in=true,false'
         }
       },
@@ -212,7 +245,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'boolean',
-          description: 'Check if boolean property exists (e.g., active.boolean.exists=true)',
+          description: 'Value exists (`true`) or not (`false`)',
           example: 'active.boolean.exists=true'
         }
       },
@@ -222,7 +255,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           format: 'date',
-          description: 'Filter by exact date value (e.g., created_date.date=2025-01-28)',
+          description: 'Exact date; date and datetime filters also take a Unix timestamp in milliseconds',
           example: 'created_date.date=2025-01-28'
         }
       },
@@ -232,7 +265,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           format: 'date',
-          description: 'Filter by date greater than (e.g., created_date.date.gt=2025-01-01)',
+          description: 'Greater than',
           example: 'created_date.date.gt=2025-01-01'
         }
       },
@@ -242,7 +275,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           format: 'date',
-          description: 'Filter by date greater than or equal (e.g., created_date.date.gte=2025-01-01)',
+          description: 'Greater than or equal',
           example: 'created_date.date.gte=2025-01-01'
         }
       },
@@ -252,7 +285,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           format: 'date',
-          description: 'Filter by date less than (e.g., created_date.date.lt=2025-12-31)',
+          description: 'Less than',
           example: 'created_date.date.lt=2025-12-31'
         }
       },
@@ -262,7 +295,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           format: 'date',
-          description: 'Filter by date less than or equal (e.g., created_date.date.lte=2025-12-31)',
+          description: 'Less than or equal',
           example: 'created_date.date.lte=2025-12-31'
         }
       },
@@ -271,7 +304,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Filter by multiple date values (comma-separated, e.g., event_date.date.in=2025-01-01,2025-02-01)',
+          description: 'Any of the comma-separated dates',
           example: 'event_date.date.in=2025-01-01,2025-02-01'
         }
       },
@@ -280,7 +313,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'boolean',
-          description: 'Check if date property exists (e.g., birthdate.date.exists=true)',
+          description: 'Value exists (`true`) or not (`false`)',
           example: 'birthdate.date.exists=true'
         }
       },
@@ -290,7 +323,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           format: 'date-time',
-          description: 'Filter by exact datetime value (e.g., created_at.datetime=2025-01-28T08:21:25.637Z)',
+          description: 'Exact datetime',
           example: 'created_at.datetime=2025-01-28T08:21:25.637Z'
         }
       },
@@ -300,7 +333,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           format: 'date-time',
-          description: 'Filter by datetime greater than',
+          description: 'Greater than',
           example: 'created_at.datetime.gt=2025-01-01T00:00:00.000Z'
         }
       },
@@ -310,7 +343,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           format: 'date-time',
-          description: 'Filter by datetime greater than or equal',
+          description: 'Greater than or equal',
           example: 'created_at.datetime.gte=2025-01-01T00:00:00.000Z'
         }
       },
@@ -320,7 +353,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           format: 'date-time',
-          description: 'Filter by datetime less than',
+          description: 'Less than',
           example: 'created_at.datetime.lt=2025-12-31T23:59:59.999Z'
         }
       },
@@ -330,7 +363,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           format: 'date-time',
-          description: 'Filter by datetime less than or equal',
+          description: 'Less than or equal',
           example: 'created_at.datetime.lte=2025-12-31T23:59:59.999Z'
         }
       },
@@ -339,7 +372,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Filter by multiple datetime values (comma-separated)',
+          description: 'Any of the comma-separated datetimes',
           example: 'created_at.datetime.in=2025-01-01T00:00:00.000Z,2025-02-01T00:00:00.000Z'
         }
       },
@@ -348,7 +381,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'boolean',
-          description: 'Check if datetime property exists (e.g., created_at.datetime.exists=true)',
+          description: 'Value exists (`true`) or not (`false`)',
           example: 'created_at.datetime.exists=true'
         }
       },
@@ -357,7 +390,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'number',
-          description: 'Filter by exact file size in bytes (e.g., photo.filesize=1024000)',
+          description: 'Exact file size in bytes',
           example: 'photo.filesize=1024000'
         }
       },
@@ -366,7 +399,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'number',
-          description: 'Filter by file size greater than (in bytes)',
+          description: 'Greater than',
           example: 'photo.filesize.gt=1000000'
         }
       },
@@ -375,7 +408,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'number',
-          description: 'Filter by file size greater than or equal (in bytes)',
+          description: 'Greater than or equal',
           example: 'photo.filesize.gte=1000000'
         }
       },
@@ -384,7 +417,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'number',
-          description: 'Filter by file size less than (in bytes)',
+          description: 'Less than',
           example: 'photo.filesize.lt=5000000'
         }
       },
@@ -393,7 +426,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'number',
-          description: 'Filter by file size less than or equal (in bytes)',
+          description: 'Less than or equal',
           example: 'photo.filesize.lte=5000000'
         }
       },
@@ -402,7 +435,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Filter by multiple file size values (comma-separated)',
+          description: 'Any of the comma-separated sizes',
           example: 'photo.filesize.in=1024000,2048000'
         }
       },
@@ -411,7 +444,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'boolean',
-          description: 'Check if filesize property exists (e.g., photo.filesize.exists=true)',
+          description: 'File exists (`true`) or not (`false`)',
           example: 'photo.filesize.exists=true'
         }
       },
@@ -420,42 +453,42 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'boolean',
-          description: 'Check if string property exists (e.g., name.string.exists=true)',
+          description: 'Value exists (`true`) or not (`false`)',
           example: 'name.string.exists=true'
         }
       }
     ],
     responses: {
       200: {
-        description: 'List of entities with their properties',
+        description: 'List of entities',
         content: {
           'application/json': {
             schema: {
               type: 'object',
-              description: 'Paginated list of entities with metadata',
+              description: 'Paginated list of entities',
               properties: {
                 entities: {
                   type: 'array',
-                  description: 'Array of entity objects',
+                  description: 'Entities in the view the caller may read; with `group`, rows of `_count` and `props` values, without `_id`',
                   items: {
                     $ref: '#/components/schemas/Entity'
                   }
                 },
                 count: {
                   type: 'integer',
-                  description: 'Total number of entities matching the query',
+                  description: 'Total matches, or number of groups with `group`',
                   minimum: 0,
                   example: 14
                 },
                 limit: {
                   type: 'integer',
-                  description: 'Maximum entities returned in this response',
+                  description: 'Limit applied',
                   minimum: 1,
                   example: 100
                 },
                 skip: {
                   type: 'integer',
-                  description: 'Number of entities skipped',
+                  description: 'Skip applied',
                   minimum: 0,
                   example: 0
                 }
@@ -466,7 +499,15 @@ defineRouteMeta({
         }
       },
       400: {
-        description: 'Invalid regex filter',
+        description: 'Invalid regex, invalid ID in a reference filter, or invalid database name',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      401: {
+        description: 'Invalid or expired JWT, or JWT audience does not match caller IP',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      404: {
+        description: 'Account not found',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }
@@ -497,48 +538,7 @@ export default defineEventHandler(async (event) => {
 
     if (!/^\w+$/.test(field) || !/^\w+$/.test(type)) continue
 
-    let value
-
-    switch (type) {
-      case 'reference':
-        value = operator === 'in' ? v.split(',').map(getObjectId) : getObjectId(v)
-        break
-      case 'boolean':
-        value = operator === 'in' ? v.split(',').map((x) => x.toLowerCase() === 'true') : v.toLowerCase() === 'true'
-        break
-      case 'number':
-        value = operator === 'in' ? v.split(',').map(Number) : Number(v)
-        break
-      case 'filesize':
-        value = operator === 'in' ? v.split(',').map(Number) : Number(v)
-        break
-      case 'date':
-        value = operator === 'in' ? v.split(',').map(parseDate) : parseDate(v)
-        break
-      case 'datetime':
-        value = operator === 'in' ? v.split(',').map(parseDate) : parseDate(v)
-        break
-      default:
-        if (operator === 'regex' && v.includes('/')) {
-          const parts = v.split('/')
-          const flags = (parts.at(2) || '').replace(/[^imsx]/g, '')
-          try {
-            value = new RegExp(parts.at(1), flags)
-          }
-          catch {
-            throw createError({ statusCode: 400, statusMessage: 'Invalid regex' })
-          }
-        }
-        else if (operator === 'exists') {
-          value = v.toLowerCase() === 'true'
-        }
-        else if (operator === 'in') {
-          value = v.split(',')
-        }
-        else {
-          value = v
-        }
-    }
+    const value = parseFilterValue(type, operator, v)
 
     if (['gt', 'gte', 'lt', 'lte', 'ne', 'regex', 'exists', 'in'].includes(operator)) {
       filter[`private.${field}.${type}`] = {
@@ -553,6 +553,40 @@ export default defineEventHandler(async (event) => {
 
   return await queryEntities(entu, { filter, search, props, group, sort, limit, skip })
 })
+
+// Converts a filter's query value to the field's type - `exists` takes true or false for every type, never a typed value
+function parseFilterValue (type, operator, v) {
+  if (operator === 'exists') {
+    return v.toLowerCase() === 'true'
+  }
+
+  switch (type) {
+    case 'reference':
+      return operator === 'in' ? v.split(',').map(getObjectId) : getObjectId(v)
+    case 'boolean':
+      return operator === 'in' ? v.split(',').map((x) => x.toLowerCase() === 'true') : v.toLowerCase() === 'true'
+    case 'number':
+    case 'filesize':
+      return operator === 'in' ? v.split(',').map(Number) : Number(v)
+    case 'date':
+    case 'datetime':
+      return operator === 'in' ? v.split(',').map(parseDate) : parseDate(v)
+    default:
+      if (operator === 'regex' && v.includes('/')) {
+        const parts = v.split('/')
+        const flags = (parts.at(2) || '').replace(/[^imsx]/g, '')
+
+        try {
+          return new RegExp(parts.at(1), flags)
+        }
+        catch {
+          throw createError({ statusCode: 400, statusMessage: 'Invalid regex' })
+        }
+      }
+
+      return operator === 'in' ? v.split(',') : v
+  }
+}
 
 function parseDate (dateValue) {
   try {

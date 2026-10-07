@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Entity'],
-    description: 'Create a new entity. `_type` property is required. Supports all [property types](https://entu.ee/overview/properties). File properties return signed S3 upload URLs.',
+    description: 'Create an entity from property values; `_type` is required, the caller becomes `_owner`, and the type\'s default parents (with their `_sharing` and `_inheritrights`) and property defaults are added. See [writing properties](https://entu.ee/api/properties/#writing-properties), [file uploads](https://entu.ee/api/files/#upload-process) and [webhooks](https://entu.ee/configuration/plugins/#plugin-types).',
     security: [{ bearerAuth: [] }],
     parameters: [
       {
@@ -20,18 +20,24 @@ defineRouteMeta({
         'application/json': {
           schema: {
             type: 'array',
-            description: 'Array of property objects to create entity with. Must include a { "type": "_type", "reference": "..." } entry referencing the entity type',
+            description: 'Property values including `_type`. Rights and `_parent` take `reference`, `_sharing` a `string`, `_inheritrights` a `boolean`; other `_` names, billing and `entu_passkey` values are rejected.',
+            minItems: 1,
             items: {
               type: 'object',
               properties: {
-                type: { type: 'string', description: 'Property type', example: 'name' },
-                string: { type: 'string', description: 'String value', example: 'My Entity Name' },
+                type: { type: 'string', pattern: '^\\w+$', description: 'Property name (letters, digits and underscore)', example: 'name' },
+                string: { type: 'string', description: 'String or text value; for `entu_user` creates an invite, for `entu_api_key` a key is generated', example: 'My Entity Name' },
                 number: { type: 'number', description: 'Number value' },
                 boolean: { type: 'boolean', description: 'Boolean value' },
-                reference: { type: 'string', description: 'Reference to another entity' },
+                reference: { type: 'string', description: 'Referenced entity ID' },
                 date: { type: 'string', format: 'date', description: 'Date value' },
-                datetime: { type: 'string', format: 'date-time', description: 'DateTime value' },
-                language: { type: 'string', description: 'Language code for multilingual properties' }
+                datetime: { type: 'string', format: 'date-time', description: 'Datetime value' },
+                language: { type: 'string', pattern: '^[a-z]{2}$', description: 'Language code', example: 'en' },
+                filename: { type: 'string', description: 'File name; files need `filename`, `filesize` and `filetype`' },
+                filesize: { type: 'integer', description: 'File size in bytes' },
+                filetype: { type: 'string', description: 'File MIME type', example: 'image/jpeg' },
+                counter: { type: ['boolean', 'number'], description: 'Next counter value: the database\'s highest `number` for this property plus the given step (`true` = 1); a sent `string` keeps its own last number' },
+                email: { type: 'string', description: 'Email for an `entu_user` value' }
               },
               required: ['type']
             }
@@ -41,7 +47,7 @@ defineRouteMeta({
     },
     responses: {
       200: {
-        description: 'Created entity ID and array of created properties',
+        description: 'Created entity ID and all written values, including server-added ones',
         content: {
           'application/json': {
             schema: {
@@ -54,33 +60,39 @@ defineRouteMeta({
                 },
                 properties: {
                   type: 'array',
-                  description: 'Array of created property objects',
+                  description: 'Written values with `type`, without `created`',
                   items: {
                     type: 'object',
                     properties: {
                       _id: { type: 'string', description: 'Property ID' },
-                      type: { type: 'string', description: 'Property type', example: 'name' },
-                      string: { type: 'string', description: 'String value. For entu_api_key properties this is the plaintext API key — returned only in this response; only its hash is stored.' },
+                      type: { type: 'string', description: 'Property name', example: 'name' },
+                      string: { type: 'string', description: 'String value; for `entu_api_key` the plaintext key, returned only here' },
                       number: { type: 'number', description: 'Numeric value' },
                       boolean: { type: 'boolean', description: 'Boolean value' },
-                      reference: { type: 'string', description: 'Reference to another entity' },
-                      date: { type: 'string', format: 'date', description: 'Date value' },
-                      datetime: { type: 'string', format: 'date-time', description: 'DateTime value' },
-                      language: { type: 'string', description: 'Language code for multilingual properties' },
-                      filename: { type: 'string', description: 'File name (file properties)' },
-                      filesize: { type: 'number', description: 'File size in bytes (file properties)' },
-                      filetype: { type: 'string', description: 'File MIME type (file properties)' },
-                      invite: { type: 'string', description: 'Invite JWT, returned only for entu_user properties. Valid for 24 hours.' },
+                      reference: { type: 'string', description: 'Referenced entity ID' },
+                      date: { type: 'string', format: 'date-time', description: 'Date at UTC midnight', example: '2025-01-28T00:00:00.000Z' },
+                      datetime: { type: 'string', format: 'date-time', description: 'Datetime value' },
+                      language: { type: 'string', description: 'Language code' },
+                      filename: { type: 'string', description: 'File name' },
+                      filesize: { type: 'integer', description: 'File size in bytes' },
+                      filetype: { type: 'string', description: 'File MIME type' },
+                      email: { type: 'string', description: 'Email of an `entu_user` value' },
+                      invite: { type: 'string', description: 'Invite JWT replacing an `entu_user` `string`, valid 24 hours' },
                       upload: {
                         type: 'object',
-                        description: 'Signed S3 upload instructions, returned only for file properties',
+                        description: 'Signed S3 upload for file values. See [upload process](https://entu.ee/api/files/#upload-process).',
                         properties: {
-                          url: { type: 'string', description: 'Signed S3 upload URL' },
-                          method: { type: 'string', description: 'HTTP method to use for upload', example: 'PUT' },
+                          url: { type: 'string', description: 'Signed upload URL, valid 60 seconds' },
+                          method: { type: 'string', description: 'HTTP method', example: 'PUT' },
                           headers: {
                             type: 'object',
-                            description: 'Headers that must be sent with the upload request',
-                            additionalProperties: { type: 'string' }
+                            description: 'Required upload headers',
+                            properties: {
+                              ACL: { type: 'string', example: 'private' },
+                              'Content-Disposition': { type: 'string', example: 'inline;filename="photo.jpg"' },
+                              'Content-Length': { type: 'integer', description: 'The sent `filesize`' },
+                              'Content-Type': { type: 'string', description: 'The sent `filetype`', example: 'image/jpeg' }
+                            }
                           }
                         }
                       }
@@ -94,7 +106,7 @@ defineRouteMeta({
         }
       },
       400: {
-        description: 'Bad Request - Invalid property data',
+        description: 'Invalid body, missing `_type`, empty value, `_type`/`_parent` not found, no `_expander` on parent, invalid ID or database name',
         content: {
           'application/json': {
             schema: {
@@ -103,8 +115,16 @@ defineRouteMeta({
           }
         }
       },
+      401: {
+        description: 'Invalid or expired JWT, or JWT audience does not match caller IP',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
       403: {
-        description: 'No user',
+        description: 'No user, or a server-only property or field sent',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      404: {
+        description: 'Account not found',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }

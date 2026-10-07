@@ -1,4 +1,4 @@
-// RFC 8414 discovery document - fetched by OAuth clients, not called by hand, so kept out of the API docs
+// RFC 8414 discovery document - OAuth client libraries fetch it themselves, so it stays out of the spec
 defineRouteMeta({ openAPI: { hidden: true } })
 
 export default defineEventHandler((event) => {

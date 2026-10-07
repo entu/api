@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Entity'],
-    description: 'Duplicate entity with all or selected properties. Optionally set a different parent or create multiple copies at once.',
+    description: 'Create copies of an entity; needs `_owner`, and `_expander` on any copied `_parent`. All values are copied (counters as-is) except files, credentials, billing, `_created`, `_mid` and `ignoredProperties`; the caller becomes `_owner`. No webhooks are triggered.',
     security: [{ bearerAuth: [] }],
     parameters: [
       {
@@ -19,28 +19,30 @@ defineRouteMeta({
         required: true,
         schema: {
           type: 'string',
-          description: 'Entity ID to duplicate'
+          description: 'Entity ID'
         }
       }
     ],
     requestBody: {
-      required: false,
+      required: true,
       content: {
         'application/json': {
           schema: {
             type: 'object',
+            description: 'Required; send `{}` for defaults (an empty body fails with 500)',
             properties: {
               count: {
-                type: 'number',
-                description: 'Number of duplicates to create',
+                type: 'integer',
+                description: 'Number of copies',
                 default: 1,
                 minimum: 1,
                 maximum: 100
               },
               ignoredProperties: {
                 type: 'array',
-                items: { type: 'string' },
-                description: 'Property types to ignore during duplication (e.g., ["unique_id", "created_at"])'
+                items: { type: 'string', minLength: 1 },
+                default: [],
+                description: 'Property names not to copy'
               }
             }
           }
@@ -54,7 +56,7 @@ defineRouteMeta({
           'application/json': {
             schema: {
               type: 'array',
-              description: 'Array of created entities with their properties',
+              description: 'One item per copy, shaped like the POST /{db}/entity response',
               items: {
                 type: 'object',
                 properties: {
@@ -64,20 +66,22 @@ defineRouteMeta({
                     example: '6798938432faaba00f8fc72f'
                   },
                   properties: {
-                    type: 'object',
-                    description: 'Entity properties indexed by property name',
-                    additionalProperties: {
-                      type: 'array',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          _id: { type: 'string', description: 'Property ID' },
-                          string: { type: 'string', description: 'String value' },
-                          number: { type: 'number', description: 'Numeric value' },
-                          boolean: { type: 'boolean', description: 'Boolean value' },
-                          reference: { type: 'string', description: 'Reference to another entity' }
-                        }
-                      }
+                    type: 'array',
+                    description: 'Values written, including `_owner` and `_created`',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        _id: { type: 'string', description: 'Property ID' },
+                        type: { type: 'string', description: 'Property name', example: 'name' },
+                        string: { type: 'string', description: 'String value' },
+                        number: { type: 'number', description: 'Numeric value' },
+                        boolean: { type: 'boolean', description: 'Boolean value' },
+                        reference: { type: 'string', description: 'Referenced entity ID' },
+                        date: { type: 'string', format: 'date-time', description: 'Date value' },
+                        datetime: { type: 'string', format: 'date-time', description: 'Datetime value' },
+                        language: { type: 'string', description: 'Language code' }
+                      },
+                      required: ['_id', 'type']
                     }
                   }
                 },
@@ -88,15 +92,19 @@ defineRouteMeta({
         }
       },
       400: {
-        description: 'Invalid count or ignoredProperties',
+        description: 'Invalid `count` or `ignoredProperties`, a copied value failed validation (e.g. no `_expander` on parent), invalid ID or database name',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      401: {
+        description: 'Invalid or expired JWT, or JWT audience does not match caller IP',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       403: {
-        description: 'No user or not owner',
+        description: 'No user, or caller is not `_owner`',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       404: {
-        description: 'Entity not found',
+        description: 'Entity not found, or account not found',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }

@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Register an OAuth client (RFC 7591). There is no client secret — the `client_id` carries its own redirect URIs and is valid for a year. Store it rather than registering again on every start.',
+    description: 'Register an OAuth client (RFC 7591), without a client secret. See [Register a client](https://entu.ee/api/authentication/#register-a-client).',
     security: [], // Registration is open — the client is not yet known
     requestBody: {
       required: true,
@@ -12,12 +12,14 @@ defineRouteMeta({
             properties: {
               redirect_uris: {
                 type: 'array',
-                description: 'Where the user may be returned after login — 1 to 10 URIs',
-                items: { type: 'string', example: 'https://your-app.com/callback' }
+                description: '1–10 absolute URIs, any scheme',
+                minItems: 1,
+                maxItems: 10,
+                items: { type: 'string', format: 'uri', example: 'https://your-app.com/callback' }
               },
               client_name: {
                 type: 'string',
-                description: 'Application name, up to 200 characters',
+                description: 'App name, cut to 200 characters',
                 example: 'My App'
               }
             },
@@ -34,28 +36,29 @@ defineRouteMeta({
             schema: {
               type: 'object',
               properties: {
-                client_id: { type: 'string', description: 'Client id to use at /auth/authorize' },
-                client_name: { type: 'string' },
+                client_id: { type: 'string', description: 'Valid for a year' },
+                client_name: { type: 'string', description: 'Absent if not given' },
                 redirect_uris: {
                   type: 'array',
                   items: { type: 'string' }
                 },
-                token_endpoint_auth_method: { type: 'string', example: 'none' },
+                token_endpoint_auth_method: { type: 'string', enum: ['none'] },
                 grant_types: {
                   type: 'array',
-                  items: { type: 'string', example: 'authorization_code' }
+                  items: { type: 'string', enum: ['authorization_code'] }
                 },
                 response_types: {
                   type: 'array',
-                  items: { type: 'string', example: 'code' }
+                  items: { type: 'string', enum: ['code'] }
                 }
-              }
+              },
+              required: ['client_id', 'redirect_uris', 'token_endpoint_auth_method', 'grant_types', 'response_types']
             }
           }
         }
       },
       400: {
-        description: 'Missing redirect_uris, more than 10 of them, or one that is not a valid URI',
+        description: '`invalid_redirect_uri` — missing, empty, over 10, or invalid URIs',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }

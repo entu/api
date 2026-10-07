@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Entity'],
-    description: 'Returns chronological audit log of all property changes — additions, modifications, and deletions with timestamps and authors.',
+    description: 'Audit log of the entity\'s property changes, oldest first; a same-moment removal and addition is one entry, `_created` and `_mid` are left out. Needs direct or inherited rights; domain or public sharing is not enough.',
     security: [{ bearerAuth: [] }],
     parameters: [
       {
@@ -28,7 +28,9 @@ defineRouteMeta({
         schema: {
           type: 'integer',
           default: 100,
-          description: 'Maximum number of history entries to return'
+          minimum: 1,
+          maximum: 1000,
+          description: 'Maximum entries; clamped, `0` or non-numeric means 100'
         }
       },
       {
@@ -37,7 +39,8 @@ defineRouteMeta({
         schema: {
           type: 'integer',
           default: 0,
-          description: 'Number of history entries to skip'
+          minimum: 0,
+          description: 'Entries to skip; negative means 0'
         }
       }
     ],
@@ -51,30 +54,59 @@ defineRouteMeta({
               properties: {
                 changes: {
                   type: 'array',
-                  description: 'Array of history entries showing entity changes',
+                  description: 'History entries, oldest first',
                   items: {
                     type: 'object',
                     properties: {
-                      type: { type: 'string', description: 'Property type that was changed' },
-                      at: { type: 'string', format: 'date-time', description: 'When the change occurred' },
-                      by: { type: 'string', description: 'User ID who made the change' },
-                      old: { type: 'object', description: 'Property value before change' },
-                      new: { type: 'object', description: 'Property value after change' }
-                    }
+                      type: { type: 'string', description: 'Property name' },
+                      at: { type: 'string', format: 'date-time', description: 'Change time, if recorded' },
+                      by: { type: 'string', description: 'Author entity ID or `entu` for server changes, if recorded' },
+                      old: {
+                        type: 'object',
+                        description: 'Removed value, if any',
+                        properties: {
+                          _id: { type: 'string', description: 'Property ID' },
+                          string: { type: 'string', description: 'String value, or the referenced entity\'s name; credentials masked' },
+                          number: { type: 'number' },
+                          boolean: { type: 'boolean' },
+                          reference: { type: 'string', description: 'Referenced entity ID' },
+                          date: { type: 'string', format: 'date-time' },
+                          datetime: { type: 'string', format: 'date-time' },
+                          filename: { type: 'string' },
+                          filesize: { type: 'integer' },
+                          md5: { type: 'string', description: 'File MD5 hash' },
+                          language: { type: 'string' }
+                        }
+                      },
+                      new: {
+                        type: 'object',
+                        description: 'Added value, if any; same fields as `old`'
+                      }
+                    },
+                    required: ['type']
                   }
                 },
-                count: { type: 'integer', description: 'Total number of history entries' }
-              }
+                count: { type: 'integer', description: 'Total entries' }
+              },
+              required: ['changes', 'count']
             }
           }
         }
       },
+      400: {
+        description: 'Invalid ID or invalid database name',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      401: {
+        description: 'Invalid or expired JWT, or JWT audience does not match caller IP',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
       403: {
-        description: 'Insufficient permissions',
+        description: 'No user, or User not in any rights property',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       404: {
-        description: 'Entity not found',
+        description: 'Entity {_id} not found, or account not found',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }

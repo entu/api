@@ -1,15 +1,15 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Exchange an API key or a session token for a 12-hour JWT, with the databases that identity can reach. Use `db` to limit it to one.\n\nWithout an `Authorization` header it starts a login instead, letting OAuth.ee ask which provider to use. Passkey sign-in has its own endpoint and does not come through here.',
-    security: [], // Uses API key, not JWT
+    description: 'Exchange an API key or a single-use login session token for a 12-hour, IP-bound JWT; without an `Authorization` header it starts a login. See [Getting a Token](https://entu.ee/api/authentication/#getting-a-token).',
+    security: [], // Uses an API key or session token, not a JWT
     parameters: [
       {
         name: 'authorization',
         in: 'header',
         schema: {
           type: 'string',
-          description: 'API key, or the session token from a login. Omit to start a login',
+          description: 'API key or session token; omit to start a login',
           example: 'Bearer nEkPYET5fYjJqktNz9yfLxPF'
         }
       },
@@ -18,7 +18,8 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Limit auth to this database'
+          description: 'Limit to this database; enables [automatic user creation](https://entu.ee/configuration/users/#automatic-user-creation)',
+          example: 'mydatabase'
         }
       },
       {
@@ -34,7 +35,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Invite token to accept while authenticating'
+          description: 'Invite token — session token only; links this identity to the invited person and limits to its database'
         }
       },
       {
@@ -42,7 +43,8 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Starting a login: URL to return to, with the session token appended'
+          description: 'Login start: return URL, session token appended. Without it: JSON `{ key }`',
+          example: 'https://your-app.com/auth?key='
         }
       },
       {
@@ -51,13 +53,13 @@ defineRouteMeta({
         schema: {
           type: 'string',
           enum: ['en', 'et'],
-          description: 'Starting a login: OAuth.ee page language. Omit to let OAuth.ee choose'
+          description: 'Login start: OAuth.ee page language'
         }
       }
     ],
     responses: {
       200: {
-        description: 'JWT token with accessible accounts',
+        description: 'JWT and accessible databases',
         content: {
           'application/json': {
             schema: {
@@ -65,17 +67,19 @@ defineRouteMeta({
               properties: {
                 accounts: {
                   type: 'array',
-                  description: 'Databases the user has access to',
+                  description: 'Accessible databases — may be empty after a login',
                   items: {
                     type: 'object',
                     properties: {
-                      _id: { type: 'string', example: 'mydatabase' },
-                      name: { type: 'string', example: 'mydatabase' },
+                      _id: { type: 'string', description: 'Database name', example: 'mydatabase' },
+                      name: { type: 'string', description: 'Database name', example: 'mydatabase' },
                       user: {
                         type: 'object',
+                        description: 'Person entity signed in as',
                         properties: {
-                          _id: { type: 'string', example: 'npfwb8fv4ku7tzpq5yjarncc' },
-                          name: { type: 'string', example: 'User 1' }
+                          _id: { type: 'string', description: 'Person entity ID', example: '6798938432faaba00f8fc72f' },
+                          name: { type: 'string', description: 'Person name, or ID', example: 'User 1' },
+                          new: { type: 'boolean', description: 'Person created by this sign-in' }
                         }
                       }
                     }
@@ -83,28 +87,37 @@ defineRouteMeta({
                 },
                 user: {
                   type: 'object',
+                  description: 'Login identity — empty for an API key',
                   properties: {
-                    uid: { type: 'string', description: 'Provider user ID, or the credential ID for a passkey — absent for API key auth' },
-                    provider: { type: 'string', description: 'Provider name, `passkey` for a passkey — absent for API key auth' },
-                    email: { type: 'string' },
-                    name: { type: 'string' }
+                    uid: { type: 'string', description: 'Provider user ID or passkey credential ID' },
+                    provider: { type: 'string', description: 'Provider name' },
+                    email: { type: 'string', description: 'Provider e-mail — never for a passkey' },
+                    name: { type: 'string', description: 'Provider name; for a passkey the person name in the first database, by name, that has one' },
+                    passkeyPublic: { type: 'string', description: 'Passkey public key' },
+                    device: { type: 'string', description: 'Passkey device name' },
+                    registered: { type: 'boolean', description: 'Passkey created in this sign-in' }
                   }
                 },
-                token: { type: 'string', description: '12-hour JWT' },
-                expires: { type: 'string', format: 'date-time', description: 'Token expiry as ISO 8601 datetime' },
-                conflict: { type: 'string', description: 'Set to `invite` if invite targets an entity already linked to another user' }
-              }
+                token: { type: 'string', description: '12-hour JWT (`use: access`), bound to this IP' },
+                expires: { type: 'string', format: 'date-time', description: 'Token expiry' },
+                conflict: { type: 'string', enum: ['invite'], description: 'Invite targets another person than this identity is linked to' }
+              },
+              required: ['accounts', 'user', 'token', 'expires']
             }
           }
         }
       },
-      302: { description: 'Redirect to the OAuth.ee login, when called without an Authorization header' },
+      302: { description: 'Login redirect, without an Authorization header' },
       400: {
-        description: 'Invalid session, missing user email, or an error reported by the provider',
+        description: '`Invalid or expired invite`; session token without invite: `db` is a system database',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       401: {
-        description: 'Credential is not valid, or grants access to no database',
+        description: '`Invalid credential` — unknown API key; invalid, expired, used or wrong-IP session token',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      404: {
+        description: 'Session token without invite: `db` not found',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }

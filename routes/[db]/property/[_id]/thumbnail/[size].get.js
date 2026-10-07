@@ -3,8 +3,8 @@ const ALLOWED_SIZES = [50, 200, 400]
 defineRouteMeta({
   openAPI: {
     tags: ['Property'],
-    description: 'Get a square thumbnail (center cover-crop, JPEG) generated from a file property. Supports image and PDF sources. Thumbnails are cached in S3. Returns a signed download URL (60s) in the `url` field.',
-    security: [{ bearerAuth: [] }],
+    description: 'Get a signed URL to a square JPEG thumbnail of a file property; access as for `GET /{db}/property/{_id}`. See [property thumbnail](https://entu.ee/api/files/#property-thumbnail).',
+    security: [{}, { bearerAuth: [] }],
     parameters: [
       {
         name: 'db',
@@ -30,8 +30,8 @@ defineRouteMeta({
         required: true,
         schema: {
           type: 'integer',
-          enum: ALLOWED_SIZES,
-          description: 'Thumbnail size in pixels (width and height of the square)'
+          enum: [50, 200, 400],
+          description: 'Square side in pixels'
         }
       }
     ],
@@ -43,22 +43,31 @@ defineRouteMeta({
             schema: {
               type: 'object',
               properties: {
-                url: { type: 'string', description: 'Signed thumbnail download URL (valid 60s)' }
-              }
+                url: { type: 'string', description: 'Signed URL, valid 60 seconds' }
+              },
+              required: ['url']
             }
           }
         }
       },
       400: {
-        description: 'Invalid size or property is not a previewable file',
+        description: 'Invalid size, ID or database name, not an image or PDF, image too large, or undecodable file',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      401: {
+        description: 'Invalid or expired JWT, or JWT bound to another IP',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       403: {
-        description: 'Insufficient permissions',
+        description: 'No access to property',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       404: {
-        description: 'Property or entity not found',
+        description: 'Database, property or entity not found, or file missing from storage',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      413: {
+        description: 'Source file over 25 MB',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }

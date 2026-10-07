@@ -1,8 +1,8 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Entity'],
-    description: 'Get entity by ID. Returns properties filtered by access rights. Use `props` to request specific properties only.',
-    security: [{ bearerAuth: [] }],
+    description: 'Get an entity in the view (private, domain or public) the caller may read; credential values are masked. See [property values](https://entu.ee/api/properties/) and [access rights](https://entu.ee/overview/entities/#access-rights).',
+    security: [{}, { bearerAuth: [] }], // The token is optional; without it only public entities are readable
     parameters: [
       {
         name: 'db',
@@ -27,13 +27,14 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Comma-separated list of properties to include. If not set, all properties are returned.'
+          description: 'Comma-separated properties or `property.field` paths to return; `_id` is always returned',
+          example: 'name,_type'
         }
       }
     ],
     responses: {
       200: {
-        description: 'Entity with all properties in flattened structure',
+        description: 'Entity: `_id` plus an array of values per property',
         content: {
           'application/json': {
             schema: {
@@ -49,12 +50,20 @@ defineRouteMeta({
           }
         }
       },
+      400: {
+        description: 'Invalid ID or invalid database name',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      401: {
+        description: 'Invalid or expired JWT, or JWT audience does not match caller IP',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
       403: {
         description: 'No accessible properties',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       404: {
-        description: 'Entity not found',
+        description: 'Entity {_id} not found, or account not found',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }

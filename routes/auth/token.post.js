@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Exchange an authorization code for a 12-hour JWT, scoped to the authorized database. Codes are single use and expire in five minutes. Unlike tokens from `/auth`, this one is not tied to an IP address.',
+    description: 'Exchange an authorization code for a 12-hour JWT that is not IP-bound and cannot be refreshed. See [Exchange the code](https://entu.ee/api/authentication/#exchange-the-code).',
     security: [], // The code and PKCE verifier authenticate this call, not a JWT
     requestBody: {
       required: true,
@@ -13,15 +13,28 @@ defineRouteMeta({
               grant_type: {
                 type: 'string',
                 enum: ['authorization_code'],
-                description: 'Only the authorization code grant is supported'
+                description: 'Only `authorization_code`'
               },
-              code: { type: 'string', description: 'Code received at the redirect URI' },
+              code: { type: 'string', description: 'From the redirect URI' },
               redirect_uri: {
                 type: 'string',
-                description: 'Must match the one used at /auth/authorize',
+                description: 'Same as at `/auth/authorize`',
                 example: 'https://your-app.com/callback'
               },
-              code_verifier: { type: 'string', description: 'Verifier for the challenge sent at /auth/authorize' }
+              code_verifier: { type: 'string', description: 'PKCE verifier' }
+            },
+            required: ['grant_type', 'code', 'redirect_uri', 'code_verifier']
+          }
+        },
+        'application/json': {
+          schema: {
+            type: 'object',
+            description: 'Same fields as JSON',
+            properties: {
+              grant_type: { type: 'string', enum: ['authorization_code'] },
+              code: { type: 'string' },
+              redirect_uri: { type: 'string' },
+              code_verifier: { type: 'string' }
             },
             required: ['grant_type', 'code', 'redirect_uri', 'code_verifier']
           }
@@ -36,16 +49,17 @@ defineRouteMeta({
             schema: {
               type: 'object',
               properties: {
-                access_token: { type: 'string', description: '12-hour JWT — send as `Authorization: Bearer <token>`' },
-                token_type: { type: 'string', example: 'Bearer' },
-                expires_in: { type: 'integer', description: 'Seconds until the token expires', example: 43200 }
-              }
+                access_token: { type: 'string', description: '12-hour JWT (`use: access`), not IP-bound' },
+                token_type: { type: 'string', enum: ['Bearer'] },
+                expires_in: { type: 'integer', description: 'Seconds to expiry', example: 43200 }
+              },
+              required: ['access_token', 'token_type', 'expires_in']
             }
           }
         }
       },
       400: {
-        description: 'Unknown, expired or already used code, redirect_uri mismatch, failed PKCE verification, or no access to the authorized database',
+        description: '`data.error`: `unsupported_grant_type`, or `invalid_grant` — bad, expired or used code, `redirect_uri` mismatch, PKCE failure, no database access',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }

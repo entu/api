@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Property'],
-    description: 'Soft-delete a property. Entity is re-aggregated automatically. Files are removed from S3. Requires editor rights; rights properties require owner rights. `_type` cannot be deleted.',
+    description: 'Soft-delete a property value and trigger `entity-edit-webhook`; a file stays in storage and counts as deleted file storage. See [deleting a property](https://entu.ee/api/properties/#deleting-a-property) for the rights rules.',
     security: [{ bearerAuth: [] }],
     parameters: [
       {
@@ -19,13 +19,13 @@ defineRouteMeta({
         required: true,
         schema: {
           type: 'string',
-          description: 'Property ID to delete'
+          description: 'Property ID'
         }
       }
     ],
     responses: {
       200: {
-        description: 'Property deleted successfully',
+        description: 'Property deleted',
         content: {
           'application/json': {
             schema: {
@@ -33,20 +33,29 @@ defineRouteMeta({
               properties: {
                 deleted: {
                   type: 'boolean',
-                  example: true,
-                  description: 'Confirmation that property was deleted'
+                  description: 'Always true'
                 }
-              }
-            }
+              },
+              required: ['deleted']
+            },
+            example: { deleted: true }
           }
         }
       },
+      400: {
+        description: 'Invalid ID or database name, or `_parent` entity not found',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      401: {
+        description: 'Invalid or expired JWT, or JWT bound to another IP',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
       403: {
-        description: 'No user, insufficient rights, or cannot delete `_type` / last `_owner`',
+        description: 'No user, undeletable property, missing rights, or last `_owner`',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       404: {
-        description: 'Property not found',
+        description: 'Database, property (or already deleted) or entity not found',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }

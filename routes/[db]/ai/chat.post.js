@@ -1,3 +1,4 @@
+// Internal to the Entu webapp and app - the built-in AI assistant, which may propose but never apply write operations
 defineRouteMeta({ openAPI: { hidden: true } })
 
 const maxIterations = 10

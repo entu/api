@@ -4,15 +4,13 @@ export default defineEventHandler(async () => {
   // Get the original OpenAPI spec from the default route
   const openapi = await $fetch('/_openapi.json')
 
-  // Keep only documented paths (exclude hidden and internal routes)
+  // Keep only documented routes - a hidden method is dropped on its own, so a public method on the same path stays
   if (openapi.paths) {
     openapi.paths = Object.fromEntries(
-      Object.entries(openapi.paths).filter(([path, methods]) =>
-        !path.startsWith('/docs')
-        && !path.startsWith('/graphql')
-        && !path.startsWith('/_')
-        && !Object.values(methods).some((op) => op?.hidden)
-      )
+      Object.entries(openapi.paths)
+        .filter(([path]) => !path.startsWith('/docs') && !path.startsWith('/graphql') && !path.startsWith('/_'))
+        .map(([path, methods]) => [path, Object.fromEntries(Object.entries(methods).filter(([, op]) => !op?.hidden))])
+        .filter(([, methods]) => Object.keys(methods).length > 0)
     )
   }
 
@@ -23,7 +21,7 @@ export default defineEventHandler(async () => {
     }
   ]
 
-  openapi.info.description = 'RESTful API for [Entu](https://entu.ee) — a flexible entity-property database. Entities hold typed properties (text, numbers, dates, files, references) defined per entity type, with no fixed schema. Supports hierarchical structures, granular access control, full-text search, filtering, sorting, computed properties ([formulas](https://entu.ee/api/formulas)), and file management via signed URLs.\n\nAuthentication uses JWT tokens obtained via API key, OAuth, or WebAuthn passkey. See [authentication docs](https://entu.ee/api/authentication) for details.'
+  openapi.info.description = 'REST API for [Entu](https://entu.ee), a schema-less entity-property database. Start with the [quick start](https://entu.ee/api/quickstart/), then see [authentication](https://entu.ee/api/authentication/) and [best practices](https://entu.ee/api/best-practices/).'
 
   if (!openapi.components) {
     openapi.components = {}
@@ -40,7 +38,7 @@ export default defineEventHandler(async () => {
       type: 'http',
       scheme: 'bearer',
       bearerFormat: 'JWT',
-      description: 'JWT token obtained from /auth endpoint'
+      description: '12-hour JWT, bound to the issuing IP unless it came from `POST /auth/token`. See [authentication flow](https://entu.ee/api/authentication/#authentication-flow).'
     }
   }
 
@@ -50,19 +48,19 @@ export default defineEventHandler(async () => {
   openapi.tags = [
     {
       name: 'Authentication',
-      description: 'Exchange API key, OAuth token, or passkey for a 12-hour JWT. Use `Authorization: Bearer <token>` on all subsequent requests. Entu is also an OAuth 2.1 authorization server, so an app can sign users in without handling their credentials — register a client, send the user to `/auth/authorize`, exchange the code at `/auth/token`. See [authentication docs](https://entu.ee/api/authentication).'
+      description: 'Get a 12-hour JWT from an API key or login, or through Entu\'s [OAuth 2.1 server](https://entu.ee/api/authentication/#oauth-server). See [authentication](https://entu.ee/api/authentication/).'
     },
     {
       name: 'Database',
-      description: 'Database statistics, limits, and billing management.'
+      description: 'Database statistics and limits.'
     },
     {
       name: 'Entity',
-      description: 'CRUD operations on [entities](https://entu.ee/overview/entities) — filtering, sorting, pagination, full-text search, change history, duplication, and aggregation of [computed properties](https://entu.ee/api/formulas).'
+      description: 'Create, read, update and delete [entities](https://entu.ee/overview/entities/). See the [query reference](https://entu.ee/api/query-reference/) and [formulas](https://entu.ee/api/formulas/).'
     },
     {
       name: 'Property',
-      description: 'Read or delete individual [property](https://entu.ee/overview/properties) values. File properties return signed download URLs.'
+      description: 'Read or delete single [property](https://entu.ee/overview/properties/) values.'
     }
   ]
 
@@ -71,71 +69,79 @@ export default defineEventHandler(async () => {
     openapi.components.schemas = {}
   }
 
-  // Entity - Core entity model with flattened properties structure
+  // Entity - the caller's private, domain or public view of an entity, each property an array of values
   openapi.components.schemas.Entity = {
     type: 'object',
-    description: 'Entity with flattened properties.',
+    description: 'Entity with only the properties the caller [may read](https://entu.ee/overview/entities/#access-rights), each an array of values.',
     properties: {
       _id: {
         type: 'string',
-        description: 'Entity ID',
+        description: 'Entity ID — absent in grouped results',
         example: '6798938432faaba00f8fc72f'
       },
       _type: {
-        type: 'string',
-        description: 'Entity type reference',
-        example: '6798938432faaba00f8fc72e'
+        type: 'array',
+        description: 'Entity type — `reference` is the type entity ID, `string` its name',
+        items: {
+          $ref: '#/components/schemas/PropertyValue'
+        }
+      },
+      _parent: {
+        type: 'array',
+        description: 'Parent entities',
+        items: {
+          $ref: '#/components/schemas/PropertyValue'
+        }
       },
       _owner: {
         type: 'array',
-        description: 'Owners',
+        description: 'Owners — only in the private view',
         items: {
-          $ref: '#/components/schemas/Property'
+          $ref: '#/components/schemas/PropertyValue'
         }
       },
       _created: {
         type: 'array',
-        description: 'Creation metadata',
+        description: 'Creation time (`datetime`) and creator (`reference`)',
         items: {
-          $ref: '#/components/schemas/Property'
+          $ref: '#/components/schemas/PropertyValue'
         }
       },
       _sharing: {
         type: 'array',
-        description: 'Sharing level',
+        description: 'Sharing level — `string` is `private`, `domain` or `public`',
         items: {
-          $ref: '#/components/schemas/Property'
+          $ref: '#/components/schemas/PropertyValue'
         }
+      },
+      _count: {
+        type: 'integer',
+        description: 'Number of entities in the group — only in grouped results',
+        minimum: 1
       }
     },
     additionalProperties: {
       type: 'array',
       description: 'Dynamic properties defined by the entity type',
       items: {
-        $ref: '#/components/schemas/Property'
+        $ref: '#/components/schemas/PropertyValue'
       }
-    },
-    required: ['_id', '_type']
+    }
   }
 
-  // Property - Individual property with typed values and metadata
-  openapi.components.schemas.Property = {
+  // PropertyValue - one value of a property as embedded in an entity, without the property document's own metadata
+  openapi.components.schemas.PropertyValue = {
     type: 'object',
-    description: 'Typed property value with metadata.',
+    description: 'One property value with the field for its type; [credential properties](https://entu.ee/api/authentication/#auth-properties) are masked.',
     properties: {
       _id: {
         type: 'string',
-        description: 'Property ID',
+        description: 'Property ID — use it with `/{db}/property/{_id}`; absent for computed formula values',
         example: '6798938532faaba00f8fc761'
-      },
-      type: {
-        type: 'string',
-        description: 'Property type name',
-        example: 'manufacturer'
       },
       string: {
         type: 'string',
-        description: 'String value or referenced entity name',
+        description: 'String value, or the name of the referenced entity on a reference',
         example: 'Prusament'
       },
       number: {
@@ -151,10 +157,24 @@ export default defineEventHandler(async () => {
         description: 'Referenced entity ID',
         example: '6798938532faaba00f8fc75f'
       },
+      property_type: {
+        type: 'string',
+        description: 'On a reference: the property name',
+        example: 'manufacturer'
+      },
+      entity_type: {
+        type: 'string',
+        description: 'On a reference: the referenced entity\'s type name',
+        example: 'manufacturer'
+      },
+      inherited: {
+        type: 'boolean',
+        description: 'On a rights property: the right comes from a parent entity'
+      },
       date: {
         type: 'string',
-        format: 'date',
-        description: 'Date value'
+        format: 'date-time',
+        description: 'Date value, serialized as an ISO 8601 datetime'
       },
       datetime: {
         type: 'string',
@@ -180,11 +200,82 @@ export default defineEventHandler(async () => {
         type: 'string',
         description: 'Language code',
         example: 'en'
+      }
+    },
+    additionalProperties: true
+  }
+
+  // Property - a single property document as returned by the property endpoints
+  openapi.components.schemas.Property = {
+    type: 'object',
+    description: 'Property with its entity, creation metadata and the value field for its type.',
+    properties: {
+      _id: {
+        type: 'string',
+        description: 'Property ID',
+        example: '6798938532faaba00f8fc761'
+      },
+      type: {
+        type: 'string',
+        description: 'Property name',
+        example: 'manufacturer'
       },
       entity: {
         type: 'string',
-        description: 'Parent entity ID',
+        description: 'ID of the entity this property belongs to',
         example: '6798938532faaba00f8fc75f'
+      },
+      string: {
+        type: 'string',
+        description: 'String value',
+        example: 'Prusament'
+      },
+      number: {
+        type: 'number',
+        description: 'Numeric value'
+      },
+      boolean: {
+        type: 'boolean',
+        description: 'Boolean value'
+      },
+      reference: {
+        type: 'string',
+        description: 'Referenced entity ID',
+        example: '6798938532faaba00f8fc75f'
+      },
+      date: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Date value, serialized as an ISO 8601 datetime'
+      },
+      datetime: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Datetime value',
+        example: '2025-01-28T08:21:25.637Z'
+      },
+      filename: {
+        type: 'string',
+        description: 'File name'
+      },
+      filesize: {
+        type: 'integer',
+        description: 'File size in bytes',
+        minimum: 0
+      },
+      filetype: {
+        type: 'string',
+        description: 'MIME type',
+        example: 'image/jpeg'
+      },
+      url: {
+        type: 'string',
+        description: 'Signed download URL, valid for 60 seconds — file properties only'
+      },
+      language: {
+        type: 'string',
+        description: 'Language code',
+        example: 'en'
       },
       created: {
         type: 'object',
@@ -198,37 +289,66 @@ export default defineEventHandler(async () => {
           },
           by: {
             type: 'string',
-            description: 'User ID',
+            description: 'ID of the person who created it, or `entu` for the system',
             example: '506e7c33dcb4b5c4fde735d0'
           }
         },
         required: ['at', 'by']
       }
     },
+    additionalProperties: true,
     required: ['_id', 'type', 'entity', 'created']
   }
 
-  // Error - Standard error response format used across all API endpoints
+  // Error - the body Nitro's error handler sends for every thrown error
   openapi.components.schemas.Error = {
     type: 'object',
     description: 'Error response.',
     properties: {
       error: {
-        type: 'string',
-        description: 'Error message'
+        type: 'boolean',
+        description: 'Always true',
+        example: true
       },
-      statusCode: {
+      url: {
+        type: 'string',
+        description: 'Request URL',
+        example: 'https://api.entu.app/mydatabase/entity/6798938432faaba00f8fc72f'
+      },
+      status: {
         type: 'integer',
-        description: 'Status code',
-        example: 400
+        description: 'HTTP status code',
+        example: 404
       },
-      statusMessage: {
+      statusText: {
         type: 'string',
-        description: 'Status message',
-        example: 'Bad Request'
+        description: 'Error message — absent on an unexpected server error',
+        example: 'Entity 6798938432faaba00f8fc72f not found'
+      },
+      message: {
+        type: 'string',
+        description: 'Error message — `Server Error` on an unexpected server error',
+        example: 'Entity 6798938432faaba00f8fc72f not found'
+      },
+      data: {
+        type: 'object',
+        description: 'Extra details — OAuth `error` and `error_description`',
+        properties: {
+          error: {
+            type: 'string',
+            description: 'OAuth error code',
+            example: 'invalid_grant'
+          },
+          error_description: {
+            type: 'string',
+            description: 'OAuth error description',
+            example: 'PKCE verification failed'
+          }
+        },
+        additionalProperties: true
       }
     },
-    required: ['error', 'statusCode', 'statusMessage']
+    required: ['error', 'url', 'status', 'message']
   }
 
   // Update API paths to reference the new schemas

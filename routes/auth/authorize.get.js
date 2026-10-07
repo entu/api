@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
-    description: 'Start the OAuth 2.1 authorization flow. Open this in the user\'s browser, not from your server. On success the client\'s `redirect_uri` receives `code` and `state` — exchange the code at `/auth/token`.',
+    description: 'Start the OAuth 2.1 authorization code flow (PKCE required) in the user\'s browser. See [Authorize](https://entu.ee/api/authentication/#authorize).',
     security: [], // The user is not authenticated yet — that is what this flow does
     parameters: [
       {
@@ -10,7 +10,7 @@ defineRouteMeta({
         required: true,
         schema: {
           type: 'string',
-          description: 'Client id issued by /auth/register'
+          description: 'From `POST /auth/register`'
         }
       },
       {
@@ -19,7 +19,7 @@ defineRouteMeta({
         required: true,
         schema: {
           type: 'string',
-          description: 'Must be one of the URIs registered for this client',
+          description: 'A registered redirect URI',
           example: 'https://your-app.com/callback'
         }
       },
@@ -30,7 +30,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           enum: ['code'],
-          description: 'Only the authorization code flow is supported'
+          description: 'Only `code`'
         }
       },
       {
@@ -39,7 +39,8 @@ defineRouteMeta({
         required: true,
         schema: {
           type: 'string',
-          description: 'base64url SHA-256 of the code verifier'
+          minLength: 43,
+          description: 'base64url SHA-256 of the verifier'
         }
       },
       {
@@ -49,7 +50,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           enum: ['S256'],
-          description: 'Plain challenges are rejected'
+          description: 'Only `S256`'
         }
       },
       {
@@ -57,7 +58,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Database to scope the token to. Required unless `resource` is given',
+          description: 'Database to scope to; required without `resource`',
           example: 'mydatabase'
         }
       },
@@ -66,7 +67,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Resource indicator naming the database, instead of `db`',
+          description: 'RFC 8707 resource, database as first path segment; host in the API\'s parent domain',
           example: 'https://mcp.entu.app/mydatabase'
         }
       },
@@ -75,8 +76,17 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          enum: ['e-mail', 'google', 'apple', 'smart-id', 'mobile-id', 'id-card', 'passkey'],
-          description: 'Sign the user in with this provider. Omit to let OAuth.ee ask which provider to use'
+          enum: ['passkey', 'apple', 'google', 'e-mail', 'smart-id', 'mobile-id', 'id-card'],
+          description: 'Skip the provider choice'
+        }
+      },
+      {
+        name: 'lang',
+        in: 'query',
+        schema: {
+          type: 'string',
+          enum: ['en', 'et'],
+          description: 'OAuth.ee page language'
         }
       },
       {
@@ -84,14 +94,18 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Returned unchanged to the redirect URI'
+          description: 'Returned unchanged'
         }
       }
     ],
     responses: {
-      302: { description: 'Redirect to the login, or back to the client redirect URI with an OAuth error' },
+      302: { description: 'To the login, or to `redirect_uri` with an OAuth error' },
       400: {
-        description: 'Unknown client_id, or a redirect_uri not registered for it',
+        description: 'Invalid `client_id` (`invalid_grant`), unregistered `redirect_uri` (`invalid_request`), invalid database name',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      404: {
+        description: 'Database name is a reserved route name',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }
@@ -99,7 +113,7 @@ defineRouteMeta({
 })
 
 // Providers a client may ask for - the same list as /auth/{provider}, plus passkey
-const providers = ['e-mail', 'google', 'apple', 'smart-id', 'mobile-id', 'id-card', 'passkey']
+const providers = ['passkey', 'apple', 'google', 'e-mail', 'smart-id', 'mobile-id', 'id-card']
 
 export default defineEventHandler((event) => {
   const query = getQuery(event)

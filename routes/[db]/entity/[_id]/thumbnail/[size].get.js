@@ -3,8 +3,8 @@ const ALLOWED_SIZES = [50, 200, 400]
 defineRouteMeta({
   openAPI: {
     tags: ['Entity'],
-    description: 'Get a square thumbnail (center cover-crop, JPEG) generated from the first file of the entity\'s `photo` property. Supports image and PDF sources. Thumbnails are cached in S3. Returns a signed download URL (60s) in the `url` field.',
-    security: [{ bearerAuth: [] }],
+    description: 'Get a signed URL to a square JPEG thumbnail of the entity\'s first `photo` in the caller\'s view. See [entity thumbnail](https://entu.ee/api/files/#entity-thumbnail).',
+    security: [{}, { bearerAuth: [] }], // The token is optional; without it only public entities are readable
     parameters: [
       {
         name: 'db',
@@ -30,8 +30,8 @@ defineRouteMeta({
         required: true,
         schema: {
           type: 'integer',
-          enum: ALLOWED_SIZES,
-          description: 'Thumbnail size in pixels (width and height of the square)'
+          enum: [50, 200, 400],
+          description: 'Square side in pixels'
         }
       }
     ],
@@ -43,14 +43,19 @@ defineRouteMeta({
             schema: {
               type: 'object',
               properties: {
-                url: { type: 'string', description: 'Signed thumbnail download URL (valid 60s)' }
-              }
+                url: { type: 'string', description: 'Signed URL, valid 60 seconds' }
+              },
+              required: ['url']
             }
           }
         }
       },
       400: {
-        description: 'Invalid size, unsupported file type, or undecodable file',
+        description: 'Invalid size or ID, not a previewable file, image too large, undecodable file, or invalid database name',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      401: {
+        description: 'Invalid or expired JWT, or JWT audience does not match caller IP',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       403: {
@@ -58,7 +63,11 @@ defineRouteMeta({
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       404: {
-        description: 'Entity not found or has no photo',
+        description: 'Entity not found, no photo in the caller\'s view, file missing from storage, or account not found',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      413: {
+        description: 'Source file over 25 MB',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }

@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Entity'],
-    description: 'Returns the changes this entity (usually a person) has made to other entities, newest first — the first entry is its last activity. Only changes on entities the caller has direct rights on are returned. Writes only: logins and reads are not recorded.',
+    description: 'Property changes made by this entity (usually a person), newest first; writes only, `_created` and `_mid` left out. Only changes on entities the caller has direct or inherited rights to are returned.',
     security: [{ bearerAuth: [] }],
     parameters: [
       {
@@ -19,7 +19,7 @@ defineRouteMeta({
         required: true,
         schema: {
           type: 'string',
-          description: 'ID of the entity whose activity is returned'
+          description: 'Entity ID'
         }
       },
       {
@@ -28,8 +28,9 @@ defineRouteMeta({
         schema: {
           type: 'integer',
           default: 100,
+          minimum: 1,
           maximum: 1000,
-          description: 'Maximum number of activity entries to return'
+          description: 'Maximum entries; clamped, `0` or non-numeric means 100'
         }
       },
       {
@@ -38,7 +39,9 @@ defineRouteMeta({
         schema: {
           type: 'integer',
           default: 0,
-          description: 'Number of activity entries to skip'
+          minimum: 0,
+          maximum: 10000,
+          description: 'Entries to skip; clamped'
         }
       }
     ],
@@ -52,37 +55,67 @@ defineRouteMeta({
               properties: {
                 changes: {
                   type: 'array',
-                  description: 'Changes made by this entity, newest first',
+                  description: 'Changes, newest first',
                   items: {
                     type: 'object',
                     properties: {
                       entity: {
                         type: 'object',
-                        description: 'Entity that was changed',
+                        description: 'Changed entity',
                         properties: {
                           _id: { type: 'string', description: 'Entity ID' },
-                          name: { type: 'string', description: 'Entity name' }
+                          name: { type: 'string', description: 'First `name` value, if any' }
+                        },
+                        required: ['_id']
+                      },
+                      type: { type: 'string', description: 'Property name' },
+                      at: { type: 'string', format: 'date-time', description: 'Change time' },
+                      by: { type: 'string', description: 'This entity\'s ID' },
+                      old: {
+                        type: 'object',
+                        description: 'Removed value, if any',
+                        properties: {
+                          _id: { type: 'string', description: 'Property ID' },
+                          string: { type: 'string', description: 'String value, or the referenced entity\'s name; credentials masked' },
+                          number: { type: 'number' },
+                          boolean: { type: 'boolean' },
+                          reference: { type: 'string', description: 'Referenced entity ID' },
+                          date: { type: 'string', format: 'date-time' },
+                          datetime: { type: 'string', format: 'date-time' },
+                          filename: { type: 'string' },
+                          filesize: { type: 'integer' },
+                          md5: { type: 'string', description: 'File MD5 hash' },
+                          language: { type: 'string' }
                         }
                       },
-                      type: { type: 'string', description: 'Property type that was changed' },
-                      at: { type: 'string', format: 'date-time', description: 'When the change occurred' },
-                      by: { type: 'string', description: 'ID of the entity that made the change' },
-                      old: { type: 'object', description: 'Property value before change' },
-                      new: { type: 'object', description: 'Property value after change' }
-                    }
+                      new: {
+                        type: 'object',
+                        description: 'Added value, if any; same fields as `old`'
+                      }
+                    },
+                    required: ['entity', 'type', 'at', 'by']
                   }
                 }
-              }
+              },
+              required: ['changes']
             }
           }
         }
+      },
+      400: {
+        description: 'Invalid ID or invalid database name',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      401: {
+        description: 'Invalid or expired JWT, or JWT audience does not match caller IP',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       403: {
         description: 'No user',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       404: {
-        description: 'Entity not found',
+        description: 'Entity not found or not readable, or account not found',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }

@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Entity'],
-    description: 'Delete entity and all its properties. References to this entity from other entities are also removed. Requires owner rights.',
+    description: 'Delete an entity; needs `_owner`. References to it (including children\'s `_parent`) are soft-deleted, children are kept; `entity-delete-webhook` plugins are currently not called. See [deletion](https://entu.ee/overview/entities/#deletion).',
     security: [{ bearerAuth: [] }],
     parameters: [
       {
@@ -19,7 +19,7 @@ defineRouteMeta({
         required: true,
         schema: {
           type: 'string',
-          description: 'Entity ID to delete'
+          description: 'Entity ID'
         }
       }
     ],
@@ -36,17 +36,26 @@ defineRouteMeta({
                   description: 'Deletion confirmation',
                   example: true
                 }
-              }
+              },
+              required: ['deleted']
             }
           }
         }
       },
+      400: {
+        description: 'Invalid ID or invalid database name',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      401: {
+        description: 'Invalid or expired JWT, or JWT audience does not match caller IP',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
       403: {
-        description: 'No user or not owner',
+        description: 'No user, or User not in _owner property',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       404: {
-        description: 'Entity not found',
+        description: 'Entity {_id} not found, or account not found',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }

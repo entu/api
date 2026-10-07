@@ -1,5 +1,6 @@
 import Stripe from 'stripe'
 
+// Internal to the Entu webapp - returns a Stripe customer portal URL for this database
 defineRouteMeta({ openAPI: { hidden: true } })
 
 export default defineEventHandler(async (event) => {

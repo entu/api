@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Database'],
-    description: 'Returns database usage statistics: entity and property counts, monthly API requests, file storage, database size, and account limits.',
+    description: 'Database usage and limits: entities, properties, this UTC month\'s API requests and AI tokens, file storage and database size. Cached for 5 minutes.',
     security: [{ bearerAuth: [] }],
     parameters: [
       {
@@ -24,57 +24,82 @@ defineRouteMeta({
               properties: {
                 organization: {
                   type: 'array',
-                  description: 'Organization name values (multilingual)',
+                  description: 'Organization name values',
                   items: {
                     type: 'object',
                     properties: {
-                      language: { type: 'string', description: 'Language code, absent for non-multilingual values' },
-                      string: { type: 'string', description: 'Organization name in the given language' }
+                      language: { type: 'string', description: 'Language code, if any' },
+                      string: { type: 'string', description: 'Organization name' }
                     }
                   }
                 },
                 entities: {
                   type: 'object',
                   properties: {
-                    usage: { type: 'number', description: 'Number of entities used' },
-                    deleted: { type: 'number', description: 'Number of deleted entities' },
-                    limit: { type: 'number', description: 'Entity limit for account' }
+                    usage: { type: 'integer', description: 'Existing entities (estimate)' },
+                    deleted: { type: 'integer', description: 'Entities ever deleted' },
+                    limit: { type: 'number', description: '`billing_entities_limit`, 0 if unset' }
                   }
                 },
                 properties: {
                   type: 'object',
                   properties: {
-                    usage: { type: 'number', description: 'Number of properties used' },
-                    deleted: { type: 'number', description: 'Number of deleted properties' }
+                    usage: { type: 'integer', description: 'Current property values' },
+                    deleted: { type: 'integer', description: 'Deleted property values' }
                   }
                 },
                 requests: {
                   type: 'object',
                   properties: {
-                    usage: { type: 'number', description: 'Number of API requests' },
-                    limit: { type: 'number', description: 'Request limit for account' }
+                    usage: { type: 'integer', description: 'API requests this month' },
+                    limit: { type: 'integer', description: 'Display scale only: usage rounded up on its leading digit' }
                   }
                 },
                 tokens: {
                   type: 'object',
                   properties: {
-                    usage: { type: 'number', description: 'AI tokens used this month (prompt + completion)' },
-                    limit: { type: 'number', description: 'AI token limit for account' }
+                    usage: { type: 'integer', description: 'AI tokens this month' },
+                    limit: { type: 'number', description: '`billing_tokens_limit`, 100000 if unset' }
                   }
                 },
                 files: {
                   type: 'object',
                   properties: {
-                    usage: { type: 'number', description: 'File storage used in bytes' },
-                    deleted: { type: 'number', description: 'Deleted file storage in bytes' },
-                    limit: { type: 'number', description: 'Storage limit in bytes' }
+                    usage: { type: 'number', description: 'Bytes in live files' },
+                    deleted: { type: 'number', description: 'Bytes in deleted files still in storage' },
+                    limit: { type: 'number', description: 'Bytes (`billing_data_limit` GB × 10⁹), 0 if unset' }
                   }
                 },
-                dbSize: { type: 'number', description: 'Database size in bytes' }
+                dbSize: { type: 'number', description: 'Data plus index size in bytes' }
               }
+            },
+            example: {
+              organization: [{ language: 'en', string: 'Example Museum' }],
+              entities: { usage: 15230, deleted: 412, limit: 50000 },
+              properties: { usage: 210554, deleted: 18320 },
+              requests: { usage: 1234, limit: 2000 },
+              tokens: { usage: 25480, limit: 100000 },
+              files: { usage: 5368709120, deleted: 104857600, limit: 10000000000 },
+              dbSize: 187695104
             }
           }
         }
+      },
+      400: {
+        description: 'Invalid database name',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      401: {
+        description: 'Invalid or expired JWT, or JWT bound to another IP',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      403: {
+        description: 'No user in this database',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+      },
+      404: {
+        description: 'Database not found',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       }
     }
   }
