@@ -1,5 +1,3 @@
-import jwt from 'jsonwebtoken'
-
 defineRouteMeta({
   openAPI: {
     tags: ['Authentication'],
@@ -68,21 +66,16 @@ defineRouteMeta({
 })
 
 export default defineEventHandler(async (event) => {
-  const { jwtSecret } = useRuntimeConfig(event)
   const key = (event.req.headers.get('authorization') || '').replace('Bearer ', '').trim()
 
   if (!key) {
     throw createError({ statusCode: 400, statusMessage: 'No key' })
   }
 
-  const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
+  const decoded = tokenVerify(event, 'access', key, { bindIp: true, ignoreExpiration: true, legacy: true })
 
-  let decoded
-  try {
-    decoded = jwt.verify(key, jwtSecret, { audience, ignoreExpiration: true })
-  }
-  catch (e) {
-    throw createError({ statusCode: 401, statusMessage: e.message || e })
+  if (!decoded) {
+    throw createError({ statusCode: 401, statusMessage: 'Invalid token' })
   }
 
   const now = Math.floor(Date.now() / 1000)
@@ -97,28 +90,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Session expired, re-authenticate' })
   }
 
-  const accounts = []
-  const accountUsersIds = {}
-
-  function addAccount (account, userId, userName) {
-    accountUsersIds[account] = userId.toString()
-    accounts.push({ _id: account, name: account, user: { _id: userId.toString(), name: userName } })
-  }
-
-  let accountResults
+  let accounts
 
   if (decoded.user?.uid && decoded.user?.provider) {
     // OAuth session: rediscover accounts by a live identity scan that replaces the old claim, so revoked databases drop out and new ones appear
-    accountResults = await findUserAccounts({
-      uid: decoded.user.uid,
-      provider: decoded.user.provider,
-      email: decoded.user.email,
-      passkeyPublic: decoded.user.passkeyPublic
-    })
+    accounts = await findUserAccounts(decoded.user)
   }
   else {
     // API-key session (or a passkey token issued before passkeys carried an identity): re-validate the existing accounts claim, dropping entities that no longer exist
-    accountResults = (await Promise.all(
+    accounts = (await Promise.all(
       Object.entries(decoded.accounts || {}).map(async ([account, userId]) => {
         let person
 
@@ -138,34 +118,19 @@ export default defineEventHandler(async (event) => {
           return null
         }
 
-        return { account, userId: person._id, userName: person.private?.name?.at(0)?.string || person._id.toString() }
+        return { account, userId: person._id, userName: person.private?.name?.at(0)?.string }
       })
     )).filter(Boolean)
-  }
-
-  for (const result of accountResults) {
-    addAccount(result.account, result.userId, result.userName)
   }
 
   if (accounts.length === 0) {
     throw createError({ statusCode: 401, statusMessage: 'No accessible accounts' })
   }
 
-  const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000)
-  const tokenData = {
-    accounts: accountUsersIds,
-    exp: Math.floor(expiresAt.getTime() / 1000),
-    authAt: decoded.authAt // preserve original authentication time across refreshes
-  }
+  // A passkey created at sign-in counts as new only in that sign-in's token, and its name follows the persons it is stored on
+  const user = decoded.user?.uid && decoded.user?.provider
+    ? authIdentity({ ...decoded.user, registered: undefined }, accounts)
+    : decoded.user || {}
 
-  if (decoded.user) {
-    tokenData.user = decoded.user
-  }
-
-  return {
-    accounts,
-    user: decoded.user || {},
-    token: jwt.sign(tokenData, jwtSecret, { audience }),
-    expires: expiresAt.toISOString()
-  }
+  return authIssueToken(event, { accounts, authAt: decoded.authAt, user })
 })

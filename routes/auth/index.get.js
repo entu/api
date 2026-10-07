@@ -124,7 +124,6 @@ export default defineEventHandler(async (event) => {
   return await authExchange(event, {
     account: query.db || query.account,
     invite: query.invite,
-    ip: (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1'),
     key
   })
 })

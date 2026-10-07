@@ -1,5 +1,3 @@
-import jwt from 'jsonwebtoken'
-
 export default defineEventHandler((event) => {
   const path = getRoutePath(event)
 
@@ -10,50 +8,18 @@ export default defineEventHandler((event) => {
 
   // Routes without an account (database) path parameter — JWT is still verified when present
   const accountless = authRoute || isNewRoute
+  const account = accountless ? undefined : formatDatabaseName(path.split('/').at(1))
 
-  const entu = {
-    ip: (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1'),
-    account: accountless ? undefined : formatDatabaseName(path.split('/').at(1))
-  }
-
-  if (!accountless && !entu.account) {
+  if (!accountless && !account) {
     throw createError({
       statusCode: 401,
       statusMessage: 'No account parameter'
     })
   }
 
-  entu.tokenStr = (event.req.headers.get('authorization') || '').replace('Bearer ', '').trim()
-
-  if (!authRoute && entu.tokenStr) {
-    try {
-      const { jwtSecret } = useRuntimeConfig(event)
-      entu.token = jwt.verify(entu.tokenStr, jwtSecret)
-
-      // Only verify audience if token contains it (for IP-restricted tokens)
-      if (entu.token.aud && entu.token.aud !== entu.ip) {
-        throw createError({
-          statusCode: 401,
-          statusMessage: 'Invalid JWT audience'
-        })
-      }
-
-      if (entu.account && entu.token.accounts?.[entu.account]) {
-        entu.user = getObjectId(entu.token.accounts[entu.account])
-        entu.userStr = entu.token.accounts[entu.account]
-      }
-
-      if (entu.token?.user?.email) {
-        entu.email = entu.token.user.email
-      }
-    }
-    catch (e) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: e.message || e
-      })
-    }
+  // The auth routes read their own credential - an API key or session token there is not an access token
+  event.context.entu = {
+    ...(authRoute ? { ip: authRequestIp(event) } : authReadToken(event, account)),
+    account
   }
-
-  event.context.entu = entu
 })

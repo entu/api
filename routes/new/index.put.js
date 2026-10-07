@@ -7,14 +7,14 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'No token' })
   }
 
-  const { uid, provider, name, email, passkeyPublic, device } = entu.token.user || {}
+  const { uid, provider, name, email, passkeyPublic, device, registered } = entu.token.user || {}
 
   if (!uid || !provider || (provider === 'passkey' && !passkeyPublic)) {
     throw createError({ statusCode: 400, statusMessage: 'Sign in with a provider to create a database' })
   }
 
-  // The new owner person gets this passkey, so it must still be one Entu knows
-  if (provider === 'passkey' && !await passkeyExists(uid, passkeyPublic)) {
+  // The new owner person gets this passkey, so it must still be one Entu knows - or one created in this sign-in that no other key claims
+  if (provider === 'passkey' && !(registered ? !await passkeyIdTaken(uid, passkeyPublic) : await passkeyExists(uid, passkeyPublic))) {
     throw createError({ statusCode: 400, statusMessage: 'Passkey is no longer registered - sign in again' })
   }
 

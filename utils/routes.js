@@ -23,5 +23,6 @@ export function isContextFreeRoute (method, path) {
 // True for the routes in routes/auth/, which have no account in the path; GET /auth/<x> is the [provider] route
 export function isAuthRoute (method, path) {
   return (method === 'GET' && /^\/auth(\/[^/]+)?$/.test(path))
-    || (method === 'POST' && /^\/auth\/(passkey|register|token)$/.test(path))
+    || (method === 'GET' && /^\/auth\/passkey(\/register)?(\/options)?$/.test(path))
+    || (method === 'POST' && /^\/auth\/(passkey|passkey\/register|register|token)$/.test(path))
 }

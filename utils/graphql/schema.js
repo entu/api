@@ -1,6 +1,5 @@
 import { GraphQLScalarType, Kind } from 'graphql'
 import { createSchema } from 'graphql-yoga'
-import jwt from 'jsonwebtoken'
 
 // Parses a GraphQL AST literal to a plain JS value
 function parseLiteralValue (ast) {
@@ -85,42 +84,13 @@ const CACHE_TTL_MS = 5 * 60 * 1000
 
 // Builds the auth + DB context for GraphQL route handlers (auto-imported by Nitro)
 export async function buildEntuContext (event) {
-  const { jwtSecret } = useRuntimeConfig(event)
   const account = formatDatabaseName(event.context.params?.db)
 
   if (!account) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid account parameter' })
   }
 
-  const entu = {
-    ip: getRequestIP(event, { xForwardedFor: true }),
-    account
-  }
-
-  const tokenStr = (event.req.headers.get('authorization') || '').replace('Bearer ', '').trim()
-
-  if (tokenStr) {
-    try {
-      entu.token = jwt.verify(tokenStr, jwtSecret)
-
-      if (entu.token.aud && entu.token.aud !== entu.ip) {
-        throw new Error('Invalid JWT audience')
-      }
-      if (entu.token.accounts?.[account]) {
-        entu.user = getObjectId(entu.token.accounts[account])
-        entu.userStr = entu.token.accounts[account]
-      }
-      if (entu.token?.user?.email) {
-        entu.email = entu.token.user.email
-      }
-    }
-    catch (e) {
-      throw createError({ statusCode: 401, statusMessage: e.message || String(e) })
-    }
-  }
-
-  entu.db = await connectDb(account)
-  return entu
+  return { ...authReadToken(event, account), account, db: await connectDb(account) }
 }
 
 // Returns a cached (or freshly built) GraphQL schema for the given user context (auto-imported by Nitro)

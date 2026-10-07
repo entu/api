@@ -1,49 +1,17 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { CallToolRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema, ReadResourceRequestSchema } from '@modelcontextprotocol/sdk/types.js'
-import jwt from 'jsonwebtoken'
 
 const schemaResourceUri = 'entu://schema'
 
 // Builds the Entu context for MCP requests, which the auth and mongodb middleware skip - the token is optional, as on the REST API
 export async function buildMcpContext (event) {
-  const { jwtSecret } = useRuntimeConfig(event)
   const account = formatDatabaseName(event.context.params?.db)
 
   if (!account) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid account parameter' })
   }
 
-  const entu = {
-    ip: (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1'),
-    account
-  }
-
-  const tokenStr = (event.req.headers.get('authorization') || '').replace('Bearer ', '').trim()
-
-  if (tokenStr) {
-    try {
-      entu.token = jwt.verify(tokenStr, jwtSecret)
-
-      // Only verify audience if token contains it (for IP-restricted tokens)
-      if (entu.token.aud && entu.token.aud !== entu.ip) {
-        throw new Error('Invalid JWT audience')
-      }
-      if (entu.token.accounts?.[account]) {
-        entu.user = getObjectId(entu.token.accounts[account])
-        entu.userStr = entu.token.accounts[account]
-      }
-      if (entu.token.user?.email) {
-        entu.email = entu.token.user.email
-      }
-    }
-    catch (e) {
-      throw createError({ statusCode: 401, statusMessage: e.message || String(e) })
-    }
-  }
-
-  entu.db = await connectDb(account)
-
-  return entu
+  return { ...authReadToken(event, account), account, db: await connectDb(account) }
 }
 
 // Creates an MCP server bound to one request's Entu context - every tool and resource runs as the calling user

@@ -1,5 +1,4 @@
 import { createHash, randomBytes } from 'node:crypto'
-import jwt from 'jsonwebtoken'
 
 const charsForKey = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*-_=+'
 
@@ -553,9 +552,7 @@ async function insertProperties (entu, entityId, properties, createdDt) {
       delete property.counter
     }
     if (property.type === 'entu_user' && property.string) {
-      const { jwtSecret } = useRuntimeConfig()
-
-      property.invite = jwt.sign({ db: entu.account, entityId: entityId.toString() }, jwtSecret, { expiresIn: '24h' })
+      property.invite = inviteCreate(entu, entityId)
 
       delete property.string
     }
@@ -872,7 +869,7 @@ export async function cleanupEntity (entu, entity) {
   }
 
   if (result.entu_passkey) {
-    result.entu_passkey = result.entu_passkey.map((k) => ({ ...k, string: `${k.passkey_device || ''} ${k._id.toString().slice(-4).toUpperCase()}`.trim() }))
+    result.entu_passkey = result.entu_passkey.map((k) => ({ ...k, string: passkeyLabel(k) }))
   }
 
   return result

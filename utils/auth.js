@@ -1,156 +1,109 @@
 import { createHash } from 'node:crypto'
-import jwt from 'jsonwebtoken'
 
-// Exchanges a credential - an API key or a session token - for a 12-hour JWT. The shared body of GET /auth, also
-// called by the OAuth token endpoint. `ip` binds the issued token to that address; `bindIp: false` issues one usable
-// from anywhere, which an OAuth client needs since it calls from its own servers.
-export async function authExchange (event, { account, bindIp = true, invite, ip, key, sessionId }) {
-  const { jwtSecret } = useRuntimeConfig(event)
-  const connection = await connectDb('entu')
-  let session
-  let apiKeyHash
+// Caller IP as every IP-bound token is issued for and checked against
+export function authRequestIp (event) {
+  return (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
+}
 
-  // The OAuth token endpoint has already authenticated the user and passes the session id straight in, so there is
-  // no bearer credential to verify - and nothing usable for anyone who intercepted the authorization code
-  if (sessionId) {
-    session = await consumeSession(connection, sessionId)
+// Reads the bearer access token into Entu context fields - the one token check REST, GraphQL and MCP share
+export function authReadToken (event, account) {
+  const ip = authRequestIp(event)
+  const tokenStr = (event.req.headers.get('authorization') || '').replace('Bearer ', '').trim()
 
-    if (!hasIdentity(session)) {
-      throw createError({ statusCode: 400, statusMessage: 'No session' })
-    }
-  }
-  else {
-    try {
-      const decoded = jwt.verify(key, jwtSecret, { audience: ip })
-
-      // Only a session token opens a session — any other Entu JWT falls through to the API key branch below
-      if (decoded.use !== 'session') {
-        throw createError({ statusCode: 400, statusMessage: 'Not a session token' })
-      }
-
-      session = await consumeSession(connection, decoded.sub)
-
-      if (!hasIdentity(session)) {
-        throw createError({ statusCode: 400, statusMessage: 'No session' })
-      }
-    }
-    catch {
-      apiKeyHash = createHash('sha256').update(key).digest('hex')
-    }
+  if (!tokenStr) {
+    return { ip }
   }
 
-  let onlyForAccount = account
+  const token = tokenVerify(event, 'access', tokenStr, { legacy: true })
 
-  if (invite && !onlyForAccount) {
-    const payload = jwt.decode(invite)
-
-    if (payload?.db) {
-      onlyForAccount = payload.db
-    }
+  // An IP-bound token works only from the address it was issued to; an OAuth client's token names no address
+  if (!token || (token.aud && token.aud !== ip)) {
+    throw createError({ statusCode: 401, statusMessage: 'Invalid token' })
   }
 
-  const accounts = []
-  const accountUsersIds = {}
+  const userStr = account ? token.accounts?.[account] : undefined
 
-  const identity = apiKeyHash
-    ? { apiKeyHash }
-    : { uid: session?.user?.id, provider: session?.user?.provider, email: session?.user?.email, passkeyPublic: session?.user?.publicKey }
-
-  const accountResults = await findUserAccounts(identity, onlyForAccount)
-
-  for (const result of accountResults) {
-    addAccount(accounts, accountUsersIds, result.account, result.userId, result.userName)
+  return {
+    ip,
+    token,
+    ...(userStr ? { user: getObjectId(userStr), userStr } : {}),
+    ...(token.user?.email ? { email: token.user.email } : {})
   }
+}
+
+// Exchanges a credential - an API key or a session - for a 12-hour access token. The shared body of GET /auth, the
+// passkey routes and the OAuth token endpoint; `bindIp: false` issues a token an OAuth client can use from its servers.
+export async function authExchange (event, { account, bindIp = true, invite, key, sessionId }) {
+  const credential = await resolveCredential(event, key, sessionId)
+  const identity = credential.session ? sessionIdentity(credential.session) : undefined
+
+  // An invite only counts with a login identity to link, and limits the sign-in to its own database
+  const pendingInvite = identity && invite ? await inviteVerify(event, invite) : undefined
+  const onlyForAccount = account || pendingInvite?.account
+
+  if (pendingInvite && pendingInvite.account !== onlyForAccount) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid or expired invite' })
+  }
+
+  // A passkey created in this sign-in is stored nowhere yet, so it opens only what an invite, add_user or PUT /new links it to
+  const found = identity?.registered ? [] : await findUserAccounts(identity || { apiKeyHash: credential.apiKeyHash }, onlyForAccount)
 
   // A session is proof on its own - a user with no databases yet still needs a token to create their first one.
   // An API key is only proof if it matched something, so nothing matching means the credential was not valid.
-  if (!session && accounts.length === 0) {
+  if (!identity && found.length === 0) {
     throw createError({ statusCode: 401, statusMessage: 'Invalid credential' })
   }
 
-  // Invite acceptance: user arrived via invite link and completed OAuth
-  const inviteAttempted = !!(onlyForAccount && session && invite)
-  let inviteConflict = false
+  const accepted = pendingInvite ? await inviteAccept(pendingInvite, identity, found) : {}
+  const accounts = accepted.account ? [...found, accepted.account] : found
 
-  if (inviteAttempted) {
-    const existingEntry = accounts.find((a) => a._id === onlyForAccount)
+  // A database that adds users automatically gets a person for a new identity - never while an invite names one
+  const created = identity && onlyForAccount && !pendingInvite && accounts.length === 0
+    ? await createUserForAccount(onlyForAccount, identity)
+    : undefined
 
-    try {
-      const inviteData = jwt.verify(invite, jwtSecret)
+  const allAccounts = created ? [{ account: onlyForAccount, userId: created._id, userName: created.name, new: true }] : accounts
 
-      if (inviteData.db === onlyForAccount) {
-        const inviteEntu = { account: onlyForAccount, db: await connectDb(onlyForAccount), systemUser: true }
-        const storedInvite = await findStoredInvite(inviteEntu, inviteData.entityId)
-
-        if (!existingEntry) {
-          // User has no account in this db yet → accept invite
-
-          if (storedInvite) {
-            await replaceInviteWithCredentials(inviteEntu, inviteData.entityId, storedInvite._id, session)
-            addAccount(accounts, accountUsersIds, onlyForAccount, inviteData.entityId, session.user.name)
-          }
-        }
-        else if (existingEntry.user._id === inviteData.entityId) {
-          // Same entity: clean up orphaned invite property
-          if (storedInvite) {
-            await replaceInviteWithCredentials(inviteEntu, inviteData.entityId, storedInvite._id, session)
-          }
-        }
-        else {
-          // Different entity: user's identity is already linked to another entity
-          inviteConflict = true
-        }
-      }
-    }
-    catch { /* invalid/expired invite */ }
+  return {
+    ...authIssueToken(event, { accounts: allAccounts, bindIp, user: identity ? authIdentity(identity, allAccounts) : {} }),
+    ...(accepted.conflict ? { conflict: 'invite' } : {})
   }
+}
 
-  // Auto-create user if no account found and invite was not attempted
-  if (onlyForAccount && accounts.length === 0 && session && !inviteAttempted) {
-    const person = await createUserForAccount(onlyForAccount, session)
+// Signs the 12-hour access token for a sign-in or refresh; `accounts` are { account, userId, userName, new? } entries
+export function authIssueToken (event, { accounts, authAt = Math.floor(Date.now() / 1000), bindIp = true, user = {} }) {
+  const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000)
 
-    if (person) {
-      addAccount(accounts, accountUsersIds, onlyForAccount, person._id, person.name, { new: true })
-    }
-  }
+  // authAt is the original authentication time - carried unchanged through refreshes
+  const tokenData = { exp: Math.floor(expiresAt.getTime() / 1000), authAt }
 
-  const userData = {}
-  const tokenData = {}
-
-  if (session?.user?.email || session?.user?.name || session?.user?.provider === 'passkey') {
-    userData.email = session?.user?.email
-    userData.name = session?.user?.name
-
-    // Provider identity — required for creating new databases (PUT /new)
-    if (session?.user?.id && session?.user?.provider) {
-      userData.uid = session.user.id
-      userData.provider = session.user.provider
-    }
-
-    // A passkey is stored as-is on every person it opens, so the identity carries the key it was verified with
-    if (session?.user?.provider === 'passkey') {
-      userData.passkeyPublic = session.user.publicKey
-      userData.device = session.user.device
-    }
-
-    tokenData.user = userData
+  if (Object.keys(user).length > 0) {
+    tokenData.user = user
   }
 
   if (accounts.length > 0) {
-    tokenData.accounts = accountUsersIds
+    tokenData.accounts = Object.fromEntries(accounts.map((a) => [a.account, a.userId.toString()]))
   }
-
-  const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000)
-  tokenData.exp = Math.floor(expiresAt.getTime() / 1000)
-  tokenData.authAt = Math.floor(Date.now() / 1000) // original authentication time — carried unchanged through refreshes
 
   return {
-    accounts,
-    user: userData,
-    token: jwt.sign(tokenData, jwtSecret, bindIp ? { audience: ip } : {}),
-    expires: expiresAt.toISOString(),
-    ...(inviteConflict ? { conflict: 'invite' } : {})
+    accounts: accounts.map((a) => ({
+      _id: a.account,
+      name: a.account,
+      user: { _id: a.userId.toString(), name: a.userName || a.userId.toString(), ...(a.new ? { new: true } : {}) }
+    })),
+    user,
+    token: tokenSign(event, 'access', tokenData, { bindIp }),
+    expires: expiresAt.toISOString()
   }
+}
+
+// The login identity a token carries - a passkey has no name of its own, so it takes the first database person's that has one
+export function authIdentity (identity, accounts) {
+  const name = identity.provider === 'passkey'
+    ? accounts.toSorted((a, b) => a.account.localeCompare(b.account)).find((a) => a.userName)?.userName
+    : identity.name
+
+  return withoutUndefined({ ...identity, name })
 }
 
 // The credential property that links a person to a login identity - `entu_user` for oauth.ee, `entu_passkey` for a passkey
@@ -162,55 +115,59 @@ export function authCredentialProperty ({ uid, provider, email, passkeyPublic, d
   return { type: 'entu_user', uid, provider, ...(email ? { email } : {}) }
 }
 
+// Turns the bearer credential into a consumed session, or else the hash it is looked up by as an API key
+async function resolveCredential (event, key, sessionId) {
+  if (sessionId) {
+    const session = await consumeSession(sessionId)
+
+    if (!hasIdentity(session)) {
+      throw createError({ statusCode: 400, statusMessage: 'No session' })
+    }
+
+    return { session }
+  }
+
+  // Only a session token opens a session - anything else, valid or not, is tried as an API key
+  const decoded = tokenVerify(event, 'session', key, { bindIp: true })
+  const session = decoded?.sub ? await consumeSession(decoded.sub) : undefined
+
+  if (hasIdentity(session)) {
+    return { session }
+  }
+
+  return { apiKeyHash: createHash('sha256').update(key).digest('hex') }
+}
+
 // A session is usable when its login gave an e-mail (oauth.ee) or a verified passkey to find the person by
 function hasIdentity (session) {
   return !!(session?.user?.email || (session?.user?.provider === 'passkey' && session.user.id && session.user.publicKey))
 }
 
 // Marks a session as used and returns it - the update is the single-use guarantee, so a replay finds nothing
-async function consumeSession (connection, id) {
+async function consumeSession (id) {
+  const connection = await connectDb('entu')
+
   return await connection.collection('session').findOneAndUpdate(
     { _id: getObjectId(id), pending: { $exists: false }, deleted: { $exists: false } },
     { $set: { deleted: new Date() } }
   )
 }
 
-// The login identity of a session in the shape authCredentialProperty takes
+// The login identity of a session in the shape tokens, findUserAccounts and authCredentialProperty take
 function sessionIdentity (session) {
-  return {
+  return withoutUndefined({
     uid: session.user.id,
     provider: session.user.provider,
     email: session.user.email,
+    name: session.user.name,
     passkeyPublic: session.user.publicKey,
-    device: session.user.device
-  }
+    device: session.user.device,
+    registered: session.user.registered
+  })
 }
 
-// Adds one database to both the response list and the token's accounts map
-function addAccount (accounts, accountUsersIds, account, userId, userName, extra = {}) {
-  accountUsersIds[account] = userId.toString()
-  accounts.push({ _id: account, name: account, user: { _id: userId.toString(), name: userName, ...extra } })
-}
-
-// Finds a pending invite property on the invited entity
-async function findStoredInvite (entu, entityId) {
-  const entity = await entu.db.collection('entity').findOne(
-    { _id: getObjectId(entityId) },
-    { projection: { 'private.entu_user': true } }
-  )
-
-  return entity?.private?.entu_user?.find((u) => u.invite) || null
-}
-
-// Turns a pending invite property into real credentials for the authenticated user
-async function replaceInviteWithCredentials (entu, entityId, invitePropId, session) {
-  await setEntity(entu, getObjectId(entityId), [{ ...authCredentialProperty(sessionIdentity(session)), _id: invitePropId }])
-}
-
-// Creates a person entity on first login, when the database is configured to add users automatically
-async function createUserForAccount (account, session) {
-  if (!account || !session) return
-
+// Creates a person on first sign-in, when the database is configured to add users automatically
+async function createUserForAccount (account, identity) {
   const entu = { account, db: await connectDb(account), systemUser: true }
 
   const database = await entu.db.collection('entity').findOne(
@@ -233,15 +190,15 @@ async function createUserForAccount (account, session) {
     { type: '_type', reference: type._id },
     { type: '_parent', reference: parent },
     { type: '_inheritrights', boolean: true },
-    authCredentialProperty(sessionIdentity(session))
+    authCredentialProperty(identity)
   ]
 
-  if (session.user.email) {
-    properties.push({ type: 'email', string: session.user.email })
+  if (identity.email) {
+    properties.push({ type: 'email', string: identity.email })
   }
 
-  if (session.user.name) {
-    properties.push({ type: 'name', string: session.user.name })
+  if (identity.name) {
+    properties.push({ type: 'name', string: identity.name })
   }
 
   const person = await setEntity(entu, null, properties)
@@ -250,5 +207,10 @@ async function createUserForAccount (account, session) {
 
   await setEntity(entu, person._id, [{ type: '_editor', reference: person._id }])
 
-  return { _id: person._id, name: session.user.name }
+  return { _id: person._id, name: identity.name }
+}
+
+// Drops undefined fields, so a token carries only what the identity has
+function withoutUndefined (object) {
+  return Object.fromEntries(Object.entries(object).filter(([, value]) => value !== undefined))
 }

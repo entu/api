@@ -1,4 +1,4 @@
-// Scans all account databases for person entities matching the given identity (API key hash, passkey id + key, or OAuth uid+provider with legacy email fallback) and returns the accessible accounts
+// Scans all account databases for person entities matching the given identity (API key hash, passkey id + key, or OAuth uid+provider with legacy email fallback) and returns { account, userId, userName } entries
 export async function findUserAccounts ({ apiKeyHash, uid, provider, email, passkeyPublic } = {}, onlyForAccount) {
   // Harden Mongo filters: only scalar strings may reach the queries — anything else counts as absent
   apiKeyHash = typeof apiKeyHash === 'string' ? apiKeyHash : undefined
@@ -74,7 +74,8 @@ export async function findUserAccounts ({ apiKeyHash, uid, provider, email, pass
           return null
         }
 
-        return { account, userId: person._id, userName: person.private?.name?.at(0)?.string || person._id.toString() }
+        // The person's own name, if any - authIssueToken falls back to the id where a name must be shown
+        return { account, userId: person._id, userName: person.private?.name?.at(0)?.string }
       })
   )
 

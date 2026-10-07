@@ -1,4 +1,3 @@
-import jwt from 'jsonwebtoken'
 import { createHash } from 'node:crypto'
 
 // Languages the OAuth.ee login page supports
@@ -25,16 +24,15 @@ export function oauthApiUrl (event) {
   return apiUrl || oauthBaseUrl(event)
 }
 
-// Sends the user to the oauth.ee login, or the webapp passkey page. `state` comes back from oauthCompleteLogin, so callers store nothing.
-export function oauthStartLogin (event, { provider, state = {} } = {}) {
-  const { appUrl, jwtSecret, oauthId } = useRuntimeConfig(event)
+// Sends the user to the oauth.ee login, or a webapp passkey page. `state` comes back from oauthCompleteLogin, so callers store nothing.
+export function oauthStartLogin (event, { provider, register = false, state = {} } = {}) {
+  const { appUrl, oauthId } = useRuntimeConfig(event)
   const { lang, next } = getQuery(event)
-  const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
-  const signedState = jwt.sign({ next, ...state, provider, use: 'state' }, jwtSecret, { audience, expiresIn: '5m' })
+  const signedState = tokenSign(event, 'state', { next, ...state, provider, ...(register ? { register } : {}) }, { bindIp: true, expiresIn: '5m' })
 
-  // The webapp page stands in for oauth.ee - it runs the passkey prompt and returns to /auth/callback the same way
+  // The webapp pages stand in for oauth.ee - they run the passkey prompt and return to /auth/callback the same way
   if (provider === 'passkey') {
-    const url = new URL('/auth/passkey-sign-in', appUrl)
+    const url = new URL(register ? '/auth/passkey-register' : '/auth/passkey-sign-in', appUrl)
 
     url.searchParams.set('state', signedState)
 
@@ -64,24 +62,18 @@ export function oauthStartLogin (event, { provider, state = {} } = {}) {
 
 // Completes a login - creates the session and returns its id and token, with the state the caller sent
 export async function oauthCompleteLogin (event, code, state) {
-  const { jwtSecret } = useRuntimeConfig(event)
-  const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
-  const decodedState = jwt.verify(state, jwtSecret, { audience })
+  const decodedState = tokenVerify(event, 'state', state, { bindIp: true })
 
-  if (decodedState.use !== 'state') {
-    throw createError({ statusCode: 400, statusMessage: 'Not a login state' })
+  if (!decodedState) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid or expired login state' })
   }
 
   // The state names the provider, so a passkey code is only accepted for a login started as a passkey login
   const sessionId = decodedState.provider === 'passkey'
-    ? await claimPasskeySession(event, code, state, audience)
-    : await oauthCreateSession(audience, await fetchOauthEeUser(event, code))
+    ? await claimPasskeySession(event, code, state)
+    : await oauthCreateSession(authRequestIp(event), await fetchOauthEeUser(event, code))
 
-  const token = jwt.sign({ use: 'session' }, jwtSecret, {
-    audience,
-    subject: sessionId,
-    expiresIn: '5m'
-  })
+  const token = tokenSign(event, 'session', {}, { bindIp: true, expiresIn: '5m', subject: sessionId })
 
   return { id: sessionId, state: decodedState, token }
 }
@@ -101,44 +93,28 @@ export async function oauthCreateSession (ip, user, { pending = false } = {}) {
 
 // Signs the code the passkey page hands to /auth/callback - it names a pending session and the state it was issued for
 export function oauthSignPasskeyCode (event, sessionId, state) {
-  const { jwtSecret } = useRuntimeConfig(event)
-  const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
-
-  return jwt.sign({ session: sessionId, state: hashState(state), use: 'passkey' }, jwtSecret, { audience, expiresIn: '1m' })
+  return tokenSign(event, 'passkey-code', { session: sessionId, state: hashState(state) }, { bindIp: true, expiresIn: '1m' })
 }
 
-// Checks the state the passkey page sends belongs to a passkey login started from this browser
-export function oauthVerifyPasskeyState (event, state) {
-  const { jwtSecret } = useRuntimeConfig(event)
-  const audience = (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
-  let payload
+// Checks the state a passkey page sends belongs to a passkey login of this kind (sign-in or create) started from this browser
+export function oauthVerifyPasskeyState (event, state, { register = false } = {}) {
+  const payload = tokenVerify(event, 'state', state, { bindIp: true })
 
-  try {
-    payload = jwt.verify(state, jwtSecret, { audience })
-  }
-  catch {
+  if (!payload) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid or expired login state' })
   }
 
-  if (payload.use !== 'state' || payload.provider !== 'passkey') {
-    throw createError({ statusCode: 400, statusMessage: 'Not a passkey login state' })
+  if (payload.provider !== 'passkey' || !!payload.register !== register) {
+    throw createError({ statusCode: 400, statusMessage: 'Not a login state for this passkey step' })
   }
 }
 
 // Claims the pending session a passkey code names - the atomic update makes the code single use
-async function claimPasskeySession (event, code, state, audience) {
-  const { jwtSecret } = useRuntimeConfig(event)
-  let payload
+async function claimPasskeySession (event, code, state) {
+  const payload = tokenVerify(event, 'passkey-code', code, { bindIp: true })
 
-  try {
-    payload = jwt.verify(code, jwtSecret, { audience })
-  }
-  catch {
+  if (!payload || payload.state !== hashState(state)) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid or expired passkey code' })
-  }
-
-  if (payload.use !== 'passkey' || payload.state !== hashState(state)) {
-    throw createError({ statusCode: 400, statusMessage: 'Not a passkey code for this login' })
   }
 
   const connection = await connectDb('entu')
@@ -186,27 +162,17 @@ async function fetchOauthEeUser (event, code) {
   }
 }
 
-// Signs an OAuth artifact - registrations, state and codes are self-contained JWTs, so the flow needs no storage
+// Signs an OAuth artifact - registrations and codes are self-contained JWTs, so the flow needs no storage
 export function oauthSign (event, type, payload) {
-  const { jwtSecret } = useRuntimeConfig(event)
-
-  return jwt.sign({ ...payload, use: type }, jwtSecret, { expiresIn: lifetimes[type] })
+  return tokenSign(event, type, payload, { expiresIn: lifetimes[type] })
 }
 
-// Verifies an OAuth artifact and rejects one of the wrong type, so a client registration can't be replayed as a code
+// Verifies an OAuth artifact of this type, so a client registration can't be replayed as a code
 export function oauthVerify (event, type, token) {
-  const { jwtSecret } = useRuntimeConfig(event)
-  let payload
+  const payload = tokenVerify(event, type, token)
 
-  try {
-    payload = jwt.verify(token, jwtSecret)
-  }
-  catch {
+  if (!payload) {
     throw oauthError('invalid_grant', `Invalid or expired ${type}`)
-  }
-
-  if (payload.use !== type) {
-    throw oauthError('invalid_grant', `Not a valid ${type}`)
   }
 
   return payload

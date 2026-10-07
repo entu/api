@@ -1,36 +1,38 @@
-import { verifyAuthenticationResponse } from '@simplewebauthn/server'
-import jwt from 'jsonwebtoken'
+import { generateAuthenticationOptions, generateRegistrationOptions, verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server'
 
-// Signs a WebAuthn challenge for the browser that asked for it - typed, so no other Entu JWT passes as one
-export function passkeySignChallenge (event, challenge) {
-  const { jwtSecret } = useRuntimeConfig(event)
+// WebAuthn options for signing in with a stored passkey, with the challenge signed for this browser
+export async function passkeySignInOptions (event) {
+  const { passkeyRpId } = useRuntimeConfig(event)
 
-  return jwt.sign({ challenge, use: 'passkey-challenge' }, jwtSecret, { audience: requestIp(event), expiresIn: '5m' })
+  const options = await generateAuthenticationOptions({
+    rpID: passkeyRpId,
+    userVerification: 'preferred',
+    allowCredentials: []
+  })
+
+  return { ...options, challengeToken: tokenSign(event, 'passkey-challenge', { challenge: options.challenge }, { bindIp: true, expiresIn: '5m' }) }
 }
 
-// Returns the challenge from a token signed by passkeySignChallenge for this browser
-export function passkeyReadChallenge (event, token) {
-  const { jwtSecret } = useRuntimeConfig(event)
-  let payload
+// WebAuthn options for creating a passkey - an Entu passkey belongs to no person or database, so each is labelled Entu
+export async function passkeyRegisterOptions (event) {
+  const { passkeyRpId } = useRuntimeConfig(event)
 
-  try {
-    payload = jwt.verify(token, jwtSecret, { audience: requestIp(event) })
-  }
-  catch {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid or expired challenge' })
-  }
+  // Sign-in asks for any passkey without naming one, so only a discoverable passkey can ever be used
+  const options = await generateRegistrationOptions({
+    rpName: 'Entu',
+    rpID: passkeyRpId,
+    userName: 'Entu',
+    authenticatorSelection: { residentKey: 'required', userVerification: 'preferred' },
+    supportedAlgorithmIDs: [-7, -257] // ES256, RS256
+  })
 
-  if (payload.use !== 'passkey-challenge') {
-    throw createError({ statusCode: 400, statusMessage: 'Not a passkey challenge' })
-  }
-
-  return payload.challenge
+  return { ...options, challengeToken: tokenSign(event, 'passkey-register', { challenge: options.challenge }, { bindIp: true, expiresIn: '5m' }) }
 }
 
-// Verifies a passkey assertion against each database's own stored key and returns the identity it proves - a reused id with another key opens nothing.
-export async function passkeyVerify (event, body) {
+// Verifies a passkey assertion against each database's own stored key and returns the identity it proves - a reused id with another key opens nothing
+export async function passkeyVerifySignIn (event, body) {
   const { passkeyRpId, passkeyOrigin } = useRuntimeConfig(event)
-  const challenge = passkeyReadChallenge(event, body?.challengeToken)
+  const challenge = readChallenge(event, 'passkey-challenge', body?.challengeToken)
 
   // The credential id goes straight into a Mongo filter, so only a plain string may reach it
   if (typeof body.id !== 'string') {
@@ -85,9 +87,68 @@ export async function passkeyVerify (event, body) {
     provider: 'passkey',
     id: body.id,
     publicKey: first.property.passkey_public,
-    device: first.property.passkey_device,
-    name: first.personName
+    device: first.property.passkey_device
   }
+}
+
+// Verifies a new passkey and returns its identity - the id and key come from the verified attestation, never the request body
+export async function passkeyVerifyRegister (event, body) {
+  const { passkeyRpId, passkeyOrigin } = useRuntimeConfig(event)
+  const challenge = readChallenge(event, 'passkey-register', body?.challengeToken)
+  let verification
+
+  try {
+    verification = await verifyRegistrationResponse({
+      response: body,
+      expectedChallenge: challenge,
+      expectedOrigin: passkeyOrigin,
+      expectedRPID: passkeyRpId
+    })
+  }
+  catch {
+    verification = undefined
+  }
+
+  const credential = verification?.verified ? verification.registrationInfo?.credential : undefined
+
+  if (typeof credential?.id !== 'string' || !credential.publicKey) {
+    throw createError({ statusCode: 400, statusMessage: 'Registration verification failed' })
+  }
+
+  // A "none" attestation does not prove the private key, so a stored id - with any key - is a copy, never a new passkey
+  if ((await findCredential(credential.id)).length > 0) {
+    throw createError({ statusCode: 400, statusMessage: 'Passkey is already registered' })
+  }
+
+  const publicKey = Buffer.from(credential.publicKey).toString('base64url')
+
+  const device = typeof body.deviceName === 'string' && body.deviceName.trim() ? body.deviceName.trim().slice(0, 100) : undefined
+
+  return { provider: 'passkey', id: credential.id, publicKey, device, registered: true }
+}
+
+// Ends a verified passkey step: the webapp page (with `state`) gets a code for /auth/callback, the native app a token as from GET /auth
+export async function passkeyFinish (event, identity, body) {
+  const ip = authRequestIp(event)
+
+  if (body.state) {
+    const sessionId = await oauthCreateSession(ip, identity, { pending: true })
+
+    return { code: oauthSignPasskeyCode(event, sessionId, body.state) }
+  }
+
+  const sessionId = await oauthCreateSession(ip, identity)
+
+  return await authExchange(event, {
+    account: typeof body.db === 'string' && body.db ? formatDatabaseName(body.db) : undefined,
+    invite: typeof body.invite === 'string' && body.invite ? body.invite : undefined,
+    sessionId
+  })
+}
+
+// The label an entu_passkey value shows - its device name plus the last four characters of its id
+export function passkeyLabel (property) {
+  return `${property.passkey_device || ''} ${property._id.toString().slice(-4).toUpperCase()}`.trim()
 }
 
 // True when the credential id is already stored somewhere with a different public key
@@ -108,6 +169,17 @@ export async function passkeyExists (credentialId, publicKey) {
   return matches.some(({ property }) => property.passkey_public === publicKey)
 }
 
+// Returns the challenge from a token of this type signed for this browser
+function readChallenge (event, use, token) {
+  const payload = tokenVerify(event, use, token, { bindIp: true })
+
+  if (!payload?.challenge) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid or expired challenge' })
+  }
+
+  return payload.challenge
+}
+
 // Finds the entu_passkey values for a credential id in every database, with the person each belongs to
 async function findCredential (credentialId) {
   const entuDb = await connectDb('entu')
@@ -121,19 +193,14 @@ async function findCredential (credentialId) {
 
         const persons = await db.collection('entity').find(
           { 'private.entu_passkey.passkey_id': credentialId },
-          { projection: { 'private.name.string': true, 'private.entu_passkey': true } }
+          { projection: { 'private.entu_passkey': true } }
         ).toArray()
 
         return persons.flatMap((person) => person.private.entu_passkey
           .filter((property) => property.passkey_id === credentialId && property.passkey_public)
-          .map((property) => ({ account, db, personId: person._id, personName: person.private?.name?.at(0)?.string, property })))
+          .map((property) => ({ account, db, personId: person._id, property })))
       })
   )
 
   return matches.flat()
-}
-
-// Caller IP as used for token audiences across the auth routes
-function requestIp (event) {
-  return (getRequestIP(event, { xForwardedFor: true }) || '127.0.0.1').replace('::1', '127.0.0.1')
 }
