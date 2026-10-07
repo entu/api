@@ -292,10 +292,10 @@ async function validatePropertyTypes (entu, properties, allowedTypes) {
       }
     }
 
-    if (property.language !== undefined && (typeof property.language !== 'string' || property.language.trim() === '')) {
+    if (property.language !== undefined && (typeof property.language !== 'string' || !/^[a-z]{2}$/.test(property.language))) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Property language must be a non-empty string'
+        statusMessage: 'Property language must be a two-letter lowercase code'
       })
     }
 
