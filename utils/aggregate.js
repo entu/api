@@ -369,8 +369,21 @@ async function propertiesToEntity (entu, properties) {
     delete cleanProp.search
     delete cleanProp.public
 
+    // A retired credential type signs nobody in and shows nowhere - it waits only for its migration
+    if (retiredCredentialTypes.includes(prop.type)) continue
+
     if (!entity.private[prop.type]) {
       entity.private[prop.type] = []
+    }
+
+    // Credentials keep their real value only in `auth`, outside every view, so filters, formulas and search see the masked form
+    if (credentialAuthKeys[prop.type]) {
+      const key = credentialAuthKeys[prop.type]
+
+      entity.auth = { ...entity.auth, [key]: [...entity.auth?.[key] || [], credentialAuthValue(prop.type, cleanProp)] }
+      entity.private[prop.type] = [...entity.private[prop.type], credentialMask(prop.type, cleanProp)]
+
+      continue
     }
 
     if (prop.reference) {

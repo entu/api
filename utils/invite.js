@@ -15,15 +15,15 @@ export async function inviteVerify (event, token) {
   const db = await connectDb(account)
 
   const person = await db.collection('entity').findOne(
-    { _id: getObjectId(payload.entityId), 'private.entu_user.invite': token },
-    { projection: { 'private.name.string': true, 'private.entu_user': true } }
+    { _id: getObjectId(payload.entityId), 'auth.user.invite': token },
+    { projection: { 'private.name.string': true, 'auth.user': true } }
   )
 
   return {
     account,
     entityId: payload.entityId,
     personName: person?.private?.name?.at(0)?.string,
-    property: person?.private?.entu_user?.find((u) => u.invite === token)
+    property: person?.auth?.user?.find((u) => u.invite === token)
   }
 }
 

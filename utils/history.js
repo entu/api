@@ -9,11 +9,16 @@ const VALUE_FIELDS = {
   boolean: '$boolean',
   date: '$date',
   datetime: '$datetime',
+  email: '$email',
   filename: '$filename',
   filesize: '$filesize',
+  invite: '$invite',
   language: '$language',
   md5: '$md5',
   number: '$number',
+  passkey_device: '$passkey_device',
+  passkey_public: '$passkey_public',
+  provider: '$provider',
   reference: '$reference',
   string: '$string'
 }
@@ -244,21 +249,10 @@ function activityBranch (entu, actorId, stamp, side, take) {
 
 // Masks credential values and drops the empty sides of one change entry
 function cleanChange (change) {
-  if (change.type === 'entu_api_key' || change.type === 'entu_user') {
-    if (change.old?.string) {
-      change.old.string = '***'
-    }
-    if (change.new?.string) {
-      change.new.string = '***'
-    }
-  }
-  else if (change.type === 'entu_passkey') {
-    if (change.old?.string) {
-      change.old.string = `${change.old.passkey_device || ''} ${change.old._id.toString().slice(-4).toUpperCase()}`.trim()
-    }
-    if (change.new?.string) {
-      change.new.string = `${change.new.passkey_device || ''} ${change.new._id.toString().slice(-4).toUpperCase()}`.trim()
-    }
+  // Credential sides show only their masked form, the same as in entity responses
+  if (credentialTypes.includes(change.type) || retiredCredentialTypes.includes(change.type)) {
+    change.old = change.old && credentialMask(change.type, change.old)
+    change.new = change.new && credentialMask(change.type, change.new)
   }
 
   if (change.at === null) {

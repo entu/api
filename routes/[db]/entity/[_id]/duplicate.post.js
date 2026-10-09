@@ -162,7 +162,7 @@ export default defineEventHandler(async (event) => {
     entity: entityId,
     deleted: { $exists: false },
     filename: { $exists: false },
-    type: { $nin: [...ignoredProperties, '_created', '_mid', 'entu_api_key', 'entu_user', 'entu_passkey', ...serverOnlyTypes] }
+    type: { $nin: [...ignoredProperties, '_created', '_mid', ...credentialTypes, ...retiredCredentialTypes, ...serverOnlyTypes] }
   }, {
     projection: {
       _id: false,

@@ -54,7 +54,7 @@ export async function passkeyVerifySignIn (event, body) {
         expectedOrigin: passkeyOrigin,
         expectedRPID: passkeyRpId,
         credential: {
-          id: match.property.passkey_id,
+          id: match.property.uid,
           publicKey: Buffer.from(match.property.passkey_public, 'base64url'),
           counter: match.property.passkey_counter || 0
         }
@@ -146,7 +146,7 @@ export async function passkeyFinish (event, identity, body) {
   })
 }
 
-// The label an entu_passkey value shows - its device name plus the last four characters of its id
+// The label a passkey's entu_user value shows - its device name plus the last four characters of its id
 export function passkeyLabel (property) {
   return `${property.passkey_device || ''} ${property._id.toString().slice(-4).toUpperCase()}`.trim()
 }
@@ -180,7 +180,7 @@ function readChallenge (event, use, token) {
   return payload.challenge
 }
 
-// Finds the entu_passkey values for a credential id in every database, with the person each belongs to
+// Finds the passkey entu_user values for a credential id in every database, with the person each belongs to
 async function findCredential (credentialId) {
   const entuDb = await connectDb('entu')
   const dbs = await entuDb.admin().listDatabases()
@@ -192,12 +192,12 @@ async function findCredential (credentialId) {
         const db = await connectDb(account)
 
         const persons = await db.collection('entity').find(
-          { 'private.entu_passkey.passkey_id': credentialId },
-          { projection: { 'private.entu_passkey': true } }
+          { 'auth.user': { $elemMatch: { uid: credentialId, provider: 'passkey' } } },
+          { projection: { 'auth.user': true } }
         ).toArray()
 
-        return persons.flatMap((person) => person.private.entu_passkey
-          .filter((property) => property.passkey_id === credentialId && property.passkey_public)
+        return persons.flatMap((person) => person.auth.user
+          .filter((property) => property.provider === 'passkey' && property.uid === credentialId && property.passkey_public)
           .map((property) => ({ account, db, personId: person._id, property })))
       })
   )

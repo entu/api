@@ -303,6 +303,9 @@ async function formulaField (entu, str, entityId, localValues = {}) {
     if (localValues[str]) { // Use in-memory value from current aggregation pass (e.g. another formula result)
       result = localValues[str]
     }
+    else if (credentialTypes.includes(str) || retiredCredentialTypes.includes(str)) { // Credentials are never read raw - an entity without them has none
+      result = []
+    }
     else {
       result = await entu.db.collection('property').find({
         entity: entityId,

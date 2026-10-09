@@ -1,7 +1,7 @@
 defineRouteMeta({
   openAPI: {
     tags: ['Property'],
-    description: 'Get one property value as stored, with `entity` and `created`, if the caller has entity rights or the value is in its domain or public view. References carry no name, `entu_api_key` is masked, `entu_passkey` gets a device label. See [properties](https://entu.ee/api/properties/) and [file download](https://entu.ee/api/files/#download-process).',
+    description: 'Get one property value as stored, with `entity` and `created`, if the caller has entity rights or the value is in its domain or public view. References carry no name; credentials return only their masked form (`entu_user`: email or passkey label, provider and an invite flag; `entu_api_key`: `***`). See [properties](https://entu.ee/api/properties/) and [file download](https://entu.ee/api/files/#download-process).',
     security: [{}, { bearerAuth: [] }],
     parameters: [
       {
@@ -46,21 +46,13 @@ defineRouteMeta({
                       type: 'string',
                       description: 'Signed download URL, valid 60 seconds; files only'
                     },
-                    passkey_device: {
+                    provider: {
                       type: 'string',
-                      description: 'Passkey device name'
+                      description: '`entu_user`: login provider'
                     },
-                    passkey_id: {
-                      type: 'string',
-                      description: 'WebAuthn credential ID'
-                    },
-                    passkey_public: {
-                      type: 'string',
-                      description: 'Base64url public key'
-                    },
-                    passkey_counter: {
-                      type: 'integer',
-                      description: 'Last signature counter'
+                    invite: {
+                      type: 'boolean',
+                      description: '`entu_user`: `true` while an invite is pending'
                     }
                   }
                 }
@@ -151,17 +143,14 @@ export default defineEventHandler(async (event) => {
     property.url = await getSignedDownloadUrl(entu.account, property.entity, property)
   }
 
-  if (property.type === 'entu_api_key') {
-    property.string = '***'
-  }
-  else if (property.type === 'entu_passkey') {
-    property.string = `${property.passkey_device || ''} ${property._id.toString().slice(-4).toUpperCase()}`.trim()
-  }
-
   if (property.url && getQuery(event).download) {
     return redirect(property.url, 302)
   }
-  else {
+
+  if (!credentialTypes.includes(property.type) && !retiredCredentialTypes.includes(property.type)) {
     return property
   }
+
+  // A credential shows only its masked form, the same as in entity responses
+  return { type: property.type, entity: property.entity, created: property.created, ...credentialMask(property.type, property) }
 })

@@ -20,7 +20,7 @@ defineRouteMeta({
         'application/json': {
           schema: {
             type: 'array',
-            description: 'Property values including `_type`. Rights and `_parent` take `reference`, `_sharing` a `string`, `_inheritrights` a `boolean`; other `_` names, billing and `entu_passkey` values are rejected.',
+            description: 'Property values including `_type`. Rights and `_parent` take `reference`, `_sharing` a `string`, `_inheritrights` a `boolean`; other `_` names and billing values are rejected, `entu_user` and `entu_api_key` take only `string` and `email`.',
             minItems: 1,
             items: {
               type: 'object',
@@ -146,5 +146,5 @@ export default defineEventHandler(async (event) => {
 
   await triggerWebhooks(entu, _id, 'entity-add-webhook')
 
-  return { _id, properties }
+  return { _id, properties: properties.map((p) => credentialWritten(entu, _id, p)) }
 })

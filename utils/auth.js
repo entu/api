@@ -106,10 +106,10 @@ export function authIdentity (identity, accounts) {
   return withoutUndefined({ ...identity, name })
 }
 
-// The credential property that links a person to a login identity - `entu_user` for oauth.ee, `entu_passkey` for a passkey
+// The `entu_user` value that links a person to a login identity - a passkey also stores its public key, counter and device
 export function authCredentialProperty ({ uid, provider, email, passkeyPublic, device }) {
   if (provider === 'passkey') {
-    return { type: 'entu_passkey', passkey_id: uid, passkey_public: passkeyPublic, passkey_counter: 0, passkey_device: device || 'Unknown Device' }
+    return { type: 'entu_user', uid, provider, passkey_public: passkeyPublic, passkey_counter: 0, passkey_device: device || 'Unknown Device' }
   }
 
   return { type: 'entu_user', uid, provider, ...(email ? { email } : {}) }

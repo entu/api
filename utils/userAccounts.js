@@ -28,34 +28,28 @@ export async function findUserAccounts ({ apiKeyHash, uid, provider, email, pass
 
         if (apiKeyHash) {
           person = await accountCon.collection('entity').findOne(
-            { 'private.entu_api_key.string': apiKeyHash },
-            { projection: { _id: true, 'private.name.string': true } }
-          )
-        }
-        else if (provider === 'passkey') {
-          person = await accountCon.collection('entity').findOne(
-            { 'private.entu_passkey': { $elemMatch: { passkey_id: uid, passkey_public: passkeyPublic } } },
+            { 'auth.api.string': apiKeyHash },
             { projection: { _id: true, 'private.name.string': true } }
           )
         }
         else {
-          // Step 1: new format — find by uid + provider
+          // Step 1: new format — find by uid + provider, and a passkey also by the key it was verified with
           if (uid && provider) {
             person = await accountCon.collection('entity').findOne(
-              { 'private.entu_user': { $elemMatch: { uid, provider } } },
+              { 'auth.user': { $elemMatch: { uid, provider, ...(provider === 'passkey' ? { passkey_public: passkeyPublic } : {}) } } },
               { projection: { _id: true, 'private.name.string': true } }
             )
           }
 
-          // Step 2: old format — find by email string and migrate on first match
+          // Step 2: old format — a login holding only its email, which aggregation marks `legacy`; migrated on first match
           if (!person && email) {
             const oldPerson = await accountCon.collection('entity').findOne(
-              { 'private.entu_user.string': email },
-              { projection: { _id: true, 'private.name.string': true, 'private.entu_user': true } }
+              { 'auth.user': { $elemMatch: { email, legacy: true } } },
+              { projection: { _id: true, 'private.name.string': true, 'auth.user': true } }
             )
 
             if (oldPerson) {
-              const oldProp = oldPerson.private?.entu_user?.find((u) => u.string === email)
+              const oldProp = oldPerson.auth?.user?.find((u) => u.email === email && u.legacy)
 
               if (oldProp && uid && provider) {
                 await setEntity(

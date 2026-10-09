@@ -6,7 +6,13 @@ const charsForKey = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456
 export const entityPropertyTypes = ['string', 'text', 'number', 'boolean', 'reference', 'date', 'datetime', 'file', 'counter', 'formula']
 
 // Credential property types — writing any grants login access AS the entity.
-export const credentialTypes = ['entu_user', 'entu_api_key', 'entu_passkey']
+export const credentialTypes = ['entu_user', 'entu_api_key']
+
+// Retired credential types - a passkey is an entu_user value created only by a verified sign-in, so these are never written by a client
+export const retiredCredentialTypes = ['entu_passkey']
+
+// Where aggregation keeps each credential type's real values - `entity.auth.user` and `entity.auth.api`
+export const credentialAuthKeys = { entu_user: 'user', entu_api_key: 'api' }
 
 // Server-managed property types — set and deleted only by the server (Stripe billing and entitlements), never by clients.
 export const serverOnlyTypes = [
@@ -104,7 +110,7 @@ function validateInput (properties) {
 function validateCredentialProperties (entu, properties) {
   if (entu.systemUser) return
 
-  const serverOnlyProperty = properties.find((property) => serverOnlyTypes.includes(property.type))
+  const serverOnlyProperty = properties.find((property) => serverOnlyTypes.includes(property.type) || retiredCredentialTypes.includes(property.type))
 
   if (serverOnlyProperty) {
     throw createError({
@@ -113,11 +119,10 @@ function validateCredentialProperties (entu, properties) {
     })
   }
 
-  // Passkey values come only from a verified registration or login, so a client may not set any of them
+  // Login and passkey fields (uid, provider, passkey_*) come only from a verified sign-in, so a client may not set any of them
   const allowedFields = {
     entu_user: ['type', '_id', 'language', 'string', 'email'],
-    entu_api_key: ['type', '_id', 'language', 'string', 'email'],
-    entu_passkey: ['type', '_id']
+    entu_api_key: ['type', '_id', 'language', 'string', 'email']
   }
 
   for (const property of properties) {
@@ -851,28 +856,84 @@ export async function cleanupEntity (entu, entity) {
     return
   }
 
-  if (result.entu_api_key) {
-    result.entu_api_key = result.entu_api_key.map((k) => ({ ...k, string: '***' }))
-  }
-
-  if (result.entu_user) {
-    result.entu_user = result.entu_user.map((u) => {
-      if (u.invite) {
-        return { ...u, invite: '***' }
-      }
-      if (u.email?.endsWith('@eesti.ee')) {
-        return { ...u, email: u.email.replace('@eesti.ee', '') }
-      }
-
-      return u
-    })
-  }
-
-  if (result.entu_passkey) {
-    result.entu_passkey = result.entu_passkey.map((k) => ({ ...k, string: passkeyLabel(k) }))
+  for (const type of credentialTypes) {
+    if (result[type]) {
+      result[type] = result[type].map((value) => credentialMask(type, value))
+    }
   }
 
   return result
+}
+
+// The only form of a credential value outside auth code - also correct when applied to an already masked value
+export function credentialMask (type, value) {
+  if (type === 'entu_api_key') {
+    return { _id: value._id, string: '***' }
+  }
+  if (type === 'entu_passkey') {
+    return { _id: value._id, string: passkeyLabel(value), provider: 'passkey' }
+  }
+  if (type !== 'entu_user') {
+    return value
+  }
+
+  const masked = { _id: value._id, string: credentialDisplay(value) }
+
+  if (value.provider) {
+    masked.provider = value.provider
+  }
+
+  if (value.invite) {
+    masked.invite = true
+  }
+
+  return masked
+}
+
+// What an entu_user value shows: a passkey's device label, else the login's email without the ID-card domain
+function credentialDisplay (value) {
+  if (value.provider === 'passkey') {
+    return value.passkey_public ? passkeyLabel(value) : value.string
+  }
+
+  const email = value.email ?? value.string
+
+  return email?.endsWith('@eesti.ee') ? email.replace('@eesti.ee', '') : email
+}
+
+// A written value as a create or edit response returns it - a new API key once in plain text, an invite token only to the person themselves
+export function credentialWritten (entu, entityId, property) {
+  if (!credentialTypes.includes(property.type)) {
+    return property
+  }
+
+  const masked = { type: property.type, ...credentialMask(property.type, property) }
+
+  if (property.type === 'entu_api_key') {
+    return { ...masked, string: property.string }
+  }
+
+  if (property.invite && entu.userStr === entityId.toString()) {
+    return { ...masked, invite: property.invite }
+  }
+
+  return masked
+}
+
+// The real credential value auth code reads - an old-format login holds only its email, in `string`, so it is kept as `email`
+export function credentialAuthValue (type, value) {
+  if (type === 'entu_api_key') {
+    return value
+  }
+
+  const { string, ...rest } = value
+
+  // Marked legacy, so the email-only login fallback never matches an email a client wrote without `string`
+  if (string && !rest.provider && !rest.email && !rest.invite) {
+    return { ...rest, email: string, legacy: true }
+  }
+
+  return rest
 }
 
 // Generates all unique substrings of value strings for full-text search indexing
