@@ -25,6 +25,7 @@ export const serverOnlyTypes = [
 
 // Validates, processes, and persists properties to a new or existing entity.
 // options.skipTypeRequired: if true, skips the _type required check (for system bootstrap only)
+// options.deleteIds: extra property _ids of this entity to soft-delete, only after the access checks pass
 export async function setEntity (entu, entityId, properties, options = {}) {
   const allowedTypes = [
     '_type',
@@ -60,7 +61,9 @@ export async function setEntity (entu, entityId, properties, options = {}) {
     })
   }
 
-  await checkEntityAccess(entu, entityId, properties, rightTypes)
+  const removedTypes = await getRemovedTypes(entu, entityId, properties, options.deleteIds || [], allowedTypes)
+
+  await checkEntityAccess(entu, entityId, properties, removedTypes, rightTypes)
   await validatePropertyTypes(entu, properties, allowedTypes)
 
   if (!entityId) {
@@ -76,7 +79,7 @@ export async function setEntity (entu, entityId, properties, options = {}) {
 
   const { pIds, oldPIds } = await insertProperties(entu, entityId, properties, createdDt)
 
-  await markPropertiesDeleted(entu, entityId, oldPIds)
+  await markPropertiesDeleted(entu, entityId, [...oldPIds, ...(options.deleteIds || [])])
   await markReplacedUserRightsDeleted(entu, entityId, pIds)
   await aggregateEntity(entu, entityId)
 
@@ -103,6 +106,63 @@ function validateInput (properties) {
       statusMessage: 'At least one property must be set'
     })
   }
+}
+
+// Returns the stored types of the values a replaced _id or deleteIds removes, throwing if one isn't live on this entity or can't be removed.
+async function getRemovedTypes (entu, entityId, properties, deleteIds, allowedTypes) {
+  if (!entityId) {
+    return []
+  }
+
+  const removed = [
+    ...properties.filter((property) => property._id).map((property) => ({ _id: getObjectId(property._id), newType: property.type })),
+    ...deleteIds.map((_id) => ({ _id: getObjectId(_id) }))
+  ]
+
+  if (removed.length === 0) {
+    return []
+  }
+
+  const records = await entu.db.collection('property').find(
+    { _id: { $in: removed.map((property) => property._id) }, entity: entityId, deleted: { $exists: false } },
+    { projection: { type: true } }
+  ).toArray()
+
+  const typeById = new Map(records.map((record) => [record._id.toString(), record.type]))
+
+  return removed.map((property) => {
+    const type = typeById.get(property._id.toString())
+
+    if (!type) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: `Property ${property._id} not found on this entity`
+      })
+    }
+
+    if (type === '_type' && property.newType !== '_type') {
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'Can\'t delete _type property'
+      })
+    }
+
+    if (type.startsWith('_') && !allowedTypes.includes(type)) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'Can\'t delete system property'
+      })
+    }
+
+    if (!entu.systemUser && (serverOnlyTypes.includes(type) || retiredCredentialTypes.includes(type))) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: `Property ${type} can only be deleted by the server`
+      })
+    }
+
+    return type
+  })
 }
 
 // Clients may only trigger a server-generated invite/API key (string) — the login-match and
@@ -139,8 +199,8 @@ function validateCredentialProperties (entu, properties) {
   }
 }
 
-// Verifies the user has editor or owner access to an existing entity
-async function checkEntityAccess (entu, entityId, properties, rightTypes) {
+// Verifies the user has editor or owner access to an existing entity, for the types written and the types removed
+async function checkEntityAccess (entu, entityId, properties, removedTypes, rightTypes) {
   if (!entityId) return
 
   const entity = await entu.db.collection('entity').findOne({
@@ -169,10 +229,13 @@ async function checkEntityAccess (entu, entityId, properties, rightTypes) {
     })
   }
 
-  const rigtsProperties = properties.filter((property) => rightTypes.includes(property.type))
+  const writtenTypes = properties.map((property) => property.type)
   const owners = entity.private?._owner?.map((s) => s.reference?.toString()) || []
 
-  if (rigtsProperties.length > 0 && !owners.includes(entu.userStr) && !entu.systemUser) {
+  // Removing a _parent drops the rights inherited from it, so it needs _owner like the property delete route - adding one needs only _editor
+  const changesRights = writtenTypes.some((type) => rightTypes.includes(type)) || removedTypes.some((type) => rightTypes.includes(type) || type === '_parent')
+
+  if (changesRights && !owners.includes(entu.userStr) && !entu.systemUser) {
     throw createError({
       statusCode: 403,
       statusMessage: 'User not in _owner property'
@@ -180,10 +243,10 @@ async function checkEntityAccess (entu, entityId, properties, rightTypes) {
   }
 
   // Credentials grant login AS the entity — only its _owner or the entity itself, never a plain _editor.
-  const credentialProperties = properties.filter((property) => credentialTypes.includes(property.type))
+  const changesCredentials = [...writtenTypes, ...removedTypes].some((type) => credentialTypes.includes(type))
   const isOwnEntity = entityId.toString() === entu.userStr
 
-  if (credentialProperties.length > 0 && !owners.includes(entu.userStr) && !isOwnEntity && !entu.systemUser) {
+  if (changesCredentials && !owners.includes(entu.userStr) && !isOwnEntity && !entu.systemUser) {
     throw createError({
       statusCode: 403,
       statusMessage: 'User not in _owner property'

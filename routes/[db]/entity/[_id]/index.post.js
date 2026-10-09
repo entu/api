@@ -34,7 +34,7 @@ defineRouteMeta({
             items: {
               type: 'object',
               properties: {
-                _id: { type: 'string', description: 'Existing value to replace' },
+                _id: { type: 'string', description: 'Existing value of this entity to replace; the rights to remove its own `type` are checked too' },
                 type: { type: 'string', pattern: '^\\w+$', description: 'Property name (letters, digits and underscore)', example: 'name' },
                 string: { type: 'string', description: 'String or text value; for `entu_user` creates an invite (`send-invite` also emails it), for `entu_api_key` a key is generated', example: 'Updated Name' },
                 number: { type: 'number', description: 'Number value', example: 100 },
@@ -116,7 +116,7 @@ defineRouteMeta({
         }
       },
       400: {
-        description: 'Invalid body, empty value, `send-invite` without `email`, `_parent` not found, no `_expander` on parent, invalid ID or database name',
+        description: 'Invalid body, empty value, `_id` not a live value of this entity, `send-invite` without `email`, `_parent` not found, no `_expander` on parent, invalid ID or database name',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       401: {

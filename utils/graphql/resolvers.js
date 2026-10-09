@@ -144,17 +144,11 @@ export function buildResolvers (entityTypes, propsByTypeId) {
         return prop
       })
 
-      // Delete any remaining old props beyond the count of new props (list-shrink case)
+      // Old props beyond the count of new props (list-shrink case) are deleted by setEntity, only after its access checks
       const extraOldIds = Object.values(oldIdsByType).flat()
-      if (extraOldIds.length > 0) {
-        await entu.db.collection('property').updateMany(
-          { _id: { $in: extraOldIds }, entity: entityId, deleted: { $exists: false } },
-          { $set: { deleted: { at: new Date(), by: entu.user } } }
-        )
-      }
 
-      // setEntity validates access, inserts props (deleting old via _id tags), and re-aggregates
-      await setEntity(entu, entityId, taggedProps)
+      // setEntity validates access, inserts props (deleting old via _id tags and deleteIds), and re-aggregates
+      await setEntity(entu, entityId, taggedProps, { deleteIds: extraOldIds })
       await triggerWebhooks(entu, entityId, 'entity-edit-webhook')
 
       const entity = await entu.db.collection('entity').findOne({ _id: entityId })
