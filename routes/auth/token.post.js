@@ -88,6 +88,7 @@ export default defineEventHandler(async (event) => {
   const auth = await authExchange(event, {
     account: code.account,
     bindIp: false,
+    offerRename: false,
     sessionId: code.session
   }).catch(() => {})
 

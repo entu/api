@@ -33,7 +33,8 @@ export function authReadToken (event, account) {
 
 // Exchanges a credential - an API key or a session - for a 12-hour access token. The shared body of GET /auth, the
 // passkey routes and the OAuth token endpoint; `bindIp: false` issues a token an OAuth client can use from its servers.
-export async function authExchange (event, { account, bindIp = true, invite, key, sessionId }) {
+// `offerRename: false` is for a response that never reaches the passkey's own client, so no rename is recorded for it.
+export async function authExchange (event, { account, bindIp = true, invite, key, offerRename = true, sessionId }) {
   const credential = await resolveCredential(event, key, sessionId)
   const identity = credential.session ? sessionIdentity(credential.session) : undefined
 
@@ -63,10 +64,17 @@ export async function authExchange (event, { account, bindIp = true, invite, key
     : undefined
 
   const allAccounts = created ? [{ account: onlyForAccount, userId: created._id, userName: created.name, new: true }] : accounts
+  const user = identity ? authIdentity(identity, allAccounts) : {}
+
+  // A passkey starts out as "Entu" in the password manager; a client that can rename it is told the person name once, and again only when it changes
+  const rename = offerRename && credential.session?.user?.rename && user.provider === 'passkey' && user.name
+    ? await passkeyRename(user.uid, user.passkeyPublic, user.name)
+    : undefined
 
   return {
-    ...authIssueToken(event, { accounts: allAccounts, bindIp, user: identity ? authIdentity(identity, allAccounts) : {} }),
-    ...(accepted.conflict ? { conflict: 'invite' } : {})
+    ...authIssueToken(event, { accounts: allAccounts, bindIp, user }),
+    ...(accepted.conflict ? { conflict: 'invite' } : {}),
+    ...(rename ? { rename } : {})
   }
 }
 

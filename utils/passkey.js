@@ -131,19 +131,37 @@ export async function passkeyVerifyRegister (event, body) {
 export async function passkeyFinish (event, identity, body) {
   const ip = authRequestIp(event)
 
+  // `rename: true` says the client can rename the passkey in its password manager, so the exchange may ask it to
+  const user = body.rename === true ? { ...identity, rename: true } : identity
+
   if (body.state) {
-    const sessionId = await oauthCreateSession(ip, identity, { pending: true })
+    const sessionId = await oauthCreateSession(ip, user, { pending: true })
 
     return { code: oauthSignPasskeyCode(event, sessionId, body.state) }
   }
 
-  const sessionId = await oauthCreateSession(ip, identity)
+  const sessionId = await oauthCreateSession(ip, user)
 
   return await authExchange(event, {
     account: typeof body.db === 'string' && body.db ? formatDatabaseName(body.db) : undefined,
     invite: typeof body.invite === 'string' && body.invite ? body.invite : undefined,
     sessionId
   })
+}
+
+// Records `name` as the passkey's password-manager name on every person it is stored on; returns it when it changed, so the client renames once
+export async function passkeyRename (credentialId, publicKey, name) {
+  const matches = (await findCredential(credentialId)).filter(({ property }) => property.passkey_public === publicKey)
+
+  if (matches.length === 0 || matches.every(({ property }) => property.passkey_name === name)) return
+
+  await Promise.all(matches.map(async ({ account, db, personId, property }) => {
+    await db.collection('property').updateOne({ _id: property._id }, { $set: { passkey_name: name } })
+
+    await aggregateEntity({ account, user: personId, userStr: personId.toString(), db }, personId)
+  }))
+
+  return name
 }
 
 // The label a passkey's entu_user value shows - its device name plus the last four characters of its id
