@@ -28,9 +28,9 @@ export function oauthApiUrl (event) {
 export function oauthStartLogin (event, { provider, register = false, state = {} } = {}) {
   const { appUrl, oauthId } = useRuntimeConfig(event)
   const { lang, next } = getQuery(event)
-  const signedState = tokenSign(event, 'state', { next, ...state, provider, ...(register ? { register } : {}) }, { bindIp: true, expiresIn: '5m' })
+  const signedState = tokenSign(event, 'state', { next, ...state, provider }, { bindIp: true, expiresIn: '5m' })
 
-  // The webapp pages stand in for oauth.ee - they run the passkey prompt and return to /auth/callback the same way
+  // The webapp pages stand in for oauth.ee - they run the passkey prompt and return to /auth/callback the same way; `register` only picks the page
   if (provider === 'passkey') {
     const url = new URL(register ? '/auth/passkey-register' : '/auth/passkey-sign-in', appUrl)
 
@@ -96,16 +96,16 @@ export function oauthSignPasskeyCode (event, sessionId, state) {
   return tokenSign(event, 'passkey-code', { session: sessionId, state: hashState(state) }, { bindIp: true, expiresIn: '1m' })
 }
 
-// Checks the state a passkey page sends belongs to a passkey login of this kind (sign-in or create) started from this browser
-export function oauthVerifyPasskeyState (event, state, { register = false } = {}) {
+// Checks the state a passkey page sends belongs to a passkey login started from this browser
+export function oauthVerifyPasskeyState (event, state) {
   const payload = tokenVerify(event, 'state', state, { bindIp: true })
 
   if (!payload) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid or expired login state' })
   }
 
-  if (payload.provider !== 'passkey' || !!payload.register !== register) {
-    throw createError({ statusCode: 400, statusMessage: 'Not a login state for this passkey step' })
+  if (payload.provider !== 'passkey') {
+    throw createError({ statusCode: 400, statusMessage: 'Not a passkey login state' })
   }
 }
 

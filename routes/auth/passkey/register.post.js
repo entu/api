@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
 
   // Checked before verifying, so a passkey created for a login from another browser never creates a session
   if (body.state) {
-    oauthVerifyPasskeyState(event, body.state, { register: true })
+    oauthVerifyPasskeyState(event, body.state)
   }
 
   return await passkeyFinish(event, await passkeyVerifyRegister(event, body), body)
