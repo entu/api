@@ -22,12 +22,13 @@ export async function getThumbnail (account, entityId, photo, size) {
   const metadata = await getThumbnailMetadata(thumbnailKey)
 
   if (metadata) {
-    const isStored = metadata.color === NO_COLOR || COLOR_PATTERN.test(metadata.color)
-    const color = isStored ? metadata.color : await addThumbnailColor(thumbnailKey)
+    if (metadata.color !== NO_COLOR && !COLOR_PATTERN.test(metadata.color)) {
+      addThumbnailColor(thumbnailKey)
+    }
 
     return {
       url: await getSignedThumbnailUrl(thumbnailKey),
-      color: COLOR_PATTERN.test(color) ? color : undefined
+      color: COLOR_PATTERN.test(metadata.color) ? metadata.color : undefined
     }
   }
 
@@ -63,25 +64,26 @@ export async function getThumbnail (account, entityId, photo, size) {
   }
 }
 
-// Computes and stores the dominant color of a thumbnail made before colors were stored; a failure only leaves the color out.
+// Thumbnail keys whose color is being added, or failed to store, in this process; each is attempted once so a refused copy cannot repeat the work.
+const colorBackfills = new Set()
+
+// Adds the dominant color to a thumbnail made before colors were stored, in the background; the request that triggers it is answered without a color.
 async function addThumbnailColor (key) {
-  let color
+  if (colorBackfills.has(key)) return
+
+  colorBackfills.add(key)
 
   try {
-    color = getDominantColor(await Jimp.read(await getThumbnailBuffer(key)))
-  }
-  catch {
-    return NO_COLOR
-  }
+    const color = getDominantColor(await Jimp.read(await getThumbnailBuffer(key)))
 
-  try {
     await setThumbnailColor(key, 'image/jpeg', color)
-  }
-  catch {
-    // Storing is an optimization; the computed color is still returned.
-  }
 
-  return color
+    colorBackfills.delete(key)
+  }
+  catch (error) {
+    // The color stays missing until the API restarts; the thumbnail itself is unaffected.
+    loggerError(`thumbnail color not stored for ${key}: ${error.message}`)
+  }
 }
 
 // Same parameters as the native app's CIKMeans call in `dominantRGB`.
