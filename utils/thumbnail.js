@@ -5,9 +5,11 @@ const MAX_SOURCE_BYTES = 25 * 1024 * 1024
 const MAX_RENDER_DIM = 2000
 const MAX_PIXELS = 40000000
 
-// Returns a signed URL for the square thumbnail of an entity's photo file at
-// the given size, generating and caching it in the thumbnails bucket on first
-// request. Throws on unsupported or undecodable source files.
+// Stored when a thumbnail has no colorful dominant color, so it is not recomputed on every request.
+const NO_COLOR = 'none'
+const COLOR_PATTERN = /^#[\da-f]{6}$/
+
+// Returns a signed URL and the dominant color (#rrggbb, omitted when none) of a file's square thumbnail, generating and caching it on first request.
 export async function getThumbnail (account, entityId, photo, size) {
   if (!isPreviewableFile(photo)) {
     throw createError({
@@ -17,9 +19,16 @@ export async function getThumbnail (account, entityId, photo, size) {
   }
 
   const thumbnailKey = getThumbnailKey(account, entityId, photo, size)
+  const metadata = await getThumbnailMetadata(thumbnailKey)
 
-  if (await thumbnailExists(thumbnailKey)) {
-    return await getSignedThumbnailUrl(thumbnailKey)
+  if (metadata) {
+    const isStored = metadata.color === NO_COLOR || COLOR_PATTERN.test(metadata.color)
+    const color = isStored ? metadata.color : await addThumbnailColor(thumbnailKey)
+
+    return {
+      url: await getSignedThumbnailUrl(thumbnailKey),
+      color: COLOR_PATTERN.test(color) ? color : undefined
+    }
   }
 
   let source
@@ -44,14 +53,160 @@ export async function getThumbnail (account, entityId, photo, size) {
   const isPdf = (contentType || '').toLowerCase() === 'application/pdf'
     || source.subarray(0, 5).toString('latin1') === '%PDF-'
 
-  const thumbnail = await renderThumbnail(source, isPdf, size)
+  const { buffer, color } = await renderThumbnail(source, isPdf, size)
 
-  await putThumbnail(thumbnailKey, thumbnail, 'image/jpeg')
+  await putThumbnail(thumbnailKey, buffer, 'image/jpeg', color)
 
-  return await getSignedThumbnailUrl(thumbnailKey)
+  return {
+    url: await getSignedThumbnailUrl(thumbnailKey),
+    color: COLOR_PATTERN.test(color) ? color : undefined
+  }
 }
 
-// Renders a source image or PDF buffer to a square, center cover-cropped JPEG.
+// Computes and stores the dominant color of a thumbnail made before colors were stored; a failure only leaves the color out.
+async function addThumbnailColor (key) {
+  let color
+
+  try {
+    color = getDominantColor(await Jimp.read(await getThumbnailBuffer(key)))
+  }
+  catch {
+    return NO_COLOR
+  }
+
+  try {
+    await setThumbnailColor(key, 'image/jpeg', color)
+  }
+  catch {
+    // Storing is an optimization; the computed color is still returned.
+  }
+
+  return color
+}
+
+// Same parameters as the native app's CIKMeans call in `dominantRGB`.
+const KMEANS_CLUSTERS = 6
+const KMEANS_PASSES = 10
+
+// Clustering runs on a downscaled copy; 4096 pixels are ample for 6 clusters and keep the event loop free.
+const KMEANS_SAMPLE_SIZE = 64
+
+// The native app's `dominantRGB`: k-means (6 clusters, 10 passes) in linear RGB, clusters ranked by pixel share, the heaviest colorful one wins, else the heaviest; as sRGB #rrggbb.
+function getDominantColor (image) {
+  const { data } = image.clone().resize({ w: KMEANS_SAMPLE_SIZE, h: KMEANS_SAMPLE_SIZE }).bitmap
+  const pixels = []
+
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] === 0) continue
+
+    pixels.push([toLinear(data[i] / 255), toLinear(data[i + 1] / 255), toLinear(data[i + 2] / 255)])
+  }
+
+  if (pixels.length === 0) {
+    return NO_COLOR
+  }
+
+  const means = seedMeans(pixels, KMEANS_CLUSTERS)
+  let counts = []
+
+  for (let pass = 0; pass < KMEANS_PASSES; pass++) {
+    const sums = means.map(() => [0, 0, 0])
+
+    counts = means.map(() => 0)
+
+    for (const pixel of pixels) {
+      const nearest = nearestMean(means, pixel)
+
+      counts[nearest]++
+      sums[nearest][0] += pixel[0]
+      sums[nearest][1] += pixel[1]
+      sums[nearest][2] += pixel[2]
+    }
+
+    for (const [index, sum] of sums.entries()) {
+      if (counts[index] === 0) continue
+
+      means[index] = sum.map((x) => x / counts[index])
+    }
+  }
+
+  const clusters = means
+    .map((mean, index) => ({ weight: counts[index], red: toSrgb(mean[0]), green: toSrgb(mean[1]), blue: toSrgb(mean[2]) }))
+    .filter((x) => x.weight > 0)
+    .sort((a, b) => b.weight - a.weight)
+
+  const winner = clusters.find(isColorful) || clusters.at(0)
+
+  return `#${[winner.red, winner.green, winner.blue].map((x) => Math.round(x * 255).toString(16).padStart(2, '0')).join('')}`
+}
+
+// Deterministic farthest-point seeding: the average color first, then repeatedly the pixel farthest from every chosen mean.
+function seedMeans (pixels, count) {
+  const average = [0, 1, 2].map((channel) => pixels.reduce((sum, x) => sum + x[channel], 0) / pixels.length)
+  const means = [average]
+
+  while (means.length < count) {
+    let farthest = pixels.at(0)
+    let farthestDistance = -1
+
+    for (const pixel of pixels) {
+      const distance = colorDistance(pixel, means[nearestMean(means, pixel)])
+
+      if (distance > farthestDistance) {
+        farthest = pixel
+        farthestDistance = distance
+      }
+    }
+
+    means.push([...farthest])
+  }
+
+  return means
+}
+
+// Returns the index of the mean closest to the pixel.
+function nearestMean (means, pixel) {
+  let nearest = 0
+  let nearestDistance = Infinity
+
+  for (const [index, mean] of means.entries()) {
+    const distance = colorDistance(pixel, mean)
+
+    if (distance < nearestDistance) {
+      nearest = index
+      nearestDistance = distance
+    }
+  }
+
+  return nearest
+}
+
+function colorDistance (a, b) {
+  return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2
+}
+
+// sRGB → linear transfer, the working space CIKMeans clusters in.
+function toLinear (value) {
+  return value <= 0.040_45 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+}
+
+// Linear → sRGB transfer, as the native app applies to the cluster colors.
+function toSrgb (value) {
+  const v = Math.min(Math.max(value, 0), 1)
+
+  return v <= 0.003_130_8 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055
+}
+
+// The native app's rule: saturated and not near-black, so it can carry the entity's identity on a header.
+function isColorful ({ red, green, blue }) {
+  const max = Math.max(red, green, blue)
+  const min = Math.min(red, green, blue)
+  const saturation = max === 0 ? 0 : (max - min) / max
+
+  return saturation >= 0.15 && max >= 0.15
+}
+
+// Renders a source image or PDF buffer to a square, center cover-cropped JPEG and its dominant color.
 async function renderThumbnail (source, isPdf, size) {
   try {
     // Normalize source to a raster buffer Jimp can read.
@@ -79,7 +234,10 @@ async function renderThumbnail (source, isPdf, size) {
 
     image.cover({ w: size, h: size })
 
-    return await image.getBuffer('image/jpeg')
+    return {
+      buffer: await image.getBuffer('image/jpeg'),
+      color: getDominantColor(image)
+    }
   }
   catch (error) {
     if (error.statusCode) {

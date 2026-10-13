@@ -37,13 +37,14 @@ defineRouteMeta({
     ],
     responses: {
       200: {
-        description: 'Signed thumbnail download URL',
+        description: 'Signed thumbnail download URL and its dominant color',
         content: {
           'application/json': {
             schema: {
               type: 'object',
               properties: {
-                url: { type: 'string', description: 'Signed URL, valid 60 seconds' }
+                url: { type: 'string', description: 'Signed URL, valid 60 seconds' },
+                color: { type: 'string', description: 'Dominant color of the thumbnail as #rrggbb; omitted when the image has no colorful color' }
               },
               required: ['url']
             }
@@ -138,5 +139,5 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  return { url: await getThumbnail(entu.account, entity._id, photo, size) }
+  return await getThumbnail(entu.account, entity._id, photo, size)
 })

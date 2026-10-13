@@ -1,4 +1,4 @@
-import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { CopyObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 let s3Client
@@ -69,27 +69,37 @@ export async function getFileBuffer (account, entityId, property, maxBytes) {
   }
 }
 
-// Returns true if a thumbnail object already exists in the thumbnails bucket.
-export async function thumbnailExists (key) {
+// Returns a thumbnail object's metadata ({ color } may be missing on older thumbnails), or undefined if the thumbnail does not exist.
+export async function getThumbnailMetadata (key) {
   const { s3BucketThumbnails } = useRuntimeConfig()
 
   try {
-    await getS3Client().send(new HeadObjectCommand({
+    const response = await getS3Client().send(new HeadObjectCommand({
       Bucket: s3BucketThumbnails,
       Key: key
     }))
 
-    return true
+    return response.Metadata || {}
   }
   catch {
-    return false
+    return
   }
 }
 
-// Uploads a generated thumbnail to the thumbnails bucket. The object is
-// immutable for its key (keyed by file property _id + size), so it carries a
-// long immutable Cache-Control for browsers/CDNs fetching the signed URL.
-export async function putThumbnail (key, body, contentType) {
+// Downloads a thumbnail object's bytes.
+export async function getThumbnailBuffer (key) {
+  const { s3BucketThumbnails } = useRuntimeConfig()
+
+  const response = await getS3Client().send(new GetObjectCommand({
+    Bucket: s3BucketThumbnails,
+    Key: key
+  }))
+
+  return Buffer.from(await response.Body.transformToByteArray())
+}
+
+// Uploads a generated thumbnail with its dominant color as object metadata; keyed by file _id and size, so it is cached as immutable.
+export async function putThumbnail (key, body, contentType, color) {
   const { s3BucketThumbnails } = useRuntimeConfig()
 
   await getS3Client().send(new PutObjectCommand({
@@ -98,7 +108,24 @@ export async function putThumbnail (key, body, contentType) {
     ACL: 'private',
     ContentType: contentType,
     CacheControl: 'public, max-age=31536000, immutable',
+    Metadata: { color },
     Body: body
+  }))
+}
+
+// Adds the dominant color to an existing thumbnail's metadata by copying the object onto itself.
+export async function setThumbnailColor (key, contentType, color) {
+  const { s3BucketThumbnails } = useRuntimeConfig()
+
+  await getS3Client().send(new CopyObjectCommand({
+    Bucket: s3BucketThumbnails,
+    Key: key,
+    CopySource: encodeURI(`${s3BucketThumbnails}/${key}`),
+    MetadataDirective: 'REPLACE',
+    ACL: 'private',
+    ContentType: contentType,
+    CacheControl: 'public, max-age=31536000, immutable',
+    Metadata: { color }
   }))
 }
 
