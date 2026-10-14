@@ -1,5 +1,10 @@
-import { Jimp } from 'jimp'
+import { createJimp } from '@jimp/core'
+import webp from '@jimp/wasm-webp'
+import { defaultFormats, defaultPlugins } from 'jimp'
 import * as mupdf from 'mupdf'
+
+// Jimp's default formats plus WebP, which it only decodes through the WASM plugin.
+const Jimp = createJimp({ formats: [...defaultFormats, webp], plugins: defaultPlugins })
 
 const MAX_SOURCE_BYTES = 25 * 1024 * 1024
 const MAX_RENDER_DIM = 2000
@@ -236,8 +241,11 @@ async function renderThumbnail (source, isPdf, size) {
 
     image.cover({ w: size, h: size })
 
+    // JPEG has no alpha, so transparent pixels would encode as black; flatten onto white first.
+    const flattened = new Jimp({ width: size, height: size, color: 0xFF_FF_FF_FF }).composite(image)
+
     return {
-      buffer: await image.getBuffer('image/jpeg'),
+      buffer: await flattened.getBuffer('image/jpeg'),
       color: getDominantColor(image)
     }
   }
