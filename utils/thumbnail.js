@@ -1,10 +1,21 @@
-import { createJimp } from '@jimp/core'
-import webp from '@jimp/wasm-webp'
-import { defaultFormats, defaultPlugins } from 'jimp'
+import decodeHeic from 'heic-decode'
 import * as mupdf from 'mupdf'
+import sharp from 'sharp'
 
-// Jimp's default formats plus WebP, which it only decodes through the WASM plugin.
-const Jimp = createJimp({ formats: [...defaultFormats, webp], plugins: defaultPlugins })
+// Untrusted uploads may reach only the buffer loaders of the formats we thumbnail; libvips' own, CSV, matrix and other loaders stay blocked. Raw input needs no loader.
+sharp.block({ operation: ['VipsForeignLoad'] })
+sharp.unblock({
+  operation: [
+    'VipsForeignLoadJpegBuffer',
+    'VipsForeignLoadUhdrBuffer',
+    'VipsForeignLoadPngBuffer',
+    'VipsForeignLoadWebpBuffer',
+    'VipsForeignLoadNsgifBuffer',
+    'VipsForeignLoadTiffBuffer',
+    'VipsForeignLoadHeifBuffer',
+    'VipsForeignLoadSvgBuffer'
+  ]
+})
 
 const MAX_SOURCE_BYTES = 25 * 1024 * 1024
 const MAX_RENDER_DIM = 2000
@@ -53,13 +64,7 @@ export async function getThumbnail (account, entityId, photo, size) {
     })
   }
 
-  // Route on the actual bytes / S3 ContentType rather than DB metadata, which
-  // legacy files may lack. PDFs start with the `%PDF-` magic; everything else
-  // goes to Jimp, which validates real image bytes and rejects anything else.
-  const isPdf = (contentType || '').toLowerCase() === 'application/pdf'
-    || source.subarray(0, 5).toString('latin1') === '%PDF-'
-
-  const { buffer, color } = await renderThumbnail(source, isPdf, size)
+  const { buffer, color } = await renderThumbnail(source, contentType, size, thumbnailKey)
 
   await putThumbnail(thumbnailKey, buffer, 'image/jpeg', color)
 
@@ -79,7 +84,7 @@ async function addThumbnailColor (key) {
   colorBackfills.add(key)
 
   try {
-    const color = getDominantColor(await Jimp.read(await getThumbnailBuffer(key)))
+    const color = await getDominantColor(sharp(await getThumbnailBuffer(key)))
 
     await setThumbnailColor(key, 'image/jpeg', color)
 
@@ -99,8 +104,8 @@ const KMEANS_PASSES = 10
 const KMEANS_SAMPLE_SIZE = 64
 
 // The native app's `dominantRGB`: k-means (6 clusters, 10 passes) in linear RGB, clusters ranked by pixel share, the heaviest colorful one wins, else the heaviest; as sRGB #rrggbb.
-function getDominantColor (image) {
-  const { data } = image.clone().resize({ w: KMEANS_SAMPLE_SIZE, h: KMEANS_SAMPLE_SIZE }).bitmap
+async function getDominantColor (image) {
+  const data = await image.resize(KMEANS_SAMPLE_SIZE, KMEANS_SAMPLE_SIZE, { fit: 'fill' }).ensureAlpha().raw().toBuffer()
   const pixels = []
 
   for (let i = 0; i < data.length; i += 4) {
@@ -213,40 +218,31 @@ function isColorful ({ red, green, blue }) {
   return saturation >= 0.15 && max >= 0.15
 }
 
+// ISO BMFF brands of HEVC-coded HEIF; AVIF shares the container but sharp decodes it itself.
+const HEVC_BRANDS = new Set(['heic', 'heix', 'hevc', 'hevx'])
+const FTYP_MAX_BYTES = 256
+
 // Renders a source image or PDF buffer to a square, center cover-cropped JPEG and its dominant color.
-async function renderThumbnail (source, isPdf, size) {
+async function renderThumbnail (source, contentType, size, key) {
   try {
-    // Normalize source to a raster buffer Jimp can read.
-    let raster = source
+    const { input, options } = await getSharpInput(source, contentType)
+    const { width, height } = await sharp(input, { ...options, limitInputPixels: MAX_PIXELS }).metadata()
 
-    if (isPdf) {
-      const doc = mupdf.Document.openDocument(source, 'application/pdf')
-      const page = doc.loadPage(0)
-      const [x0, y0, x1, y1] = page.getBounds()
-      const maxSide = Math.max(x1 - x0, y1 - y0)
-      const scale = maxSide > MAX_RENDER_DIM ? MAX_RENDER_DIM / maxSide : 1
-      const pixmap = page.toPixmap(mupdf.Matrix.scale(scale, scale), mupdf.ColorSpace.DeviceRGB, false)
+    assertPixelLimit(width, height)
 
-      raster = Buffer.from(pixmap.asPNG())
-    }
+    // The square crop is kept as raw RGBA so the JPEG and the color sample both start from it; sharp allows one resize per pipeline.
+    const { data, info } = await sharp(input, { ...options, autoOrient: true, limitInputPixels: MAX_PIXELS })
+      .resize(size, size, { fit: 'cover' })
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true })
 
-    const image = await Jimp.read(raster)
-
-    if (image.bitmap.width * image.bitmap.height > MAX_PIXELS) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Image dimensions too large to process'
-      })
-    }
-
-    image.cover({ w: size, h: size })
-
-    // JPEG has no alpha, so transparent pixels would encode as black; flatten onto white first.
-    const flattened = new Jimp({ width: size, height: size, color: 0xFF_FF_FF_FF }).composite(image)
+    const raw = { raw: { width: info.width, height: info.height, channels: info.channels } }
 
     return {
-      buffer: await flattened.getBuffer('image/jpeg'),
-      color: getDominantColor(image)
+      // JPEG has no alpha, so transparent pixels would encode as black; flatten onto white first.
+      buffer: await sharp(data, raw).flatten({ background: '#ffffff' }).jpeg().toBuffer(),
+      color: await getDominantColor(sharp(data, raw))
     }
   }
   catch (error) {
@@ -254,9 +250,105 @@ async function renderThumbnail (source, isPdf, size) {
       throw error
     }
 
+    loggerError(`thumbnail not generated for ${key}: ${error.message}`)
+
     throw createError({
       statusCode: 400,
       statusMessage: 'Unable to generate thumbnail from file'
     })
   }
+}
+
+// Routes on the file's bytes and S3 ContentType, not DB metadata, which legacy files may lack; formats sharp cannot read are decoded first, the rest pass as-is.
+async function getSharpInput (source, contentType) {
+  if ((contentType || '').toLowerCase() === 'application/pdf' || source.subarray(0, 5).toString('latin1') === '%PDF-') {
+    return { input: renderFirstPage(source, 'application/pdf') }
+  }
+
+  if (source.toString('latin1', 0, 2) === 'BM') {
+    // MuPDF decodes the whole bitmap before its size is known, so check the dimensions in the DIB header first.
+    if (source.length < 26) {
+      throw new Error('BMP header truncated')
+    }
+
+    // OS/2 BITMAPCOREHEADER (12 bytes) stores 16-bit dimensions; every later header stores signed 32-bit ones.
+    if (source.readUInt32LE(14) === 12) {
+      assertPixelLimit(source.readUInt16LE(18), source.readUInt16LE(20))
+    }
+    else {
+      assertPixelLimit(Math.abs(source.readInt32LE(18)), Math.abs(source.readInt32LE(22)))
+    }
+
+    return { input: renderFirstPage(source, 'image/bmp') }
+  }
+
+  if (isHevcHeif(source)) {
+    return await decodeHevcHeif(source)
+  }
+
+  return { input: source }
+}
+
+// Throws 400 when an image's pixel count is unknown or above MAX_PIXELS.
+function assertPixelLimit (width, height) {
+  if (width > 0 && height > 0 && width * height <= MAX_PIXELS) return
+
+  throw createError({
+    statusCode: 400,
+    statusMessage: 'Image dimensions too large to process'
+  })
+}
+
+// Decodes the primary HEVC HEIF image to raw RGBA sharp input, checking its declared size before any pixel buffer is allocated.
+async function decodeHevcHeif (source) {
+  const images = await decodeHeic.all({ buffer: source })
+
+  try {
+    const [image] = images
+
+    assertPixelLimit(image.width, image.height)
+
+    const { width, height, data } = await image.decode()
+
+    return {
+      input: Buffer.from(data.buffer, data.byteOffset, data.byteLength),
+      options: { raw: { width, height, channels: 4 } }
+    }
+  }
+  finally {
+    images.dispose()
+  }
+}
+
+// Renders the first page of a document or image MuPDF opens (PDF, BMP) to a PNG, its longest side capped at MAX_RENDER_DIM.
+function renderFirstPage (source, magic) {
+  const page = mupdf.Document.openDocument(source, magic).loadPage(0)
+  const [x0, y0, x1, y1] = page.getBounds()
+  const maxSide = Math.max(x1 - x0, y1 - y0)
+  const scale = maxSide > MAX_RENDER_DIM ? MAX_RENDER_DIM / maxSide : 1
+  const pixmap = page.toPixmap(mupdf.Matrix.scale(scale, scale), mupdf.ColorSpace.DeviceRGB, false)
+
+  return Buffer.from(pixmap.asPNG())
+}
+
+// Whether the source is HEIF holding HEVC images, by the major and compatible brands of its leading ftyp box.
+function isHevcHeif (source) {
+  if (source.length < 16 || source.subarray(4, 8).toString('latin1') !== 'ftyp') {
+    return false
+  }
+
+  if (HEVC_BRANDS.has(source.toString('latin1', 8, 12))) {
+    return true
+  }
+
+  // Real ftyp boxes list a handful of brands; the cap keeps a forged box size from scanning the whole file.
+  const boxEnd = Math.min(source.readUInt32BE(0), source.length, FTYP_MAX_BYTES)
+
+  for (let offset = 16; offset + 4 <= boxEnd; offset += 4) {
+    if (HEVC_BRANDS.has(source.toString('latin1', offset, offset + 4))) {
+      return true
+    }
+  }
+
+  return false
 }
