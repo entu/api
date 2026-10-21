@@ -209,6 +209,7 @@ async function createDatabaseIndexes (db) {
     db.collection('entity').createIndexes([
       { key: { 'private._parent.reference': 1 } },
       { key: { 'private._reference.reference': 1 } },
+      { key: { 'private._type.reference': 1 } },
       { key: { 'private._type.string': 1 } },
       { key: { 'private.add_from.reference': 1 } },
       { key: { 'auth.api.string': 1 }, sparse: true },

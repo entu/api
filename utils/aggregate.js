@@ -13,6 +13,9 @@ export async function aggregateEntity (entu, entityId) {
       'private._sharing': true,
       'private._inheritrights': true,
       'private._reference': true,
+      'private.search': true,
+      'private.formula': true,
+      'private.multilingual': true,
       'private._noaccess': true,
       'private._viewer': true,
       'private._expander': true,
@@ -499,6 +502,10 @@ async function startRelativeAggregation (entu, oldEntity, newEntity) {
     return 0
   }
 
+  // Type and property definition changes re-queue every entity of the affected types
+  const typeIds = getChangedTypeIds(oldEntity, newEntity)
+  const typeQueued = typeIds.length > 0 ? await addTypeAggregateQueue(entu, typeIds) : 0
+
   // Collect referrer IDs once (entities whose properties point to this entity).
   // Reused for both name-change propagation and formula Case 2 below.
   const referrerIds = await entu.db.collection('property').distinct(
@@ -563,12 +570,59 @@ async function startRelativeAggregation (entu, oldEntity, newEntity) {
   ids = uniqBy(ids, (x) => x.toString())
 
   if (ids.length === 0) {
-    return 0
+    return typeQueued
   }
 
   await addAggregateQueue(entu, ids)
 
-  return ids.length
+  return ids.length + typeQueued
+}
+
+// Returns the ids of types whose entities must re-aggregate because this entity changed as a type or a property definition
+function getChangedTypeIds (oldEntity, newEntity) {
+  // Any entity can be used as a _type, so a sharing change is checked on every entity
+  const typeIds = getValuesKey(oldEntity, '_sharing') === getValuesKey(newEntity, '_sharing') ? [] : [oldEntity._id]
+  const isDefinition = [oldEntity, newEntity].some((x) => x.private?._type?.some((t) => t.string === 'property'))
+
+  if (!isDefinition) {
+    return typeIds
+  }
+
+  // Only the definition fields aggregation reads; one it starts reading must be added here, multilingual matters only for formulas
+  const hasFormula = [oldEntity, newEntity].some((x) => x.private?.formula?.length > 0)
+  const fields = ['name', '_sharing', 'search', 'formula', '_parent', '_type', ...hasFormula ? ['multilingual'] : []]
+
+  if (fields.every((field) => getValuesKey(oldEntity, field) === getValuesKey(newEntity, field))) {
+    return typeIds
+  }
+
+  const parentIds = [...oldEntity.private?._parent || [], ...newEntity.private?._parent || []].map((x) => x.reference)
+
+  return uniqBy([...typeIds, ...parentIds], (x) => x.toString())
+}
+
+// Returns a comparable key of a property's values, references by id only so a renamed parent does not count as a change
+function getValuesKey (entity, field) {
+  return (entity.private?.[field] || [])
+    .map((x) => x.reference ? x.reference.toString() : JSON.stringify([x.language, x.string, x.number, x.boolean]))
+    .sort()
+    .join('|')
+}
+
+// Marks every local entity of the given types as queued for background aggregation and returns how many
+async function addTypeAggregateQueue (entu, typeIds) {
+  // Already queued entities keep their place, so repeated definition edits cannot push pending work back
+  const { matchedCount } = await entu.db.collection('entity').updateMany({
+    'private._type.reference': { $in: typeIds },
+    _origin_db: { $exists: false },
+    queued: { $exists: false }
+  }, {
+    $set: {
+      queued: new Date()
+    }
+  })
+
+  return matchedCount
 }
 
 // Marks entities as queued for background aggregation
