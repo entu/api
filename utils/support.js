@@ -31,7 +31,7 @@ export async function getSupportGrant (db) {
 }
 
 // Databases with a running support grant for a support identity, leaving out those it is a person in - { account, databaseId, until } entries
-export async function findSupportAccounts (identity, ownAccounts = [], onlyForAccount) {
+export async function findSupportAccounts (identity, ownAccounts = [], onlyForAccounts = []) {
   if (!isSupportIdentity(identity)) {
     return []
   }
@@ -41,7 +41,7 @@ export async function findSupportAccounts (identity, ownAccounts = [], onlyForAc
 
   const results = await Promise.all(
     dbs.databases
-      .filter(({ name: account }) => !mongoDbSystemDbs.includes(account) && !ownAccounts.includes(account) && (!onlyForAccount || onlyForAccount === account))
+      .filter(({ name: account }) => !mongoDbSystemDbs.includes(account) && !ownAccounts.includes(account) && (onlyForAccounts.length === 0 || onlyForAccounts.includes(account)))
       .map(async ({ name: account }) => {
         const grant = await getSupportGrant(await connectDb(account))
 

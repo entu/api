@@ -85,8 +85,16 @@ export default defineEventHandler(async (event) => {
 
   // The code carries only the session id, so nothing here is a credential an interceptor could have used. The issued
   // JWT is not bound to an address - an OAuth client calls from its own servers, never from the browser
+  // A code names one database from the authorization request, or the databases the user picked on the consent page - never none, which would mean all
+  const databases = code.accounts || [code.account]
+
+  if (databases.length === 0 || databases.some((database) => typeof database !== 'string' || !database)) {
+    throw oauthError('invalid_grant', 'Code names no database')
+  }
+
   const auth = await authExchange(event, {
     account: code.account,
+    accounts: code.accounts,
     bindIp: false,
     listSupport: false,
     offerRename: false,
@@ -97,8 +105,10 @@ export default defineEventHandler(async (event) => {
     throw oauthError('invalid_grant', 'Session could not be exchanged')
   }
 
-  if (!auth.accounts?.some((account) => account._id === code.account)) {
-    throw oauthError('invalid_grant', `No access to database ${code.account}`)
+  for (const database of databases) {
+    if (!auth.accounts?.some((account) => account._id === database)) {
+      throw oauthError('invalid_grant', `No access to database ${database}`)
+    }
   }
 
   return {

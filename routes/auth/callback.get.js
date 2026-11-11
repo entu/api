@@ -23,20 +23,17 @@ export default defineEventHandler(async (event) => {
     return { key: login.token }
   }
 
-  const url = new URL(login.state.redirectUri)
+  // Every authorization goes to the webapp consent page, which completes it at /auth/consent - a sign-in alone never hands a client a code
+  const url = new URL('/auth/consent', useRuntimeConfig(event).appUrl)
 
-  // The session id, never its token — a JWT is readable, so a code carrying the token would hand an interceptor a
-  // working credential and make PKCE pointless
-  url.searchParams.set('code', oauthSign(event, 'code', {
-    account: login.state.account,
+  url.searchParams.set('consent', oauthSignConsent(event, {
+    ...(login.state.account ? { account: login.state.account } : {}),
+    clientName: login.state.clientName,
+    clientState: login.state.clientState,
     codeChallenge: login.state.codeChallenge,
     redirectUri: login.state.redirectUri,
     session: login.id
   }))
-
-  if (login.state.clientState) {
-    url.searchParams.set('state', login.state.clientState)
-  }
 
   return sendRedirect(event, url.toString(), 302)
 })

@@ -1,5 +1,5 @@
-// Scans all account databases for person entities matching the given identity (API key hash, passkey id + key, or OAuth uid+provider with legacy email fallback) and returns { account, userId, userName } entries
-export async function findUserAccounts ({ apiKeyHash, uid, provider, email, passkeyPublic } = {}, onlyForAccount) {
+// Scans all account databases (or only `onlyForAccounts`) for person entities matching the given identity (API key hash, passkey id + key, or OAuth uid+provider with legacy email fallback) and returns { account, userId, userName } entries
+export async function findUserAccounts ({ apiKeyHash, uid, provider, email, passkeyPublic } = {}, onlyForAccounts = []) {
   // Harden Mongo filters: only scalar strings may reach the queries — anything else counts as absent
   apiKeyHash = typeof apiKeyHash === 'string' ? apiKeyHash : undefined
   uid = typeof uid === 'string' ? uid : undefined
@@ -21,7 +21,7 @@ export async function findUserAccounts ({ apiKeyHash, uid, provider, email, pass
 
   const results = await Promise.all(
     dbs.databases
-      .filter(({ name: account }) => !mongoDbSystemDbs.includes(account) && (!onlyForAccount || onlyForAccount === account))
+      .filter(({ name: account }) => !mongoDbSystemDbs.includes(account) && (onlyForAccounts.length === 0 || onlyForAccounts.includes(account)))
       .map(async ({ name: account }) => {
         const accountCon = await connectDb(account)
         let person

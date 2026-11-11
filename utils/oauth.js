@@ -96,6 +96,22 @@ export function oauthSignPasskeyCode (event, sessionId, state) {
   return tokenSign(event, 'passkey-code', { session: sessionId, state: hashState(state) }, { bindIp: true, expiresIn: '1m' })
 }
 
+// Signs the token the webapp database picker carries - it names the login session and the authorization it completes
+export function oauthSignConsent (event, payload) {
+  return tokenSign(event, 'consent', payload, { bindIp: true, expiresIn: '10m' })
+}
+
+// Verifies a consent token from the browser that signed in
+export function oauthVerifyConsent (event, token) {
+  const payload = tokenVerify(event, 'consent', token, { bindIp: true })
+
+  if (!payload) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid or expired consent' })
+  }
+
+  return payload
+}
+
 // Checks the state a passkey page sends belongs to a passkey login started from this browser
 export function oauthVerifyPasskeyState (event, state) {
   const payload = tokenVerify(event, 'state', state, { bindIp: true })

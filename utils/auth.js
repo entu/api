@@ -34,7 +34,8 @@ export function authReadToken (event, account) {
 // Exchanges a credential - an API key or a session - for a 12-hour access token. The shared body of GET /auth, the
 // passkey routes and the OAuth token endpoint; `bindIp: false` issues a token an OAuth client can use from its servers.
 // `offerRename: false` is for a response that never reaches the passkey's own client, so no rename is recorded for it.
-export async function authExchange (event, { account, bindIp = true, invite, key, listSupport = true, offerRename = true, sessionId }) {
+// `account` limits the token to one database, `accounts` to the databases an OAuth consent picked.
+export async function authExchange (event, { account, accounts: onlyAccounts, bindIp = true, invite, key, listSupport = true, offerRename = true, sessionId }) {
   const credential = await resolveCredential(event, key, sessionId)
   const identity = credential.session ? sessionIdentity(credential.session) : undefined
 
@@ -46,8 +47,15 @@ export async function authExchange (event, { account, bindIp = true, invite, key
     throw createError({ statusCode: 400, statusMessage: 'Invalid or expired invite' })
   }
 
+  // An empty list would mean every database, so a consent that names none is refused here as well as at the token endpoint
+  if (onlyAccounts !== undefined && (!Array.isArray(onlyAccounts) || onlyAccounts.length === 0 || onlyAccounts.some((x) => typeof x !== 'string' || !x))) {
+    throw createError({ statusCode: 400, statusMessage: 'No database to limit to' })
+  }
+
+  const onlyForAccounts = onlyAccounts || (onlyForAccount ? [onlyForAccount] : [])
+
   // A passkey created in this sign-in is stored nowhere yet, so it opens only what an invite, add_user or PUT /new links it to
-  const found = identity?.registered ? [] : await findUserAccounts(identity || { apiKeyHash: credential.apiKeyHash }, onlyForAccount)
+  const found = identity?.registered ? [] : await findUserAccounts(identity || { apiKeyHash: credential.apiKeyHash }, onlyForAccounts)
 
   // A session is proof on its own - a user with no databases yet still needs a token to create their first one.
   // An API key is only proof if it matched something, so nothing matching means the credential was not valid.
@@ -65,7 +73,7 @@ export async function authExchange (event, { account, bindIp = true, invite, key
 
   const allAccounts = created ? [{ account: onlyForAccount, userId: created._id, userName: created.name, new: true }] : accounts
   const user = identity ? authIdentity(identity, allAccounts) : {}
-  const support = listSupport && identity ? await findSupportAccounts(identity, allAccounts.map((a) => a.account), onlyForAccount) : []
+  const support = listSupport && identity ? await findSupportAccounts(identity, allAccounts.map((a) => a.account), onlyForAccounts) : []
 
   // A passkey starts out as "Entu" in the password manager; a client that can rename it is told the person name once, and again only when it changes
   const rename = offerRename && credential.session?.user?.rename && user.provider === 'passkey' && user.name
@@ -161,6 +169,23 @@ async function consumeSession (id) {
     { _id: getObjectId(id), pending: { $exists: false }, deleted: { $exists: false } },
     { $set: { deleted: new Date() } }
   )
+}
+
+// Databases the login of a still unused session is a person in - for the OAuth database picker, which must not use the session up
+export async function authSessionAccounts (sessionId) {
+  const connection = await connectDb('entu')
+
+  const session = await connection.collection('session').findOne(
+    { _id: getObjectId(sessionId), pending: { $exists: false }, deleted: { $exists: false } }
+  )
+
+  if (!hasIdentity(session)) {
+    throw createError({ statusCode: 400, statusMessage: 'No session' })
+  }
+
+  const identity = sessionIdentity(session)
+
+  return identity.registered ? [] : await findUserAccounts(identity)
 }
 
 // The login identity of a session in the shape tokens, findUserAccounts and authCredentialProperty take

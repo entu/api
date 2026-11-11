@@ -58,7 +58,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'Database to scope to; required without `resource`',
+          description: 'Database to scope to; without it and a `resource` database, the user picks databases after signing in',
           example: 'mydatabase'
         }
       },
@@ -67,7 +67,7 @@ defineRouteMeta({
         in: 'query',
         schema: {
           type: 'string',
-          description: 'RFC 8707 resource, database as first path segment; host in the API\'s parent domain',
+          description: 'RFC 8707 resource, database as first path segment if any; host in the API\'s parent domain',
           example: 'https://mcp.entu.app/mydatabase'
         }
       },
@@ -77,7 +77,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           enum: ['passkey', 'apple', 'google', 'e-mail', 'smart-id', 'mobile-id', 'id-card'],
-          description: 'Skip the provider choice'
+          description: 'Skip Entu\'s provider choice page'
         }
       },
       {
@@ -86,7 +86,7 @@ defineRouteMeta({
         schema: {
           type: 'string',
           enum: ['en', 'et'],
-          description: 'OAuth.ee page language'
+          description: 'Entu and OAuth.ee page language'
         }
       },
       {
@@ -99,7 +99,7 @@ defineRouteMeta({
       }
     ],
     responses: {
-      302: { description: 'To the login, or to `redirect_uri` with an OAuth error' },
+      302: { description: 'To Entu\'s provider choice page, the login, or `redirect_uri` with an OAuth error' },
       400: {
         description: 'Invalid `client_id` (`invalid_grant`), unregistered `redirect_uri` (`invalid_request`), invalid database name',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
@@ -138,19 +138,25 @@ export default defineEventHandler((event) => {
 
   const account = formatDatabaseName(query.db || parseResourceAccount(event, query.resource))
 
-  if (!account) {
-    return redirectWithError(event, query, 'invalid_request', 'Missing database - add it as the resource or db parameter')
-  }
-
   if (query.provider !== undefined && !providers.includes(query.provider)) {
     return redirectWithError(event, query, 'invalid_request', `Unknown provider - use one of ${providers.join(', ')}`)
   }
 
-  // The authorization travels inside the login state and comes back to /auth/callback with the login
+  // Without a provider the user picks one on the webapp's sign-in page, which links back here with this query plus `provider`
+  if (!query.provider) {
+    const url = new URL('/auth/connect', useRuntimeConfig(event).appUrl)
+
+    url.search = getRequestURL(event).search
+
+    return sendRedirect(event, url.toString(), 302)
+  }
+
+  // The authorization travels inside the login state and comes back to /auth/callback with the login, then to the consent page
   return oauthStartLogin(event, {
     provider: query.provider,
     state: {
-      account,
+      ...(account ? { account } : {}),
+      clientName: client.name,
       clientState: query.state,
       codeChallenge: query.code_challenge,
       redirectUri: query.redirect_uri

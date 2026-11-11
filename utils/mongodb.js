@@ -75,7 +75,7 @@ export function formatDatabaseName (name) {
   }
 
   if (name === 'mcp') {
-    throw createError({ statusCode: 404, statusMessage: 'Not found - the MCP endpoint is POST /mcp/<database>' })
+    throw createError({ statusCode: 404, statusMessage: 'Not found - the MCP endpoint is POST /mcp or POST /mcp/<database>' })
   }
 
   if (reservedDatabaseNames.includes(name)) {

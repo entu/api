@@ -1,21 +1,72 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import { CallToolRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema, ReadResourceRequestSchema } from '@modelcontextprotocol/sdk/types.js'
 
-const schemaResourceUri = 'entu://schema'
+const schemaResourcePattern = /^entu:\/\/([^/]+)\/schema$/
 
-// Builds the Entu context for MCP requests, which the auth and mongodb middleware skip - the token is optional, as on the REST API
-export async function buildMcpContext (event) {
+// Serves one MCP request - POST /mcp/<db> reaches that database, POST /mcp the databases the token was given at sign-in
+export async function mcpHandleRequest (event) {
   const account = formatDatabaseName(event.context.params?.db)
 
-  if (!account) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid account parameter' })
+  let accounts
+
+  try {
+    accounts = mcpAccounts(event, account)
+  }
+  catch (e) {
+    // Point rejected clients at the protected resource metadata so they can start the OAuth flow (RFC 9728)
+    if (e.statusCode === 401) {
+      const metadataPath = account ? `/.well-known/oauth-protected-resource/${account}` : '/.well-known/oauth-protected-resource'
+
+      setResponseHeader(event, 'www-authenticate', `Bearer resource_metadata="${oauthBaseUrl(event)}${metadataPath}"`)
+    }
+
+    throw e
+  }
+
+  const server = await createMcpServer(event, accounts)
+
+  // Stateless - each request carries its own credentials, so any API replica can serve any request
+  const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true })
+
+  await server.connect(transport)
+
+  try {
+    return await transport.handleRequest(event.req)
+  }
+  finally {
+    await server.close()
+  }
+}
+
+// The databases this request's tools may name - the one in the URL, where the token is optional as on the REST API, or every database in the token
+function mcpAccounts (event, account) {
+  const { token } = authReadToken(event)
+
+  if (account) {
+    return [account]
+  }
+
+  const accounts = Object.keys(token?.accounts || {}).toSorted()
+
+  if (accounts.length === 0) {
+    throw createError({ statusCode: 401, statusMessage: 'Sign in to connect databases' })
+  }
+
+  return accounts
+}
+
+// The Entu context for one call, as the calling user in the database it names - never through withSupportAccess, so support access never reaches MCP
+async function databaseContext (event, accounts, account) {
+  if (!accounts.includes(account)) {
+    throw createError({ statusCode: 400, statusMessage: `Unknown database ${account} - use one of ${accounts.join(', ')}` })
   }
 
   return { ...authReadToken(event, account), account, db: await connectDb(account) }
 }
 
-// Creates an MCP server bound to one request's Entu context - every tool and resource runs as the calling user
-export async function createMcpServer (entu) {
+// Creates an MCP server for one request - every tool and resource runs as the calling user in the database the call names
+async function createMcpServer (event, accounts) {
   const { appUrl, commitHash } = useRuntimeConfig()
 
   const server = new Server({
@@ -23,15 +74,16 @@ export async function createMcpServer (entu) {
     version: commitHash || 'dev'
   }, {
     capabilities: { resources: {}, tools: {} },
-    instructions: (await aiPrompt('mcp')).replaceAll('{{entityUrl}}', () => `${appUrl}/${entu.account}`)
+    instructions: (await aiPrompt('mcp')).replaceAll('{{entityUrl}}', () => `${appUrl}/{db}`)
   })
 
-  server.setRequestHandler(ListToolsRequestSchema, () => ({ tools: toolDefinitions() }))
+  server.setRequestHandler(ListToolsRequestSchema, () => ({ tools: toolDefinitions(accounts) }))
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // Tool failures are returned to the model rather than thrown, so it can correct itself instead of losing the turn
     try {
-      const result = await executeTool(entu, request.params.name, request.params.arguments)
+      const { db, ...args } = request.params.arguments || {}
+      const result = await executeTool(await databaseContext(event, accounts, db), request.params.name, args)
 
       return { content: [{ type: 'text', text: JSON.stringify(result) }] }
     }
@@ -44,24 +96,26 @@ export async function createMcpServer (entu) {
   })
 
   server.setRequestHandler(ListResourcesRequestSchema, () => ({
-    resources: [{
-      uri: schemaResourceUri,
-      name: `${entu.account} schema`,
-      description: 'Entity types and their property definitions in this database',
+    resources: accounts.map((account) => ({
+      uri: `entu://${account}/schema`,
+      name: `${account} schema`,
+      description: `Entity types and their property definitions in the ${account} database`,
       mimeType: 'text/markdown'
-    }]
+    }))
   }))
 
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-    if (request.params.uri !== schemaResourceUri) {
+    const account = request.params.uri.match(schemaResourcePattern)?.at(1)
+
+    if (!account) {
       throw createError({ statusCode: 404, statusMessage: `Unknown resource ${request.params.uri}` })
     }
 
     return {
       contents: [{
-        uri: schemaResourceUri,
+        uri: request.params.uri,
         mimeType: 'text/markdown',
-        text: await aiRenderConfiguration(entu)
+        text: await aiRenderConfiguration(await databaseContext(event, accounts, account))
       }]
     }
   })
@@ -69,14 +123,21 @@ export async function createMcpServer (entu) {
   return server
 }
 
-// Read tools from the shared AI definitions, annotated read-only so clients know nothing here changes data
-function toolDefinitions () {
+// Read tools from the shared AI definitions with a required `db` argument, annotated read-only so clients know nothing here changes data
+function toolDefinitions (accounts) {
   return aiToolDefinitions
     .filter((tool) => aiReadToolNames.includes(tool.function.name))
     .map((tool) => ({
       name: tool.function.name,
       description: tool.function.description,
-      inputSchema: tool.function.parameters,
+      inputSchema: {
+        ...tool.function.parameters,
+        properties: {
+          db: { type: 'string', enum: accounts, description: 'Database to read' },
+          ...tool.function.parameters.properties
+        },
+        required: ['db', ...(tool.function.parameters.required || [])]
+      },
       annotations: {
         readOnlyHint: true,
         idempotentHint: true,
@@ -91,5 +152,5 @@ async function executeTool (entu, name, args) {
     throw createError({ statusCode: 400, statusMessage: `Unknown tool ${name}` })
   }
 
-  return await aiExecuteReadTool(entu, name, args || {})
+  return await aiExecuteReadTool(entu, name, args)
 }

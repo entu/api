@@ -13,9 +13,9 @@ export function isContextFreeRoute (method, path) {
   return method === 'OPTIONS'
     || ['/', '/_openapi.json', '/docs', '/openapi'].includes(path)
     || (method === 'GET' && path === '/.well-known/oauth-authorization-server')
-    || (method === 'GET' && /^\/mcp\/\.well-known\/oauth-protected-resource\/[^/]+$/.test(path))
+    || (method === 'GET' && /^\/mcp\/\.well-known\/oauth-protected-resource(\/[^/]+)?$/.test(path))
     || (method === 'POST' && path === '/stripe')
-    || (method === 'POST' && /^\/mcp\/[^/]+$/.test(path))
+    || (method === 'POST' && /^\/mcp(\/[^/]+)?$/.test(path))
     || (method === 'GET' && /^\/new\/[^/]+$/.test(path))
     || /^\/graphql\/[^/]+$/.test(path)
 }
@@ -24,5 +24,5 @@ export function isContextFreeRoute (method, path) {
 export function isAuthRoute (method, path) {
   return (method === 'GET' && /^\/auth(\/[^/]+)?$/.test(path))
     || (method === 'GET' && /^\/auth\/passkey(\/register)?(\/options)?$/.test(path))
-    || (method === 'POST' && /^\/auth\/(passkey|passkey\/register|register|token)$/.test(path))
+    || (method === 'POST' && /^\/auth\/(consent|passkey|passkey\/register|register|token)$/.test(path))
 }
