@@ -55,10 +55,11 @@ export async function initializeNewDatabase (entu, owner) {
   await createDatabaseIndexes(entu.db)
 
   // Fetch all template entities
-  const [templateTypes, templateMenus, templatePlugins] = await Promise.all([
+  const [templateTypes, templateMenus, templatePlugins, templateDatabaseId] = await Promise.all([
     getTypes(),
     getMenus(),
-    getPlugins()
+    getPlugins(),
+    getDatabaseId()
   ])
 
   const allTemplateEntities = [...templateTypes, ...templateMenus, ...templatePlugins]
@@ -138,12 +139,21 @@ export async function initializeNewDatabase (entu, owner) {
   const personId = personEntry.newId
   const databaseId = databaseEntry.newId
 
+  // Template references to its own database entity (_parent, default_parent, add_parent) point to the new database entity; rights on it are dropped
+  const templateDatabaseKey = templateDatabaseId?.toString()
+  const rightTypes = new Set(['_noaccess', '_viewer', '_expander', '_editor', '_owner'])
+
   // Pass 2: add reference properties (remapped via idMap) to template entities
   await Promise.all(entities.map(async (entry) => {
     if (entry.refProps.length === 0 || !entry.newId) return
 
     const remapped = entry.refProps
-      .map((p) => ({ ...p, reference: idMap.get(p.reference.toString()) }))
+      .map((p) => {
+        const key = p.reference.toString()
+        const reference = key === templateDatabaseKey && !rightTypes.has(p.type) ? databaseId : idMap.get(key)
+
+        return { ...p, reference }
+      })
       .filter((p) => p.reference)
 
     if (remapped.length > 0) {
@@ -289,6 +299,16 @@ async function getPlugins () {
   ))
 
   return result.flat()
+}
+
+// Returns the _id of the template database's own database entity, or undefined if it has none
+async function getDatabaseId () {
+  const templateDb = await connectDb('template')
+  const entity = await templateDb.collection('entity').findOne({
+    'private._type.string': 'database'
+  }, { projection: { _id: true }, sort: { _id: 1 } })
+
+  return entity?._id
 }
 
 // Reads a single entity and its properties from the template database, excluding specified property types and system properties

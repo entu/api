@@ -414,7 +414,7 @@ async function validatePropertyTypes (entu, properties, allowedTypes) {
   }
 }
 
-// Returns default _parent properties based on the entity's _type definition
+// Returns default _parent properties based on the entity's _type definition; added after validation, so they intentionally skip the parent _expander check.
 async function getDefaultParents (entu, properties, createdDt) {
   const entityType = properties.find((x) => x.type === '_type' && x.reference)
 

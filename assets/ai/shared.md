@@ -28,6 +28,8 @@ This comment is stripped before use.
 
 Menu `query` properties and `reference_query` are URL query strings. The search tool takes the same fields as an object instead — never put a query string in it.
 
+A menu's `add_entity` lists the entity types its "New" button creates, and `add_parent` the parents every entity created from it gets.
+
 - A condition is `propertyname.valuetype=value`, the valuetype matching the property's own type. `_type.string=person` selects by entity type.
 - Operator suffixes: `.gt` `.gte` `.lt` `.lte` (number, date, datetime, filesize), `.ne` (number), `.in=a,b,c`, `.exists=true|false`, `.regex=/pattern/flags` (string).
 - Conditions join with `&` and all must match — there is no OR across properties, so use `.in` for several values of one.
