@@ -12,6 +12,8 @@ export default defineEventHandler((event) => {
   // The resource lives on this host (mcp.entu.app), but Entu's authorization server is the API itself
   return {
     resource: `${base}/${account}`,
+    resource_name: `Entu ${account}`,
+    resource_documentation: 'https://entu.ee/configuration/mcp/',
     authorization_servers: [oauthApiUrl(event)],
     bearer_methods_supported: ['header']
   }

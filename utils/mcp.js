@@ -4,6 +4,15 @@ import { CallToolRequestSchema, ListResourcesRequestSchema, ListToolsRequestSche
 
 const schemaResourcePattern = /^entu:\/\/([^/]+)\/schema$/
 
+// Readable tool names MCP clients show in tool lists and permission prompts - MCP-only, so they stay out of the shared AI definitions
+const toolTitles = {
+  get_entity_type: 'Get entity type',
+  search_entities: 'Search entities',
+  get_entity: 'Get entity',
+  get_entity_history: 'Get entity history',
+  get_file_url: 'Get file link'
+}
+
 // Serves one MCP request - POST /mcp/<db> reaches that database, POST /mcp the databases the token was given at sign-in
 export async function mcpHandleRequest (event) {
   const account = formatDatabaseName(event.context.params?.db)
@@ -69,9 +78,17 @@ async function databaseContext (event, accounts, account) {
 async function createMcpServer (event, accounts) {
   const { appUrl, commitHash } = useRuntimeConfig()
 
+  // Clients that support server metadata (MCP serverInfo) show this title, description, website and the Entu logo from the webapp next to the connector
   const server = new Server({
     name: 'entu',
-    version: commitHash || 'dev'
+    title: 'Entu',
+    description: 'Read your Entu databases - search entities, read their properties, history and files, with your own rights.',
+    websiteUrl: 'https://entu.ee',
+    version: commitHash || 'dev',
+    icons: [
+      { src: `${appUrl}/logo.svg`, mimeType: 'image/svg+xml' },
+      { src: `${appUrl}/logo.png`, mimeType: 'image/png' }
+    ]
   }, {
     capabilities: { resources: {}, tools: {} },
     instructions: (await aiPrompt('mcp')).replaceAll('{{entityUrl}}', () => `${appUrl}/{db}`)
@@ -99,6 +116,7 @@ async function createMcpServer (event, accounts) {
     resources: accounts.map((account) => ({
       uri: `entu://${account}/schema`,
       name: `${account} schema`,
+      title: `${account} schema`,
       description: `Entity types and their property definitions in the ${account} database`,
       mimeType: 'text/markdown'
     }))
@@ -129,6 +147,7 @@ function toolDefinitions (accounts) {
     .filter((tool) => aiReadToolNames.includes(tool.function.name))
     .map((tool) => ({
       name: tool.function.name,
+      title: toolTitles[tool.function.name],
       description: tool.function.description,
       inputSchema: {
         ...tool.function.parameters,

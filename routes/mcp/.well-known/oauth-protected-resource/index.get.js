@@ -5,6 +5,8 @@ export default defineEventHandler((event) => {
   // No database in the resource, so the user picks databases after signing in
   return {
     resource: oauthBaseUrl(event),
+    resource_name: 'Entu',
+    resource_documentation: 'https://entu.ee/configuration/mcp/',
     authorization_servers: [oauthApiUrl(event)],
     bearer_methods_supported: ['header']
   }
