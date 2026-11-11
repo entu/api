@@ -222,6 +222,9 @@
   let hasLanguages = false
   let nextRequestId = 1
   let language = 'en'
+  let hostLanguage = 'en'
+  let callLanguage
+  let lastResult
   let t = texts.en
 
   // Sends a JSON-RPC request to the host and resolves with its result
@@ -265,6 +268,8 @@
 
     switch (message.method) {
       case 'ui/notifications/tool-input':
+        callLanguage = texts[message.params?.arguments?.language] ? message.params.arguments.language : undefined
+        applyLanguage(callLanguage || hostLanguage)
         renderPending()
         break
       case 'ui/notifications/tool-result':
@@ -297,10 +302,27 @@
     }
 
     if (context.locale) {
-      language = context.locale.toLowerCase().startsWith('et') ? 'et' : 'en'
-      t = texts[language]
-      document.documentElement.lang = language
+      setLanguage(context.locale)
     }
+  }
+
+  // Records the host's or browser's language and redraws a result already shown - a language the call named still wins
+  function setLanguage (locale) {
+    hostLanguage = locale.toLowerCase().startsWith('et') ? 'et' : 'en'
+
+    if (lastResult) {
+      renderResult(lastResult)
+    }
+    else {
+      applyLanguage(callLanguage || hostLanguage)
+    }
+  }
+
+  // Switches texts and label lookups to one language
+  function applyLanguage (code) {
+    language = code
+    t = texts[code]
+    document.documentElement.lang = code
   }
 
   // Sets the header badge's style and label
@@ -319,6 +341,10 @@
   // Renders a finished write - its entity, every written or removed value, and a link back to Entu
   function renderResult (result) {
     const data = result?.structuredContent
+
+    lastResult = result
+    // The conversation's language, which the model passes with the call, before the host's interface language
+    applyLanguage(texts[data?.language] ? data.language : callLanguage || hostLanguage)
 
     if (result?.isError || !data) {
       renderBadge('deleted', t.failed)
@@ -507,16 +533,20 @@
     request('ui/open-link', { url }).catch(() => {})
   }
 
-  // Tells the host the card's size so it can fit the frame to the content
+  // Tells the host the content's own size - the document's scroll size never drops below the current frame, so the card could grow but never shrink back
   function reportSize () {
+    const { width, height } = document.body.getBoundingClientRect()
+
     notify('ui/notifications/size-changed', {
-      width: Math.ceil(document.documentElement.scrollWidth),
-      height: Math.ceil(document.documentElement.scrollHeight)
+      width: Math.ceil(width),
+      height: Math.ceil(height)
     })
   }
 
   // Runs the MCP Apps handshake, then reports size changes
   async function start () {
+    // The browser's language until the host names one - Claude may send its own interface locale, or none
+    setLanguage(navigator.language || 'en')
     renderPending()
 
     window.addEventListener('message', onMessage)

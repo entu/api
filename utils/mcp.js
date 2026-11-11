@@ -8,6 +8,9 @@ const schemaResourcePattern = /^entu:\/\/([^/]+)\/schema$/
 const changeViewUri = 'ui://entu/change.html'
 const changeViewMimeType = 'text/html;profile=mcp-app'
 
+// Languages the change view has texts for - the model passes the conversation's, since the host only knows its own interface language
+const viewLanguages = ['en', 'et']
+
 // Readable tool names MCP clients show in tool lists and permission prompts - MCP-only, so they stay out of the shared AI definitions
 const toolTitles = {
   get_entity_type: 'Get entity type',
@@ -129,12 +132,16 @@ async function createMcpServer (event, accounts) {
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // Tool failures are returned to the model rather than thrown, so it can correct itself instead of losing the turn
     try {
-      const { db, ...args } = request.params.arguments || {}
+      const { db, language, ...args } = request.params.arguments || {}
       const result = await executeTool(await databaseContext(event, accounts, db), request.params.name, args)
       const content = [{ type: 'text', text: JSON.stringify(result) }]
 
-      // Write results also go out as structuredContent, which the change view renders as is
-      return writeAnnotations[request.params.name] ? { content, structuredContent: result } : { content }
+      if (!writeAnnotations[request.params.name]) {
+        return { content }
+      }
+
+      // Write results also go out as structuredContent, which the change view renders in the conversation's language when the model names it
+      return { content, structuredContent: { ...result, language: viewLanguages.includes(language) ? language : undefined } }
     }
     catch (e) {
       return {
@@ -202,7 +209,8 @@ function toolDefinitions (accounts, writableAccounts) {
             db: isRead
               ? { type: 'string', enum: accounts, description: 'Database to read' }
               : { type: 'string', enum: writableAccounts, description: 'Database to change' },
-            ...tool.function.parameters.properties
+            ...tool.function.parameters.properties,
+            ...(isRead ? {} : { language: { type: 'string', enum: viewLanguages, description: 'Language you are talking to the user in - the change card shown to them uses it' } })
           },
           required: ['db', ...(tool.function.parameters.required || [])]
         },

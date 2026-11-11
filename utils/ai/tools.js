@@ -193,7 +193,7 @@ export const aiToolDefinitions = [
     type: 'function',
     function: {
       name: 'create_entity',
-      description: 'Create a new entity.',
+      description: 'Create a new entity with all its values in this one call.',
       parameters: {
         type: 'object',
         properties: {
@@ -213,7 +213,7 @@ export const aiToolDefinitions = [
     type: 'function',
     function: {
       name: 'update_entity',
-      description: 'Change an existing entity. Each property ADDS a new value, unless it includes valueId (an existing value _id from get_entity), in which case it REPLACES that value.',
+      description: 'Change an existing entity. Put EVERY value you add or replace on this entity into this one call - never one call per property. Each property ADDS a new value, unless it includes valueId (an existing value _id from get_entity), in which case it REPLACES that value.',
       parameters: {
         type: 'object',
         properties: {
