@@ -51,38 +51,9 @@ export function buildResolvers (entityTypes, propsByTypeId) {
         if (!entu.user) {
           throw new Error('Authentication required')
         }
-        const entityId = getObjectId(id)
-        const entity = await entu.db.collection('entity').findOne(
-          { _id: entityId },
-          { projection: { _id: false, 'private._owner': true } }
-        )
-        if (!entity) {
-          throw new Error(`Entity ${id} not found`)
-        }
-        if (!hasRight(entu, entity, '_owner')) {
-          throw new Error('User not in _owner property')
-        }
-        if (entu.support && entityId.toString() === entu.userStr) {
-          throw new Error('Entu support can\'t delete the database entity')
-        }
-        await entu.db.collection('property').insertOne({
-          entity: entityId,
-          type: '_deleted',
-          reference: entu.user,
-          datetime: new Date(),
-          created: stampFor(entu)
-        })
-        await aggregateEntity(entu, entityId)
-        await triggerWebhooks(entu, entityId, 'entity-delete-webhook')
-        const referrers = await entu.db.collection('property').aggregate([
-          { $match: { reference: entityId, deleted: { $exists: false } } },
-          { $group: { _id: '$entity' } }
-        ]).toArray()
-        await entu.db.collection('property').updateMany(
-          { reference: entityId, deleted: { $exists: false } },
-          { $set: { deleted: stampFor(entu) } }
-        )
-        await addAggregateQueue(entu, referrers.map((r) => r._id))
+
+        await deleteEntity(entu, getObjectId(id))
+
         return true
       }
       continue
@@ -164,47 +135,7 @@ export function buildResolvers (entityTypes, propsByTypeId) {
         throw new Error('Authentication required')
       }
 
-      const entityId = getObjectId(id)
-
-      const entity = await entu.db.collection('entity').findOne(
-        { _id: entityId },
-        { projection: { _id: false, 'private._owner': true } }
-      )
-
-      if (!entity) {
-        throw new Error(`Entity ${id} not found`)
-      }
-
-      if (!hasRight(entu, entity, '_owner')) {
-        throw new Error('User not in _owner property')
-      }
-
-      if (entu.support && entityId.toString() === entu.userStr) {
-        throw new Error('Entu support can\'t delete the database entity')
-      }
-
-      await entu.db.collection('property').insertOne({
-        entity: entityId,
-        type: '_deleted',
-        reference: entu.user,
-        datetime: new Date(),
-        created: stampFor(entu)
-      })
-
-      await aggregateEntity(entu, entityId)
-      await triggerWebhooks(entu, entityId, 'entity-delete-webhook')
-
-      const referrers = await entu.db.collection('property').aggregate([
-        { $match: { reference: entityId, deleted: { $exists: false } } },
-        { $group: { _id: '$entity' } }
-      ]).toArray()
-
-      await entu.db.collection('property').updateMany(
-        { reference: entityId, deleted: { $exists: false } },
-        { $set: { deleted: stampFor(entu) } }
-      )
-
-      await addAggregateQueue(entu, referrers.map((r) => r._id))
+      await deleteEntity(entu, getObjectId(id))
 
       return true
     }

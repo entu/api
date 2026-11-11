@@ -25,7 +25,7 @@ const propertyValueSchema = {
     string: { type: 'string', description: 'String/text value' },
     number: { type: 'number', description: 'Number value' },
     boolean: { type: 'boolean', description: 'Boolean value' },
-    reference: { type: 'string', description: 'Referenced entity id, or a tempId ("$1", "$2", ...) of an earlier queued operation' },
+    reference: { type: 'string', description: 'Referenced entity id' },
     date: { type: 'string', description: 'Date value (YYYY-MM-DD)' },
     datetime: { type: 'string', description: 'Datetime value (ISO 8601)' },
     language: { type: 'string', description: 'Language code (en or et) for multilingual properties' }
@@ -138,7 +138,7 @@ export const aiToolDefinitions = [
     type: 'function',
     function: {
       name: 'create_entity_type',
-      description: 'Queue creation of a new entity type. Not executed until the user confirms. The result tempId ("$1", "$2", ...) can be used as entityType/type/reference in later operations.',
+      description: 'Create a new entity type. Its name can then be used as entityType in create_property_definition and as type in create_entity.',
       parameters: {
         type: 'object',
         properties: {
@@ -154,12 +154,12 @@ export const aiToolDefinitions = [
   {
     type: 'function',
     function: {
-      name: 'add_property_definition',
-      description: 'Queue adding a property definition to an entity type. Not executed until the user confirms. entityType may be an existing type name or a tempId ("$1", ...) returned by an earlier queued create_entity_type.',
+      name: 'create_property_definition',
+      description: 'Create a property definition on an entity type.',
       parameters: {
         type: 'object',
         properties: {
-          entityType: { type: 'string', description: 'Entity type name, or tempId of an earlier queued operation' },
+          entityType: { type: 'string', description: 'Entity type name' },
           name: { type: 'string', description: 'Property name (snake_case identifier)' },
           type: {
             type: 'string',
@@ -193,12 +193,12 @@ export const aiToolDefinitions = [
     type: 'function',
     function: {
       name: 'create_entity',
-      description: 'Queue creation of a new entity. Not executed until the user confirms. type and parent may be a tempId ("$1", ...) of an earlier queued operation; reference values inside properties may be tempIds too.',
+      description: 'Create a new entity.',
       parameters: {
         type: 'object',
         properties: {
-          type: { type: 'string', description: 'Entity type name, or tempId of an earlier queued create_entity_type' },
-          parent: { type: 'string', description: 'Parent entity id, or tempId of an earlier queued operation' },
+          type: { type: 'string', description: 'Entity type name' },
+          parent: { type: 'string', description: 'Parent entity id' },
           properties: {
             type: 'array',
             description: 'Properties to set on the new entity',
@@ -213,11 +213,11 @@ export const aiToolDefinitions = [
     type: 'function',
     function: {
       name: 'update_entity',
-      description: 'Queue changing an existing entity. Each property ADDS a new value, unless it includes valueId (an existing value _id from get_entity), in which case it REPLACES that value. Not executed until the user confirms. _id may be a tempId ("$1", ...) of an earlier queued operation; reference values may be tempIds too.',
+      description: 'Change an existing entity. Each property ADDS a new value, unless it includes valueId (an existing value _id from get_entity), in which case it REPLACES that value.',
       parameters: {
         type: 'object',
         properties: {
-          _id: { type: 'string', description: 'Entity id, or tempId of an earlier queued operation' },
+          _id: { type: 'string', description: 'Entity id' },
           properties: {
             type: 'array',
             description: 'Properties to add or replace',
@@ -231,8 +231,22 @@ export const aiToolDefinitions = [
   {
     type: 'function',
     function: {
+      name: 'delete_entity',
+      description: 'Delete an entity. Needs owner rights, and is refused while the entity has child entities or, for an entity type, while entities of that type exist - delete or move those first.',
+      parameters: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string', description: 'Entity id' }
+        },
+        required: ['_id']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
       name: 'delete_property',
-      description: 'Queue deletion of a single property value by its property id (returned inside entity properties as _id). Not executed until the user confirms. System properties cannot be deleted.',
+      description: 'Delete a single property value by its property id (returned inside entity properties as _id). System properties cannot be deleted.',
       parameters: {
         type: 'object',
         properties: {

@@ -1,4 +1,5 @@
-const operationTypes = ['create_entity_type', 'add_property_definition', 'create_entity', 'update_entity', 'delete_property']
+const operationTypes = ['create_entity_type', 'create_property_definition', 'create_entity', 'update_entity', 'delete_entity', 'delete_property']
+const deleteOperationTypes = ['delete_entity', 'delete_property']
 const namePattern = /^[a-z][a-z0-9_]*$/
 const tempIdPattern = /^\$\d+$/
 const propertyValueFields = ['string', 'number', 'boolean', 'reference', 'date', 'datetime']
@@ -42,8 +43,8 @@ export function aiValidateOperations (operations) {
       case 'create_entity_type':
         validateCreateEntityType(params, i)
         break
-      case 'add_property_definition':
-        validateAddPropertyDefinition(params, i, operations)
+      case 'create_property_definition':
+        validateCreatePropertyDefinition(params, i, operations)
         break
       case 'create_entity':
         validateCreateEntity(params, i, operations)
@@ -51,8 +52,9 @@ export function aiValidateOperations (operations) {
       case 'update_entity':
         validateUpdateEntity(params, i, operations)
         break
+      case 'delete_entity':
       case 'delete_property':
-        validateDeleteProperty(params, i)
+        validateDeleteTarget(params, i)
         break
     }
   }
@@ -65,7 +67,7 @@ export function aiDescribeOperation (operation) {
   switch (operation.op) {
     case 'create_entity_type':
       return `Create entity type "${params.name}" labeled "${describeMultilingualText(params.label)}"`
-    case 'add_property_definition': {
+    case 'create_property_definition': {
       const flags = []
 
       if (params.mandatory) {
@@ -86,7 +88,7 @@ export function aiDescribeOperation (operation) {
 
       const suffix = flags.length > 0 ? ` (${flags.join(', ')})` : ''
 
-      return `Add new ${params.type} property definition "${params.name}" to type "${params.entityType}"${suffix}`
+      return `Create ${params.type} property definition "${params.name}" on type "${params.entityType}"${suffix}`
     }
     case 'create_entity': {
       const parent = params.parent ? ` under parent ${params.parent}` : ''
@@ -96,6 +98,8 @@ export function aiDescribeOperation (operation) {
     }
     case 'update_entity':
       return `Update entity ${params._id}: ${describePropertyValues(params.properties)}`
+    case 'delete_entity':
+      return `Delete entity ${params._id}`
     case 'delete_property':
       return `Delete property value ${params._id}`
     default:
@@ -269,7 +273,7 @@ function validateTempIdRef (value, field, index, operations) {
     throw operationError(index, `${field} tempId ${value} must reference an earlier operation`)
   }
 
-  if (operations[n - 1].op === 'delete_property') {
+  if (deleteOperationTypes.includes(operations[n - 1].op)) {
     throw operationError(index, `${field} tempId ${value} references an operation that does not create or update an entity`)
   }
 }
@@ -308,8 +312,8 @@ function validateCreateEntityType (params, index) {
   validateMultilingualText(params.description, 'description', index, { max: 5000 })
 }
 
-// Validates add_property_definition params
-function validateAddPropertyDefinition (params, index, operations) {
+// Validates create_property_definition params
+function validateCreatePropertyDefinition (params, index, operations) {
   if (typeof params.entityType !== 'string') {
     throw operationError(index, 'entityType must be a string')
   }
@@ -385,8 +389,8 @@ function validateUpdateEntity (params, index, operations) {
   validateProperties(params.properties, index, operations, { allowEmpty: false })
 }
 
-// Validates delete_property params
-function validateDeleteProperty (params, index) {
+// Validates delete_entity and delete_property params - a real id, never a tempId
+function validateDeleteTarget (params, index) {
   if (typeof params._id !== 'string') {
     throw operationError(index, '_id must be a string')
   }
@@ -455,17 +459,19 @@ function validateProperties (properties, index, operations, { allowEmpty }) {
 // Execution helpers
 // ---------------------------------------------------------------------------
 
-// Executes a single operation and returns the affected entity id (or undefined for delete_property)
+// Executes a single operation and returns the affected entity id (or undefined for deletes)
 async function executeOperation (entu, operation, tempIdMap) {
   switch (operation.op) {
     case 'create_entity_type':
       return await executeCreateEntityType(entu, operation.params)
-    case 'add_property_definition':
-      return await executeAddPropertyDefinition(entu, operation.params, tempIdMap)
+    case 'create_property_definition':
+      return await executeCreatePropertyDefinition(entu, operation.params, tempIdMap)
     case 'create_entity':
       return await executeCreateEntity(entu, operation.params, tempIdMap)
     case 'update_entity':
       return await executeUpdateEntity(entu, operation.params, tempIdMap)
+    case 'delete_entity':
+      return await executeDeleteEntity(entu, operation.params)
     case 'delete_property':
       return await executeDeleteProperty(entu, operation.params)
   }
@@ -523,20 +529,39 @@ function resolveEntityId (value, tempIdMap) {
   return getObjectId(value)
 }
 
-// Throws when the entity is a system type definition - a type "entity" entity that carries a system property or has a reserved name
+// Throws when the entity is a system type definition, or a property definition of one
 async function rejectSystemTypeDefinition (entu, entityId) {
-  const entity = await entu.db.collection('entity').findOne({ _id: entityId }, { projection: { 'private._type.string': true, 'private.name.string': true, 'private.system': true } })
+  const projection = { 'private._type.string': true, 'private._parent.reference': true, 'private.name.string': true, 'private.system': true }
+  const entity = await entu.db.collection('entity').findOne({ _id: entityId }, { projection })
+  const systemTypeError = createError({
+    statusCode: 403,
+    statusMessage: 'System type definitions can\'t be changed'
+  })
 
+  if (isSystemTypeDefinition(entity)) {
+    throw systemTypeError
+  }
+
+  if (entity?.private?._type?.at(0)?.string !== 'property') return
+
+  const parentIds = entity.private._parent?.map((x) => x.reference).filter(Boolean) || []
+
+  if (parentIds.length === 0) return
+
+  const parents = await entu.db.collection('entity').find({ _id: { $in: parentIds } }, { projection }).toArray()
+
+  if (parents.some(isSystemTypeDefinition)) {
+    throw systemTypeError
+  }
+}
+
+// True for a type "entity" entity that carries a system property or has a reserved name
+function isSystemTypeDefinition (entity) {
   const isTypeDefinition = entity?.private?._type?.at(0)?.string === 'entity'
   const isSystem = (entity?.private?.system?.length || 0) > 0
   const isReserved = reservedTypeNames.includes(entity?.private?.name?.at(0)?.string)
 
-  if (isTypeDefinition && (isSystem || isReserved)) {
-    throw createError({
-      statusCode: 403,
-      statusMessage: 'System type definitions can\'t be changed'
-    })
-  }
+  return isTypeDefinition && (isSystem || isReserved)
 }
 
 // Maps a tempId to the entity id created by an earlier executed operation
@@ -579,7 +604,7 @@ async function executeCreateEntityType (entu, params) {
 }
 
 // Creates a new property definition entity under an entity type
-async function executeAddPropertyDefinition (entu, params, tempIdMap) {
+async function executeCreatePropertyDefinition (entu, params, tempIdMap) {
   const typeId = await resolveTypeId(entu, params.entityType, tempIdMap)
 
   await rejectSystemTypeDefinition(entu, typeId)
@@ -600,7 +625,7 @@ async function executeAddPropertyDefinition (entu, params, tempIdMap) {
   }
 
   // typeId is already resolved for the duplicate check above - reuse it instead of resolving twice
-  const properties = await buildOperationProperties({ op: 'add_property_definition', params }, { ...executionResolvers(entu), typeId: async () => typeId })
+  const properties = await buildOperationProperties({ op: 'create_property_definition', params }, { ...executionResolvers(entu), typeId: async () => typeId })
 
   const { _id } = await setEntity(entu, null, properties)
 
@@ -611,6 +636,11 @@ async function executeAddPropertyDefinition (entu, params, tempIdMap) {
 
 // Creates a new data entity with the given properties
 async function executeCreateEntity (entu, params, tempIdMap) {
+  // A child of a system type definition would be one of its property definitions, so it counts as changing it
+  if (params.parent !== undefined) {
+    await rejectSystemTypeDefinition(entu, resolveEntityId(params.parent, tempIdMap))
+  }
+
   const properties = await buildOperationProperties({ op: 'create_entity', params }, executionResolvers(entu, tempIdMap))
 
   const { _id } = await setEntity(entu, null, properties)
@@ -659,7 +689,7 @@ async function buildOperationProperties (operation, resolve) {
 
       return properties
     }
-    case 'add_property_definition': {
+    case 'create_property_definition': {
       const properties = [
         { type: '_type', reference: await resolve.baseType('property') },
         { type: '_parent', reference: await resolve.typeId(params.entityType) },
@@ -867,25 +897,17 @@ async function executeDeleteProperty (entu, params) {
     })
   }
 
+  await rejectSystemTypeDefinition(entu, property.entity)
+
   const entity = await entu.db.collection('entity').findOne({
     _id: property.entity
   }, {
     projection: {
       _id: false,
       'private._editor': true,
-      'private._owner': true,
-      'private._type.string': true,
-      'private.name.string': true,
-      'private.system': true
+      'private._owner': true
     }
   })
-
-  if (entity?.private?._type?.at(0)?.string === 'entity' && ((entity?.private?.system?.length || 0) > 0 || reservedTypeNames.includes(entity?.private?.name?.at(0)?.string))) {
-    throw createError({
-      statusCode: 403,
-      statusMessage: 'System type definitions can\'t be changed'
-    })
-  }
 
   if (!entity) {
     throw createError({
@@ -923,4 +945,65 @@ async function executeDeleteProperty (entu, params) {
   await aggregateEntity(entu, property.entity)
 
   await triggerWebhooks(entu, property.entity, 'entity-edit-webhook')
+}
+
+// Deletes an entity like the REST route, but only when nothing depends on it - no children, and for a type definition no entities of that type
+async function executeDeleteEntity (entu, params) {
+  const entityId = getObjectId(params._id)
+
+  const entity = await entu.db.collection('entity').findOne({ _id: entityId }, { projection: { _id: false, 'private._owner': true, 'private._type.string': true } })
+
+  if (!entity) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `Entity ${entityId} not found`
+    })
+  }
+
+  // Ownership first, so the checks below never tell a non-owner anything about the entity
+  if (!hasRight(entu, entity, '_owner')) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'User not in _owner property'
+    })
+  }
+
+  const type = entity.private?._type?.at(0)?.string
+
+  if (type === 'database') {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'The database entity can\'t be deleted'
+    })
+  }
+
+  await rejectSystemTypeDefinition(entu, entityId)
+
+  // Counted without a rights filter, so children the user can't see block the delete too
+  if (await hasReferrer(entu, '_parent', entityId)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Entity has child entities - delete or move them first'
+    })
+  }
+
+  if (type === 'entity' && await hasReferrer(entu, '_type', entityId)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Entity type is in use - delete its entities first'
+    })
+  }
+
+  await deleteEntity(entu, entityId)
+}
+
+// True when any existing entity references this one through the given system property - deleted entities are gone from the entity collection
+async function hasReferrer (entu, type, entityId) {
+  const referrer = await entu.db.collection('entity').findOne({
+    [`private.${type}.reference`]: entityId
+  }, {
+    projection: { _id: true }
+  })
+
+  return Boolean(referrer)
 }

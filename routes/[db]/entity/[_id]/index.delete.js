@@ -72,66 +72,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const entityId = getObjectId(getRouterParam(event, '_id'))
-
-  const entity = await entu.db.collection('entity').findOne({
-    _id: entityId
-  }, {
-    projection: {
-      _id: false,
-      'private._owner': true
-    }
-  })
-
-  if (!entity) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: `Entity ${entityId} not found`
-    })
-  }
-
-  if (!hasRight(entu, entity, '_owner')) {
-    throw createError({
-      statusCode: 403,
-      statusMessage: 'User not in _owner property'
-    })
-  }
-
-  // Support acts as the database entity, and deleting that would end the customer's database and its grant
-  if (entu.support && entityId.toString() === entu.userStr) {
-    throw createError({
-      statusCode: 403,
-      statusMessage: 'Entu support can\'t delete the database entity'
-    })
-  }
-
-  await entu.db.collection('property').insertOne({
-    entity: entityId,
-    type: '_deleted',
-    reference: entu.user,
-    datetime: new Date(),
-    created: stampFor(entu)
-  })
-
-  await aggregateEntity(entu, entityId)
-
-  await triggerWebhooks(entu, entityId, 'entity-delete-webhook')
-
-  const referrers = await entu.db.collection('property').aggregate([
-    { $match: { reference: entityId, deleted: { $exists: false } } },
-    { $group: { _id: '$entity' } }
-  ]).toArray()
-
-  const referrerIds = referrers.map((x) => x._id)
-
-  await entu.db.collection('property').updateMany({
-    reference: entityId,
-    deleted: { $exists: false }
-  }, {
-    $set: { deleted: stampFor(entu) }
-  })
-
-  await addAggregateQueue(entu, referrerIds)
+  await deleteEntity(entu, getObjectId(getRouterParam(event, '_id')))
 
   return { deleted: true }
 })

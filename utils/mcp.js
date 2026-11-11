@@ -10,7 +10,26 @@ const toolTitles = {
   search_entities: 'Search entities',
   get_entity: 'Get entity',
   get_entity_history: 'Get entity history',
-  get_file_url: 'Get file link'
+  get_file_url: 'Get file link',
+  create_entity_type: 'Create entity type',
+  create_property_definition: 'Create property definition',
+  create_entity: 'Create entity',
+  update_entity: 'Change entity',
+  delete_entity: 'Delete entity',
+  delete_property: 'Delete property value'
+}
+
+// Hints for MCP clients - every write is marked destructive, creates included, so clients ask before each call instead of auto-approving
+const readAnnotations = { readOnlyHint: true, idempotentHint: true, openWorldHint: false }
+const repeatableWriteAnnotations = { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false }
+const deleteAnnotations = { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false }
+const writeAnnotations = {
+  create_entity_type: repeatableWriteAnnotations,
+  create_property_definition: repeatableWriteAnnotations,
+  create_entity: repeatableWriteAnnotations,
+  update_entity: repeatableWriteAnnotations,
+  delete_entity: deleteAnnotations,
+  delete_property: deleteAnnotations
 }
 
 // Serves one MCP request - POST /mcp/<db> reaches that database, POST /mcp the databases the token was given at sign-in
@@ -65,6 +84,13 @@ function mcpAccounts (event, account) {
   return accounts
 }
 
+// The databases where the token names a user - only there are write tools offered, so anonymous connections stay read-only
+function mcpWritableAccounts (event, accounts) {
+  const { token } = authReadToken(event)
+
+  return accounts.filter((account) => token?.accounts?.[account])
+}
+
 // The Entu context for one call, as the calling user in the database it names - never through withSupportAccess, so support access never reaches MCP
 async function databaseContext (event, accounts, account) {
   if (!accounts.includes(account)) {
@@ -82,7 +108,7 @@ async function createMcpServer (event, accounts) {
   const server = new Server({
     name: 'entu',
     title: 'Entu',
-    description: 'Read your Entu databases - search entities, read their properties, history and files, with your own rights.',
+    description: 'Read and change your Entu databases - search entities, read their properties, history and files, and create, change or delete entities, with your own rights.',
     websiteUrl: 'https://entu.ee',
     version: commitHash || 'dev',
     icons: [
@@ -94,7 +120,7 @@ async function createMcpServer (event, accounts) {
     instructions: (await aiPrompt('mcp')).replaceAll('{{entityUrl}}', () => `${appUrl}/{db}`)
   })
 
-  server.setRequestHandler(ListToolsRequestSchema, () => ({ tools: toolDefinitions(accounts) }))
+  server.setRequestHandler(ListToolsRequestSchema, () => ({ tools: toolDefinitions(accounts, mcpWritableAccounts(event, accounts)) }))
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // Tool failures are returned to the model rather than thrown, so it can correct itself instead of losing the turn
@@ -106,7 +132,7 @@ async function createMcpServer (event, accounts) {
     }
     catch (e) {
       return {
-        content: [{ type: 'text', text: e.statusMessage || e.message || String(e) }],
+        content: [{ type: 'text', text: e.statusMessage || 'Tool failed' }],
         isError: true
       }
     }
@@ -141,35 +167,136 @@ async function createMcpServer (event, accounts) {
   return server
 }
 
-// Read tools from the shared AI definitions with a required `db` argument, annotated read-only so clients know nothing here changes data
-function toolDefinitions (accounts) {
+// Tools from the shared AI definitions with a required `db` argument - read tools for every database, write tools only for those with a signed-in user
+function toolDefinitions (accounts, writableAccounts) {
   return aiToolDefinitions
-    .filter((tool) => aiReadToolNames.includes(tool.function.name))
-    .map((tool) => ({
-      name: tool.function.name,
-      title: toolTitles[tool.function.name],
-      description: tool.function.description,
-      inputSchema: {
-        ...tool.function.parameters,
-        properties: {
-          db: { type: 'string', enum: accounts, description: 'Database to read' },
-          ...tool.function.parameters.properties
+    .filter((tool) => aiReadToolNames.includes(tool.function.name) || writableAccounts.length > 0)
+    .map((tool) => {
+      const isRead = aiReadToolNames.includes(tool.function.name)
+
+      return {
+        name: tool.function.name,
+        title: toolTitles[tool.function.name],
+        description: tool.function.description,
+        inputSchema: {
+          ...tool.function.parameters,
+          properties: {
+            db: isRead
+              ? { type: 'string', enum: accounts, description: 'Database to read' }
+              : { type: 'string', enum: writableAccounts, description: 'Database to change' },
+            ...tool.function.parameters.properties
+          },
+          required: ['db', ...(tool.function.parameters.required || [])]
         },
-        required: ['db', ...(tool.function.parameters.required || [])]
-      },
-      annotations: {
-        readOnlyHint: true,
-        idempotentHint: true,
-        openWorldHint: false
+        annotations: isRead ? readAnnotations : writeAnnotations[tool.function.name]
       }
-    }))
+    })
 }
 
-// Executes a tool as the calling user - rights filtering is inherited from the entu context
+// Executes a tool as the calling user - reads run directly, each write runs at once as a batch of one, since the client confirms every call
 async function executeTool (entu, name, args) {
-  if (!aiReadToolNames.includes(name)) {
+  if (aiReadToolNames.includes(name)) {
+    return await aiExecuteReadTool(entu, name, args)
+  }
+
+  if (!writeAnnotations[name]) {
     throw createError({ statusCode: 400, statusMessage: `Unknown tool ${name}` })
   }
 
-  return await aiExecuteReadTool(entu, name, args)
+  if (!entu.user) {
+    throw createError({ statusCode: 403, statusMessage: 'Sign in to change data' })
+  }
+
+  const operation = { op: name, params: args }
+
+  aiValidateOperations([operation])
+
+  // Read before writing, but report only after the write succeeded - its rights checks are what entitle the caller to see this
+  const before = await readBeforeWrite(entu, name, args)
+  const { results, error } = await aiExecuteOperations(entu, [operation])
+
+  if (error) {
+    throw createError({ statusCode: error.statusCode, statusMessage: error.statusMessage })
+  }
+
+  const entityId = results.at(0)?._id ?? before.entityId
+  const entity = name === 'delete_entity' ? before.entity : await entitySummary(entu, entityId)
+
+  return {
+    _id: entityId,
+    ...entity,
+    description: aiDescribeOperation(operation),
+    changes: writeChanges(name, args, before.values)
+  }
+}
+
+// Collects what the write will replace or remove while it still exists - the deleted entity, or the old values by id
+async function readBeforeWrite (entu, name, args) {
+  switch (name) {
+    case 'update_entity': {
+      const valueIds = args.properties.filter((property) => property.valueId).map((property) => getObjectId(property.valueId))
+
+      return { values: await propertyRecords(entu, { _id: { $in: valueIds }, entity: getObjectId(args._id) }) }
+    }
+    case 'delete_entity':
+      return { entityId: args._id, entity: await entitySummary(entu, args._id) }
+    case 'delete_property': {
+      const values = await propertyRecords(entu, { _id: getObjectId(args._id) })
+
+      return { entityId: values.get(args._id)?.entity?.toString(), values }
+    }
+    default:
+      return {}
+  }
+}
+
+// Live property records matching the filter, keyed by their id
+async function propertyRecords (entu, filter) {
+  const records = await entu.db.collection('property').find({ ...filter, deleted: { $exists: false } }, {
+    projection: { entity: true, type: true, language: true, string: true, number: true, boolean: true, reference: true, date: true, datetime: true, filename: true }
+  }).toArray()
+
+  return new Map(records.map((record) => [record._id.toString(), record]))
+}
+
+// An entity's type and name, so the user sees what a write touched instead of a bare id
+async function entitySummary (entu, entityId) {
+  if (!entityId) return
+
+  const entity = await entu.db.collection('entity').findOne({ _id: getObjectId(entityId) }, {
+    projection: { _id: false, 'private._type.string': true, 'private.name.string': true }
+  })
+
+  return {
+    type: entity?.private?._type?.at(0)?.string,
+    name: entity?.private?.name?.at(0)?.string
+  }
+}
+
+// One line per written or removed value - old is the value replaced or deleted, new the value written
+function writeChanges (name, args, values) {
+  if (name === 'delete_property') {
+    const record = values?.get(args._id)
+
+    return record ? [{ property: record.type, language: record.language, old: plainValue(record) }] : undefined
+  }
+
+  if (name !== 'create_entity' && name !== 'update_entity') return
+
+  return args.properties.map((property) => ({
+    property: property.type,
+    language: property.language,
+    old: property.valueId ? plainValue(values?.get(property.valueId)) : undefined,
+    new: plainValue(property)
+  }))
+}
+
+// The bare value of a property record or a tool property argument
+function plainValue (value) {
+  if (!value) return
+  if (value.reference) {
+    return value.reference.toString()
+  }
+
+  return value.string ?? value.number ?? value.boolean ?? value.date ?? value.datetime ?? value.filename
 }
