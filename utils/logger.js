@@ -1,3 +1,5 @@
+import { createHmac } from 'node:crypto'
+
 export function logger (message, entu, messageTags) {
   const messageArray = []
   const db = entu?.account
@@ -8,6 +10,9 @@ export function logger (message, entu, messageTags) {
   }
   if (user) {
     messageArray.push(`user:${user}`)
+  }
+  if (entu?.support) {
+    messageArray.push(`support:${supportLogId(entu.support)}`)
   }
   if (messageTags) {
     messageArray.push(...messageTags)
@@ -30,6 +35,9 @@ export function loggerError (message, entu, messageTags) {
   if (user) {
     messageArray.push(`user:${user}`)
   }
+  if (entu?.support) {
+    messageArray.push(`support:${supportLogId(entu.support)}`)
+  }
   if (messageTags) {
     messageArray.push(...messageTags)
   }
@@ -38,4 +46,9 @@ export function loggerError (message, entu, messageTags) {
   }
 
   console.error(messageArray.join(' '))
+}
+
+// A short keyed hash of the support login id, so logs tell staff apart without anyone being able to work back to the personal ID code
+function supportLogId (uid) {
+  return createHmac('sha256', useRuntimeConfig().jwtSecret).update(uid).digest('hex').slice(0, 12)
 }

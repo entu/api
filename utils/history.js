@@ -74,7 +74,7 @@ export async function requireDirectAccess (entu, entityId) {
     throw createError({ statusCode: 404, statusMessage: `Entity ${entityId} not found` })
   }
 
-  if (!entity.access?.map((x) => x.toString()).includes(entu.userStr)) {
+  if (!hasRight(entu, entity, 'access')) {
     throw createError({ statusCode: 403, statusMessage: 'User not in any rights property' })
   }
 }
@@ -93,6 +93,7 @@ export async function entityHistory (entu, entityId, { limit = 100, skip = 0 } =
         type: '$type',
         at: '$created.at',
         by: '$created.by',
+        support: '$created.support',
         new: VALUE_FIELDS
       }
     },
@@ -112,6 +113,7 @@ export async function entityHistory (entu, entityId, { limit = 100, skip = 0 } =
               type: '$type',
               at: '$deleted.at',
               by: '$deleted.by',
+              support: '$deleted.support',
               old: VALUE_FIELDS
             }
           }
@@ -120,10 +122,11 @@ export async function entityHistory (entu, entityId, { limit = 100, skip = 0 } =
     },
     {
       $group: {
-        _id: { type: '$type', at: '$at', by: '$by' },
+        _id: { type: '$type', at: '$at', by: '$by', support: '$support' },
         type: { $max: '$type' },
         at: { $max: '$at' },
         by: { $max: '$by' },
+        support: { $max: '$support' },
         old: { $max: '$old' },
         new: { $max: '$new' }
       }
@@ -171,11 +174,12 @@ export async function entityActivity (entu, actorId, { limit = 100, skip = 0 } =
     },
     {
       $group: {
-        _id: { entity: '$entity._id', type: '$type', at: '$at', by: '$by' },
+        _id: { entity: '$entity._id', type: '$type', at: '$at', by: '$by', support: '$support' },
         entity: { $max: '$entity' },
         type: { $max: '$type' },
         at: { $max: '$at' },
         by: { $max: '$by' },
+        support: { $max: '$support' },
         old: { $max: '$old' },
         new: { $max: '$new' }
       }
@@ -222,7 +226,7 @@ function activityBranch (entu, actorId, stamp, side, take) {
         from: 'entity',
         let: { id: '$entity' },
         pipeline: [
-          { $match: { $expr: { $eq: ['$_id', '$$id'] }, access: entu.user } },
+          { $match: { $expr: { $eq: ['$_id', '$$id'] }, ...(entu.support ? {} : { access: entu.user }) } },
           { $project: { name: { $arrayElemAt: ['$private.name.string', 0] } } }
         ],
         as: '_entity'
@@ -241,6 +245,7 @@ function activityBranch (entu, actorId, stamp, side, take) {
         type: '$type',
         at: `$${stamp}.at`,
         by: `$${stamp}.by`,
+        support: `$${stamp}.support`,
         [side]: VALUE_FIELDS
       }
     }
@@ -260,6 +265,14 @@ function cleanChange (change) {
   }
   if (change.by === null) {
     delete change.by
+  }
+
+  // Only that Entu support made the change is shown - the login id is a personal ID code
+  if (change.support) {
+    change.support = true
+  }
+  else {
+    delete change.support
   }
   if (change.old === null) {
     delete change.old

@@ -11,6 +11,11 @@ export const credentialTypes = ['entu_user', 'entu_api_key']
 // Retired credential types - a passkey is an entu_user value created only by a verified sign-in, so these are never written by a client
 export const retiredCredentialTypes = ['entu_passkey']
 
+// Whether a property type is a login credential, current or retired - only its entity's _owner or the entity itself may change one
+export function isCredentialType (type) {
+  return credentialTypes.includes(type) || retiredCredentialTypes.includes(type)
+}
+
 // Where aggregation keeps each credential type's real values - `entity.auth.user` and `entity.auth.api`
 export const credentialAuthKeys = { entu_user: 'user', entu_api_key: 'api' }
 
@@ -53,6 +58,7 @@ export async function setEntity (entu, entityId, properties, options = {}) {
 
   validateInput(properties)
   validateCredentialProperties(entu, properties)
+  validateSupportUntil(properties)
 
   if (!entityId && !options.skipTypeRequired && !properties.some((p) => p.type === '_type')) {
     throw createError({
@@ -201,7 +207,13 @@ function validateCredentialProperties (entu, properties) {
 
 // Verifies the user has editor or owner access to an existing entity, for the types written and the types removed
 async function checkEntityAccess (entu, entityId, properties, removedTypes, rightTypes) {
-  if (!entityId) return
+  const writtenTypes = properties.map((property) => property.type)
+
+  // A new entity has no owner yet, so it can't carry a support grant
+  if (!entityId) {
+    checkSupportTypes(entu, writtenTypes, false)
+    return
+  }
 
   const entity = await entu.db.collection('entity').findOne({
     _id: entityId
@@ -220,22 +232,21 @@ async function checkEntityAccess (entu, entityId, properties, removedTypes, righ
     })
   }
 
-  const access = entity.private?._editor?.map((s) => s.reference?.toString()) || []
-
-  if (!access.includes(entu.userStr) && !entu.systemUser) {
+  if (!hasRight(entu, entity, '_editor')) {
     throw createError({
       statusCode: 403,
       statusMessage: 'User not in _owner nor _editor property'
     })
   }
 
-  const writtenTypes = properties.map((property) => property.type)
-  const owners = entity.private?._owner?.map((s) => s.reference?.toString()) || []
+  const isOwner = hasRight(entu, entity, '_owner')
+
+  checkSupportTypes(entu, [...writtenTypes, ...removedTypes], isOwner)
 
   // Removing a _parent drops the rights inherited from it, so it needs _owner like the property delete route - adding one needs only _editor
   const changesRights = writtenTypes.some((type) => rightTypes.includes(type)) || removedTypes.some((type) => rightTypes.includes(type) || type === '_parent')
 
-  if (changesRights && !owners.includes(entu.userStr) && !entu.systemUser) {
+  if (changesRights && !isOwner) {
     throw createError({
       statusCode: 403,
       statusMessage: 'User not in _owner property'
@@ -246,7 +257,7 @@ async function checkEntityAccess (entu, entityId, properties, removedTypes, righ
   const changesCredentials = [...writtenTypes, ...removedTypes].some((type) => credentialTypes.includes(type))
   const isOwnEntity = entityId.toString() === entu.userStr
 
-  if (changesCredentials && !owners.includes(entu.userStr) && !isOwnEntity && !entu.systemUser) {
+  if (changesCredentials && !isOwner && !isOwnEntity) {
     throw createError({
       statusCode: 403,
       statusMessage: 'User not in _owner property'
@@ -386,9 +397,7 @@ async function validatePropertyTypes (entu, properties, allowedTypes) {
         })
       }
 
-      const parentAccess = parent.private?._expander?.map((s) => s.reference?.toString()) || []
-
-      if (!parentAccess.includes(entu.userStr) && !entu.systemUser) {
+      if (!hasRight(entu, parent, '_expander')) {
         throw createError({
           statusCode: 400,
           statusMessage: 'User not in parent _owner, _editor nor _expander property'
@@ -425,7 +434,7 @@ async function getDefaultParents (entu, properties, createdDt) {
       props.push({
         type: '_parent',
         reference: parent.reference,
-        created: { at: createdDt, by: entu.user || 'entu' }
+        created: stampFor(entu, createdDt)
       })
     }
   }
@@ -455,15 +464,15 @@ async function getInheritedProperties (entu, properties, createdDt) {
       const parentSharings = parents.map((p) => p.private?._sharing?.at(0)?.string).filter(Boolean)
 
       if (parentSharings.includes('public')) {
-        props.push({ type: '_sharing', string: 'public', created: { at: createdDt, by: entu.user || 'entu' } })
+        props.push({ type: '_sharing', string: 'public', created: stampFor(entu, createdDt) })
       }
       else if (parentSharings.includes('domain')) {
-        props.push({ type: '_sharing', string: 'domain', created: { at: createdDt, by: entu.user || 'entu' } })
+        props.push({ type: '_sharing', string: 'domain', created: stampFor(entu, createdDt) })
       }
     }
 
     if (needsInheritRights && parents.some((p) => p.private?._inheritrights?.at(0)?.boolean === true)) {
-      props.push({ type: '_inheritrights', boolean: true, created: { at: createdDt, by: entu.user || 'entu' } })
+      props.push({ type: '_inheritrights', boolean: true, created: stampFor(entu, createdDt) })
     }
   }
 
@@ -566,13 +575,13 @@ async function createEntityRecord (entu, createdDt) {
         entity: entityId,
         type: '_owner',
         reference: entu.user,
-        created: { at: createdDt, by: entu.user }
+        created: stampFor(entu, createdDt)
       }, {
         entity: entityId,
         type: '_created',
         reference: entu.user,
         datetime: createdDt,
-        created: { at: createdDt, by: entu.user }
+        created: stampFor(entu, createdDt)
       }]
     }
   }
@@ -631,10 +640,7 @@ async function insertProperties (entu, entityId, properties, createdDt) {
     }
 
     property.entity = entityId
-    property.created = {
-      at: createdDt,
-      by: entu.user || 'entu'
-    }
+    property.created = stampFor(entu, createdDt)
 
     const insertedProperty = await entu.db.collection('property').insertOne(property)
     const newProperty = { _id: insertedProperty.insertedId, ...property }
@@ -724,12 +730,7 @@ async function markReplacedUserRightsDeleted (entu, entityId, newProperties) {
     _id: { $nin: newRights.map((p) => p._id) },
     deleted: { $exists: false }
   }, {
-    $set: {
-      deleted: {
-        at: new Date(),
-        by: entu.user || 'entu'
-      }
-    }
+    $set: { deleted: stampFor(entu) }
   })
 }
 
@@ -742,12 +743,7 @@ async function markPropertiesDeleted (entu, entityId, oldPIds) {
     entity: entityId,
     deleted: { $exists: false }
   }, {
-    $set: {
-      deleted: {
-        at: new Date(),
-        by: entu.user || 'entu'
-      }
-    }
+    $set: { deleted: stampFor(entu) }
   })
 }
 
@@ -872,6 +868,10 @@ export async function queryEntities (entu, { filter = {}, search = [], props = [
 
 // MongoDB filter limiting a query to entities the caller may read - never inline it, an undefined user in the $in serializes to null and matches 'domain'
 export function accessFilter (entu) {
+  if (entu.support) {
+    return { $nin: [] }
+  }
+
   if (!entu.user) {
     return 'public'
   }
@@ -879,11 +879,30 @@ export function accessFilter (entu) {
   return { $in: [entu.user, 'domain', 'public'] }
 }
 
+// Whether the caller holds a right on an entity - `access` (any right) or a rights property like `_editor`; the server and Entu support hold them all
+export function hasRight (entu, entity, right) {
+  if (entu.systemUser || entu.support) {
+    return true
+  }
+  if (!entu.userStr) {
+    return false
+  }
+
+  const values = right === 'access' ? entity?.access : entity?.private?.[right]?.map((x) => x.reference)
+
+  return values?.some((x) => x?.toString() === entu.userStr) === true
+}
+
+// The created / deleted stamp of a write - `support` names the Entu support login that made it
+export function stampFor (entu, at = new Date()) {
+  return { at, by: entu.user || 'entu', ...(entu.support ? { support: entu.support } : {}) }
+}
+
 // Resolves whether the caller may read one property value, mirroring cleanupEntity's private/domain/public precedence
 export function canReadProperty (entu, entity, property) {
   const access = entity.access?.map((x) => x.toString()) || []
 
-  if (entu.userStr && access.includes(entu.userStr)) {
+  if (entu.support || (entu.userStr && access.includes(entu.userStr))) {
     return true
   }
 
@@ -906,7 +925,7 @@ export async function cleanupEntity (entu, entity) {
 
   let result = { _id: entity._id }
 
-  if (entu.userStr && entity.access?.map((x) => x.toString())?.includes(entu.userStr)) {
+  if (entu.support || (entu.userStr && entity.access?.map((x) => x.toString())?.includes(entu.userStr))) {
     result = { ...result, ...entity.private }
   }
   else if (entu.userStr && entity.access?.includes('domain')) {

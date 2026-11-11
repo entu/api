@@ -860,6 +860,13 @@ async function executeDeleteProperty (entu, params) {
     })
   }
 
+  if (serverOnlyTypes.includes(property.type)) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: `Can't delete server-managed property ${property.type}`
+    })
+  }
+
   const entity = await entu.db.collection('entity').findOne({
     _id: property.entity
   }, {
@@ -887,12 +894,22 @@ async function executeDeleteProperty (entu, params) {
     })
   }
 
-  const access = entity.private?._editor?.map((s) => s.reference?.toString()) || []
-
-  if (!access.includes(entu.userStr)) {
+  if (!hasRight(entu, entity, '_editor')) {
     throw createError({
       statusCode: 403,
       statusMessage: 'User not in _owner nor _editor property'
+    })
+  }
+
+  const isOwner = hasRight(entu, entity, '_owner')
+
+  checkSupportTypes(entu, [property.type], isOwner)
+
+  // Credentials grant login AS the entity - removing one needs its _owner or the entity itself, the same as adding one
+  if (isCredentialType(property.type) && !isOwner && property.entity.toString() !== entu.userStr) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'User not in _owner property'
     })
   }
 
@@ -900,12 +917,7 @@ async function executeDeleteProperty (entu, params) {
     _id: propertyId,
     entity: property.entity
   }, {
-    $set: {
-      deleted: {
-        at: new Date(),
-        by: entu.user
-      }
-    }
+    $set: { deleted: stampFor(entu) }
   })
 
   await aggregateEntity(entu, property.entity)

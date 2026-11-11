@@ -90,12 +90,18 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const access = entity.private?._owner?.map((s) => s.reference?.toString()) || []
-
-  if (!access.includes(entu.userStr)) {
+  if (!hasRight(entu, entity, '_owner')) {
     throw createError({
       statusCode: 403,
       statusMessage: 'User not in _owner property'
+    })
+  }
+
+  // Support acts as the database entity, and deleting that would end the customer's database and its grant
+  if (entu.support && entityId.toString() === entu.userStr) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Entu support can\'t delete the database entity'
     })
   }
 
@@ -104,10 +110,7 @@ export default defineEventHandler(async (event) => {
     type: '_deleted',
     reference: entu.user,
     datetime: new Date(),
-    created: {
-      at: new Date(),
-      by: entu.user
-    }
+    created: stampFor(entu)
   })
 
   await aggregateEntity(entu, entityId)
@@ -125,12 +128,7 @@ export default defineEventHandler(async (event) => {
     reference: entityId,
     deleted: { $exists: false }
   }, {
-    $set: {
-      deleted: {
-        at: new Date(),
-        by: entu.user
-      }
-    }
+    $set: { deleted: stampFor(entu) }
   })
 
   await addAggregateQueue(entu, referrerIds)

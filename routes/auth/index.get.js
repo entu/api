@@ -85,6 +85,25 @@ defineRouteMeta({
                     }
                   }
                 },
+                support: {
+                  type: 'array',
+                  description: 'Entu support only: databases whose owner granted support access, open until `until`; omitted when empty',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      _id: { type: 'string', description: 'Database name', example: 'mydatabase' },
+                      name: { type: 'string', description: 'Database name', example: 'mydatabase' },
+                      until: { type: 'string', format: 'date-time', description: 'Support access end' },
+                      user: {
+                        type: 'object',
+                        description: 'The database entity, which support acts as',
+                        properties: {
+                          _id: { type: 'string', description: 'Database entity ID', example: '6798938432faaba00f8fc72f' }
+                        }
+                      }
+                    }
+                  }
+                },
                 user: {
                   type: 'object',
                   description: 'Login identity — empty for an API key',

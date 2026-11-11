@@ -578,7 +578,7 @@ async function getEntityHistoryTool (entu, args) {
     throw createError({ statusCode: 404, statusMessage: `Entity ${entityId} not found` })
   }
 
-  if (!entity.access?.map((x) => x.toString()).includes(entu.userStr)) {
+  if (!hasRight(entu, entity, 'access')) {
     throw createError({ statusCode: 403, statusMessage: 'User not in any rights property' })
   }
 

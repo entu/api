@@ -59,16 +59,18 @@ export function buildResolvers (entityTypes, propsByTypeId) {
         if (!entity) {
           throw new Error(`Entity ${id} not found`)
         }
-        const owners = (entity.private?._owner || []).map((s) => s.reference?.toString())
-        if (!owners.includes(entu.userStr)) {
+        if (!hasRight(entu, entity, '_owner')) {
           throw new Error('User not in _owner property')
+        }
+        if (entu.support && entityId.toString() === entu.userStr) {
+          throw new Error('Entu support can\'t delete the database entity')
         }
         await entu.db.collection('property').insertOne({
           entity: entityId,
           type: '_deleted',
           reference: entu.user,
           datetime: new Date(),
-          created: { at: new Date(), by: entu.user }
+          created: stampFor(entu)
         })
         await aggregateEntity(entu, entityId)
         await triggerWebhooks(entu, entityId, 'entity-delete-webhook')
@@ -78,7 +80,7 @@ export function buildResolvers (entityTypes, propsByTypeId) {
         ]).toArray()
         await entu.db.collection('property').updateMany(
           { reference: entityId, deleted: { $exists: false } },
-          { $set: { deleted: { at: new Date(), by: entu.user } } }
+          { $set: { deleted: stampFor(entu) } }
         )
         await addAggregateQueue(entu, referrers.map((r) => r._id))
         return true
@@ -173,9 +175,12 @@ export function buildResolvers (entityTypes, propsByTypeId) {
         throw new Error(`Entity ${id} not found`)
       }
 
-      const owners = (entity.private?._owner || []).map((s) => s.reference?.toString())
-      if (!owners.includes(entu.userStr)) {
+      if (!hasRight(entu, entity, '_owner')) {
         throw new Error('User not in _owner property')
+      }
+
+      if (entu.support && entityId.toString() === entu.userStr) {
+        throw new Error('Entu support can\'t delete the database entity')
       }
 
       await entu.db.collection('property').insertOne({
@@ -183,7 +188,7 @@ export function buildResolvers (entityTypes, propsByTypeId) {
         type: '_deleted',
         reference: entu.user,
         datetime: new Date(),
-        created: { at: new Date(), by: entu.user }
+        created: stampFor(entu)
       })
 
       await aggregateEntity(entu, entityId)
@@ -196,7 +201,7 @@ export function buildResolvers (entityTypes, propsByTypeId) {
 
       await entu.db.collection('property').updateMany(
         { reference: entityId, deleted: { $exists: false } },
-        { $set: { deleted: { at: new Date(), by: entu.user } } }
+        { $set: { deleted: stampFor(entu) } }
       )
 
       await addAggregateQueue(entu, referrers.map((r) => r._id))

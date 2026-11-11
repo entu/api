@@ -142,18 +142,26 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const access = entity.private?._editor?.map((s) => s.reference?.toString()) || []
-
-  if (!access.includes(entu.userStr)) {
+  if (!hasRight(entu, entity, '_editor')) {
     throw createError({
       statusCode: 403,
       statusMessage: 'User not in _owner nor _editor property'
     })
   }
 
-  const owners = entity.private?._owner?.map((s) => s.reference?.toString()) || []
+  const isOwner = hasRight(entu, entity, '_owner')
 
-  if (rightTypes.includes(property.type) && !owners.includes(entu.userStr)) {
+  checkSupportTypes(entu, [property.type], isOwner)
+
+  if (rightTypes.includes(property.type) && !isOwner) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'User not in _owner property'
+    })
+  }
+
+  // Credentials grant login AS the entity - removing one needs its _owner or the entity itself, the same as adding one
+  if (isCredentialType(property.type) && !isOwner && property.entity.toString() !== entu.userStr) {
     throw createError({
       statusCode: 403,
       statusMessage: 'User not in _owner property'
@@ -184,9 +192,7 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const parentAccess = parent.private?._expander?.map((s) => s.reference?.toString()) || []
-
-    if (!parentAccess.includes(entu.userStr) && !entu.systemUser) {
+    if (!hasRight(entu, parent, '_expander')) {
       throw createError({
         statusCode: 403,
         statusMessage: 'User not in parent _owner, _editor nor _expander property'
@@ -198,12 +204,7 @@ export default defineEventHandler(async (event) => {
     _id: propertyId,
     entity: property.entity
   }, {
-    $set: {
-      deleted: {
-        at: new Date(),
-        by: entu.user
-      }
-    }
+    $set: { deleted: stampFor(entu) }
   })
 
   await aggregateEntity(entu, property.entity)

@@ -148,9 +148,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const isOwner = entity.private?._owner?.some((owner) => owner.reference?.toString() === entu.userStr)
-
-  if (!isOwner) {
+  if (!hasRight(entu, entity, '_owner')) {
     throw createError({
       statusCode: 403,
       statusMessage: 'User must be owner to duplicate entity'
@@ -162,7 +160,7 @@ export default defineEventHandler(async (event) => {
     entity: entityId,
     deleted: { $exists: false },
     filename: { $exists: false },
-    type: { $nin: [...ignoredProperties, '_created', '_mid', ...credentialTypes, ...retiredCredentialTypes, ...serverOnlyTypes] }
+    type: { $nin: [...ignoredProperties, '_created', '_mid', 'support_until', ...credentialTypes, ...retiredCredentialTypes, ...serverOnlyTypes] }
   }, {
     projection: {
       _id: false,

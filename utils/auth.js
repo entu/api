@@ -34,7 +34,7 @@ export function authReadToken (event, account) {
 // Exchanges a credential - an API key or a session - for a 12-hour access token. The shared body of GET /auth, the
 // passkey routes and the OAuth token endpoint; `bindIp: false` issues a token an OAuth client can use from its servers.
 // `offerRename: false` is for a response that never reaches the passkey's own client, so no rename is recorded for it.
-export async function authExchange (event, { account, bindIp = true, invite, key, offerRename = true, sessionId }) {
+export async function authExchange (event, { account, bindIp = true, invite, key, listSupport = true, offerRename = true, sessionId }) {
   const credential = await resolveCredential(event, key, sessionId)
   const identity = credential.session ? sessionIdentity(credential.session) : undefined
 
@@ -58,13 +58,14 @@ export async function authExchange (event, { account, bindIp = true, invite, key
   const accepted = pendingInvite ? await inviteAccept(pendingInvite, identity, found) : {}
   const accounts = accepted.account ? [...found, accepted.account] : found
 
-  // A database that adds users automatically gets a person for a new identity - never while an invite names one
-  const created = identity && onlyForAccount && !pendingInvite && accounts.length === 0
+  // A database that adds users automatically gets a person for a new identity - never while an invite names one, and never for Entu support, which gets in only through a grant
+  const created = identity && onlyForAccount && !pendingInvite && accounts.length === 0 && !isSupportIdentity(identity)
     ? await createUserForAccount(onlyForAccount, identity)
     : undefined
 
   const allAccounts = created ? [{ account: onlyForAccount, userId: created._id, userName: created.name, new: true }] : accounts
   const user = identity ? authIdentity(identity, allAccounts) : {}
+  const support = listSupport && identity ? await findSupportAccounts(identity, allAccounts.map((a) => a.account), onlyForAccount) : []
 
   // A passkey starts out as "Entu" in the password manager; a client that can rename it is told the person name once, and again only when it changes
   const rename = offerRename && credential.session?.user?.rename && user.provider === 'passkey' && user.name
@@ -72,14 +73,14 @@ export async function authExchange (event, { account, bindIp = true, invite, key
     : undefined
 
   return {
-    ...authIssueToken(event, { accounts: allAccounts, bindIp, user }),
+    ...authIssueToken(event, { accounts: allAccounts, bindIp, support, user }),
     ...(accepted.conflict ? { conflict: 'invite' } : {}),
     ...(rename ? { rename } : {})
   }
 }
 
-// Signs the 12-hour access token for a sign-in or refresh; `accounts` are { account, userId, userName, new? } entries
-export function authIssueToken (event, { accounts, authAt = Math.floor(Date.now() / 1000), bindIp = true, user = {} }) {
+// Signs the 12-hour access token for a sign-in or refresh; `support` databases are listed in the response only, as their access is decided per request.
+export function authIssueToken (event, { accounts, authAt = Math.floor(Date.now() / 1000), bindIp = true, support = [], user = {} }) {
   const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000)
 
   // authAt is the original authentication time - carried unchanged through refreshes
@@ -99,6 +100,7 @@ export function authIssueToken (event, { accounts, authAt = Math.floor(Date.now(
       name: a.account,
       user: { _id: a.userId.toString(), name: a.userName || a.userId.toString(), ...(a.new ? { new: true } : {}) }
     })),
+    ...(support.length > 0 ? { support: support.map((s) => ({ _id: s.account, name: s.account, until: s.until.toISOString(), user: { _id: s.databaseId.toString() } })) } : {}),
     user,
     token: tokenSign(event, 'access', tokenData, { bindIp }),
     expires: expiresAt.toISOString()

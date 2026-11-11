@@ -90,12 +90,12 @@ export async function buildEntuContext (event) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid account parameter' })
   }
 
-  return { ...authReadToken(event, account), account, db: await connectDb(account) }
+  return await withSupportAccess({ ...authReadToken(event, account), account, db: await connectDb(account) })
 }
 
 // Returns a cached (or freshly built) GraphQL schema for the given user context (auto-imported by Nitro)
 export async function getOrBuildSchema (entu) {
-  const cacheKey = `${entu.account}:${entu.userStr || 'anonymous'}`
+  const cacheKey = `${entu.account}:${entu.support ? 'support' : entu.userStr || 'anonymous'}`
   const cached = schemaCache.get(cacheKey)
 
   if (cached && Date.now() - cached.builtAt < CACHE_TTL_MS) {
@@ -302,6 +302,8 @@ type Change {
   at: String
   "ID of the entity that made the change"
   by: ID
+  "True when Entu support made the change, acting as the database entity"
+  support: Boolean
   "Property value before the change"
   old: ChangeValue
   "Property value after the change"

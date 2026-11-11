@@ -116,7 +116,7 @@ export default defineEventHandler(async (event) => {
 
   // Resolve the view the caller is allowed to see (mirrors cleanupEntity).
   let photo
-  if (entu.userStr && entity.access?.map((x) => x.toString())?.includes(entu.userStr)) {
+  if (entu.support || (entu.userStr && entity.access?.map((x) => x.toString())?.includes(entu.userStr))) {
     photo = entity.private?.photo?.at(0)
   }
   else if (entu.userStr && entity.access?.includes('domain')) {

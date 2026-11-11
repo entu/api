@@ -147,6 +147,11 @@ export default defineEventHandler(async (event) => {
     return redirect(property.url, 302)
   }
 
+  // Only that Entu support made the value is shown - its login id is a personal ID code
+  if (property.created?.support) {
+    property.created = { ...property.created, support: true }
+  }
+
   if (!credentialTypes.includes(property.type) && !retiredCredentialTypes.includes(property.type)) {
     return property
   }

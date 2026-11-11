@@ -25,7 +25,7 @@ defineRouteMeta({
               properties: {
                 accounts: {
                   type: 'array',
-                  description: 'Accessible databases — never empty',
+                  description: 'Databases the identity is a person in — empty only when `support` lists one',
                   items: {
                     type: 'object',
                     properties: {
@@ -37,6 +37,25 @@ defineRouteMeta({
                         properties: {
                           _id: { type: 'string', description: 'Person entity ID', example: '6798938432faaba00f8fc72f' },
                           name: { type: 'string', description: 'Person name, or ID', example: 'User 1' }
+                        }
+                      }
+                    }
+                  }
+                },
+                support: {
+                  type: 'array',
+                  description: 'Entu support only: databases whose owner granted support access, open until `until`; omitted when empty',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      _id: { type: 'string', description: 'Database name', example: 'mydatabase' },
+                      name: { type: 'string', description: 'Database name', example: 'mydatabase' },
+                      until: { type: 'string', format: 'date-time', description: 'Support access end' },
+                      user: {
+                        type: 'object',
+                        description: 'The database entity, which support acts as',
+                        properties: {
+                          _id: { type: 'string', description: 'Database entity ID', example: '6798938432faaba00f8fc72f' }
                         }
                       }
                     }
@@ -100,10 +119,12 @@ export default defineEventHandler(async (event) => {
   }
 
   let accounts
+  let support = []
 
   if (decoded.user?.uid && decoded.user?.provider) {
     // OAuth session: rediscover accounts by a live identity scan that replaces the old claim, so revoked databases drop out and new ones appear
     accounts = await findUserAccounts(decoded.user)
+    support = await findSupportAccounts(decoded.user, accounts.map((a) => a.account))
   }
   else {
     // API-key session (or a passkey token issued before passkeys carried an identity): re-validate the existing accounts claim, dropping entities that no longer exist
@@ -132,7 +153,7 @@ export default defineEventHandler(async (event) => {
     )).filter(Boolean)
   }
 
-  if (accounts.length === 0) {
+  if (accounts.length === 0 && support.length === 0) {
     throw createError({ statusCode: 401, statusMessage: 'No accessible accounts' })
   }
 
@@ -141,5 +162,5 @@ export default defineEventHandler(async (event) => {
     ? authIdentity({ ...decoded.user, registered: undefined }, accounts)
     : decoded.user || {}
 
-  return authIssueToken(event, { accounts, authAt: decoded.authAt, user })
+  return authIssueToken(event, { accounts, authAt: decoded.authAt, support, user })
 })

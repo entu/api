@@ -71,6 +71,7 @@ defineRouteMeta({
                       type: { type: 'string', description: 'Property name' },
                       at: { type: 'string', format: 'date-time', description: 'Change time' },
                       by: { type: 'string', description: 'This entity\'s ID' },
+                      support: { type: 'boolean', description: '`true` when Entu support made the change, acting as the database entity' },
                       old: {
                         type: 'object',
                         description: 'Removed value, if any',

@@ -29,7 +29,8 @@ export default defineNitroConfig({
     sesKey: '',
     sesSecret: '',
     stripeKey: '',
-    stripeEndpointSecret: ''
+    stripeEndpointSecret: '',
+    supportUsers: ''
   },
   routeRules: {
     '/**': { cors: true }
