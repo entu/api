@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<!-- MCP Apps change card served by utils/mcp.js as ui://entu/change.html; shows one write tool result. Data is untrusted, so it is only ever set as textContent. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entu change</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: var(--color-background-primary, light-dark(#ffffff, #1f1f1f));
+    --bg-muted: var(--color-background-secondary, light-dark(#f4f5f7, #2a2a2a));
+    --text: var(--color-text-primary, light-dark(#1f2328, #f2f2f2));
+    --text-muted: var(--color-text-secondary, light-dark(#5f6670, #a8acb3));
+    --border: var(--color-border-tertiary, light-dark(#e3e5e8, #3a3a3a));
+    --created: var(--color-text-success, light-dark(#1a7f37, #4ac26b));
+    --created-bg: var(--color-background-success, light-dark(#e8f6ec, #15301d));
+    --changed: var(--color-text-info, light-dark(#0b5cad, #6cb6ff));
+    --changed-bg: var(--color-background-info, light-dark(#e7f0fb, #14263b));
+    --deleted: var(--color-text-danger, light-dark(#c62828, #ff7b72));
+    --deleted-bg: var(--color-background-danger, light-dark(#fdecec, #3a1a1a));
+    --radius: var(--border-radius-md, 8px);
+    --font: var(--font-sans, system-ui, -apple-system, "Segoe UI", sans-serif);
+    --mono: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+  }
+
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 12px 14px;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.45 var(--font);
+  }
+
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+  }
+
+  .badge {
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .badge.created { color: var(--created); background: var(--created-bg); }
+  .badge.changed { color: var(--changed); background: var(--changed-bg); }
+  .badge.deleted { color: var(--deleted); background: var(--deleted-bg); }
+  .badge.pending { color: var(--text-muted); background: var(--bg-muted); }
+
+  .type {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  .badge { flex-shrink: 0; }
+
+  .name {
+    flex-basis: 100%;
+    font-size: 16px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  #open { margin-left: auto; }
+
+  .deleted-name { text-decoration: line-through; color: var(--text-muted); }
+
+  .description {
+    margin: 8px 0 0;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  td {
+    padding: 6px 0;
+    border-top: 1px solid var(--border);
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  td.property {
+    width: 34%;
+    padding-right: 12px;
+    color: var(--text-muted);
+  }
+
+  .line {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .line + .line { margin-top: 4px; }
+
+  .values {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Fixed width, and present on every line once the card has any language, so values stay aligned */
+  .language {
+    flex: 0 0 24px;
+    text-align: center;
+    border-radius: 4px;
+    background: var(--bg-muted);
+    font: 11px var(--mono);
+  }
+
+  .language:empty { background: none; }
+
+  .stacked .value { display: block; }
+  .stacked .value + .value { margin-top: 4px; }
+
+  .clamped {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .old { color: var(--deleted); text-decoration: line-through; }
+  .arrow { margin: 0 6px; color: var(--text-muted); }
+  .new { color: var(--created); }
+
+  .error {
+    margin: 8px 0 0;
+    color: var(--deleted);
+    overflow-wrap: anywhere;
+  }
+
+  button {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-muted);
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  button:hover { border-color: var(--text-muted); }
+
+  button.more {
+    margin-top: 6px;
+    padding: 2px 0;
+    border: 0;
+    background: none;
+    color: var(--changed);
+  }
+</style>
+</head>
+<body>
+<header>
+  <span id="badge" class="badge pending"></span>
+  <span id="type" class="type"></span>
+  <button id="open" type="button" hidden></button>
+  <span id="name" class="name"></span>
+</header>
+<p id="description" class="description" hidden></p>
+<p id="error" class="error" hidden></p>
+<table id="changes" hidden><tbody></tbody></table>
+<button id="more" class="more" type="button" hidden></button>
+
+<script>
+  const texts = {
+    en: {
+      pending: 'Saving',
+      created: 'Created',
+      changed: 'Changed',
+      deleted: 'Deleted',
+      failed: 'Not saved',
+      cancelled: 'Cancelled',
+      yes: 'Yes',
+      no: 'No',
+      open: 'Open in Entu',
+      showAll: (count) => `Show all ${count}`,
+      showLess: 'Show less'
+    },
+    et: {
+      pending: 'Salvestan',
+      created: 'Loodud',
+      changed: 'Muudetud',
+      deleted: 'Kustutatud',
+      failed: 'Salvestamata',
+      cancelled: 'Katkestatud',
+      yes: 'Jah',
+      no: 'Ei',
+      open: 'Ava Entus',
+      showAll: (count) => `Näita kõiki ${count}`,
+      showLess: 'Näita vähem'
+    }
+  }
+
+  // Rows shown before "Show all", and the length from which a value is cut to two lines until clicked
+  const collapsedRowCount = 5
+  const longValueLength = 120
+
+  const pendingRequests = new Map()
+  let isExpanded = false
+  let hasLanguages = false
+  let nextRequestId = 1
+  let language = 'en'
+  let t = texts.en
+
+  // Sends a JSON-RPC request to the host and resolves with its result
+  function request (method, params) {
+    const id = nextRequestId++
+
+    window.parent.postMessage({ jsonrpc: '2.0', id, method, params }, '*')
+
+    return new Promise((resolve, reject) => {
+      pendingRequests.set(id, { resolve, reject })
+    })
+  }
+
+  // Sends a JSON-RPC notification to the host
+  function notify (method, params) {
+    window.parent.postMessage({ jsonrpc: '2.0', method, params }, '*')
+  }
+
+  // Routes host messages - responses to our requests, and the tool input and result notifications
+  function onMessage (event) {
+    if (event.source !== window.parent) return
+
+    const message = event.data
+
+    if (message?.jsonrpc !== '2.0') return
+
+    if (message.id !== undefined && pendingRequests.has(message.id)) {
+      const pending = pendingRequests.get(message.id)
+
+      pendingRequests.delete(message.id)
+
+      if (message.error) {
+        pending.reject(new Error(message.error.message))
+      }
+      else {
+        pending.resolve(message.result)
+      }
+
+      return
+    }
+
+    switch (message.method) {
+      case 'ui/notifications/tool-input':
+        renderPending()
+        break
+      case 'ui/notifications/tool-result':
+        renderResult(message.params)
+        break
+      case 'ui/notifications/tool-cancelled':
+        renderBadge('pending', t.cancelled)
+        break
+      case 'ui/notifications/host-context-changed':
+        applyHostContext(message.params)
+        break
+      case 'ui/resource-teardown':
+        window.parent.postMessage({ jsonrpc: '2.0', id: message.id, result: {} }, '*')
+        break
+    }
+  }
+
+  // Applies the host's theme, style variables and language
+  function applyHostContext (context) {
+    if (!context) return
+
+    if (context.theme) {
+      document.documentElement.dataset.theme = context.theme
+    }
+
+    for (const [key, value] of Object.entries(context.styles?.variables || {})) {
+      if (value) {
+        document.documentElement.style.setProperty(key, value)
+      }
+    }
+
+    if (context.locale) {
+      language = context.locale.toLowerCase().startsWith('et') ? 'et' : 'en'
+      t = texts[language]
+      document.documentElement.lang = language
+    }
+  }
+
+  // Sets the header badge's style and label
+  function renderBadge (kind, label) {
+    const badge = document.getElementById('badge')
+
+    badge.className = `badge ${kind}`
+    badge.textContent = label
+  }
+
+  // Shows the saving state while the call runs
+  function renderPending () {
+    renderBadge('pending', `${t.pending}…`)
+  }
+
+  // Renders a finished write - its entity, every written or removed value, and a link back to Entu
+  function renderResult (result) {
+    const data = result?.structuredContent
+
+    if (result?.isError || !data) {
+      renderBadge('deleted', t.failed)
+      showText('error', result?.content?.find((item) => item.type === 'text')?.text)
+
+      return
+    }
+
+    renderBadge(data.action, t[data.action] || data.action)
+
+    document.getElementById('type').textContent = pickLabel(data.typeLabel) || data.type || ''
+
+    const name = document.getElementById('name')
+
+    name.textContent = data.name || data._id || ''
+    name.classList.toggle('deleted-name', data.action === 'deleted')
+
+    if (!data.changes?.length) {
+      showText('description', data.description)
+    }
+
+    renderChanges(data.changes || [])
+    renderOpenButton(data.url)
+  }
+
+  // Picks the label in the host's language, then a language-neutral one, then any
+  function pickLabel (labels) {
+    if (!labels?.length) return
+
+    const match = labels.find((label) => label.language === language) || labels.find((label) => !label.language) || labels.at(0)
+
+    return match.string
+  }
+
+  // Shows a paragraph with plain text, or hides it when there is none
+  function showText (id, text) {
+    const element = document.getElementById(id)
+
+    element.textContent = text || ''
+    element.hidden = !text
+  }
+
+  // One row per property, its label shown once above every changed value; long lists start collapsed
+  function renderChanges (changes) {
+    const table = document.getElementById('changes')
+    const body = table.querySelector('tbody')
+    const more = document.getElementById('more')
+    const groups = groupByProperty(changes)
+
+    hasLanguages = changes.some((change) => change.language)
+    body.replaceChildren(...groups.map(propertyRow))
+    table.hidden = groups.length === 0
+
+    more.hidden = groups.length <= collapsedRowCount
+    more.onclick = () => setExpanded(!isExpanded)
+
+    setExpanded(false)
+  }
+
+  // Shows every row or only the first few, and relabels the toggle to match
+  function setExpanded (expanded) {
+    const rows = document.querySelectorAll('#changes tbody tr')
+    const more = document.getElementById('more')
+
+    isExpanded = expanded
+
+    rows.forEach((row, index) => {
+      row.hidden = !expanded && index >= collapsedRowCount
+    })
+
+    more.textContent = expanded ? t.showLess : t.showAll(rows.length)
+  }
+
+  // Collects the changes of each property into one group, keeping the server's ordinal order
+  function groupByProperty (changes) {
+    const groups = []
+
+    for (const change of changes) {
+      const group = groups.find((item) => item.property === change.property)
+
+      if (group) {
+        group.changes.push(change)
+      }
+      else {
+        groups.push({ property: change.property, label: change.label, changes: [change] })
+      }
+    }
+
+    return groups
+  }
+
+  // Builds one property row - the label once, then a line per changed value
+  function propertyRow (group) {
+    const row = document.createElement('tr')
+    const property = document.createElement('td')
+    const values = document.createElement('td')
+
+    property.className = 'property'
+    property.textContent = pickLabel(group.label) || group.property
+    property.title = group.property
+
+    values.append(...group.changes.map(changeLine))
+    row.append(property, values)
+
+    return row
+  }
+
+  // Builds one value line - a language slot when the card has languages, then old crossed out and the new value
+  function changeLine (change) {
+    const line = document.createElement('div')
+    const values = document.createElement('span')
+    const oldText = change.old === undefined ? undefined : formatValue(change.old)
+    const newText = change.new === undefined ? undefined : formatValue(change.new)
+    const isLong = [oldText, newText].some((text) => text?.length > longValueLength)
+
+    // Long values stack old above new, each cut to two lines until clicked
+    line.className = isLong ? 'line stacked' : 'line'
+    values.className = 'values'
+
+    if (hasLanguages) {
+      line.append(element('span', 'language', change.language || ''))
+    }
+
+    if (oldText !== undefined) {
+      values.append(valueSpan('old', oldText, isLong))
+    }
+
+    if (oldText !== undefined && newText !== undefined && !isLong) {
+      values.append(element('span', 'arrow', '→'))
+    }
+
+    // A removed value is just the old one crossed out
+    if (newText !== undefined) {
+      values.append(valueSpan('new', newText, isLong))
+    }
+
+    line.append(values)
+
+    return line
+  }
+
+  // Builds an old or new value; a long one is clamped and opens or closes on click
+  function valueSpan (className, text, isLong) {
+    const span = element('span', `value ${className}`, text)
+
+    if (isLong) {
+      span.classList.add('clamped')
+      span.title = text
+      span.addEventListener('click', () => span.classList.toggle('clamped'))
+    }
+
+    return span
+  }
+
+  // Creates an element with a class and plain text
+  function element (tag, className, text) {
+    const node = document.createElement(tag)
+
+    node.className = className
+    node.textContent = text
+
+    return node
+  }
+
+  // Renders a value for display - booleans as yes or no, everything else as text
+  function formatValue (value) {
+    if (value === true) return t.yes
+    if (value === false) return t.no
+
+    return String(value)
+  }
+
+  // Shows the header's Open in Entu button when the entity still exists
+  function renderOpenButton (url) {
+    const button = document.getElementById('open')
+
+    button.hidden = !url
+    button.textContent = t.open
+    button.onclick = () => openLink(url)
+  }
+
+  // Opens only web links, and only through the host - a refusal by the host or the user stands
+  function openLink (url) {
+    if (!/^https?:\/\//.test(url)) return
+
+    request('ui/open-link', { url }).catch(() => {})
+  }
+
+  // Tells the host the card's size so it can fit the frame to the content
+  function reportSize () {
+    notify('ui/notifications/size-changed', {
+      width: Math.ceil(document.documentElement.scrollWidth),
+      height: Math.ceil(document.documentElement.scrollHeight)
+    })
+  }
+
+  // Runs the MCP Apps handshake, then reports size changes
+  async function start () {
+    renderPending()
+
+    window.addEventListener('message', onMessage)
+
+    const result = await request('ui/initialize', {
+      appInfo: { name: 'entu-change', version: '1.0.0' },
+      appCapabilities: { availableDisplayModes: ['inline'] },
+      protocolVersion: '2026-01-26'
+    })
+
+    applyHostContext(result?.hostContext)
+    renderPending()
+    notify('ui/notifications/initialized', {})
+
+    new ResizeObserver(reportSize).observe(document.body)
+  }
+
+  start()
+</script>
+</body>
+</html>

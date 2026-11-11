@@ -4,6 +4,10 @@ import { CallToolRequestSchema, ListResourcesRequestSchema, ListToolsRequestSche
 
 const schemaResourcePattern = /^entu:\/\/([^/]+)\/schema$/
 
+// MCP Apps view that clients supporting the extension render under every write - the change card in assets/mcp/change.html
+const changeViewUri = 'ui://entu/change.html'
+const changeViewMimeType = 'text/html;profile=mcp-app'
+
 // Readable tool names MCP clients show in tool lists and permission prompts - MCP-only, so they stay out of the shared AI definitions
 const toolTitles = {
   get_entity_type: 'Get entity type',
@@ -127,8 +131,10 @@ async function createMcpServer (event, accounts) {
     try {
       const { db, ...args } = request.params.arguments || {}
       const result = await executeTool(await databaseContext(event, accounts, db), request.params.name, args)
+      const content = [{ type: 'text', text: JSON.stringify(result) }]
 
-      return { content: [{ type: 'text', text: JSON.stringify(result) }] }
+      // Write results also go out as structuredContent, which the change view renders as is
+      return writeAnnotations[request.params.name] ? { content, structuredContent: result } : { content }
     }
     catch (e) {
       return {
@@ -149,6 +155,18 @@ async function createMcpServer (event, accounts) {
   }))
 
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+    if (request.params.uri === changeViewUri) {
+      return {
+        contents: [{
+          uri: changeViewUri,
+          mimeType: changeViewMimeType,
+          text: await useStorage('assets:server').getItem('mcp/change.html'),
+          // No csp entry - the view loads nothing external and opens links through the host
+          _meta: { ui: { prefersBorder: true } }
+        }]
+      }
+    }
+
     const account = request.params.uri.match(schemaResourcePattern)?.at(1)
 
     if (!account) {
@@ -188,7 +206,9 @@ function toolDefinitions (accounts, writableAccounts) {
           },
           required: ['db', ...(tool.function.parameters.required || [])]
         },
-        annotations: isRead ? readAnnotations : writeAnnotations[tool.function.name]
+        annotations: isRead ? readAnnotations : writeAnnotations[tool.function.name],
+        // Both the current and the deprecated MCP Apps key, as the official SDK writes them
+        ...(isRead ? {} : { _meta: { ui: { resourceUri: changeViewUri }, 'ui/resourceUri': changeViewUri } })
       }
     })
 }
@@ -220,14 +240,80 @@ async function executeTool (entu, name, args) {
   }
 
   const entityId = results.at(0)?._id ?? before.entityId
-  const entity = name === 'delete_entity' ? before.entity : await entitySummary(entu, entityId)
+  const isEntityDelete = name === 'delete_entity'
+  const entity = isEntityDelete ? before.entity : await entitySummary(entu, entityId)
+  const labels = await definitionLabels(entu, entity?.typeId)
 
   return {
+    action: writeAction(name),
+    database: entu.account,
     _id: entityId,
-    ...entity,
+    type: entity?.type,
+    typeLabel: labels.type,
+    name: entity?.name,
     description: aiDescribeOperation(operation),
-    changes: writeChanges(name, args, before.values)
+    changes: sortChanges(writeChanges(name, args, before.values), labels.properties),
+    url: entityId && !isEntityDelete ? `${useRuntimeConfig().appUrl}/${entu.account}/${entityId}` : undefined
   }
+}
+
+// The entity type's label and its property definitions' labels in every language, as far as the caller may read them - the change view shows these instead of names
+async function definitionLabels (entu, typeId) {
+  if (!typeId) {
+    return { properties: new Map() }
+  }
+
+  const [typeEntity, propertyEntities] = await Promise.all([
+    entu.db.collection('entity').findOne({ _id: typeId, access: accessFilter(entu) }, { projection: { _id: false, 'private.label': true } }),
+    entu.db.collection('entity').find({
+      'private._parent.reference': typeId,
+      'private._type.string': 'property',
+      access: accessFilter(entu)
+    }, {
+      projection: { _id: false, 'private.name.string': true, 'private.label': true, 'private.ordinal.number': true }
+    }).toArray()
+  ])
+
+  return {
+    type: labelValues(typeEntity?.private?.label),
+    properties: new Map(propertyEntities.map((property) => [property.private?.name?.at(0)?.string, {
+      label: labelValues(property.private?.label),
+      ordinal: property.private?.ordinal?.at(0)?.number
+    }]))
+  }
+}
+
+// Adds each change's property label and orders them like the webapp's edit form - by definition ordinal (missing last), then name, keeping a property's values together
+function sortChanges (changes, definitions) {
+  if (!changes) return
+
+  return changes
+    .map((change) => ({ ...change, label: definitions.get(change.property)?.label }))
+    .toSorted((a, b) => definitionOrdinal(definitions, a.property) - definitionOrdinal(definitions, b.property) || a.property.localeCompare(b.property))
+}
+
+// A property definition's ordinal, or last when it has none or the caller can't read the definition
+function definitionOrdinal (definitions, property) {
+  return definitions.get(property)?.ordinal ?? Number.MAX_SAFE_INTEGER
+}
+
+// Reduces label values to { string, language } pairs, or undefined when there are none
+function labelValues (values) {
+  const labels = values?.filter((value) => value.string).map((value) => ({ string: value.string, language: value.language }))
+
+  return labels?.length ? labels : undefined
+}
+
+// What a write did to its entity, for the change view's header
+function writeAction (name) {
+  if (name.startsWith('create_')) {
+    return 'created'
+  }
+  if (name === 'delete_entity') {
+    return 'deleted'
+  }
+
+  return 'changed'
 }
 
 // Collects what the write will replace or remove while it still exists - the deleted entity, or the old values by id
@@ -259,15 +345,16 @@ async function propertyRecords (entu, filter) {
   return new Map(records.map((record) => [record._id.toString(), record]))
 }
 
-// An entity's type and name, so the user sees what a write touched instead of a bare id
+// An entity's type and name, so the user sees what a write touched instead of a bare id - typeId stays server-side for the label lookup
 async function entitySummary (entu, entityId) {
   if (!entityId) return
 
   const entity = await entu.db.collection('entity').findOne({ _id: getObjectId(entityId) }, {
-    projection: { _id: false, 'private._type.string': true, 'private.name.string': true }
+    projection: { _id: false, 'private._type': true, 'private.name.string': true }
   })
 
   return {
+    typeId: entity?.private?._type?.at(0)?.reference,
     type: entity?.private?._type?.at(0)?.string,
     name: entity?.private?.name?.at(0)?.string
   }
