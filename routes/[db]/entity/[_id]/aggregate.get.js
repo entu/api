@@ -65,8 +65,7 @@ defineRouteMeta({
 export default defineEventHandler(async (event) => {
   const entu = event.context.entu
 
-  // The local dev server skips the check so the import scripts can re-aggregate without a token.
-  if (!entu.user && process.env.NODE_ENV !== 'development') {
+  if (!entu.user) {
     throw createError({ statusCode: 403, statusMessage: 'No user' })
   }
 
