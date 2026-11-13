@@ -295,7 +295,7 @@ export async function aggregateEntity (entu, entityId) {
     delete newEntity.private._parent_owner
   }
 
-  if (newEntity.private?._sharing?.at(0)?.string !== 'domain' || Object.keys(newEntity.domain).length === 0) {
+  if (!['domain', 'public'].includes(newEntity.private?._sharing?.at(0)?.string) || Object.keys(newEntity.domain).length === 0) {
     delete newEntity.domain
   }
 

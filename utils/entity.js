@@ -964,45 +964,49 @@ export function stampFor (entu, at = new Date()) {
   return { at, by: entu.user || 'entu', ...(entu.support ? { support: entu.support } : {}) }
 }
 
-// Resolves whether the caller may read one property value, mirroring cleanupEntity's private/domain/public precedence
-export function canReadProperty (entu, entity, property) {
-  const access = entity.access?.map((x) => x.toString()) || []
+// The stored view the caller may read - private with a right, domain for a person here on a domain or public entity, public for anyone on a public entity; undefined when none
+export function getEntityView (entu, entity) {
+  const access = entity?.access?.map((x) => x.toString()) || []
 
   if (entu.support || (entu.userStr && access.includes(entu.userStr))) {
+    return { name: 'private', values: entity.private || {} }
+  }
+
+  // A public entity aggregated before it kept a domain view has only its public one
+  if (entu.userStr && (access.includes('domain') || access.includes('public'))) {
+    return { name: 'domain', values: entity.domain || entity.public || {} }
+  }
+
+  if (access.includes('public')) {
+    return { name: 'public', values: entity.public || {} }
+  }
+}
+
+// Resolves whether the caller may read one property value, from the same view cleanupEntity returns
+export function canReadProperty (entu, entity, property) {
+  const view = getEntityView(entu, entity)
+
+  if (!view) {
+    return false
+  }
+  if (view.name === 'private') {
     return true
   }
 
   const propertyId = property._id.toString()
 
-  if (entu.userStr && access.includes('domain')) {
-    return entity.domain?.[property.type]?.some((x) => x._id.toString() === propertyId) === true
-  }
-
-  if (access.includes('public')) {
-    return entity.public?.[property.type]?.some((x) => x._id.toString() === propertyId) === true
-  }
-
-  return false
+  return view.values[property.type]?.some((x) => x._id.toString() === propertyId) === true
 }
 
 // Returns the public, domain, or private view of an entity based on user access rights
 export async function cleanupEntity (entu, entity) {
   if (!entity) return
 
-  let result = { _id: entity._id }
+  const view = getEntityView(entu, entity)
 
-  if (entu.support || (entu.userStr && entity.access?.map((x) => x.toString())?.includes(entu.userStr))) {
-    result = { ...result, ...entity.private }
-  }
-  else if (entu.userStr && entity.access?.includes('domain')) {
-    result = { ...result, ...entity.domain }
-  }
-  else if (entity.access?.includes('public')) {
-    result = { ...result, ...entity.public }
-  }
-  else {
-    return
-  }
+  if (!view) return
+
+  const result = { _id: entity._id, ...view.values }
 
   for (const type of credentialTypes) {
     if (result[type]) {

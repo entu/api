@@ -114,23 +114,16 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Resolve the view the caller is allowed to see (mirrors cleanupEntity).
-  let photo
-  if (entu.support || (entu.userStr && entity.access?.map((x) => x.toString())?.includes(entu.userStr))) {
-    photo = entity.private?.photo?.at(0)
-  }
-  else if (entu.userStr && entity.access?.includes('domain')) {
-    photo = entity.domain?.photo?.at(0)
-  }
-  else if (entity.access?.includes('public')) {
-    photo = entity.public?.photo?.at(0)
-  }
-  else {
+  const view = getEntityView(entu, entity)
+
+  if (!view) {
     throw createError({
       statusCode: 403,
       statusMessage: 'Insufficient permissions'
     })
   }
+
+  const photo = view.values.photo?.at(0)
 
   if (!photo) {
     throw createError({
