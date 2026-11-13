@@ -623,12 +623,24 @@ async function getPropertyDefaults (entu, properties) {
   return props
 }
 
-// Inserts a new entity document and returns its _id with the _owner and _created system properties
+// Inserts a new entity document and returns its _id with the _owner and _created system properties - Entu support acts as the database entity and holds every right anyway, so it is never made an owner
 async function createEntityRecord (entu, createdDt) {
   const entity = await entu.db.collection('entity').insertOne({})
   const entityId = entity.insertedId
 
   if (entu.user) {
+    const created = {
+      entity: entityId,
+      type: '_created',
+      reference: entu.user,
+      datetime: createdDt,
+      created: stampFor(entu, createdDt)
+    }
+
+    if (entu.support) {
+      return { _id: entityId, properties: [created] }
+    }
+
     return {
       _id: entityId,
       properties: [{
@@ -636,13 +648,7 @@ async function createEntityRecord (entu, createdDt) {
         type: '_owner',
         reference: entu.user,
         created: stampFor(entu, createdDt)
-      }, {
-        entity: entityId,
-        type: '_created',
-        reference: entu.user,
-        datetime: createdDt,
-        created: stampFor(entu, createdDt)
-      }]
+      }, created]
     }
   }
 
