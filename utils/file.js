@@ -31,7 +31,8 @@ export async function getSignedDownloadUrl (account, entityId, property) {
   return await getSignedUrl(getS3Client(), command, { expiresIn: 60 })
 }
 
-export async function getSignedUploadUrl (account, entityId, property, contentDisposition, contentType) {
+// Signed PUT URL for one file property - 60 seconds by default, longer only for clients that need a confirmation step before uploading
+export async function getSignedUploadUrl (account, entityId, property, contentDisposition, contentType, expiresIn = 60) {
   const { s3BucketFiles } = useRuntimeConfig()
 
   const command = new PutObjectCommand({
@@ -42,7 +43,7 @@ export async function getSignedUploadUrl (account, entityId, property, contentDi
     ContentType: contentType
   })
 
-  return await getSignedUrl(getS3Client(), command, { expiresIn: 60 })
+  return await getSignedUrl(getS3Client(), command, { expiresIn })
 }
 
 // Downloads an original file from the files bucket. Returns the bytes as a

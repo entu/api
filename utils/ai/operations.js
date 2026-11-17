@@ -1,8 +1,11 @@
-const operationTypes = ['create_entity_type', 'create_property_definition', 'create_entity', 'update_entity', 'delete_entity', 'delete_property']
+const operationTypes = ['create_entity_type', 'create_property_definition', 'create_entity', 'update_entity', 'add_file', 'delete_entity', 'delete_property']
 const deleteOperationTypes = ['delete_entity', 'delete_property']
 const namePattern = /^[a-z][a-z0-9_]*$/
 const tempIdPattern = /^\$\d+$/
 const propertyValueFields = ['string', 'number', 'boolean', 'reference', 'date', 'datetime']
+
+// How long an add_file upload URL stays valid - long enough for the user to approve the upload step
+const fileUploadSeconds = 600
 
 // Validates a proposed operations array — throws createError 400 on any violation
 export function aiValidateOperations (operations) {
@@ -52,6 +55,9 @@ export function aiValidateOperations (operations) {
       case 'update_entity':
         validateUpdateEntity(params, i, operations)
         break
+      case 'add_file':
+        validateAddFile(params, i, operations)
+        break
       case 'delete_entity':
       case 'delete_property':
         validateDeleteTarget(params, i)
@@ -98,6 +104,8 @@ export function aiDescribeOperation (operation) {
     }
     case 'update_entity':
       return `Update entity ${params._id}: ${describePropertyValues(params.properties)}`
+    case 'add_file':
+      return `${params.valueId ? 'Replace' : 'Add'} file "${params.filename}" in ${params.type} on entity ${params._id}`
     case 'delete_entity':
       return `Delete entity ${params._id}`
     case 'delete_property':
@@ -141,13 +149,13 @@ export async function aiExecuteOperations (entu, operations) {
     const tempId = `$${i + 1}`
 
     try {
-      const _id = await executeOperation(entu, operation, tempIdMap)
+      const { _id, upload } = await executeOperation(entu, operation, tempIdMap)
 
       if (_id) {
         tempIdMap.set(tempId, _id)
       }
 
-      results.push({ tempId, _id: _id?.toString(), op: operation.op })
+      results.push({ tempId, _id: _id?.toString(), op: operation.op, ...(upload ? { upload } : {}) })
     }
     catch (error) {
       return {
@@ -389,6 +397,22 @@ function validateUpdateEntity (params, index, operations) {
   validateProperties(params.properties, index, operations, { allowEmpty: false })
 }
 
+// Validates add_file params - the file's metadata only, since its bytes go straight to the signed upload URL
+function validateAddFile (params, index, operations) {
+  validateEntityRef(params._id, '_id', index, operations)
+  validateString(params.type, 'type', index, { required: true, max: 100, pattern: namePattern })
+  validateString(params.filename, 'filename', index, { required: true, max: 255 })
+  validateString(params.filetype, 'filetype', index, { required: true, max: 255, pattern: /^[\w.+-]+\/[\w.+-]+$/ })
+
+  if (!Number.isInteger(params.filesize) || params.filesize < 1) {
+    throw operationError(index, 'filesize must be a positive whole number of bytes')
+  }
+
+  if (params.valueId !== undefined) {
+    validateObjectIdString(params.valueId, 'valueId', index)
+  }
+}
+
 // Validates delete_entity and delete_property params - a real id, never a tempId
 function validateDeleteTarget (params, index) {
   if (typeof params._id !== 'string') {
@@ -459,21 +483,23 @@ function validateProperties (properties, index, operations, { allowEmpty }) {
 // Execution helpers
 // ---------------------------------------------------------------------------
 
-// Executes a single operation and returns the affected entity id (or undefined for deletes)
+// Executes a single operation and returns the affected entity id (undefined for deletes), and for add_file the upload the file's bytes go to
 async function executeOperation (entu, operation, tempIdMap) {
   switch (operation.op) {
     case 'create_entity_type':
-      return await executeCreateEntityType(entu, operation.params)
+      return { _id: await executeCreateEntityType(entu, operation.params) }
     case 'create_property_definition':
-      return await executeCreatePropertyDefinition(entu, operation.params, tempIdMap)
+      return { _id: await executeCreatePropertyDefinition(entu, operation.params, tempIdMap) }
     case 'create_entity':
-      return await executeCreateEntity(entu, operation.params, tempIdMap)
+      return { _id: await executeCreateEntity(entu, operation.params, tempIdMap) }
     case 'update_entity':
-      return await executeUpdateEntity(entu, operation.params, tempIdMap)
+      return { _id: await executeUpdateEntity(entu, operation.params, tempIdMap) }
+    case 'add_file':
+      return await executeAddFile(entu, operation.params, tempIdMap)
     case 'delete_entity':
-      return await executeDeleteEntity(entu, operation.params)
+      return { _id: await executeDeleteEntity(entu, operation.params) }
     case 'delete_property':
-      return await executeDeleteProperty(entu, operation.params)
+      return { _id: await executeDeleteProperty(entu, operation.params) }
   }
 }
 
@@ -664,6 +690,30 @@ async function executeUpdateEntity (entu, params, tempIdMap) {
   await triggerWebhooks(entu, _id, 'entity-edit-webhook')
 
   return _id
+}
+
+// Adds or replaces a file value and returns the signed upload the caller PUTs the bytes to - valid 10 minutes, as an MCP client asks the user before uploading
+async function executeAddFile (entu, params, tempIdMap) {
+  const entityId = resolveEntityId(params._id, tempIdMap)
+
+  await rejectSystemTypeDefinition(entu, entityId)
+  await assertReplaceableValues(entu, entityId, [params])
+
+  const property = {
+    type: params.type,
+    filename: params.filename,
+    filesize: params.filesize,
+    filetype: params.filetype,
+    ...(params.valueId ? { _id: params.valueId } : {})
+  }
+
+  const { _id, properties } = await setEntity(entu, entityId, [property], { uploadExpiresIn: fileUploadSeconds })
+
+  await triggerWebhooks(entu, _id, 'entity-edit-webhook')
+
+  const created = properties.find((value) => value.upload)
+
+  return { _id, upload: { ...created?.upload, valueId: created?._id?.toString(), expires: new Date(Date.now() + fileUploadSeconds * 1000).toISOString() } }
 }
 
 // Builds the property array an operation passes to setEntity. Resolvers map symbolic

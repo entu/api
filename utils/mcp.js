@@ -22,6 +22,7 @@ const toolTitles = {
   create_property_definition: 'Create property definition',
   create_entity: 'Create entity',
   update_entity: 'Change entity',
+  add_file: 'Add file',
   delete_entity: 'Delete entity',
   delete_property: 'Delete property value'
 }
@@ -35,6 +36,7 @@ const writeAnnotations = {
   create_property_definition: repeatableWriteAnnotations,
   create_entity: repeatableWriteAnnotations,
   update_entity: repeatableWriteAnnotations,
+  add_file: repeatableWriteAnnotations,
   delete_entity: deleteAnnotations,
   delete_property: deleteAnnotations
 }
@@ -115,7 +117,7 @@ async function createMcpServer (event, accounts) {
   const server = new Server({
     name: 'entu',
     title: 'Entu',
-    description: 'Read and change your Entu databases - search entities, read their properties, history and files, and create, change or delete entities, with your own rights.',
+    description: 'Read and change your Entu databases - search entities, read their properties, history and files, create, change or delete entities and upload files, with your own rights.',
     websiteUrl: 'https://entu.ee',
     version: commitHash || 'dev',
     icons: [
@@ -192,9 +194,9 @@ async function createMcpServer (event, accounts) {
   return server
 }
 
-// Tools from the shared AI definitions with a required `db` argument - read tools for every database, write tools only for those with a signed-in user
+// Tools from the shared AI definitions, MCP-only ones included, with a required `db` argument - read tools for every database, write tools only for those with a signed-in user
 function toolDefinitions (accounts, writableAccounts) {
-  return aiToolDefinitions
+  return [...aiToolDefinitions, ...aiMcpToolDefinitions]
     .filter((tool) => aiReadToolNames.includes(tool.function.name) || writableAccounts.length > 0)
     .map((tool) => {
       const isRead = aiReadToolNames.includes(tool.function.name)
@@ -248,6 +250,7 @@ async function executeTool (entu, name, args) {
   }
 
   const entityId = results.at(0)?._id ?? before.entityId
+  const upload = results.at(0)?.upload
   const isEntityDelete = name === 'delete_entity'
   const entity = isEntityDelete ? before.entity : await entitySummary(entu, entityId)
   const labels = await definitionLabels(entu, entity?.typeId)
@@ -261,7 +264,8 @@ async function executeTool (entu, name, args) {
     name: entity?.name,
     description: aiDescribeOperation(operation),
     changes: sortChanges(writeChanges(name, args, before.values), labels.properties),
-    url: entityId && !isEntityDelete ? `${useRuntimeConfig().appUrl}/${entu.account}/${entityId}` : undefined
+    url: entityId && !isEntityDelete ? `${useRuntimeConfig().appUrl}/${entu.account}/${entityId}` : undefined,
+    upload
   }
 }
 
@@ -332,6 +336,8 @@ async function readBeforeWrite (entu, name, args) {
 
       return { values: await propertyRecords(entu, { _id: { $in: valueIds }, entity: getObjectId(args._id) }) }
     }
+    case 'add_file':
+      return args.valueId ? { values: await propertyRecords(entu, { _id: getObjectId(args.valueId), entity: getObjectId(args._id) }) } : {}
     case 'delete_entity':
       return { entityId: args._id, entity: await entitySummary(entu, args._id) }
     case 'delete_property': {
@@ -374,6 +380,10 @@ function writeChanges (name, args, values) {
     const record = values?.get(args._id)
 
     return record ? [{ property: record.type, language: record.language, old: plainValue(record) }] : undefined
+  }
+
+  if (name === 'add_file') {
+    return [{ property: args.type, old: args.valueId ? plainValue(values?.get(args.valueId)) : undefined, new: args.filename }]
   }
 
   if (name !== 'create_entity' && name !== 'update_entity') return

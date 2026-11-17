@@ -184,6 +184,11 @@ async function executeToolCall (entu, toolCall, operations) {
     }
   }
 
+  // Only offered tools are queued - add_file is an MCP tool, as the chat can't send a file's bytes after it
+  if (!aiToolDefinitions.some((tool) => tool.function.name === name)) {
+    return { error: `Unknown tool ${name}` }
+  }
+
   if (operations.length >= maxOperations) {
     return { error: `No more than ${maxOperations} operations can be queued` }
   }

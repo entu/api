@@ -31,6 +31,7 @@ export const serverOnlyTypes = [
 // Validates, processes, and persists properties to a new or existing entity.
 // options.skipTypeRequired: if true, skips the _type required check (for system bootstrap only)
 // options.deleteIds: extra property _ids of this entity to soft-delete, only after the access checks pass
+// options.uploadExpiresIn: seconds a file property's signed upload URL stays valid, 60 when not set
 export async function setEntity (entu, entityId, properties, options = {}) {
   const allowedTypes = [
     '_type',
@@ -83,7 +84,7 @@ export async function setEntity (entu, entityId, properties, options = {}) {
     properties = [...properties, ...record.properties]
   }
 
-  const { pIds, oldPIds } = await insertProperties(entu, entityId, properties, createdDt)
+  const { pIds, oldPIds } = await insertProperties(entu, entityId, properties, createdDt, options.uploadExpiresIn)
 
   await markPropertiesDeleted(entu, entityId, [...oldPIds, ...(options.deleteIds || [])])
   await markReplacedUserRightsDeleted(entu, entityId, pIds)
@@ -664,7 +665,7 @@ async function createEntityRecord (entu, createdDt) {
 }
 
 // Processes and inserts all properties, returning inserted pIds and replaced oldPIds
-async function insertProperties (entu, entityId, properties, createdDt) {
+async function insertProperties (entu, entityId, properties, createdDt, uploadExpiresIn) {
   const pIds = []
   const oldPIds = []
 
@@ -722,7 +723,7 @@ async function insertProperties (entu, entityId, properties, createdDt) {
       const contentDisposition = `inline;filename="${encodeURI(property.filename.replace('"', '\"'))}"`
 
       newProperty.upload = {
-        url: await getSignedUploadUrl(entu.account, entityId, newProperty, contentDisposition, property.filetype),
+        url: await getSignedUploadUrl(entu.account, entityId, newProperty, contentDisposition, property.filetype, uploadExpiresIn),
         method: 'PUT',
         headers: {
           ACL: 'private',

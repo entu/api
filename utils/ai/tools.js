@@ -258,6 +258,29 @@ export const aiToolDefinitions = [
   }
 ]
 
+// Write tools offered only over MCP - their result asks the client to send bytes afterwards, which the built-in chat can't do
+export const aiMcpToolDefinitions = [
+  {
+    type: 'function',
+    function: {
+      name: 'add_file',
+      description: 'Add a file to a file-type property of an entity, or replace one of its files with valueId. This call stores only the file\'s name, size and type and returns `upload` - then send the exact file bytes with an HTTP request of upload.method to upload.url with every header in upload.headers (e.g. curl -X PUT --data-binary @file -H ... "url") before upload.expires. Only use it when you can make that HTTP request yourself; otherwise link the entity so the user uploads the file in Entu. If the upload fails, delete the value with delete_property using upload.valueId.',
+      parameters: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string', description: 'Entity id' },
+          type: { type: 'string', description: 'Name of a file-type property of the entity\'s type' },
+          filename: { type: 'string', description: 'File name with extension, as shown to users' },
+          filesize: { type: 'integer', description: 'Exact file size in bytes - the upload must match it' },
+          filetype: { type: 'string', description: 'MIME type, e.g. application/pdf or image/jpeg' },
+          valueId: { type: 'string', description: 'To REPLACE an existing file: that file value\'s _id from get_entity. Omit to ADD a file.' }
+        },
+        required: ['_id', 'type', 'filename', 'filesize', 'filetype']
+      }
+    }
+  }
+]
+
 // Executes a read tool as the calling user (rights filtering applies) and returns a JSON-serializable result
 export async function aiExecuteReadTool (entu, name, args) {
   switch (name) {
