@@ -176,28 +176,7 @@ export default defineEventHandler(async (event) => {
   }
 
   if (property.type === '_parent' && property.reference) {
-    const parent = await entu.db.collection('entity').findOne({
-      _id: property.reference
-    }, {
-      projection: {
-        _id: false,
-        'private._expander': true
-      }
-    })
-
-    if (!parent) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Entity in _parent property not found'
-      })
-    }
-
-    if (!hasRight(entu, parent, '_expander')) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'User not in parent _owner, _editor nor _expander property'
-      })
-    }
+    await assertParentExpander(entu, property.reference, { removing: true })
   }
 
   await entu.db.collection('property').updateOne({

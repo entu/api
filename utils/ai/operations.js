@@ -433,7 +433,15 @@ function validateProperties (properties, index, operations, { allowEmpty }) {
       throw operationError(index, 'each property must be an object')
     }
 
-    validateString(property.type, 'property type', index, { required: true, max: 100, pattern: namePattern })
+    // _parent is the one system property written here, always as a single-language reference
+    if (property.type === '_parent') {
+      if (property.reference === undefined || property.language !== undefined) {
+        throw operationError(index, 'property _parent takes only a reference')
+      }
+    }
+    else {
+      validateString(property.type, 'property type', index, { required: true, max: 100, pattern: namePattern })
+    }
 
     if (property.valueId !== undefined) {
       validateObjectIdString(property.valueId, `property ${property.type} valueId`, index)
@@ -581,6 +589,13 @@ async function rejectSystemTypeDefinition (entu, entityId) {
   }
 }
 
+// Throws when a _parent value would put an entity under a system type definition, which would count as changing that definition
+async function rejectSystemTypeParents (entu, properties, tempIdMap) {
+  for (const property of properties.filter((value) => value.type === '_parent')) {
+    await rejectSystemTypeDefinition(entu, resolveEntityId(property.reference, tempIdMap))
+  }
+}
+
 // True for a type "entity" entity that carries a system property or has a reserved name
 function isSystemTypeDefinition (entity) {
   const isTypeDefinition = entity?.private?._type?.at(0)?.string === 'entity'
@@ -667,6 +682,8 @@ async function executeCreateEntity (entu, params, tempIdMap) {
     await rejectSystemTypeDefinition(entu, resolveEntityId(params.parent, tempIdMap))
   }
 
+  await rejectSystemTypeParents(entu, params.properties, tempIdMap)
+
   const properties = await buildOperationProperties({ op: 'create_entity', params }, executionResolvers(entu, tempIdMap))
 
   const { _id } = await setEntity(entu, null, properties)
@@ -681,6 +698,7 @@ async function executeUpdateEntity (entu, params, tempIdMap) {
   const entityId = resolveEntityId(params._id, tempIdMap)
 
   await rejectSystemTypeDefinition(entu, entityId)
+  await rejectSystemTypeParents(entu, params.properties, tempIdMap)
   await assertReplaceableValues(entu, entityId, params.properties)
 
   const properties = await buildOperationProperties({ op: 'update_entity', params }, executionResolvers(entu, tempIdMap))
@@ -884,7 +902,7 @@ export async function aiCheckUpdatableValues (entu, operation) {
   await assertReplaceableValues(entu, getObjectId(operation.params._id), operation.params.properties)
 }
 
-// Verifies each replaced value belongs to the entity and is not a system property - the AI never sees system value ids, this is defence in depth
+// Verifies each replaced value belongs to the entity and is not a system property other than _parent, which only another _parent may replace
 async function assertReplaceableValues (entu, entityId, properties) {
   const valueIds = properties.filter((property) => property.valueId).map((property) => getObjectId(property.valueId))
 
@@ -897,20 +915,25 @@ async function assertReplaceableValues (entu, entityId, properties) {
 
   const typeById = new Map(records.map((record) => [record._id.toString(), record.type]))
 
-  for (const valueId of valueIds) {
-    const type = typeById.get(valueId.toString())
+  for (const property of properties.filter((value) => value.valueId)) {
+    const type = typeById.get(getObjectId(property.valueId).toString())
 
     if (!type) {
-      throw createError({ statusCode: 400, statusMessage: `Property value ${valueId} not found on this entity` })
+      throw createError({ statusCode: 400, statusMessage: `Property value ${property.valueId} not found on this entity` })
     }
 
-    if (type.startsWith('_')) {
+    if (type.startsWith('_') && type !== '_parent') {
       throw createError({ statusCode: 403, statusMessage: 'System property values can\'t be replaced' })
+    }
+
+    // A parent is replaced only by another parent, so it is never dropped through a value of another property
+    if ((type === '_parent') !== (property.type === '_parent')) {
+      throw createError({ statusCode: 400, statusMessage: `Property value ${property.valueId} can only be replaced by a ${type} value` })
     }
   }
 }
 
-// Soft-deletes a property with the same rights checks as the property delete route, but never system properties
+// Soft-deletes a property with the same rights checks as the property delete route, but never system properties other than _parent
 async function executeDeleteProperty (entu, params) {
   const propertyId = getObjectId(params._id)
 
@@ -933,7 +956,7 @@ async function executeDeleteProperty (entu, params) {
     })
   }
 
-  if (property.type.startsWith('_')) {
+  if (property.type.startsWith('_') && property.type !== '_parent') {
     throw createError({
       statusCode: 403,
       statusMessage: 'Can\'t delete system property'
@@ -983,6 +1006,15 @@ async function executeDeleteProperty (entu, params) {
       statusCode: 403,
       statusMessage: 'User not in _owner property'
     })
+  }
+
+  // Removing a parent can drop inherited rights, so like the property delete route it needs the entity's _owner, and expander rights on that parent
+  if (property.type === '_parent' && !isOwner) {
+    throw createError({ statusCode: 403, statusMessage: 'User not in _owner property' })
+  }
+
+  if (property.type === '_parent' && property.reference) {
+    await assertParentExpander(entu, property.reference, { removing: true })
   }
 
   await entu.db.collection('property').updateOne({

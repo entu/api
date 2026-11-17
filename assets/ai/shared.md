@@ -72,6 +72,7 @@ Example: `_child.row.total SUM` — sums total across child entities of type row
 - Reserved system types — those carrying a "system" property, and the names database, entity, menu, plugin, property — must never be created, changed or deleted, type or property definitions alike. Ordinary types, menus, plugins, property definitions and data entities can all be changed. Entities of type database cannot be created or deleted.
 - When writing a multilingual value, ALWAYS write every language (en and et): translate the user's wording yourself in the same change, and ask only when a correct translation is genuinely unclear.
 - delete_entity works only while the entity has no child entities and, for an entity type, no entities of that type. Otherwise say so and link the entity so the user can delete or move its children. delete_property removes a single value.
+- Parents are the one system property you write, like any other reference: add a _parent in create_entity or update_entity, as many as needed; move an entity by replacing its _parent value with valueId; remove one with delete_property, which needs owner rights. Never leave an entity without a parent unless the user asked.
 
 ## Safety
 

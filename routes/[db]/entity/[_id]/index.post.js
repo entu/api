@@ -116,7 +116,7 @@ defineRouteMeta({
         }
       },
       400: {
-        description: 'Invalid body, empty value, `_id` not a live value of this entity, `send-invite` without `email`, `_parent` not found, no `_expander` on parent, invalid ID or database name',
+        description: 'Invalid body, empty value, `_id` not a live value of this entity, `send-invite` without `email`, `_parent` not found, invalid ID or database name',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       401: {
@@ -124,7 +124,7 @@ defineRouteMeta({
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       403: {
-        description: 'No user, missing `_editor`/`_owner` rights, or a server-only property or field sent',
+        description: 'No user, missing `_editor`/`_owner` rights, no `_expander` on a parent added or replaced, or a server-only property or field sent',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       404: {

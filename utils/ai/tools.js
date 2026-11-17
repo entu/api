@@ -20,7 +20,7 @@ function multilingualTextSchema (description) {
 const propertyValueSchema = {
   type: 'object',
   properties: {
-    type: { type: 'string', description: 'Property name (snake_case, no leading underscore)' },
+    type: { type: 'string', description: 'Property name (snake_case, no leading underscore) - or _parent with a reference for a parent entity, added or replaced like any other value' },
     valueId: { type: 'string', description: 'To CHANGE an existing value: the _id of the exact value to replace, taken from that value object inside get_entity output (e.g. name: [{ _id: "...", string: "John" }] -> use that _id). This is a value _id, NOT an entity _id and NOT a property definition _id. Omit to ADD a new value.' },
     string: { type: 'string', description: 'String/text value' },
     number: { type: 'number', description: 'Number value' },
@@ -246,7 +246,7 @@ export const aiToolDefinitions = [
     type: 'function',
     function: {
       name: 'delete_property',
-      description: 'Delete a single property value by its property id (returned inside entity properties as _id). System properties cannot be deleted.',
+      description: 'Delete a single property value by its property id (returned inside entity properties as _id). System properties cannot be deleted, except a _parent value, which needs owner rights on the entity.',
       parameters: {
         type: 'object',
         properties: {

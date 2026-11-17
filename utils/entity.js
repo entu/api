@@ -68,10 +68,14 @@ export async function setEntity (entu, entityId, properties, options = {}) {
     })
   }
 
-  const removedTypes = await getRemovedTypes(entu, entityId, properties, options.deleteIds || [], allowedTypes)
+  const removedValues = await getRemovedValues(entu, entityId, properties, options.deleteIds || [], allowedTypes)
 
-  await checkEntityAccess(entu, entityId, properties, removedTypes, rightTypes)
+  await checkEntityAccess(entu, entityId, properties, removedValues.map((value) => value.type), rightTypes)
   await validatePropertyTypes(entu, properties, allowedTypes)
+
+  for (const value of removedValues.filter((removed) => removed.type === '_parent' && removed.reference)) {
+    await assertParentExpander(entu, value.reference, { removing: true })
+  }
 
   if (!entityId) {
     properties = [...properties, ...await getDefaultParents(entu, properties, createdDt)]
@@ -175,8 +179,8 @@ function validateInput (properties) {
   }
 }
 
-// Returns the stored types of the values a replaced _id or deleteIds removes, throwing if one isn't live on this entity or can't be removed.
-async function getRemovedTypes (entu, entityId, properties, deleteIds, allowedTypes) {
+// Returns the stored type and reference of the values a replaced _id or deleteIds removes, throwing if one isn't live on this entity or can't be removed.
+async function getRemovedValues (entu, entityId, properties, deleteIds, allowedTypes) {
   if (!entityId) {
     return []
   }
@@ -192,13 +196,14 @@ async function getRemovedTypes (entu, entityId, properties, deleteIds, allowedTy
 
   const records = await entu.db.collection('property').find(
     { _id: { $in: removed.map((property) => property._id) }, entity: entityId, deleted: { $exists: false } },
-    { projection: { type: true } }
+    { projection: { type: true, reference: true } }
   ).toArray()
 
-  const typeById = new Map(records.map((record) => [record._id.toString(), record.type]))
+  const recordById = new Map(records.map((record) => [record._id.toString(), record]))
 
   return removed.map((property) => {
-    const type = typeById.get(property._id.toString())
+    const record = recordById.get(property._id.toString())
+    const type = record?.type
 
     if (!type) {
       throw createError({
@@ -228,8 +233,38 @@ async function getRemovedTypes (entu, entityId, properties, deleteIds, allowedTy
       })
     }
 
-    return type
+    return { type, reference: record.reference }
   })
+}
+
+// Throws unless the parent exists and the user may add children to it - checked for every _parent value written or removed, so an entity is never moved into or out of a parent the user can't expand. A removed value may point at a deleted parent, which has nothing left to protect, so `removing` lets that one go.
+export async function assertParentExpander (entu, parentId, { removing = false } = {}) {
+  const parent = await entu.db.collection('entity').findOne({
+    _id: getObjectId(parentId)
+  }, {
+    projection: {
+      _id: false,
+      'private._expander': true,
+      'private._sharing': true,
+      'private._inheritrights': true
+    }
+  })
+
+  if (!parent && removing) return
+
+  if (!parent) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Entity in _parent property not found'
+    })
+  }
+
+  if (!hasRight(entu, parent, '_expander')) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'User not in parent _owner, _editor nor _expander property'
+    })
+  }
 }
 
 // Clients may only trigger a server-generated invite/API key (string) — the login-match and
@@ -440,30 +475,7 @@ async function validatePropertyTypes (entu, properties, allowedTypes) {
     }
 
     if (property.type === '_parent' && property.reference) {
-      const parent = await entu.db.collection('entity').findOne({
-        _id: getObjectId(property.reference)
-      }, {
-        projection: {
-          _id: false,
-          'private._expander': true,
-          'private._sharing': true,
-          'private._inheritrights': true
-        }
-      })
-
-      if (!parent) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: 'Entity in _parent property not found'
-        })
-      }
-
-      if (!hasRight(entu, parent, '_expander')) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: 'User not in parent _owner, _editor nor _expander property'
-        })
-      }
+      await assertParentExpander(entu, property.reference)
     }
 
     if (refCheckedTypes.includes(property.type) && property.reference && !existingRefIds.has(getObjectId(property.reference).toString())) {

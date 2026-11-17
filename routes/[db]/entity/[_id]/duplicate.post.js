@@ -92,7 +92,7 @@ defineRouteMeta({
         }
       },
       400: {
-        description: 'Invalid `count` or `ignoredProperties`, a copied value failed validation (e.g. no `_expander` on parent), invalid ID or database name',
+        description: 'Invalid `count` or `ignoredProperties`, a copied value failed validation, invalid ID or database name',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       401: {
@@ -100,7 +100,7 @@ defineRouteMeta({
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       403: {
-        description: 'No user, or caller is not `_owner`',
+        description: 'No user, caller is not `_owner`, or no `_expander` on a copied parent',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       404: {

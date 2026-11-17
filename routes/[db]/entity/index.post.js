@@ -106,7 +106,7 @@ defineRouteMeta({
         }
       },
       400: {
-        description: 'Invalid body, missing `_type`, empty value, `_type`/`_parent` not found, no `_expander` on parent, invalid ID or database name',
+        description: 'Invalid body, missing `_type`, empty value, `_type`/`_parent` not found, invalid ID or database name',
         content: {
           'application/json': {
             schema: {
@@ -120,7 +120,7 @@ defineRouteMeta({
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       403: {
-        description: 'No user, or a server-only property or field sent',
+        description: 'No user, no `_expander` on a parent, or a server-only property or field sent',
         content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
       },
       404: {
