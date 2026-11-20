@@ -46,7 +46,7 @@ defineRouteMeta({
                 filename: { type: 'string', description: 'File name; files need `filename`, `filesize` and `filetype`' },
                 filesize: { type: 'integer', description: 'File size in bytes' },
                 filetype: { type: 'string', description: 'File MIME type', example: 'image/jpeg' },
-                counter: { type: ['boolean', 'number'], description: 'Next counter value: the database\'s highest `number` for this property plus the given step (`true` = 1); a sent `string` keeps its own last number' },
+                counter: { type: ['boolean', 'integer'], description: 'Next counter value: the highest `number` for this property across the types that define it as a counter, plus the given step (`true` = 1, or a whole number from 1 to 1000); a sent `string` keeps its own last number, or gets the step appended when it has none. Only for a `counter` property of the entity\'s type, otherwise 400' },
                 email: { type: 'string', description: 'Email for an `entu_user` value' }
               },
               required: ['type']

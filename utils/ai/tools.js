@@ -28,9 +28,21 @@ const propertyValueSchema = {
     reference: { type: 'string', description: 'Referenced entity id' },
     date: { type: 'string', description: 'Date value (YYYY-MM-DD)' },
     datetime: { type: 'string', description: 'Datetime value (ISO 8601)' },
+    counter: { type: ['boolean', 'integer'], description: 'For a counter-type property: true draws the next number, an integer of 1 to 1000 steps by that much - the drawn value is returned' },
     language: { type: 'string', description: 'Language code (en or et) for multilingual properties' }
   },
   required: ['type']
+}
+
+// A create_entity value as MCP offers it - also a file, whose bytes the client sends to the returned upload
+const mcpCreateValueSchema = {
+  ...propertyValueSchema,
+  properties: {
+    ...propertyValueSchema.properties,
+    filename: { type: 'string', description: 'For a file-type property: file name with extension, as shown to users - with filesize and filetype, and no other value' },
+    filesize: { type: 'integer', description: 'Exact file size in bytes - the upload must match it' },
+    filetype: { type: 'string', description: 'MIME type, e.g. application/pdf or image/jpeg' }
+  }
 }
 
 // OpenAI-compatible function schemas for all tools offered to the model
@@ -257,6 +269,28 @@ export const aiToolDefinitions = [
     }
   }
 ]
+
+// create_entity as MCP offers it in place of the shared one - its values can be files, as an MCP client can send their bytes afterwards
+export const aiMcpCreateEntityDefinition = {
+  type: 'function',
+  function: {
+    name: 'create_entity',
+    description: 'Create a new entity with all its values in this one call, its files included. For each file value the result lists an upload in `uploads` - send the exact file bytes with an HTTP request of its method to its url with every header in its headers before it expires. Only add files when you can make those HTTP requests yourself. If an upload fails, delete that value with delete_property using its valueId.',
+    parameters: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', description: 'Entity type name' },
+        parent: { type: 'string', description: 'Parent entity id' },
+        properties: {
+          type: 'array',
+          description: 'Properties to set on the new entity',
+          items: mcpCreateValueSchema
+        }
+      },
+      required: ['type', 'properties']
+    }
+  }
+}
 
 // Write tools offered only over MCP - their result asks the client to send bytes afterwards, which the built-in chat can't do
 export const aiMcpToolDefinitions = [
@@ -604,7 +638,6 @@ function parseToolObjectId (value) {
   }
 }
 
-// The only system (underscore) properties the AI is allowed to see - everything else, including all rights properties, is dropped
 // Returns an entity's change history, requiring the same direct rights the REST history route does
 async function getEntityHistoryTool (entu, args) {
   const entityId = parseToolObjectId(args?._id)

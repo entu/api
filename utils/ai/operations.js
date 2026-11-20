@@ -2,13 +2,14 @@ const operationTypes = ['create_entity_type', 'create_property_definition', 'cre
 const deleteOperationTypes = ['delete_entity', 'delete_property']
 const namePattern = /^[a-z][a-z0-9_]*$/
 const tempIdPattern = /^\$\d+$/
-const propertyValueFields = ['string', 'number', 'boolean', 'reference', 'date', 'datetime']
+const propertyValueFields = ['string', 'number', 'boolean', 'reference', 'date', 'datetime', 'counter']
+const fileValueFields = ['filename', 'filesize', 'filetype']
 
 // How long an add_file upload URL stays valid - long enough for the user to approve the upload step
 const fileUploadSeconds = 600
 
-// Validates a proposed operations array — throws createError 400 on any violation
-export function aiValidateOperations (operations) {
+// Validates a proposed operations array — throws createError 400 on any violation. files lets create_entity carry file values, for callers that can send the bytes afterwards
+export function aiValidateOperations (operations, { files = false } = {}) {
   if (!Array.isArray(operations) || operations.length < 1 || operations.length > 25) {
     throw createError({
       statusCode: 400,
@@ -50,7 +51,7 @@ export function aiValidateOperations (operations) {
         validateCreatePropertyDefinition(params, i, operations)
         break
       case 'create_entity':
-        validateCreateEntity(params, i, operations)
+        validateCreateEntity(params, i, operations, files)
         break
       case 'update_entity':
         validateUpdateEntity(params, i, operations)
@@ -131,7 +132,7 @@ function describePropertyValues (properties) {
   }
 
   return properties.map((property) => {
-    const value = property.string ?? property.number ?? property.boolean ?? property.reference ?? property.date ?? property.datetime
+    const value = property.string ?? property.number ?? property.boolean ?? property.reference ?? property.date ?? property.datetime ?? property.filename ?? (property.counter === undefined ? undefined : 'next counter value')
     const language = property.language ? ` (${property.language})` : ''
     const action = property.valueId ? 'change ' : ''
 
@@ -149,13 +150,20 @@ export async function aiExecuteOperations (entu, operations) {
     const tempId = `$${i + 1}`
 
     try {
-      const { _id, upload } = await executeOperation(entu, operation, tempIdMap)
+      const { _id, upload, uploads, counters } = await executeOperation(entu, operation, tempIdMap)
 
       if (_id) {
         tempIdMap.set(tempId, _id)
       }
 
-      results.push({ tempId, _id: _id?.toString(), op: operation.op, ...(upload ? { upload } : {}) })
+      results.push({
+        tempId,
+        _id: _id?.toString(),
+        op: operation.op,
+        ...(upload ? { upload } : {}),
+        ...(uploads?.length ? { uploads } : {}),
+        ...(counters?.some((value) => value !== undefined) ? { counters } : {})
+      })
     }
     catch (error) {
       return {
@@ -367,7 +375,7 @@ function validateCreatePropertyDefinition (params, index, operations) {
 }
 
 // Validates create_entity params
-function validateCreateEntity (params, index, operations) {
+function validateCreateEntity (params, index, operations, files) {
   if (typeof params.type !== 'string') {
     throw operationError(index, 'type must be a string')
   }
@@ -386,7 +394,7 @@ function validateCreateEntity (params, index, operations) {
     validateEntityRef(params.parent, 'parent', index, operations)
   }
 
-  validateProperties(params.properties, index, operations, { allowEmpty: true })
+  validateProperties(params.properties, index, operations, { allowEmpty: true, files })
 
   rejectReservedTypeCreation(params, index)
 }
@@ -401,15 +409,20 @@ function validateUpdateEntity (params, index, operations) {
 function validateAddFile (params, index, operations) {
   validateEntityRef(params._id, '_id', index, operations)
   validateString(params.type, 'type', index, { required: true, max: 100, pattern: namePattern })
-  validateString(params.filename, 'filename', index, { required: true, max: 255 })
-  validateString(params.filetype, 'filetype', index, { required: true, max: 255, pattern: /^[\w.+-]+\/[\w.+-]+$/ })
-
-  if (!Number.isInteger(params.filesize) || params.filesize < 1) {
-    throw operationError(index, 'filesize must be a positive whole number of bytes')
-  }
+  validateFileFields(params, '', index)
 
   if (params.valueId !== undefined) {
     validateObjectIdString(params.valueId, 'valueId', index)
+  }
+}
+
+// Validates a file value's name, size and type - prefix names the property in messages
+function validateFileFields (value, prefix, index) {
+  validateString(value.filename, `${prefix}filename`, index, { required: true, max: 255 })
+  validateString(value.filetype, `${prefix}filetype`, index, { required: true, max: 255, pattern: /^[\w.+-]+\/[\w.+-]+$/ })
+
+  if (!Number.isInteger(value.filesize) || value.filesize < 1) {
+    throw operationError(index, `${prefix}filesize must be a positive whole number of bytes`)
   }
 }
 
@@ -422,8 +435,8 @@ function validateDeleteTarget (params, index) {
   validateObjectIdString(params._id, '_id', index)
 }
 
-// Validates a properties array of a create_entity/update_entity operation
-function validateProperties (properties, index, operations, { allowEmpty }) {
+// Validates a properties array of a create_entity/update_entity operation - file values only when files is set
+function validateProperties (properties, index, operations, { allowEmpty, files = false }) {
   if (!Array.isArray(properties) || properties.length > 100 || (!allowEmpty && properties.length === 0)) {
     throw operationError(index, `properties must be an array of ${allowEmpty ? 0 : 1} to 100 items`)
   }
@@ -448,6 +461,13 @@ function validateProperties (properties, index, operations, { allowEmpty }) {
     }
 
     const valueFields = propertyValueFields.filter((field) => property[field] !== undefined)
+    const isFile = fileValueFields.some((field) => property[field] !== undefined)
+
+    if (isFile) {
+      validateFileValue(property, valueFields, index, files)
+
+      continue
+    }
 
     if (valueFields.length !== 1) {
       throw operationError(index, `property ${property.type} must have exactly one value of ${propertyValueFields.join(', ')}`)
@@ -475,6 +495,11 @@ function validateProperties (properties, index, operations, { allowEmpty }) {
       case 'reference':
         validateEntityRef(value, `property ${property.type} reference`, index, operations)
         break
+      case 'counter':
+        if (value !== true && !(Number.isInteger(value) && value > 0 && value <= maxCounterStep)) {
+          throw operationError(index, `property ${property.type} counter must be true or a whole step of 1 to ${maxCounterStep}`)
+        }
+        break
       default: // date, datetime
         if (typeof value !== 'string' || Number.isNaN(new Date(value).getTime())) {
           throw operationError(index, `property ${property.type} ${field} value is invalid`)
@@ -487,11 +512,24 @@ function validateProperties (properties, index, operations, { allowEmpty }) {
   }
 }
 
+// Validates a file value of create_entity - its bytes go to the upload URL afterwards, so it is allowed only where the caller can send them
+function validateFileValue (property, valueFields, index, files) {
+  if (!files) {
+    throw operationError(index, `property ${property.type} can't take a file here - link the entity so the user uploads it in Entu`)
+  }
+
+  if (property.type === '_parent' || property.valueId !== undefined || property.language !== undefined || valueFields.length > 0) {
+    throw operationError(index, `property ${property.type} file value takes only filename, filesize and filetype`)
+  }
+
+  validateFileFields(property, `property ${property.type} `, index)
+}
+
 // ---------------------------------------------------------------------------
 // Execution helpers
 // ---------------------------------------------------------------------------
 
-// Executes a single operation and returns the affected entity id (undefined for deletes), and for add_file the upload the file's bytes go to
+// Executes a single operation and returns the affected entity id (undefined for deletes), the uploads its file values' bytes go to, and the values its counters drew
 async function executeOperation (entu, operation, tempIdMap) {
   switch (operation.op) {
     case 'create_entity_type':
@@ -499,9 +537,9 @@ async function executeOperation (entu, operation, tempIdMap) {
     case 'create_property_definition':
       return { _id: await executeCreatePropertyDefinition(entu, operation.params, tempIdMap) }
     case 'create_entity':
-      return { _id: await executeCreateEntity(entu, operation.params, tempIdMap) }
+      return await executeCreateEntity(entu, operation.params, tempIdMap)
     case 'update_entity':
-      return { _id: await executeUpdateEntity(entu, operation.params, tempIdMap) }
+      return await executeUpdateEntity(entu, operation.params, tempIdMap)
     case 'add_file':
       return await executeAddFile(entu, operation.params, tempIdMap)
     case 'delete_entity':
@@ -685,12 +723,27 @@ async function executeCreateEntity (entu, params, tempIdMap) {
   await rejectSystemTypeParents(entu, params.properties, tempIdMap)
 
   const properties = await buildOperationProperties({ op: 'create_entity', params }, executionResolvers(entu, tempIdMap))
+  const hasFiles = params.properties.some((property) => property.filename !== undefined)
 
-  const { _id } = await setEntity(entu, null, properties)
+  const { _id, properties: written } = await setEntity(entu, null, properties, hasFiles ? { uploadExpiresIn: fileUploadSeconds } : {})
 
   await triggerWebhooks(entu, _id, 'entity-add-webhook')
 
-  return _id
+  return { _id, ...writtenOutputs(params.properties, written.slice(properties.length - params.properties.length)) }
+}
+
+// Pairs each requested value with the record setEntity wrote for it - the uploads file values' bytes go to, and per value the string its counter drew
+function writtenOutputs (requested, written) {
+  const expires = new Date(Date.now() + fileUploadSeconds * 1000).toISOString()
+
+  const uploads = requested
+    .map((property, index) => ({ property, record: written.at(index) }))
+    .filter(({ record }) => record?.upload)
+    .map(({ property, record }) => ({ property: property.type, filename: property.filename, valueId: record._id.toString(), ...record.upload, expires }))
+
+  const counters = requested.map((property, index) => property.counter === undefined ? undefined : written.at(index)?.string)
+
+  return { uploads, counters }
 }
 
 // Adds property values to an existing entity
@@ -703,11 +756,11 @@ async function executeUpdateEntity (entu, params, tempIdMap) {
 
   const properties = await buildOperationProperties({ op: 'update_entity', params }, executionResolvers(entu, tempIdMap))
 
-  const { _id } = await setEntity(entu, entityId, properties)
+  const { _id, properties: written } = await setEntity(entu, entityId, properties)
 
   await triggerWebhooks(entu, _id, 'entity-edit-webhook')
 
-  return _id
+  return { _id, counters: writtenOutputs(params.properties, written).counters }
 }
 
 // Adds or replaces a file value and returns the signed upload the caller PUTs the bytes to - valid 10 minutes, as an MCP client asks the user before uploading
@@ -886,6 +939,14 @@ async function buildProperty (property, resolve) {
   }
   if (property.datetime !== undefined) {
     result.datetime = property.datetime
+  }
+  if (property.counter !== undefined) {
+    result.counter = property.counter
+  }
+  if (property.filename !== undefined) {
+    result.filename = property.filename
+    result.filesize = property.filesize
+    result.filetype = property.filetype
   }
   if (property.language !== undefined) {
     result.language = property.language

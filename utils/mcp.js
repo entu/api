@@ -194,9 +194,10 @@ async function createMcpServer (event, accounts) {
   return server
 }
 
-// Tools from the shared AI definitions, MCP-only ones included, with a required `db` argument - read tools for every database, write tools only for those with a signed-in user
+// Tools from the shared AI definitions, MCP-only ones included and create_entity swapped for its file-taking form, with a required `db` argument - read tools for every database, write tools only for those with a signed-in user
 function toolDefinitions (accounts, writableAccounts) {
   return [...aiToolDefinitions, ...aiMcpToolDefinitions]
+    .map((tool) => tool.function.name === aiMcpCreateEntityDefinition.function.name ? aiMcpCreateEntityDefinition : tool)
     .filter((tool) => aiReadToolNames.includes(tool.function.name) || writableAccounts.length > 0)
     .map((tool) => {
       const isRead = aiReadToolNames.includes(tool.function.name)
@@ -239,7 +240,7 @@ async function executeTool (entu, name, args) {
 
   const operation = { op: name, params: args }
 
-  aiValidateOperations([operation])
+  aiValidateOperations([operation], { files: true })
 
   // Read before writing, but report only after the write succeeded - its rights checks are what entitle the caller to see this
   const before = await readBeforeWrite(entu, name, args)
@@ -249,8 +250,8 @@ async function executeTool (entu, name, args) {
     throw createError({ statusCode: error.statusCode, statusMessage: error.statusMessage })
   }
 
+  const { upload, uploads, counters } = results.at(0) || {}
   const entityId = results.at(0)?._id ?? before.entityId
-  const upload = results.at(0)?.upload
   const isEntityDelete = name === 'delete_entity'
   const entity = isEntityDelete ? before.entity : await entitySummary(entu, entityId)
   const labels = await definitionLabels(entu, entity?.typeId)
@@ -263,9 +264,10 @@ async function executeTool (entu, name, args) {
     typeLabel: labels.type,
     name: entity?.name,
     description: aiDescribeOperation(operation),
-    changes: sortChanges(writeChanges(name, args, before.values), labels.properties),
+    changes: sortChanges(writeChanges(name, args, before.values, counters), labels.properties),
     url: entityId && !isEntityDelete ? `${useRuntimeConfig().appUrl}/${entu.account}/${entityId}` : undefined,
-    upload
+    upload,
+    uploads
   }
 }
 
@@ -374,8 +376,8 @@ async function entitySummary (entu, entityId) {
   }
 }
 
-// One line per written or removed value - old is the value replaced or deleted, new the value written
-function writeChanges (name, args, values) {
+// One line per written or removed value - old is the value replaced or deleted, new the value written, for a counter the value it drew
+function writeChanges (name, args, values, counters) {
   if (name === 'delete_property') {
     const record = values?.get(args._id)
 
@@ -388,11 +390,11 @@ function writeChanges (name, args, values) {
 
   if (name !== 'create_entity' && name !== 'update_entity') return
 
-  return args.properties.map((property) => ({
+  return args.properties.map((property, index) => ({
     property: property.type,
     language: property.language,
     old: property.valueId ? plainValue(values?.get(property.valueId)) : undefined,
-    new: plainValue(property)
+    new: counters?.at(index) ?? plainValue(property)
   }))
 }
 

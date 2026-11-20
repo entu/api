@@ -2,6 +2,9 @@ import { createHash, randomBytes } from 'node:crypto'
 
 const charsForKey = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*-_=+'
 
+// Largest step a counter value may ask for - counter types sharing a name share one sequence, so one write must not throw the numbering off for all of them
+export const maxCounterStep = 1000
+
 // All property value types available in property definitions — the source of truth for schemas and validation
 export const entityPropertyTypes = ['string', 'text', 'number', 'boolean', 'reference', 'date', 'datetime', 'file', 'counter', 'formula']
 
@@ -72,6 +75,7 @@ export async function setEntity (entu, entityId, properties, options = {}) {
 
   await checkEntityAccess(entu, entityId, properties, removedValues.map((value) => value.type), rightTypes)
   await validatePropertyTypes(entu, properties, allowedTypes)
+  await validateCounterProperties(entu, entityId, properties)
 
   for (const value of removedValues.filter((removed) => removed.type === '_parent' && removed.reference)) {
     await assertParentExpander(entu, value.reference, { removing: true })
@@ -359,6 +363,57 @@ async function checkEntityAccess (entu, entityId, properties, removedTypes, righ
       statusMessage: 'User not in _owner property'
     })
   }
+}
+
+// Accepts a counter value only as true or a step of 1 to maxCounterStep, and only for a counter-type definition of the entity's type - the next value is drawn from that name's shared sequence, so any other property would read values the caller may not see
+async function validateCounterProperties (entu, entityId, properties) {
+  const counters = properties.filter((property) => property.counter !== undefined)
+  const invalidStep = counters.find(({ counter }) => counter !== true && !(Number.isInteger(counter) && counter > 0 && counter <= maxCounterStep))
+
+  if (invalidStep) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Property ${invalidStep.type} counter must be true or a whole step of 1 to ${maxCounterStep}`
+    })
+  }
+
+  const names = [...new Set(counters.map((property) => property.type))]
+
+  if (names.length === 0) return
+
+  const typeId = await counterEntityTypeId(entu, entityId, properties)
+
+  const definitions = typeId
+    ? await entu.db.collection('entity').find({
+      'private._type.string': 'property',
+      'private._parent.reference': typeId,
+      'private.name.string': { $in: names },
+      'private.type.string': 'counter'
+    }, { projection: { _id: false, 'private.name.string': true } }).toArray()
+    : []
+
+  const counterNames = new Set(definitions.flatMap((definition) => definition.private?.name?.map((value) => value.string) || []))
+  const invalid = names.find((name) => !counterNames.has(name))
+
+  if (invalid) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Property ${invalid} is not a counter`
+    })
+  }
+}
+
+// The entity type a write's counters belong to - an existing entity's stored type, so a _type sent along can't pick another, else the new entity's _type value
+async function counterEntityTypeId (entu, entityId, properties) {
+  if (!entityId) {
+    const reference = properties.find((property) => property.type === '_type' && property.reference)?.reference
+
+    return reference ? getObjectId(reference) : undefined
+  }
+
+  const entity = await entu.db.collection('entity').findOne({ _id: getObjectId(entityId) }, { projection: { _id: false, 'private._type.reference': true } })
+
+  return entity?.private?._type?.at(0)?.reference
 }
 
 // Validates each property's type name, system property value types, and _parent references
@@ -764,19 +819,37 @@ async function getNextCounterValue (entu, property) {
       const number = Number.parseInt(match.at(0), 10)
       return { string: property.string.replace(regex, number), number }
     }
+
+    return { string: `${property.string}${add}`, number: add }
   }
   else {
-    const lastProperty = await entu.db.collection('property')
-      .find({ type: property.type, deleted: { $exists: false } })
-      .sort({ number: -1, _id: -1 })
-      .limit(1)
-      .toArray()
+    const typeIds = await counterTypeIds(entu, property.type)
+
+    // Only values on entities of types that define this name as a counter count - the sequence is shared across them, but never reads a same-named value of another type
+    const lastProperty = await entu.db.collection('property').aggregate([
+      { $match: { type: property.type, deleted: { $exists: false } } },
+      { $sort: { number: -1, _id: -1 } },
+      {
+        $lookup: {
+          from: 'entity',
+          let: { entityId: '$entity' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$_id', '$$entityId'] }, 'private._type.reference': { $in: typeIds } } },
+            { $project: { _id: true } }
+          ],
+          as: 'counterEntity'
+        }
+      },
+      { $match: { 'counterEntity.0': { $exists: true } } },
+      { $limit: 1 },
+      { $project: { _id: false, string: true, number: true } }
+    ]).toArray()
 
     if (lastProperty.length === 0) {
       return { string: `${add}`, number: add }
     }
 
-    const str = lastProperty.at(0).string
+    const str = lastProperty.at(0).string ?? `${lastProperty.at(0).number ?? ''}`
     const match = str.match(regex)
 
     if (match) {
@@ -787,6 +860,17 @@ async function getNextCounterValue (entu, property) {
       return { string: `${str}${add}`, number: add }
     }
   }
+}
+
+// The entity types that define a property of this name as a counter - they share one sequence
+async function counterTypeIds (entu, name) {
+  const definitions = await entu.db.collection('entity').find({
+    'private._type.string': 'property',
+    'private.name.string': name,
+    'private.type.string': 'counter'
+  }, { projection: { _id: false, 'private._parent.reference': true } }).toArray()
+
+  return definitions.flatMap((definition) => definition.private?._parent?.map((parent) => parent.reference).filter(Boolean) || [])
 }
 
 // A user can hold only ONE right property per entity. When a right

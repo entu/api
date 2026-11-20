@@ -69,6 +69,7 @@ Example: `_child.row.total SUM` — sums total across child entities of type row
 
 ## Changing data
 
+- A counter-type property gets its value with `counter: true` (or a positive step) instead of a number you pick - Entu draws the next one.
 - update_entity ADDS a value by default. To CHANGE one, set that property's valueId to the value's _id from get_entity — never an entity or property-definition _id, and never a guess; if you did not just read it, add a new value or ask. Omit valueId only to add another value to a list property.
 - Reserved system types — those carrying a "system" property, and the names database, entity, menu, plugin, property — must never be created, changed or deleted, type or property definitions alike. Ordinary types, menus, plugins, property definitions and data entities can all be changed. Entities of type database cannot be created or deleted.
 - When writing a multilingual value, ALWAYS write every language (en and et): translate the user's wording yourself in the same change, and ask only when a correct translation is genuinely unclear.
