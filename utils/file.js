@@ -46,6 +46,18 @@ export async function getSignedUploadUrl (account, entityId, property, contentDi
   return await getSignedUrl(getS3Client(), command, { expiresIn })
 }
 
+// Copies a file object to another property's key, since the key is the property _id and a value re-created under a new id would lose it
+export async function copyFile (account, entityId, fromProperty, toProperty) {
+  const { s3BucketFiles } = useRuntimeConfig()
+
+  await getS3Client().send(new CopyObjectCommand({
+    Bucket: s3BucketFiles,
+    Key: getFileKey(account, entityId, toProperty),
+    CopySource: encodeURI(`${s3BucketFiles}/${getFileKey(account, entityId, fromProperty)}`),
+    ACL: 'private'
+  }))
+}
+
 // Downloads an original file from the files bucket. Returns the bytes as a
 // Buffer plus the object's stored S3 ContentType. Throws if the object exceeds
 // maxBytes (authoritative size check on the actual object).

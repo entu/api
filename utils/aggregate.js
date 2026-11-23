@@ -1,4 +1,8 @@
 import { createHash } from 'node:crypto'
+import { ObjectId } from 'mongodb'
+
+// Entity types whose properties the API, webapp and plugins read by name, so their definitions are never renamed with their values
+const systemTypeNames = ['database', 'entity', 'menu', 'plugin', 'property', 'share_in', 'share_out']
 
 // Recomputes and saves the aggregated entity with computed fields, rights, and search indexes
 export async function aggregateEntity (entu, entityId) {
@@ -321,9 +325,14 @@ export async function aggregateEntity (entu, entityId) {
 
   newEntity.hash = getEntityHash(newEntity.private)
 
-  await entu.db.collection('entity').replaceOne({ _id: entityId }, newEntity, { upsert: true })
+  // The stored names as this write replaced them, so of two overlapping aggregations only the one that changed a name renames its values
+  const replaced = await entu.db.collection('entity').findOneAndReplace({ _id: entityId }, newEntity, {
+    upsert: true,
+    returnDocument: 'before',
+    projection: { 'private.name': true, 'private._parent': true, 'private._type': true }
+  })
 
-  const sqsLength = await startRelativeAggregation(entu, entity, newEntity)
+  const sqsLength = await startRelativeAggregation(entu, entity, newEntity, replaced || {})
 
   if (sqsLength > 0) {
     logger(`Added ${sqsLength} entities to aggregation`, entu, [`entity:${entityId}`])
@@ -493,14 +502,17 @@ async function filterEntitiesWithFormulas (entu, entityIds) {
   return result.map((x) => x._id)
 }
 
-// Queues related entities for re-aggregation when name, rights, or formula-relevant data changes
-async function startRelativeAggregation (entu, oldEntity, newEntity) {
+// Queues related entities for re-aggregation when name, rights, or formula-relevant data changes; replacedEntity is the stored document this aggregation overwrote
+async function startRelativeAggregation (entu, oldEntity, newEntity, replacedEntity) {
   let ids = []
 
   // Check if entity has changed — if not, nothing to propagate
   if (Boolean(oldEntity.hash) && oldEntity.hash === newEntity.hash) {
     return 0
   }
+
+  // A renamed definition's values move to the new name before its types re-aggregate, so they are read under it
+  ids = [...ids, ...await renamePropertyValues(entu, { ...replacedEntity, _id: oldEntity._id }, newEntity)]
 
   // Type and property definition changes re-queue every entity of the affected types
   const typeIds = getChangedTypeIds(oldEntity, newEntity)
@@ -599,6 +611,156 @@ function getChangedTypeIds (oldEntity, newEntity) {
   const parentIds = [...oldEntity.private?._parent || [], ...newEntity.private?._parent || []].map((x) => x.reference)
 
   return uniqBy([...typeIds, ...parentIds], (x) => x.toString())
+}
+
+// Re-creates a renamed property definition's live values under the new name on its types' entities and returns those entities' ids
+async function renamePropertyValues (entu, oldEntity, newEntity) {
+  const oldName = getSingleName(oldEntity)
+  const newName = getSingleName(newEntity)
+  const isDefinition = [oldEntity, newEntity].every((x) => x.private?._type?.some((t) => t.string === 'property'))
+
+  if (!isDefinition || !oldName || !newName || oldName === newName) {
+    return []
+  }
+  if ([oldName, newName].some((name) => isReservedPropertyName(name))) {
+    return []
+  }
+
+  const typeIds = await getRenameTypeIds(entu, oldEntity, newEntity, oldName, newName)
+
+  if (typeIds.length === 0) {
+    return []
+  }
+
+  const entities = entu.db.collection('entity').find({
+    'private._type.reference': { $in: typeIds },
+    _origin_db: { $exists: false }
+  }, {
+    projection: { _id: true }
+  })
+
+  let batch = []
+  let entityIds = []
+
+  for await (const entity of entities) {
+    batch.push(entity._id)
+
+    if (batch.length === 1000) {
+      entityIds = [...entityIds, ...await renameBatchValues(entu, batch, oldName, newName)]
+      batch = []
+    }
+  }
+
+  if (batch.length > 0) {
+    entityIds = [...entityIds, ...await renameBatchValues(entu, batch, oldName, newName)]
+  }
+
+  if (entityIds.length > 0) {
+    logger(`Renamed ${oldName} to ${newName} on ${entityIds.length} entities`, entu, [`entity:${oldEntity._id}`])
+  }
+
+  return entityIds
+}
+
+// Returns the definition's only name, undefined when it has none, several, or a non-string one, since a rename between those is ambiguous
+function getSingleName (entity) {
+  const names = entity.private?.name || []
+
+  return names.length === 1 && typeof names.at(0).string === 'string' ? names.at(0).string : undefined
+}
+
+// Names that carry rights, logins, billing or support access, or that a key lookup on a plain object would resolve, so values never move in or out of them by a rename
+function isReservedPropertyName (name) {
+  if (typeof name !== 'string' || !/^\w+$/.test(name) || name in Object.prototype) {
+    return true
+  }
+
+  return name.startsWith('_') || isCredentialType(name) || serverOnlyTypes.includes(name) || ['add_user', 'support_until'].includes(name)
+}
+
+// Returns the types the user may edit that keep the definition across the save, are not read by name in code, and have no other definition with either name, whose values would otherwise be taken or merged
+async function getRenameTypeIds (entu, oldEntity, newEntity, oldName, newName) {
+  const newParentIds = (newEntity.private?._parent || []).map((x) => x.reference.toString())
+  const parentIds = (oldEntity.private?._parent || []).map((x) => x.reference).filter((id) => newParentIds.includes(id.toString()))
+
+  if (parentIds.length === 0) {
+    return []
+  }
+
+  const [types, takenIds] = await Promise.all([
+    entu.db.collection('entity').find({
+      _id: { $in: parentIds }
+    }, {
+      projection: { 'private.name': true, 'private._editor': true }
+    }).toArray(),
+    entu.db.collection('entity').distinct('private._parent.reference', {
+      _id: { $ne: oldEntity._id },
+      'private._parent.reference': { $in: parentIds },
+      'private._type.string': 'property',
+      'private.name.string': { $in: [oldName, newName] }
+    })
+  ])
+  const taken = new Set(takenIds.map((id) => id.toString()))
+
+  return types
+    .filter((type) => hasRight(entu, type, '_editor'))
+    .filter((type) => !type.private?.name?.some((x) => systemTypeNames.includes(x.string)))
+    .filter((type) => !taken.has(type._id.toString()))
+    .map((type) => type._id)
+}
+
+// Copies files to new value ids, inserts the new values and soft-deletes the old ones, which keep their file objects like any soft-deleted value, and returns the entities that changed
+async function renameBatchValues (entu, entityIds, oldName, newName) {
+  const values = await entu.db.collection('property').find({
+    entity: { $in: entityIds },
+    type: oldName,
+    deleted: { $exists: false }
+  }).toArray()
+
+  if (values.length === 0) {
+    return []
+  }
+
+  const createdDt = stampFor(entu)
+  const moves = []
+
+  for (const value of values) {
+    const newValue = { ...value, _id: new ObjectId(), type: newName, created: createdDt }
+
+    // A file that can't be copied keeps its value under the old name rather than lose it under the new one
+    if (value.filename !== undefined && !await copyFileValue(entu, value, newValue)) continue
+
+    moves.push({ value, newValue })
+  }
+
+  if (moves.length === 0) {
+    return []
+  }
+
+  await entu.db.collection('property').insertMany(moves.map((move) => move.newValue))
+
+  await entu.db.collection('property').updateMany({
+    _id: { $in: moves.map((move) => move.value._id) },
+    deleted: { $exists: false }
+  }, {
+    $set: { deleted: createdDt }
+  })
+
+  return uniqBy(moves.map((move) => move.value.entity), (x) => x.toString())
+}
+
+// Copies a value's file object to the value that replaces it and returns whether it succeeded; a value whose upload never finished has no object
+async function copyFileValue (entu, value, newValue) {
+  try {
+    await copyFile(entu.account, value.entity, value, newValue)
+
+    return true
+  }
+  catch (error) {
+    loggerError(`File copy failed: ${error.message}`, entu, [`entity:${value.entity}`, `property:${value._id}`])
+
+    return false
+  }
 }
 
 // Returns a comparable key of a property's values, references by id only so a renamed parent does not count as a change
