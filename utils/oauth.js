@@ -136,7 +136,7 @@ async function claimPasskeySession (event, code, state) {
   const connection = await connectDb('entu')
 
   const session = await connection.collection('session').findOneAndUpdate(
-    { _id: getObjectId(payload.session), pending: true, deleted: { $exists: false } },
+    { _id: getObjectId(payload.session), pending: true, refreshed: { $exists: false }, deleted: { $exists: false } },
     { $unset: { pending: '' } }
   )
 
@@ -178,7 +178,7 @@ async function fetchOauthEeUser (event, code) {
   }
 }
 
-// Signs an OAuth artifact - registrations and codes are self-contained JWTs, so the flow needs no storage
+// Signs an OAuth artifact - registrations and codes are self-contained JWTs, so they need no storage
 export function oauthSign (event, type, payload) {
   return tokenSign(event, type, payload, { expiresIn: lifetimes[type] })
 }
@@ -197,6 +197,15 @@ export function oauthVerify (event, type, token) {
 // Verifies a PKCE code verifier against the S256 challenge captured at authorization time
 export function oauthVerifyChallenge (codeVerifier, codeChallenge) {
   return createHash('sha256').update(codeVerifier || '').digest('base64url') === codeChallenge
+}
+
+// Reads a token or revocation request - form-encoded by default, but some clients send JSON, so both are accepted
+export async function oauthReadBody (event) {
+  if ((event.req.headers.get('content-type') || '').includes('json')) {
+    return await event.req.json().catch(() => {})
+  }
+
+  return Object.fromEntries(new URLSearchParams(await event.req.text()))
 }
 
 // OAuth 2.1 error response (RFC 6749 section 5.2) - the body shape clients expect, not Entu's statusMessage shape

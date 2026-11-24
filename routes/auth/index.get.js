@@ -119,6 +119,7 @@ defineRouteMeta({
                 },
                 token: { type: 'string', description: '12-hour JWT (`use: access`), bound to this IP' },
                 expires: { type: 'string', format: 'date-time', description: 'Token expiry' },
+                refreshToken: { type: 'string', description: 'Session token sign-in only: for `/auth/refresh` — works for 7 days, single use, never past 30 days after sign-in' },
                 conflict: { type: 'string', enum: ['invite'], description: 'Invite targets another person than this identity is linked to' }
               },
               required: ['accounts', 'user', 'token', 'expires']

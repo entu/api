@@ -35,7 +35,9 @@ export function authReadToken (event, account) {
 // passkey routes and the OAuth token endpoint; `bindIp: false` issues a token an OAuth client can use from its servers.
 // `offerRename: false` is for a response that never reaches the passkey's own client, so no rename is recorded for it.
 // `account` limits the token to one database, `accounts` to the databases an OAuth consent picked.
-export async function authExchange (event, { account, accounts: onlyAccounts, bindIp = true, invite, key, listSupport = true, offerRename = true, sessionId }) {
+// A session sign-in also gets a `refreshToken` for every database, unless `refreshable: false` - the OAuth token endpoint
+// keeps the session itself, limited to the consented databases. An API key gets none, as the key itself signs in again.
+export async function authExchange (event, { account, accounts: onlyAccounts, bindIp = true, invite, key, listSupport = true, offerRename = true, refreshable = true, sessionId }) {
   const credential = await resolveCredential(event, key, sessionId)
   const identity = credential.session ? sessionIdentity(credential.session) : undefined
 
@@ -80,16 +82,22 @@ export async function authExchange (event, { account, accounts: onlyAccounts, bi
     ? await passkeyRename(user.uid, user.passkeyPublic, user.name)
     : undefined
 
+  // Entu support gets no refresh token - one works from any address, and a stolen one would reach every database with a running support grant
+  const refreshToken = refreshable && credential.session && !isSupportIdentity(identity)
+    ? await sessionKeep(event, credential.session._id, { accounts: '*' })
+    : undefined
+
   return {
     ...authIssueToken(event, { accounts: allAccounts, bindIp, support, user }),
+    ...(refreshToken ? { refreshToken } : {}),
     ...(accepted.conflict ? { conflict: 'invite' } : {}),
     ...(rename ? { rename } : {})
   }
 }
 
-// Signs the 12-hour access token for a sign-in or refresh; `support` databases are listed in the response only, as their access is decided per request.
-export function authIssueToken (event, { accounts, authAt = Math.floor(Date.now() / 1000), bindIp = true, support = [], user = {} }) {
-  const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000)
+// Signs the 12-hour access token for a sign-in or refresh, never past `until` when the sign-in itself ends sooner; `support` databases are listed in the response only, as their access is decided per request.
+export function authIssueToken (event, { accounts, authAt = Math.floor(Date.now() / 1000), bindIp = true, support = [], until, user = {} }) {
+  const expiresAt = new Date(Math.min(Date.now() + 12 * 60 * 60 * 1000, until?.getTime() ?? Infinity))
 
   // authAt is the original authentication time - carried unchanged through refreshes
   const tokenData = { exp: Math.floor(expiresAt.getTime() / 1000), authAt }
@@ -161,13 +169,13 @@ function hasIdentity (session) {
   return !!(session?.user?.email || (session?.user?.provider === 'passkey' && session.user.id && session.user.publicKey))
 }
 
-// Marks a session as used and returns it - the update is the single-use guarantee, so a replay finds nothing
+// Takes a session not exchanged yet and stamps `refreshed` - when it last issued an access token - so a replay finds nothing; `deleted` marks sessions exchanged before sessions were kept
 async function consumeSession (id) {
   const connection = await connectDb('entu')
 
   return await connection.collection('session').findOneAndUpdate(
-    { _id: getObjectId(id), pending: { $exists: false }, deleted: { $exists: false } },
-    { $set: { deleted: new Date() } }
+    { _id: getObjectId(id), pending: { $exists: false }, refreshed: { $exists: false }, deleted: { $exists: false } },
+    { $set: { refreshed: new Date() } }
   )
 }
 
@@ -176,7 +184,7 @@ export async function authSessionAccounts (sessionId) {
   const connection = await connectDb('entu')
 
   const session = await connection.collection('session').findOne(
-    { _id: getObjectId(sessionId), pending: { $exists: false }, deleted: { $exists: false } }
+    { _id: getObjectId(sessionId), pending: { $exists: false }, refreshed: { $exists: false }, deleted: { $exists: false } }
   )
 
   if (!hasIdentity(session)) {
@@ -186,6 +194,11 @@ export async function authSessionAccounts (sessionId) {
   const identity = sessionIdentity(session)
 
   return identity.registered ? [] : await findUserAccounts(identity)
+}
+
+// The login identity a stored session was signed in with - what a refresh looks the databases up by again
+export function authSessionIdentity (session) {
+  return hasIdentity(session) ? sessionIdentity(session) : {}
 }
 
 // The login identity of a session in the shape tokens, findUserAccounts and authCredentialProperty take

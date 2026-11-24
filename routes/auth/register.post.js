@@ -45,7 +45,7 @@ defineRouteMeta({
                 token_endpoint_auth_method: { type: 'string', enum: ['none'] },
                 grant_types: {
                   type: 'array',
-                  items: { type: 'string', enum: ['authorization_code'] }
+                  items: { type: 'string', enum: ['authorization_code', 'refresh_token'] }
                 },
                 response_types: {
                   type: 'array',
@@ -88,7 +88,7 @@ export default defineEventHandler(async (event) => {
     client_name: name,
     redirect_uris: redirectUris,
     token_endpoint_auth_method: 'none',
-    grant_types: ['authorization_code'],
+    grant_types: ['authorization_code', 'refresh_token'],
     response_types: ['code']
   }
 })

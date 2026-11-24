@@ -46,6 +46,7 @@ export default defineEventHandler(async (event) => {
 
   url.searchParams.set('code', oauthSign(event, 'code', {
     ...(consent.account ? { account: consent.account } : { accounts: picked }),
+    client: consent.clientName,
     codeChallenge: consent.codeChallenge,
     redirectUri: consent.redirectUri,
     session: consent.session

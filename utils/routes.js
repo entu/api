@@ -24,5 +24,5 @@ export function isContextFreeRoute (method, path) {
 export function isAuthRoute (method, path) {
   return (method === 'GET' && /^\/auth(\/[^/]+)?$/.test(path))
     || (method === 'GET' && /^\/auth\/passkey(\/register)?(\/options)?$/.test(path))
-    || (method === 'POST' && /^\/auth\/(consent|passkey|passkey\/register|register|token)$/.test(path))
+    || (method === 'POST' && /^\/auth\/(consent|passkey|passkey\/register|register|revoke|token)$/.test(path))
 }
