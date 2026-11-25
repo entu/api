@@ -8,15 +8,15 @@ export default defineEventHandler(async (event) => {
 
   // A named database is offered even before the user is a person in it, as automatic user creation may add them at the token exchange
   const accounts = consent.account
-    ? [found.find((a) => a.account === consent.account) || { account: consent.account }]
-    : found
+    ? [consent.account]
+    : found.map((a) => a.account)
 
   return {
     client: consent.clientName,
     // A custom-scheme redirect (com.example.app:/callback) has no host, so its scheme names the app instead
     host: redirectUri.host || redirectUri.protocol,
     accounts: accounts
-      .map((a) => ({ _id: a.account, ...(a.userId ? { user: { name: a.userName || a.userId.toString() } } : {}) }))
+      .map((account) => ({ _id: account }))
       .toSorted((a, b) => a._id.localeCompare(b._id))
   }
 })
