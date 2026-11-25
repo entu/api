@@ -140,7 +140,8 @@ export async function passkeyFinish (event, identity, body) {
     return { code: oauthSignPasskeyCode(event, sessionId, body.state) }
   }
 
-  const sessionId = await oauthCreateSession(ip, user)
+  // A passkey only signs in on Entu's own origins, so without a webapp state this is the Entu app
+  const sessionId = await oauthCreateSession(ip, user, { isEntu: true })
 
   return await authExchange(event, {
     account: typeof body.db === 'string' && body.db ? formatDatabaseName(body.db) : undefined,

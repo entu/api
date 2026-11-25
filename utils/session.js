@@ -101,7 +101,8 @@ export async function sessionRevoke (event, refreshToken) {
 async function issueAccessToken (event, session, oauth) {
   const user = authSessionIdentity(session)
 
-  if (!user.uid || !user.provider) return
+  // Someone who became Entu support after signing in signs in again, as support gets no refresh token
+  if (!user.uid || !user.provider || isSupportIdentity(user)) return
 
   const onlyAccounts = oauth ? session.accounts : []
   const accounts = await findUserAccounts(user, onlyAccounts)

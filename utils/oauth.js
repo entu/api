@@ -68,27 +68,42 @@ export async function oauthCompleteLogin (event, code, state) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid or expired login state' })
   }
 
+  // Only a sign-in returning to Entu's own webapp or app may be refreshed - a third party behind `next` gets the 12-hour token alone
+  const isEntu = !decodedState.redirectUri && isEntuNext(event, decodedState.next)
+
   // The state names the provider, so a passkey code is only accepted for a login started as a passkey login
   const sessionId = decodedState.provider === 'passkey'
-    ? await claimPasskeySession(event, code, state)
-    : await oauthCreateSession(authRequestIp(event), await fetchOauthEeUser(event, code))
+    ? await claimPasskeySession(event, code, state, isEntu)
+    : await oauthCreateSession(authRequestIp(event), await fetchOauthEeUser(event, code), { isEntu })
 
   const token = tokenSign(event, 'session', {}, { bindIp: true, expiresIn: '5m', subject: sessionId })
 
   return { id: sessionId, state: decodedState, token }
 }
 
-// Stores a login session and returns its id - a pending one stays unusable until /auth/callback claims it
-export async function oauthCreateSession (ip, user, { pending = false } = {}) {
+// Stores a login session and returns its id - a pending one stays unusable until /auth/callback claims it, and only an `isEntu` one gets a refresh token
+export async function oauthCreateSession (ip, user, { isEntu = false, pending = false } = {}) {
   const connection = await connectDb('entu')
 
   const session = await connection.collection('session').insertOne({
     created: new Date(),
+    ...(isEntu ? { isEntu: true } : {}),
     ...(pending ? { pending: true } : {}),
     user: { ip, ...user }
   })
 
   return session.insertedId.toString()
+}
+
+// True when `next` returns to the Entu webapp or the Entu app, not to a third party
+function isEntuNext (event, next) {
+  const { appUrl } = useRuntimeConfig(event)
+
+  if (typeof next !== 'string') {
+    return false
+  }
+
+  return next.startsWith('entu://auth-callback?') || (URL.canParse(next) && new URL(next).origin === new URL(appUrl).origin)
 }
 
 // Signs the code the passkey page hands to /auth/callback - it names a pending session and the state it was issued for
@@ -126,7 +141,7 @@ export function oauthVerifyPasskeyState (event, state) {
 }
 
 // Claims the pending session a passkey code names - the atomic update makes the code single use
-async function claimPasskeySession (event, code, state) {
+async function claimPasskeySession (event, code, state, isEntu) {
   const payload = tokenVerify(event, 'passkey-code', code, { bindIp: true })
 
   if (!payload || payload.state !== hashState(state)) {
@@ -137,7 +152,7 @@ async function claimPasskeySession (event, code, state) {
 
   const session = await connection.collection('session').findOneAndUpdate(
     { _id: getObjectId(payload.session), pending: true, refreshed: { $exists: false }, deleted: { $exists: false } },
-    { $unset: { pending: '' } }
+    { $unset: { pending: '' }, ...(isEntu ? { $set: { isEntu: true } } : {}) }
   )
 
   if (!session) {
@@ -196,7 +211,11 @@ export function oauthVerify (event, type, token) {
 
 // Verifies a PKCE code verifier against the S256 challenge captured at authorization time
 export function oauthVerifyChallenge (codeVerifier, codeChallenge) {
-  return createHash('sha256').update(codeVerifier || '').digest('base64url') === codeChallenge
+  if (typeof codeVerifier !== 'string' || !codeVerifier) {
+    return false
+  }
+
+  return createHash('sha256').update(codeVerifier).digest('base64url') === codeChallenge
 }
 
 // Reads a token or revocation request - form-encoded by default, but some clients send JSON, so both are accepted

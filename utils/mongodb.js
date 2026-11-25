@@ -70,7 +70,8 @@ export function formatDatabaseName (name) {
     throw createError({ statusCode: 400, statusMessage: `Invalid database name: ${name}` })
   }
 
-  if (mongoDbSystemDbs.includes(name)) {
+  // `entu` holds the login sessions, never an account
+  if (mongoDbSystemDbs.includes(name) || name === 'entu') {
     throw createError({ statusCode: 400, statusMessage: `Invalid database name: ${name}` })
   }
 
